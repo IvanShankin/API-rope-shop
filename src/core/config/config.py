@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngine
@@ -88,17 +88,37 @@ class DbConnectionConfig(BaseModel):
 class PathsConfig(BaseModel):
     base: Path
     media: Path
+    products: Path
+    splice_types: Path
+    work_photos: Path
+    charity_photos: Path
+    temp: Path
 
     @classmethod
-    def build(cls) -> "PathsConfig":
+    def build(cls, postscript: Optional[str] = '') -> "PathsConfig":
         base = Path(__file__).resolve().parents[3]
         media = base / Path("media")
+        products = media / Path(f"products{postscript}")
+        splice_types = media / Path(f"splice_types{postscript}")
+        work_photos = media / Path(f"work_photos{postscript}")
+        charity_photos = media / Path(f"charity_photos{postscript}")
+        temp = media / Path(f"temp{postscript}")
 
         media.mkdir(exist_ok=True)
+        products.mkdir(exist_ok=True)
+        splice_types.mkdir(exist_ok=True)
+        work_photos.mkdir(exist_ok=True)
+        charity_photos.mkdir(exist_ok=True)
+        temp.mkdir(exist_ok=True)
 
         return cls(
             base=base,
             media=media,
+            products=products,
+            splice_types=splice_types,
+            work_photos=work_photos,
+            charity_photos=charity_photos,
+            temp=temp,
         )
 
 

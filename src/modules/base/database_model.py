@@ -3,7 +3,7 @@ from datetime import datetime, UTC
 from typing import TypeVar
 from pydantic import BaseModel
 
-from sqlalchemy import Boolean, DateTime
+from sqlalchemy import Boolean, DateTime, Enum, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.core.database.database import Base
@@ -17,6 +17,19 @@ class Language(str, enum.Enum):
     ENG = "eng"
     GER = "ger"
 
+
+class BaseTranslation:
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    locale: Mapped[Language] = mapped_column(
+        Enum(
+            Language,
+            values_callable=lambda x: [e.value for e in x],
+            name="locale",
+            native_enum=False,
+            length=10
+        ),
+        nullable=False
+    )
 
 
 class SoftDeleteMixin:

@@ -1,0 +1,33 @@
+from typing import Optional
+from datetime import datetime
+from sqlalchemy import String, Integer, Boolean, ForeignKey, DateTime, func, Numeric
+from sqlalchemy.orm import Mapped, mapped_column
+
+from src.core.database.database import Base
+
+
+class SpliceMaterial(Base):
+    __tablename__ = "splice_materials"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    code: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+
+
+class SplicePriceRule(Base):
+    __tablename__ = "splice_price_rules"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    splice_type_id: Mapped[int] = mapped_column(Integer, ForeignKey("splice_types.id", ondelete="CASCADE"), nullable=False)
+    splice_material_id: Mapped[int] = mapped_column(Integer, ForeignKey("splice_materials.id", ondelete="CASCADE"), nullable=False)
+
+    diameter_from_mm: Mapped[Optional[float]] = mapped_column(Numeric(6, 2), nullable=True)
+    diameter_to_mm: Mapped[Optional[float]] = mapped_column(Numeric(6, 2), nullable=True)
+
+    price: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
+
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+

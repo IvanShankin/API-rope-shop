@@ -2,7 +2,8 @@ from src.modules.users.models import User
 from src.modules.refresh_tokens.models import RefreshToken
 from src.modules.splice_types.models import SpliceType, SpliceTypeTranslation, SpliceVisualType
 
-from src.modules.materials.models import MaterialGroup, MaterialGroupTranslation, Material, MaterialTranslation
+from src.modules.material_groups.models import MaterialGroup, MaterialGroupTranslation
+from src.modules.materials.models import Material, MaterialTranslation
 from src.modules.colors.models import Color, ColorTranslation
 from src.modules.rope_products.models import RopeProduct, RopeVariant, RopeProductColor, RopeAllowedSplice
 from src.modules.splice_prices.models import SpliceMaterial, SplicePriceRule

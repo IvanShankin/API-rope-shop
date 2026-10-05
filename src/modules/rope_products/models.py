@@ -23,6 +23,13 @@ class RopeProduct(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
+    material_group: Mapped["MaterialGroup"] = relationship("MaterialGroup")
+    splice_material: Mapped["SpliceMaterial"] = relationship("SpliceMaterial")
+    
+    variants: Mapped[List["RopeVariant"]] = relationship("RopeVariant", back_populates="rope_product", cascade="all, delete-orphan")
+    colors: Mapped[List["RopeProductColor"]] = relationship("RopeProductColor", back_populates="rope_product", cascade="all, delete-orphan")
+    allowed_splices: Mapped[List["RopeAllowedSplice"]] = relationship("RopeAllowedSplice", back_populates="rope_product", cascade="all, delete-orphan")
+
 
 class RopeVariant(Base):
     __tablename__ = "rope_variants"
@@ -40,6 +47,8 @@ class RopeVariant(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    rope_product: Mapped["RopeProduct"] = relationship("RopeProduct", back_populates="variants")
 
 
 class RopeProductColor(Base):
@@ -53,6 +62,9 @@ class RopeProductColor(Base):
     __table_args__ = (
         UniqueConstraint("rope_product_id", "color_id", name="uq_rope_product_color"),
     )
+    
+    rope_product: Mapped["RopeProduct"] = relationship("RopeProduct", back_populates="colors")
+    color: Mapped["Color"] = relationship("Color")
 
 
 class RopeAllowedSplice(Base):
@@ -64,4 +76,6 @@ class RopeAllowedSplice(Base):
     __table_args__ = (
         UniqueConstraint("rope_product_id", "splice_type_id", name="uq_rope_allowed_splice"),
     )
-
+    
+    rope_product: Mapped["RopeProduct"] = relationship("RopeProduct", back_populates="allowed_splices")
+    splice_type: Mapped["SpliceType"] = relationship("SpliceType")

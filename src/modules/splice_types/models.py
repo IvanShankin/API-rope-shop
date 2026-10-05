@@ -10,8 +10,8 @@ from src.modules.base.database_model import BaseTranslation
 
 
 class SpliceCategory(str, enum.Enum):
-    LOOP = "loop"
-    SPLICE = "splice"
+    LOOP = "loop"       # создание петли
+    SPLICE = "splice"   # сращивание двух концов верёвок
 
 
 class SpliceVisualType(str, enum.Enum):

@@ -6,7 +6,8 @@ from src.modules.material_groups.models import MaterialGroup, MaterialGroupTrans
 from src.modules.materials.models import Material, MaterialTranslation
 from src.modules.colors.models import Color, ColorTranslation
 from src.modules.rope_products.models import RopeProduct, RopeVariant, RopeProductColor, RopeAllowedSplice
-from src.modules.splice_prices.models import SpliceMaterial, SplicePriceRule
+from src.modules.splice_prices.models import SplicePriceRule
+from src.modules.splice_materials.models import SpliceMaterial
 from src.modules.configurator.models import ConfiguratorExtra, ConfiguratorExtraTranslation, ConfiguratorSetting
 from src.modules.quote_requests.models import QuoteRequest
 

@@ -13,8 +13,8 @@ if TYPE_CHECKING:
 
 
 class UserRole(str, enum.Enum):
-    TEACHER = "admin"
-    STUDENT = "user"
+    ADMIN = "admin"
+    USER = "user"
 
 
 class User(Base):

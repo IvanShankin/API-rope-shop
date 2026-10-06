@@ -1,4 +1,4 @@
-from typing import List, Optional
+﻿from typing import List, Optional
 from datetime import datetime
 from sqlalchemy import String, Integer, Boolean, ForeignKey, UniqueConstraint, DateTime, func, Text, Numeric
 from sqlalchemy.orm import relationship, Mapped, mapped_column
@@ -70,4 +70,5 @@ class ConfiguratorSetting(Base):
     vat_note: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
 

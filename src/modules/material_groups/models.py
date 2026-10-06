@@ -1,4 +1,4 @@
-from typing import List
+﻿from typing import List
 from sqlalchemy import String, Integer, Boolean, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
@@ -46,3 +46,4 @@ class MaterialGroupTranslation(BaseTranslation):
     __table_args__ = (
         UniqueConstraint("material_group_id", "locale", name="uq_material_group_id_locale"),
     )
+

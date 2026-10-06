@@ -1,4 +1,4 @@
-import enum
+﻿import enum
 from datetime import datetime
 from typing import List, Optional
 
@@ -10,8 +10,8 @@ from src.modules.base.database_model import BaseTranslation
 
 
 class SpliceCategory(str, enum.Enum):
-    LOOP = "loop"       # создание петли
-    SPLICE = "splice"   # сращивание двух концов верёвок
+    LOOP = "loop"       # СЃРѕР·РґР°РЅРёРµ РїРµС‚Р»Рё
+    SPLICE = "splice"   # СЃСЂР°С‰РёРІР°РЅРёРµ РґРІСѓС… РєРѕРЅС†РѕРІ РІРµСЂС‘РІРѕРє
 
 
 class SpliceVisualType(str, enum.Enum):
@@ -68,6 +68,7 @@ class SpliceType(Base):
         cascade="all, delete-orphan"
     )
 
+
 class SpliceTypeTranslation(BaseTranslation):
     __tablename__ = "splice_type_translations"
 
@@ -88,4 +89,5 @@ class SpliceTypeTranslation(BaseTranslation):
     __table_args__ = (
         UniqueConstraint("splice_type_id", "locale", name="uq_splice_type_id_locale"),
     )
+
 

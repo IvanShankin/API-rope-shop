@@ -1,4 +1,4 @@
-from typing import List, Optional
+﻿from typing import List, Optional
 from sqlalchemy import String, Integer, Boolean, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
@@ -41,4 +41,5 @@ class ColorTranslation(BaseTranslation):
     __table_args__ = (
         UniqueConstraint("color_id", "locale", name="uq_color_id_locale"),
     )
+
 

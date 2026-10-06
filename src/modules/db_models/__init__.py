@@ -1,3 +1,4 @@
+﻿from src.modules.products.models import Product
 from src.modules.users.models import User
 from src.modules.refresh_tokens.models import RefreshToken
 from src.modules.splice_types.models import SpliceType, SpliceTypeTranslation, SpliceVisualType
@@ -23,6 +24,7 @@ __all__ = [
     "MaterialTranslation",
     "Color",
     "ColorTranslation",
+    "Product",
     "RopeProduct",
     "RopeVariant",
     "RopeProductColor",

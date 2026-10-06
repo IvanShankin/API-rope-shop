@@ -1,9 +1,14 @@
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from datetime import datetime
 from sqlalchemy import  Integer, Boolean, ForeignKey, DateTime, func, Numeric
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from src.core.database.database import Base
+
+
+if TYPE_CHECKING:
+    from src.modules.splice_types.models import SpliceType
+    from src.modules.splice_materials.models import SpliceMaterial
 
 
 class SplicePriceRule(Base):

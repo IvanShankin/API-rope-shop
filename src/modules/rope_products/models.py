@@ -1,4 +1,4 @@
-from typing import List, Optional
+﻿from typing import List, Optional
 from datetime import datetime
 from sqlalchemy import String, Integer, Boolean, ForeignKey, UniqueConstraint, DateTime, func, Text, Numeric
 from sqlalchemy.orm import relationship, Mapped, mapped_column
@@ -79,3 +79,5 @@ class RopeAllowedSplice(Base):
     
     rope_product: Mapped["RopeProduct"] = relationship("RopeProduct", back_populates="allowed_splices")
     splice_type: Mapped["SpliceType"] = relationship("SpliceType")
+
+

@@ -1,4 +1,4 @@
-from modules.handlers_files.fixtures import create_upload_file_fixture, create_image_bytes_fixture
+﻿from modules.handlers_files.fixtures import create_upload_file_fixture, create_image_bytes_fixture
 from tests.fixturs.fixturs_db import session_db, not_open_session_db
 from tests.fixturs.replace_services import user_service_fixture, compression_images_fixture, handler_images_fixture, \
     path_builder_fixture
@@ -14,20 +14,23 @@ __all__ = [
     "not_open_session_db",
     "client_for_tests",
 
-    # БД фикстуры
+    # Р‘Р” С„РёРєСЃС‚СѓСЂС‹
     "config_fix",
     "session_db",
 
-    # сервисы
+    # СЃРµСЂРІРёСЃС‹
     "user_service_fixture",
     "compression_images_fixture",
     "handler_images_fixture",
     "path_builder_fixture",
 
-    # из моделей
+    # РёР· РјРѕРґРµР»РµР№
     "create_user_fixture",
     "create_refresh_token_fixture",
 
     "create_upload_file_fixture",
     "create_image_bytes_fixture",
+    "create_splice_material_fixture",
 ]
+from tests.modules.splice_materials.fixtures import create_splice_material_fixture
+

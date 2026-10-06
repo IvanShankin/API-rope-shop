@@ -1,4 +1,4 @@
-import asyncio
+﻿import asyncio
 import logging
 
 from sqlalchemy import text
@@ -53,3 +53,4 @@ async def create_database():
 
 if __name__ == "__main__":
     asyncio.run(create_database())
+

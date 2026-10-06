@@ -19,6 +19,8 @@ class Language(str, enum.Enum):
 
 
 class BaseTranslation:
+    __abstract__ = True
+
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     locale: Mapped[Language] = mapped_column(
         Enum(
@@ -33,6 +35,8 @@ class BaseTranslation:
 
 
 class SoftDeleteMixin:
+    __abstract__ = True
+
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 

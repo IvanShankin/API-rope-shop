@@ -9,6 +9,7 @@ from src.modules.auth.views import router as auth_router
 from src.modules.users.views import router as user_router
 from src.modules.splice_types.views import router as splice_types_router
 from src.modules.splice_materials.views import router as splice_materials_router
+from src.modules.splice_prices.views import router as splice_prices_router
 
 
 def _include_routers(app: FastAPI) -> FastAPI:
@@ -16,6 +17,7 @@ def _include_routers(app: FastAPI) -> FastAPI:
     app.include_router(user_router)
     app.include_router(splice_types_router)
     app.include_router(splice_materials_router)
+    app.include_router(splice_prices_router)
     return app
 
 

@@ -27,7 +27,7 @@ class MaterialGroup(Base):
     )
 
 
-class MaterialGroupTranslation(BaseTranslation):
+class MaterialGroupTranslation(BaseTranslation, Base):
     __tablename__ = "material_group_translations"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -46,4 +46,5 @@ class MaterialGroupTranslation(BaseTranslation):
     __table_args__ = (
         UniqueConstraint("material_group_id", "locale", name="uq_material_group_id_locale"),
     )
+
 

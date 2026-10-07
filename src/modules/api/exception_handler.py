@@ -10,7 +10,7 @@ def register_exception_handlers(app: FastAPI):
     async def permission_error_handler(request, exc):
         return JSONResponse(status_code=403, content={"detail": "Forbidden"})
 
-    @app.exception_handler(ServiceException)
+    #@app.exception_handler(ServiceException)
     async def service_handler(request, exc):
         return JSONResponse(status_code=500, content={"detail": "Server Error"})
 
@@ -21,5 +21,6 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(NotFoundData)
     async def notfound_handler(request, exc):
         return JSONResponse(status_code=404, content={"detail": "Not found data"})
+
 
 

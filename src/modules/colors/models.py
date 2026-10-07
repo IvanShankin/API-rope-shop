@@ -22,7 +22,7 @@ class Color(Base):
     )
 
 
-class ColorTranslation(BaseTranslation):
+class ColorTranslation(BaseTranslation, Base):
     __tablename__ = "color_translations"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -41,5 +41,6 @@ class ColorTranslation(BaseTranslation):
     __table_args__ = (
         UniqueConstraint("color_id", "locale", name="uq_color_id_locale"),
     )
+
 
 

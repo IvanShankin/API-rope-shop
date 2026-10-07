@@ -28,7 +28,7 @@ class ConfiguratorExtra(Base):
     )
 
 
-class ConfiguratorExtraTranslation(BaseTranslation):
+class ConfiguratorExtraTranslation(BaseTranslation, Base):
     __tablename__ = "configurator_extra_translations"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -70,5 +70,6 @@ class ConfiguratorSetting(Base):
     vat_note: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
 
 

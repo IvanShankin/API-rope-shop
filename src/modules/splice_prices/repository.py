@@ -1,3 +1,4 @@
+from src.modules.splice_types.models import SpliceType
 from typing import Optional, Sequence, Union, Any, List
 
 from sqlalchemy import select, update, delete, or_
@@ -20,19 +21,21 @@ class SplicePriceRuleRepository(BaseRepository):
     async def get_all(self, is_active: Optional[bool] = None) -> Sequence[SplicePriceRule]:
         """Получение всех правил с предзагрузкой связей."""
         stmt = select(SplicePriceRule).options(
-            selectinload(SplicePriceRule.splice_type),
+            selectinload(SplicePriceRule.splice_type).selectinload(SpliceType.translations),
             selectinload(SplicePriceRule.splice_material)
         )
         if is_active is not None:
             stmt = stmt.where(SplicePriceRule.is_active == is_active)
             
+        stmt = stmt.order_by(SplicePriceRule.diameter_from_mm.asc().nulls_first())
+        
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
     async def get_by_id(self, rule_id: int) -> SplicePriceRule | None:
         """Получение правила по ID."""
         stmt = select(SplicePriceRule).options(
-            selectinload(SplicePriceRule.splice_type),
+            selectinload(SplicePriceRule.splice_type).selectinload(SpliceType.translations),
             selectinload(SplicePriceRule.splice_material)
         ).where(SplicePriceRule.id == rule_id)
         
@@ -42,9 +45,9 @@ class SplicePriceRuleRepository(BaseRepository):
     async def get_by_splice_material_id(self, material_id: int) -> Sequence[SplicePriceRule]:
         """Получение списка ценовых правил по ID материала."""
         stmt = select(SplicePriceRule).options(
-            selectinload(SplicePriceRule.splice_type),
+            selectinload(SplicePriceRule.splice_type).selectinload(SpliceType.translations),
             selectinload(SplicePriceRule.splice_material)
-        ).where(SplicePriceRule.splice_material_id == material_id)
+        ).where(SplicePriceRule.splice_material_id == material_id).order_by(SplicePriceRule.diameter_from_mm.asc().nulls_first())
         
         result = await self.session.execute(stmt)
         return result.scalars().all()
@@ -52,9 +55,9 @@ class SplicePriceRuleRepository(BaseRepository):
     async def get_by_splice_type_id(self, type_id: int) -> Sequence[SplicePriceRule]:
         """Получение списка ценовых правил по ID типа услуги."""
         stmt = select(SplicePriceRule).options(
-            selectinload(SplicePriceRule.splice_type),
+            selectinload(SplicePriceRule.splice_type).selectinload(SpliceType.translations),
             selectinload(SplicePriceRule.splice_material)
-        ).where(SplicePriceRule.splice_type_id == type_id)
+        ).where(SplicePriceRule.splice_type_id == type_id).order_by(SplicePriceRule.diameter_from_mm.asc().nulls_first())
         
         result = await self.session.execute(stmt)
         return result.scalars().all()
@@ -71,7 +74,7 @@ class SplicePriceRuleRepository(BaseRepository):
         Используется в конфигураторе для отображения списка доступных услуг и их цен.
         """
         stmt = select(SplicePriceRule).options(
-            selectinload(SplicePriceRule.splice_type)
+            selectinload(SplicePriceRule.splice_type).selectinload(SpliceType.translations)
         ).where(
             SplicePriceRule.splice_material_id == material_id,
             SplicePriceRule.is_active == True,
@@ -88,6 +91,8 @@ class SplicePriceRuleRepository(BaseRepository):
         if splice_type_ids is not None:
             stmt = stmt.where(SplicePriceRule.splice_type_id.in_(splice_type_ids))
             
+        stmt = stmt.order_by(SplicePriceRule.diameter_from_mm.asc().nulls_first())
+        
         result = await self.session.execute(stmt)
         return result.scalars().all()
 

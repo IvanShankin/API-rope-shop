@@ -8,7 +8,7 @@ class RepositoryException(Exception):
     pass
 
 
-class NotFoundData(Exception):
+class NotFoundData(ServiceException):
     pass
 
 

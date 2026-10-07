@@ -39,6 +39,26 @@ class SplicePriceRuleRepository(BaseRepository):
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
+    async def get_by_splice_material_id(self, material_id: int) -> Sequence[SplicePriceRule]:
+        """Получение списка ценовых правил по ID материала."""
+        stmt = select(SplicePriceRule).options(
+            selectinload(SplicePriceRule.splice_type),
+            selectinload(SplicePriceRule.splice_material)
+        ).where(SplicePriceRule.splice_material_id == material_id)
+        
+        result = await self.session.execute(stmt)
+        return result.scalars().all()
+
+    async def get_by_splice_type_id(self, type_id: int) -> Sequence[SplicePriceRule]:
+        """Получение списка ценовых правил по ID типа услуги."""
+        stmt = select(SplicePriceRule).options(
+            selectinload(SplicePriceRule.splice_type),
+            selectinload(SplicePriceRule.splice_material)
+        ).where(SplicePriceRule.splice_type_id == type_id)
+        
+        result = await self.session.execute(stmt)
+        return result.scalars().all()
+
     async def get_applicable_rules(
         self,
         material_id: int,

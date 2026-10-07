@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from passlib.context import CryptContext
 
 from src.core.config import create_config
@@ -27,8 +28,12 @@ def init_fastapi_app() -> FastAPI:
         lifespan=lifespan
     )
 
-    app.state.config = create_config()
+    config = create_config()
+    app.state.config = config
     register_exception_handlers(app)
+
+    # Раздача медиа файлов (статических изображений)
+    app.mount("/media", StaticFiles(directory=config.paths.media), name="media")
 
     _include_routers(app)
 

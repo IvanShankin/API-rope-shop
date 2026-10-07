@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from helpers import test_crypto_context
 from src.modules.handlers_files.compression_images import CompressionImages
 from src.modules.handlers_files.converter_images import HandlerImages
+from src.modules.handlers_files.service import ImageManager
 from src.modules.path_builder import PathBuilder
 from src.modules.users.repository import UsersRepository
 from src.modules.users.service import UsersService
@@ -29,6 +30,10 @@ async def handler_images_fixture(config_fix) -> HandlerImages:
 
 
 @pytest_asyncio.fixture(scope="function")
+async def image_manager_fixture(config_fix) -> ImageManager:
+    return ImageManager(config=config_fix)
+
+
+@pytest_asyncio.fixture(scope="function")
 async def path_builder_fixture(config_fix) -> PathBuilder:
     return PathBuilder(config=config_fix)
-

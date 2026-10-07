@@ -28,13 +28,10 @@ class TestsForSuccess:
 
         assert response.status_code == 200
 
-        data = response.json()
+        data = [SpliceMaterialResponseDTO.model_validate(m) for m in response.json()]
         assert len(data) >= 2
 
-        parsed_1 = SpliceMaterialResponseDTO.model_validate(data[0])
-        parsed_2 = SpliceMaterialResponseDTO.model_validate(data[1])
-        
-        ids = [m['id'] for m in data]
+        ids = [m.id for m in data]
         assert material_1.id in ids
         assert material_2.id in ids
 

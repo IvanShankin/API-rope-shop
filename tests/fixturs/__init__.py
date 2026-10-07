@@ -1,4 +1,7 @@
-﻿from tests.modules.handlers_files.fixtures import create_upload_file_fixture, create_image_bytes_fixture
+﻿from tests.modules.handlers_files.fixtures import (
+    create_upload_file_fixture,
+    create_image_bytes_fixture,
+)
 from tests.fixturs.fixturs_db import session_db, not_open_session_db
 from tests.fixturs.replace_services import (
     user_service_fixture,
@@ -6,6 +9,7 @@ from tests.fixturs.replace_services import (
     handler_images_fixture,
     image_manager_fixture,
     path_builder_fixture,
+    splice_type_service_fixture,
 )
 from tests.fixturs.fixtures import (
     app_fastapi,
@@ -17,7 +21,10 @@ from tests.fixturs.fixtures import (
 from tests.modules.users.fixtures import create_user_fixture
 from tests.modules.refresh_tokens.fixtures import create_refresh_token_fixture
 from tests.modules.splice_materials.fixtures import create_splice_material_fixture
-from tests.modules.splice_types.fixtures import create_splice_type_fixture
+from tests.modules.splice_types.fixtures import (
+    create_splice_type_fixture,
+    create_splice_type_translation_fixture,
+)
 from tests.modules.splice_prices.fixtures import create_splice_price_rule_fixture
 
 __all__ = [
@@ -32,11 +39,13 @@ __all__ = [
     "handler_images_fixture",
     "image_manager_fixture",
     "path_builder_fixture",
+    "splice_type_service_fixture",
     "create_user_fixture",
     "create_refresh_token_fixture",
     "create_upload_file_fixture",
     "create_image_bytes_fixture",
     "create_splice_material_fixture",
     "create_splice_type_fixture",
+    "create_splice_type_translation_fixture",
     "create_splice_price_rule_fixture",
 ]

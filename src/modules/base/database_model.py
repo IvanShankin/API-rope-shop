@@ -1,6 +1,6 @@
 import enum
 from datetime import datetime, UTC
-from typing import TypeVar
+from typing import TypeVar, Callable, Any
 from pydantic import BaseModel
 
 from sqlalchemy import Boolean, DateTime, Enum, Integer
@@ -32,6 +32,36 @@ class BaseTranslation:
         ),
         nullable=False
     )
+
+
+class BaseModelWithRelationshipTranslation(Base):
+    """Наследовать только тому классу, что имеет связь с переводами (BaseTranslation)"""
+    __abstract__ = True
+
+    def _get_field_with_translation(
+        self,
+        field: Callable[[Any], Any],
+        locale: Language,
+        fallback: Language = Language.ENG
+    ) -> Any | None:
+        """Вернёт по указанному языку, если такого не найдёт, то вернёт по языку fallback, иначе первый попавшийся"""
+        if not self.translations:
+            return None
+
+        for t in self.translations:
+            if t.locale == locale:
+                return field(t)
+
+        if fallback:
+            for t in self.translations:
+                if t.locale == fallback:
+                    return field(t)
+
+        # вернём первый попавшийся, если ни запрошенный язык, ни fallback не найдены
+        first_translation_value = field(self.translations[0])
+        if first_translation_value:
+            return first_translation_value
+        return None
 
 
 class SoftDeleteMixin:

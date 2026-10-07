@@ -28,10 +28,10 @@ class TestsForSuccess:
         response = await client_for_tests.get("/splice_prices")
         assert response.status_code == 200
 
-        data = response.json()
+        data = [SplicePriceRuleResponseDTO.model_validate(r) for r in response.json()]
         assert len(data) >= 2
 
-        ids = [r['id'] for r in data]
+        ids = [r.id for r in data]
         assert rule_1.id in ids
         assert rule_2.id in ids
 
@@ -111,7 +111,8 @@ class TestsForSuccess:
         updated_rule = SplicePriceRuleResponseDTO.model_validate(response.json())
         assert updated_rule.price == 999.99
 
-        result_db = await session_db.execute(select(SplicePriceRule).where(SplicePriceRule.id == updated_rule.id))
+        result_db = await session_db.execute(select(SplicePriceRule).where(SplicePriceRule.id == updated_rule.id))\
+            
         rule_from_db = result_db.scalar_one_or_none()
         assert rule_from_db
         assert comparison_models(updated_rule, rule_from_db)

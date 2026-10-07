@@ -107,6 +107,10 @@
   - `fixtures/factory.py` — функция создания сущности в БД `create_<entity>_factory(session_db, crypto_context, new_entity)`. Для незаданных полей генерируются случайные значения через `random_string()`.
   - `fixtures/fixtures.py` — pytest-фикстура фабрики `create_<entity>_fixture`, возвращающая замыкание-фабрику.
   - `test_views_<domain>.py` — тесты эндпоинтов с использованием `client_for_tests` (httpx AsyncClient).
+- **Валидация ответов API через DTO**: При получении успешного ответа от API (`response.json()`) данные обязательно валидируются через соответствующую Pydantic-модель (Response DTO), которую возвращает данный эндпоинт:
+  - Для одиночного объекта: `resp_dto = <Entity>ResponseDTO.model_validate(response.json())`.
+  - Для списка объектов: `items = [<Entity>ResponseDTO.model_validate(item) for item in response.json()]`.
+  Это гарантирует строгую проверку контракта API и соответствия типов данных схемы ответа.
 - **Сравнение данных**: Для валидации ответов и ORM-моделей использовать `comparison_models(Expected, Actual, keys_not_checked=[...])` из `tests.helpers.functions`.
 - **Изоляция**: Автоматическая очистка БД перед каждым тестом (`clearing_db` в `conftest.py`). При добавлении новых таблиц — добавлять их удаление в `clearing_db` в правильном порядке внешних ключей (FK).
 

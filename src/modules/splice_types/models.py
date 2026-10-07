@@ -1,17 +1,17 @@
 ﻿import enum
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Callable, Any
 
 from sqlalchemy import DateTime, String, Integer, func, Boolean, Enum, Text, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from src.core.database.database import Base
-from src.modules.base.database_model import BaseTranslation
+from src.modules.base.database_model import BaseTranslation, Language, BaseModelWithRelationshipTranslation
 
 
 class SpliceCategory(str, enum.Enum):
-    LOOP = "loop"       # СЃРѕР·РґР°РЅРёРµ РїРµС‚Р»Рё
-    SPLICE = "splice"   # СЃСЂР°С‰РёРІР°РЅРёРµ РґРІСѓС… РєРѕРЅС†РѕРІ РІРµСЂС‘РІРѕРє
+    LOOP = "loop"       # петля
+    SPLICE = "splice"   # сращивание
 
 
 class SpliceVisualType(str, enum.Enum):
@@ -30,7 +30,7 @@ class SpliceVisualType(str, enum.Enum):
     GENERIC = "generic"
 
 
-class SpliceType(Base):
+class SpliceType(BaseModelWithRelationshipTranslation):
     __tablename__ = "splice_types"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -69,7 +69,7 @@ class SpliceType(Base):
     )
 
 
-class SpliceTypeTranslation(BaseTranslation):
+class SpliceTypeTranslation(BaseTranslation, Base):
     __tablename__ = "splice_type_translations"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -89,5 +89,3 @@ class SpliceTypeTranslation(BaseTranslation):
     __table_args__ = (
         UniqueConstraint("splice_type_id", "locale", name="uq_splice_type_id_locale"),
     )
-
-

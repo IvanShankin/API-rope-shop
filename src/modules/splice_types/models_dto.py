@@ -14,6 +14,9 @@ class SpliceTypeTranslationBase(BaseModel):
 class SpliceTypeTranslationCreate(SpliceTypeTranslationBase):
     pass
 
+class SpliceTypeTranslationInsert(SpliceTypeTranslationCreate):
+    splice_type_id: int
+
 class SpliceTypeTranslationUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
@@ -31,7 +34,7 @@ class SpliceTypeBase(BaseModel):
     is_active: bool = True
 
 class SpliceTypeCreate(SpliceTypeBase):
-    pass
+    translations: List[SpliceTypeTranslationCreate]
 
 class SpliceTypeUpdate(BaseModel):
     code: Optional[str] = None
@@ -46,3 +49,10 @@ class SpliceTypeResponseDTO(SpliceTypeBase, ORMDTO):
     created_at: datetime
     updated_at: datetime
     translations: List[SpliceTypeTranslationResponseDTO] = []
+    
+class SpliceTypeLocalizedResponseDTO(SpliceTypeBase, ORMDTO):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+    name: str
+    description: Optional[str] = None

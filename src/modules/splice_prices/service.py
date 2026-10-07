@@ -35,14 +35,6 @@ class SplicePriceRuleService:
         if not rule:
             raise SplicePriceRuleNotFound(f"SplicePriceRule with id {rule_id} not found.")
         return SplicePriceRuleWithRelationsResponseDTO.model_validate(rule)
-        
-    async def get_rules_by_material_id(self, material_id: int) -> List[SplicePriceRuleWithRelationsResponseDTO]:
-        rules = await self.rule_repo.get_by_splice_material_id(material_id)
-        return [SplicePriceRuleWithRelationsResponseDTO.model_validate(r) for r in rules]
-        
-    async def get_rules_by_type_id(self, type_id: int) -> List[SplicePriceRuleWithRelationsResponseDTO]:
-        rules = await self.rule_repo.get_by_splice_type_id(type_id)
-        return [SplicePriceRuleWithRelationsResponseDTO.model_validate(r) for r in rules]
 
     async def get_applicable_rules(
         self, 

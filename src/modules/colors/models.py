@@ -22,7 +22,7 @@ class Color(Base):
     )
 
 
-class ColorTranslation(BaseTranslation, Base):
+class ColorTranslation(BaseTranslation):
     __tablename__ = "color_translations"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)

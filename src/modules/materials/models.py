@@ -30,7 +30,7 @@ class Material(Base):
     )
 
 
-class MaterialTranslation(BaseTranslation, Base):
+class MaterialTranslation(BaseTranslation):
     __tablename__ = "material_translations"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)

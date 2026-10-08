@@ -28,7 +28,7 @@ class ConfiguratorExtra(Base):
     )
 
 
-class ConfiguratorExtraTranslation(BaseTranslation, Base):
+class ConfiguratorExtraTranslation(BaseTranslation):
     __tablename__ = "configurator_extra_translations"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)

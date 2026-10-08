@@ -27,7 +27,7 @@ class MaterialGroup(Base):
     )
 
 
-class MaterialGroupTranslation(BaseTranslation, Base):
+class MaterialGroupTranslation(BaseTranslation):
     __tablename__ = "material_group_translations"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)

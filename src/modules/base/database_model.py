@@ -18,7 +18,7 @@ class Language(str, enum.Enum):
     GER = "ger"
 
 
-class BaseTranslation:
+class BaseTranslation(Base):
     __abstract__ = True
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)

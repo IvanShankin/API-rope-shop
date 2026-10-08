@@ -69,7 +69,7 @@ class SpliceType(BaseModelWithRelationshipTranslation):
     )
 
 
-class SpliceTypeTranslation(BaseTranslation, Base):
+class SpliceTypeTranslation(BaseTranslation):
     __tablename__ = "splice_type_translations"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)

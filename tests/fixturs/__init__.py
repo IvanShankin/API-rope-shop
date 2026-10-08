@@ -10,6 +10,7 @@ from tests.fixturs.replace_services import (
     image_manager_fixture,
     path_builder_fixture,
     splice_type_service_fixture,
+    color_service_fixture,
 )
 from tests.fixturs.fixtures import (
     app_fastapi,
@@ -26,6 +27,10 @@ from tests.modules.splice_types.fixtures import (
     create_splice_type_translation_fixture,
 )
 from tests.modules.splice_prices.fixtures import create_splice_price_rule_fixture
+from tests.modules.colors.fixtures import (
+    create_color_fixture,
+    create_color_translation_fixture,
+)
 
 __all__ = [
     "lifespan_for_tests",
@@ -40,6 +45,7 @@ __all__ = [
     "image_manager_fixture",
     "path_builder_fixture",
     "splice_type_service_fixture",
+    "color_service_fixture",
     "create_user_fixture",
     "create_refresh_token_fixture",
     "create_upload_file_fixture",
@@ -48,4 +54,6 @@ __all__ = [
     "create_splice_type_fixture",
     "create_splice_type_translation_fixture",
     "create_splice_price_rule_fixture",
+    "create_color_fixture",
+    "create_color_translation_fixture",
 ]

@@ -1,12 +1,11 @@
-﻿from typing import List, Optional
+from typing import List, Optional
 from sqlalchemy import String, Integer, Boolean, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
-from src.core.database.database import Base
-from src.modules.base.database_model import BaseTranslation
+from src.modules.base.database_model import BaseTranslation, BaseModelWithRelationshipTranslation
 
 
-class Color(Base):
+class Color(BaseModelWithRelationshipTranslation):
     __tablename__ = "colors"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -41,6 +40,3 @@ class ColorTranslation(BaseTranslation):
     __table_args__ = (
         UniqueConstraint("color_id", "locale", name="uq_color_id_locale"),
     )
-
-
-

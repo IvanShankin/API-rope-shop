@@ -2,6 +2,8 @@ import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from helpers import test_crypto_context
+from src.modules.colors.repository import ColorRepository, ColorTranslationRepository
+from src.modules.colors.service import ColorService
 from src.modules.handlers_files.compression_images import CompressionImages
 from src.modules.handlers_files.converter_images import HandlerImages
 from src.modules.handlers_files.service import ImageManager
@@ -56,4 +58,15 @@ async def splice_type_service_fixture(
         session=session_db,
         image_manager=image_manager_fixture,
         path_builder=path_builder_fixture,
+    )
+
+
+@pytest_asyncio.fixture(scope="function")
+async def color_service_fixture(
+    session_db: AsyncSession,
+) -> ColorService:
+    return ColorService(
+        color_repo=ColorRepository(session=session_db),
+        translation_repo=ColorTranslationRepository(session=session_db),
+        session=session_db,
     )

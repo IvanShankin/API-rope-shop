@@ -8,6 +8,8 @@ from src.modules.db_models import (
     SplicePriceRule,
     SpliceType,
     SpliceTypeTranslation,
+    Color,
+    ColorTranslation,
 )
 from src.tools.creating_db import create_database
 
@@ -33,4 +35,6 @@ async def clearing_db(session_db: AsyncSession):
     await session_db.execute(delete(SpliceMaterial))
     await session_db.execute(delete(SpliceTypeTranslation))
     await session_db.execute(delete(SpliceType))
+    await session_db.execute(delete(ColorTranslation))
+    await session_db.execute(delete(Color))
     await session_db.commit()

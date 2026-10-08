@@ -3,6 +3,12 @@ from starlette.responses import JSONResponse
 
 from src.modules.base.exception import ServiceException, NoDataForUpdate, NotFoundData
 from src.modules.check_permission.exception import PermissionErrorService
+from src.modules.colors.exception import (
+    ColorAlreadyExists,
+    ColorTranslationAlreadyExists,
+    ColorTranslationDeleteError,
+    ColorHasDependencies,
+)
 from src.modules.splice_types.exception import (
     SpliceTypeAlreadyExists,
     SpliceTypeTranslationAlreadyExists,
@@ -15,7 +21,7 @@ def register_exception_handlers(app: FastAPI):
     async def permission_error_handler(request, exc):
         return JSONResponse(status_code=403, content={"detail": "Forbidden"})
 
-    #@app.exception_handler(ServiceException)
+    @app.exception_handler(ServiceException)
     async def service_handler(request, exc):
         return JSONResponse(status_code=500, content={"detail": "Server Error"})
 
@@ -37,4 +43,20 @@ def register_exception_handlers(app: FastAPI):
 
     @app.exception_handler(SpliceTypeTranslationDeleteError)
     async def splice_type_translation_delete_error_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(ColorAlreadyExists)
+    async def color_already_exists_handler(request, exc):
+        return JSONResponse(status_code=409, content={"detail": str(exc)})
+
+    @app.exception_handler(ColorTranslationAlreadyExists)
+    async def color_translation_already_exists_handler(request, exc):
+        return JSONResponse(status_code=409, content={"detail": str(exc)})
+
+    @app.exception_handler(ColorTranslationDeleteError)
+    async def color_translation_delete_error_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(ColorHasDependencies)
+    async def color_has_dependencies_handler(request, exc):
         return JSONResponse(status_code=400, content={"detail": str(exc)})

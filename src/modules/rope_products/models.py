@@ -1,9 +1,16 @@
-﻿from typing import List, Optional
+﻿from typing import List, Optional, TYPE_CHECKING
 from datetime import datetime
-from sqlalchemy import String, Integer, Boolean, ForeignKey, UniqueConstraint, DateTime, func, Text, Numeric
+from sqlalchemy import String, Integer, Boolean, ForeignKey, DateTime, func, Text, Numeric
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from src.core.database.database import Base
+
+
+if TYPE_CHECKING:
+    from src.modules.material_groups.models import MaterialGroup
+    from src.modules.rope_allowed_splice.models import RopeProductColor
+    from src.modules.rope_product_color.models import RopeAllowedSplice
+    from src.modules.splice_materials.models import SpliceMaterial
 
 
 class RopeProduct(Base):
@@ -49,35 +56,4 @@ class RopeVariant(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     
     rope_product: Mapped["RopeProduct"] = relationship("RopeProduct", back_populates="variants")
-
-
-class RopeProductColor(Base):
-    __tablename__ = "rope_product_colors"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    rope_product_id: Mapped[int] = mapped_column(Integer, ForeignKey("rope_products.product_id", ondelete="CASCADE"), nullable=False)
-    color_id: Mapped[int] = mapped_column(Integer, ForeignKey("colors.id", ondelete="CASCADE"), nullable=False)
-    index: Mapped[int] = mapped_column(Integer, nullable=False)
-
-    __table_args__ = (
-        UniqueConstraint("rope_product_id", "color_id", name="uq_rope_product_color"),
-    )
-    
-    rope_product: Mapped["RopeProduct"] = relationship("RopeProduct", back_populates="colors")
-    color: Mapped["Color"] = relationship("Color")
-
-
-class RopeAllowedSplice(Base):
-    __tablename__ = "rope_allowed_splices"
-
-    rope_product_id: Mapped[int] = mapped_column(Integer, ForeignKey("rope_products.product_id", ondelete="CASCADE"), primary_key=True)
-    splice_type_id: Mapped[int] = mapped_column(Integer, ForeignKey("splice_types.id", ondelete="CASCADE"), primary_key=True)
-
-    __table_args__ = (
-        UniqueConstraint("rope_product_id", "splice_type_id", name="uq_rope_allowed_splice"),
-    )
-    
-    rope_product: Mapped["RopeProduct"] = relationship("RopeProduct", back_populates="allowed_splices")
-    splice_type: Mapped["SpliceType"] = relationship("SpliceType")
-
 

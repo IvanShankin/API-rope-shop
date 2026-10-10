@@ -21,7 +21,7 @@ class RopeProductRepository(BaseRepository):
         super().__init__(session=session, model=RopeProduct)
 
     async def add_product(self, data: Union[dict, Any]) -> RopeProduct:
-        """Добавление товара-веревки."""
+        """Добавление нового товара-веревки."""
         return self.add(data)
 
     async def create_base_product(self) -> Product:
@@ -94,6 +94,18 @@ class RopeProductRepository(BaseRepository):
         stmt = select(exists().where(SpliceMaterial.id == splice_material_id))
         result = await self.session.scalar(stmt)
         return bool(result)
+
+    async def has_dependencies(self, product_id: int) -> bool:
+        """Проверка наличия связей (варианты, цвета, разрешенные сплайсы)."""
+        variants_exist_stmt = select(exists().where(RopeVariant.rope_product_id == product_id))
+        colors_exist_stmt = select(exists().where(RopeProductColor.rope_product_id == product_id))
+        splices_exist_stmt = select(exists().where(RopeAllowedSplice.rope_product_id == product_id))
+
+        has_variants = await self.session.scalar(variants_exist_stmt)
+        has_colors = await self.session.scalar(colors_exist_stmt)
+        has_splices = await self.session.scalar(splices_exist_stmt)
+
+        return bool(has_variants or has_colors or has_splices)
 
     async def update_product(self, product_id: int, update_data: dict) -> None:
         """Обновление полей товара-веревки."""

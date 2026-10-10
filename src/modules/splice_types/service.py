@@ -24,7 +24,8 @@ from src.modules.splice_types.exception import (
     SpliceTypeAlreadyExists,
     SpliceTypeTranslationNotFound,
     SpliceTypeTranslationAlreadyExists,
-    SpliceTypeTranslationDeleteError
+    SpliceTypeTranslationDeleteError,
+    SpliceTypeHasDependencies
 )
 
 
@@ -177,7 +178,13 @@ class SpliceTypeService:
         splice_type = await self.type_repo.get_by_id(type_id)
         if not splice_type:
             raise SpliceTypeNotFound(f"SpliceType with id {type_id} not found.")
-            
+
+        has_deps = await self.type_repo.has_dependencies(type_id)
+        if has_deps:
+            raise SpliceTypeHasDependencies(
+                f"Cannot delete SpliceType with id {type_id} because it is referenced by splice price rules or rope products."
+            )
+
         # Удаляем изображение с диска, если есть
         if splice_type.image_url and self.image_manager:
             self.image_manager.delete_image(splice_type.image_url)

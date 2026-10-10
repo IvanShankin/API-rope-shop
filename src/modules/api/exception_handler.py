@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+﻿from fastapi import FastAPI
 from starlette.responses import JSONResponse
 
 from src.modules.base.exception import ServiceException, NoDataForUpdate, NotFoundData
@@ -9,14 +9,20 @@ from src.modules.colors.exception import (
     ColorTranslationDeleteError,
     ColorHasDependencies,
 )
+from src.modules.splice_materials.exception import SpliceMaterialHasDependencies
 from src.modules.splice_types.exception import (
     SpliceTypeAlreadyExists,
     SpliceTypeTranslationAlreadyExists,
     SpliceTypeTranslationDeleteError,
+    SpliceTypeHasDependencies,
 )
 from src.modules.rope_product_color.exception import RopeProductColorAlreadyExists
 from src.modules.rope_allowed_splice.exception import RopeAllowedSpliceAlreadyExists
-from src.modules.rope_products.exception import RopeProductAlreadyExists, RopeVariantAlreadyExists
+from src.modules.rope_products.exception import (
+    RopeProductAlreadyExists,
+    RopeVariantAlreadyExists,
+    RopeProductHasDependencies,
+)
 
 def register_exception_handlers(app: FastAPI):
 
@@ -46,6 +52,14 @@ def register_exception_handlers(app: FastAPI):
 
     @app.exception_handler(SpliceTypeTranslationDeleteError)
     async def splice_type_translation_delete_error_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(SpliceTypeHasDependencies)
+    async def splice_type_has_dependencies_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(SpliceMaterialHasDependencies)
+    async def splice_material_has_dependencies_handler(request, exc):
         return JSONResponse(status_code=400, content={"detail": str(exc)})
 
     @app.exception_handler(ColorAlreadyExists)
@@ -79,3 +93,7 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(RopeVariantAlreadyExists)
     async def rope_variant_already_exists_handler(request, exc):
         return JSONResponse(status_code=409, content={"detail": str(exc)})
+
+    @app.exception_handler(RopeProductHasDependencies)
+    async def rope_product_has_dependencies_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})

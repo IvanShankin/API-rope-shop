@@ -12,6 +12,8 @@ from tests.modules.splice_types.fixtures.models_dto import (
     CreateSpliceTypeFixtureDTO,
     CreateSpliceTypeTranslationFixtureDTO,
 )
+from tests.modules.splice_materials.fixtures.models_dto import CreateSpliceMaterialFixtureDTO
+from tests.modules.splice_prices.fixtures.models_dto import CreateSplicePriceRuleFixtureDTO
 from src.modules.splice_types.models import (
     SpliceType,
     SpliceTypeTranslation,
@@ -556,6 +558,35 @@ class TestsForErrors:
             headers={"Authorization": f"Bearer {access_token}"},
         )
         assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_delete_splice_type_has_dependencies(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_splice_type_fixture,
+        create_splice_material_fixture,
+        create_splice_price_rule_fixture,
+    ):
+        """Попытка удаления типа сращивания при наличии связанных ценовых правил -> 400 Bad Request."""
+        admin_user, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        st = await create_splice_type_fixture(CreateSpliceTypeFixtureDTO())
+        material = await create_splice_material_fixture(CreateSpliceMaterialFixtureDTO())
+        await create_splice_price_rule_fixture(
+            CreateSplicePriceRuleFixtureDTO(
+                splice_type_id=st.id,
+                splice_material_id=material.id,
+            )
+        )
+
+        response = await client_for_tests.delete(
+            f"/splice_types/{st.id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert response.status_code == 400
+        assert "referenced by splice price rules or rope products" in response.json()["detail"]
 
     @pytest.mark.asyncio
     async def test_upload_image_not_found(

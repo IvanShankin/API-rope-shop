@@ -4,6 +4,8 @@ from sqlalchemy import select
 from src.modules.users.models import UserRole
 from tests.modules.users.fixtures.models_dto import CreateUserFixtureDTO
 from tests.modules.splice_materials.fixtures.models_dto import CreateSpliceMaterialFixtureDTO
+from tests.modules.splice_types.fixtures.models_dto import CreateSpliceTypeFixtureDTO
+from tests.modules.splice_prices.fixtures.models_dto import CreateSplicePriceRuleFixtureDTO
 from src.modules.splice_materials.models import SpliceMaterial
 from src.modules.splice_materials.models_dto import (
     SpliceMaterialResponseDTO, 
@@ -182,3 +184,32 @@ class TestsForErrors:
     ):
         response = await client_for_tests.get("/splice_materials/99999")
         assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_delete_splice_material_has_dependencies(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_splice_material_fixture,
+        create_splice_type_fixture,
+        create_splice_price_rule_fixture,
+    ):
+        """Попытка удаления материала сращивания при наличии связанных правил цен -> 400."""
+        admin_user, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        material = await create_splice_material_fixture(CreateSpliceMaterialFixtureDTO())
+        splice_type = await create_splice_type_fixture(CreateSpliceTypeFixtureDTO())
+        await create_splice_price_rule_fixture(
+            CreateSplicePriceRuleFixtureDTO(
+                splice_material_id=material.id,
+                splice_type_id=splice_type.id,
+            )
+        )
+
+        response = await client_for_tests.delete(
+            f"/splice_materials/{material.id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert response.status_code == 400
+        assert "referenced by SplicePriceRules or RopeProducts" in response.json()["detail"]

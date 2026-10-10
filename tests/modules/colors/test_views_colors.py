@@ -9,6 +9,7 @@ from tests.modules.colors.fixtures.models_dto import (
     CreateColorFixtureDTO,
     CreateColorTranslationFixtureDTO,
 )
+from tests.modules.rope_product_color.fixtures.models_dto import CreateRopeProductColorFixtureDTO
 from src.modules.colors.models import Color, ColorTranslation
 from src.modules.colors.models_dto import (
     ColorResponseDTO,
@@ -672,6 +673,36 @@ class TestsForErrors:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
+    async def test_delete_color_has_dependencies(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_color_fixture,
+        create_rope_product_fixture,
+        create_rope_product_color_fixture,
+    ):
+        """Попытка удаления цвета, привязанного к товару-веревке -> 400 Bad Request."""
+        admin_user, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        color = await create_color_fixture(CreateColorFixtureDTO())
+        product = await create_rope_product_fixture()
+        await create_rope_product_color_fixture(
+            CreateRopeProductColorFixtureDTO(
+                rope_product_id=product.product_id,
+                color_id=color.id,
+                index=1,
+            )
+        )
+
+        response = await client_for_tests.delete(
+            f"/colors/{color.id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert response.status_code == 400
+        assert "referenced by rope products" in response.json()["detail"]
+
+    @pytest.mark.asyncio
     async def test_add_translation_color_not_found(
         self,
         client_for_tests,
@@ -729,7 +760,7 @@ class TestsForErrors:
 
         response = await client_for_tests.patch(
             "/colors/translations/99999",
-            headers={"Authorization": f"Bearer {access_token}"},
+            headers={"Authorization": f"Bearer {access_token}"},\
             json={"name": "New Name"},
         )
         assert response.status_code == 404

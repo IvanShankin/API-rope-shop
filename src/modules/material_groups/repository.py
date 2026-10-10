@@ -1,11 +1,13 @@
 ﻿from typing import Optional, Sequence, Union, Any
 
-from sqlalchemy import select, update, delete
+from sqlalchemy import select, update, delete, exists
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from src.modules.base.repository_model import BaseRepository
 from src.modules.material_groups.models import MaterialGroup
+from src.modules.materials.models import Material
+from src.modules.rope_products.models import RopeProduct
 
 
 class MaterialGroupRepository(BaseRepository):
@@ -47,6 +49,16 @@ class MaterialGroupRepository(BaseRepository):
         
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
+
+    async def has_dependencies(self, group_id: int) -> bool:
+        """Проверка наличия связей (материалы или привязанные веревки)."""
+        materials_exist_stmt = select(exists().where(Material.material_group_id == group_id))
+        ropes_exist_stmt = select(exists().where(RopeProduct.material_group_id == group_id))
+
+        has_materials = await self.session.scalar(materials_exist_stmt)
+        has_ropes = await self.session.scalar(ropes_exist_stmt)
+
+        return bool(has_materials or has_ropes)
 
     async def update_group(self, group_id: int, update_data: dict) -> None:
         """Обновление полей группы."""

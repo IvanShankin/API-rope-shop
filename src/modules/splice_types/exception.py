@@ -19,3 +19,7 @@ class SpliceTypeTranslationAlreadyExists(ServiceException):
 
 class SpliceTypeTranslationDeleteError(ServiceException):
     pass
+
+
+class SpliceTypeHasDependencies(ServiceException):
+    pass

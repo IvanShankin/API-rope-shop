@@ -1,12 +1,14 @@
 from typing import Optional, Sequence, Union, Any
 
-from sqlalchemy import select, update, delete
+from sqlalchemy import select, update, delete, exists
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from src.modules.base.database_model import Language
 from src.modules.base.repository_model import BaseRepository
 from src.modules.splice_types.models import SpliceType, SpliceTypeTranslation, SpliceCategory
+from src.modules.splice_prices.models import SplicePriceRule
+from src.modules.rope_allowed_splice.models import RopeAllowedSplice
 
 
 class SpliceTypeRepository(BaseRepository):
@@ -62,6 +64,16 @@ class SpliceTypeRepository(BaseRepository):
         
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
+
+    async def has_dependencies(self, type_id: int) -> bool:
+        """Проверка наличия связей (правила цен или привязанные веревки)."""
+        rules_exist_stmt = select(exists().where(SplicePriceRule.splice_type_id == type_id))
+        ropes_exist_stmt = select(exists().where(RopeAllowedSplice.splice_type_id == type_id))
+
+        has_rules = await self.session.scalar(rules_exist_stmt)
+        has_ropes = await self.session.scalar(ropes_exist_stmt)
+
+        return bool(has_rules or has_ropes)
 
     async def update_type(self, type_id: int, update_data: dict) -> None:
         """Обновление данных услуги."""

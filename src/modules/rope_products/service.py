@@ -22,6 +22,7 @@ from src.modules.rope_products.exception import (
     RopeVariantAlreadyExists,
     MaterialGroupNotFound,
     SpliceMaterialNotFound,
+    RopeProductHasDependencies,
 )
 
 
@@ -138,6 +139,12 @@ class RopeProductsService:
         if not await self.product_repo.exists(product_id):
             raise RopeProductNotFound(
                 f"RopeProduct with product_id {product_id} not found."
+            )
+
+        has_deps = await self.product_repo.has_dependencies(product_id)
+        if has_deps:
+            raise RopeProductHasDependencies(
+                f"Cannot delete RopeProduct with product_id {product_id} because it has associated variants, colors, or splices."
             )
 
         await self.product_repo.delete_product(product_id)

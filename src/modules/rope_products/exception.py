@@ -23,3 +23,7 @@ class MaterialGroupNotFound(NotFoundData):
 
 class SpliceMaterialNotFound(NotFoundData):
     pass
+
+
+class RopeProductHasDependencies(ServiceException):
+    pass

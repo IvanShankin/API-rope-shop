@@ -4,6 +4,10 @@ from sqlalchemy import select
 from src.modules.users.models import UserRole
 from tests.modules.users.fixtures.models_dto import CreateUserFixtureDTO
 from tests.modules.splice_materials.fixtures.models_dto import CreateSpliceMaterialFixtureDTO
+from tests.modules.colors.fixtures.models_dto import CreateColorFixtureDTO
+from tests.modules.rope_product_color.fixtures.models_dto import CreateRopeProductColorFixtureDTO
+from tests.modules.splice_types.fixtures.models_dto import CreateSpliceTypeFixtureDTO
+from tests.modules.rope_allowed_splice.fixtures.models_dto import CreateRopeAllowedSpliceFixtureDTO
 from tests.modules.rope_products.fixtures.models_dto import (
     CreateRopeProductFixtureDTO,
     CreateRopeVariantFixtureDTO,
@@ -443,6 +447,82 @@ class TestsForFailures:
         """Запрос несуществующего товара -> 404."""
         response = await client_for_tests.get("/rope_products/999999")
         assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_delete_rope_product_has_dependencies_variant(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_rope_product_fixture,
+        create_rope_variant_fixture,
+    ):
+        """Попытка удаления товара-веревки с привязанными вариантами -> 400 Bad Request."""
+        admin_user, access_token = await create_user_fixture(CreateUserFixtureDTO(role=UserRole.ADMIN))
+        product = await create_rope_product_fixture()
+        await create_rope_variant_fixture(
+            CreateRopeVariantFixtureDTO(rope_product_id=product.product_id)
+        )
+
+        response = await client_for_tests.delete(
+            f"/rope_products/{product.product_id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert response.status_code == 400
+        assert "associated variants, colors, or splices" in response.json()["detail"]
+
+    @pytest.mark.asyncio
+    async def test_delete_rope_product_has_dependencies_color(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_rope_product_fixture,
+        create_color_fixture,
+        create_rope_product_color_fixture,
+    ):
+        """Попытка удаления товара-веревки с привязанными цветами -> 400 Bad Request."""
+        admin_user, access_token = await create_user_fixture(CreateUserFixtureDTO(role=UserRole.ADMIN))
+        product = await create_rope_product_fixture()
+        color = await create_color_fixture(CreateColorFixtureDTO())
+        await create_rope_product_color_fixture(
+            CreateRopeProductColorFixtureDTO(
+                rope_product_id=product.product_id,
+                color_id=color.id,
+            )
+        )
+
+        response = await client_for_tests.delete(
+            f"/rope_products/{product.product_id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert response.status_code == 400
+        assert "associated variants, colors, or splices" in response.json()["detail"]
+
+    @pytest.mark.asyncio
+    async def test_delete_rope_product_has_dependencies_splice(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_rope_product_fixture,
+        create_splice_type_fixture,
+        create_rope_allowed_splice_fixture,
+    ):
+        """Попытка удаления товара-веревки с разрешенными типами сращивания -> 400 Bad Request."""
+        admin_user, access_token = await create_user_fixture(CreateUserFixtureDTO(role=UserRole.ADMIN))
+        product = await create_rope_product_fixture()
+        splice_type = await create_splice_type_fixture(CreateSpliceTypeFixtureDTO())
+        await create_rope_allowed_splice_fixture(
+            CreateRopeAllowedSpliceFixtureDTO(
+                rope_product_id=product.product_id,
+                splice_type_id=splice_type.id,
+            )
+        )
+
+        response = await client_for_tests.delete(
+            f"/rope_products/{product.product_id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert response.status_code == 400
+        assert "associated variants, colors, or splices" in response.json()["detail"]
 
     @pytest.mark.asyncio
     async def test_create_variant_duplicate_diameter(

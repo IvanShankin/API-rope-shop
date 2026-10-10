@@ -1,4 +1,4 @@
-﻿import pytest_asyncio
+import pytest_asyncio
 
 from fixturs import *
 from src.modules.db_models import User

@@ -20,13 +20,20 @@ class ConfiguratorType(str, enum.Enum):
     SPLICE_ONLY = "splice_only"
 
 
+class QuoteRequestStatus(str, enum.Enum):
+    NEW = "new"
+    IN_PROGRESS = "in_progress"
+    CONFIRMED = "confirmed"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+
+
 class QuoteRequest(Base):
     __tablename__ = "quote_requests"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     request_number: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
-    
-    # Тип конфигуратора: 'ROPE_WITH_SPLICE', 'LOOP_ONLY', 'SPLICE_ONLY'
+
     configurator_type: Mapped[ConfiguratorType] = mapped_column(
         Enum(
             ConfiguratorType,
@@ -49,7 +56,7 @@ class QuoteRequest(Base):
         Enum(
             Currency,
             values_callable=lambda x: [e.value for e in x],
-            name="configurator_type",
+            name="currency",
             native_enum=False,
             length=50
         ),
@@ -60,7 +67,18 @@ class QuoteRequest(Base):
     vat_rate: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False, default=0, server_default="0")
 
     is_urgent: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
-    status: Mapped[str] = mapped_column(String(30), nullable=False, default="new", server_default="new")
+    status: Mapped[QuoteRequestStatus] = mapped_column(
+        Enum(
+            QuoteRequestStatus,
+            values_callable=lambda x: [e.value for e in x],
+            name="quote_request_status",
+            native_enum=False,
+            length=30
+        ),
+        nullable=False,
+        default=QuoteRequestStatus.NEW.value,
+        server_default="new"
+    )
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

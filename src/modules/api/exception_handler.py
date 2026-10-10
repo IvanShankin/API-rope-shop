@@ -35,6 +35,13 @@ from src.modules.materials.exception import (
     MaterialTranslationDeleteError,
     MaterialHasDependencies,
 )
+from src.modules.quote_requests.exception import (
+    QuoteRequestValidationError,
+    ColorNotAllowedForProduct,
+    RopeCannotBeSplicedError,
+    SpliceNotAllowedForProductError,
+    SplicePriceRuleNotFound,
+)
 
 def register_exception_handlers(app: FastAPI):
 
@@ -140,4 +147,24 @@ def register_exception_handlers(app: FastAPI):
 
     @app.exception_handler(MaterialHasDependencies)
     async def material_has_dependencies_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(QuoteRequestValidationError)
+    async def quote_validation_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(ColorNotAllowedForProduct)
+    async def color_not_allowed_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(RopeCannotBeSplicedError)
+    async def rope_cannot_be_spliced_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(SpliceNotAllowedForProductError)
+    async def splice_not_allowed_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(SplicePriceRuleNotFound)
+    async def splice_price_not_found_handler(request, exc):
         return JSONResponse(status_code=400, content={"detail": str(exc)})

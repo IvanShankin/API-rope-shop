@@ -1,9 +1,11 @@
-from typing import List
+from typing import List, TYPE_CHECKING
 from sqlalchemy import String, Integer, Boolean, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from src.modules.base.database_model import BaseTranslation, BaseModelWithRelationshipTranslation
-from src.modules.materials.models import Material
+
+if TYPE_CHECKING:
+    from src.modules.materials.models import Material
 
 
 class MaterialGroup(BaseModelWithRelationshipTranslation):

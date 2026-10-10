@@ -1,12 +1,14 @@
-﻿from typing import List
+from typing import List, TYPE_CHECKING
 from sqlalchemy import String, Integer, Boolean, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
-from src.core.database.database import Base
-from src.modules.base.database_model import BaseTranslation
+from src.modules.base.database_model import BaseTranslation, BaseModelWithRelationshipTranslation
+
+if TYPE_CHECKING:
+    from src.modules.material_groups.models import MaterialGroup
 
 
-class Material(Base):
+class Material(BaseModelWithRelationshipTranslation):
     __tablename__ = "materials"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -49,6 +51,3 @@ class MaterialTranslation(BaseTranslation):
     __table_args__ = (
         UniqueConstraint("material_id", "locale", name="uq_material_id_locale"),
     )
-
-
-

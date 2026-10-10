@@ -41,6 +41,10 @@ from tests.modules.material_groups.fixtures import (
     create_material_group_fixture,
     create_material_group_translation_fixture,
 )
+from tests.modules.materials.fixtures import (
+    create_material_fixture,
+    create_material_translation_fixture,
+)
 
 __all__ = [
     "lifespan_for_tests",
@@ -72,4 +76,6 @@ __all__ = [
     "create_rope_allowed_splice_fixture",
     "create_material_group_fixture",
     "create_material_group_translation_fixture",
+    "create_material_fixture",
+    "create_material_translation_fixture",
 ]

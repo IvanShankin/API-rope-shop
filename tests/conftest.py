@@ -17,6 +17,8 @@ from src.modules.db_models import (
     Product,
     MaterialGroup,
     MaterialGroupTranslation,
+    Material,
+    MaterialTranslation,
 )
 from src.tools.creating_db import create_database
 
@@ -41,6 +43,8 @@ async def clearing_db(session_db: AsyncSession):
     await session_db.execute(delete(RopeVariant))
     await session_db.execute(delete(RopeProduct))
     await session_db.execute(delete(Product))
+    await session_db.execute(delete(MaterialTranslation))
+    await session_db.execute(delete(Material))
     await session_db.execute(delete(MaterialGroupTranslation))
     await session_db.execute(delete(MaterialGroup))
     await session_db.execute(delete(RefreshToken))

@@ -14,6 +14,7 @@ from src.modules.splice_types.exception import (
     SpliceTypeTranslationAlreadyExists,
     SpliceTypeTranslationDeleteError,
 )
+from src.modules.rope_product_color.exception import RopeProductColorAlreadyExists
 
 def register_exception_handlers(app: FastAPI):
 
@@ -60,3 +61,7 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(ColorHasDependencies)
     async def color_has_dependencies_handler(request, exc):
         return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(RopeProductColorAlreadyExists)
+    async def rope_product_color_already_exists_handler(request, exc):
+        return JSONResponse(status_code=409, content={"detail": str(exc)})

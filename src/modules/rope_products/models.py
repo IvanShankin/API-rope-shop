@@ -1,4 +1,4 @@
-﻿from typing import List, Optional, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING
 from datetime import datetime
 from sqlalchemy import String, Integer, Boolean, ForeignKey, DateTime, func, Text, Numeric
 from sqlalchemy.orm import relationship, Mapped, mapped_column
@@ -8,8 +8,8 @@ from src.core.database.database import Base
 
 if TYPE_CHECKING:
     from src.modules.material_groups.models import MaterialGroup
-    from src.modules.rope_allowed_splice.models import RopeProductColor
-    from src.modules.rope_product_color.models import RopeAllowedSplice
+    from src.modules.rope_product_color.models import RopeProductColor
+    from src.modules.rope_allowed_splice.models import RopeAllowedSplice
     from src.modules.splice_materials.models import SpliceMaterial
 
 
@@ -56,4 +56,3 @@ class RopeVariant(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     
     rope_product: Mapped["RopeProduct"] = relationship("RopeProduct", back_populates="variants")
-

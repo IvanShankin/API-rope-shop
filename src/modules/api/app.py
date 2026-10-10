@@ -12,6 +12,7 @@ from src.modules.splice_types.views import router as splice_types_router
 from src.modules.splice_materials.views import router as splice_materials_router
 from src.modules.splice_prices.views import router as splice_prices_router
 from src.modules.colors.views import router as colors_router
+from src.modules.rope_product_color.views import router as rope_product_colors_router
 
 
 def _include_routers(app: FastAPI) -> FastAPI:
@@ -21,6 +22,7 @@ def _include_routers(app: FastAPI) -> FastAPI:
     app.include_router(splice_materials_router)
     app.include_router(splice_prices_router)
     app.include_router(colors_router)
+    app.include_router(rope_product_colors_router)
     return app
 
 

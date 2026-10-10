@@ -24,7 +24,6 @@ class Color(BaseModelWithRelationshipTranslation):
 class ColorTranslation(BaseTranslation):
     __tablename__ = "color_translations"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     color_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("colors.id", ondelete="CASCADE"),

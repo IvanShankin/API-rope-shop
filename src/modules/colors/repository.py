@@ -7,7 +7,7 @@ from sqlalchemy.orm import selectinload
 from src.modules.base.database_model import Language
 from src.modules.base.repository_model import BaseIndexedRepository, BaseRepository
 from src.modules.colors.models import Color, ColorTranslation
-from src.modules.rope_products.models import RopeProductColor
+from src.modules.rope_product_color.models import RopeProductColor
 
 
 class ColorRepository(BaseIndexedRepository):
@@ -23,30 +23,29 @@ class ColorRepository(BaseIndexedRepository):
         """Получение списка всех цветов с предзагрузкой переводов."""
         stmt = select(Color).options(
             selectinload(Color.translations)
-        )
+        ).order_by(Color.index)
         if is_active is not None:
             stmt = stmt.where(Color.is_active == is_active)
-
-        stmt = stmt.order_by(Color.index)
-
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
     async def get_by_id(self, color_id: int) -> Color | None:
-        """Получение цвета по ID."""
-        stmt = select(Color).options(
-            selectinload(Color.translations)
-        ).where(Color.id == color_id)
-
+        """Получение цвета по ID с предзагрузкой переводов."""
+        stmt = (
+            select(Color)
+            .options(selectinload(Color.translations))
+            .where(Color.id == color_id)
+        )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
     async def get_by_code(self, code: str) -> Color | None:
         """Получение цвета по уникальному коду."""
-        stmt = select(Color).options(
-            selectinload(Color.translations)
-        ).where(Color.code == code)
-
+        stmt = (
+            select(Color)
+            .options(selectinload(Color.translations))
+            .where(Color.code == code)
+        )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 

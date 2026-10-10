@@ -10,6 +10,11 @@ from src.modules.db_models import (
     SpliceTypeTranslation,
     Color,
     ColorTranslation,
+    RopeProductColor,
+    RopeProduct,
+    Product,
+    MaterialGroup,
+    MaterialGroupTranslation,
 )
 from src.tools.creating_db import create_database
 
@@ -29,6 +34,11 @@ async def start_test(config_fix, app_fastapi):
 async def clearing_db(session_db: AsyncSession):
     """Очищает базу данных"""
     # Удаляем обязательно в таком порядке
+    await session_db.execute(delete(RopeProductColor))
+    await session_db.execute(delete(RopeProduct))
+    await session_db.execute(delete(Product))
+    await session_db.execute(delete(MaterialGroupTranslation))
+    await session_db.execute(delete(MaterialGroup))
     await session_db.execute(delete(RefreshToken))
     await session_db.execute(delete(User))
     await session_db.execute(delete(SplicePriceRule))

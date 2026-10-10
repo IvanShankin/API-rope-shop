@@ -31,6 +31,8 @@ from tests.modules.colors.fixtures import (
     create_color_fixture,
     create_color_translation_fixture,
 )
+from tests.modules.rope_products.fixtures import create_rope_product_fixture
+from tests.modules.rope_product_color.fixtures import create_rope_product_color_fixture
 
 __all__ = [
     "lifespan_for_tests",
@@ -56,4 +58,6 @@ __all__ = [
     "create_splice_price_rule_fixture",
     "create_color_fixture",
     "create_color_translation_fixture",
+    "create_rope_product_fixture",
+    "create_rope_product_color_fixture",
 ]

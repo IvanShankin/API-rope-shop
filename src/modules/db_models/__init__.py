@@ -1,6 +1,6 @@
-﻿from src.modules.products.models import Product
-from src.modules.rope_allowed_splice.models import RopeProductColor
-from src.modules.rope_product_color.models import RopeAllowedSplice
+from src.modules.products.models import Product
+from src.modules.rope_product_color.models import RopeProductColor
+from src.modules.rope_allowed_splice.models import RopeAllowedSplice
 from src.modules.users.models import User
 from src.modules.refresh_tokens.models import RefreshToken
 from src.modules.splice_types.models import SpliceType, SpliceTypeTranslation, SpliceVisualType
@@ -37,4 +37,3 @@ __all__ = [
     "ConfiguratorSetting",
     "QuoteRequest",
 ]
-

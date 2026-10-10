@@ -15,6 +15,7 @@ from src.modules.colors.views import router as colors_router
 from src.modules.rope_product_color.views import router as rope_product_colors_router
 from src.modules.rope_allowed_splice.views import router as rope_allowed_splices_router
 from src.modules.rope_products.views import router as rope_products_router, variants_router as rope_variants_router
+from src.modules.material_groups.views import router as material_groups_router
 
 
 def _include_routers(app: FastAPI) -> FastAPI:
@@ -28,6 +29,7 @@ def _include_routers(app: FastAPI) -> FastAPI:
     app.include_router(rope_allowed_splices_router)
     app.include_router(rope_products_router)
     app.include_router(rope_variants_router)
+    app.include_router(material_groups_router)
     return app
 
 

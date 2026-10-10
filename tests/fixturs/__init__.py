@@ -37,6 +37,10 @@ from tests.modules.rope_products.fixtures import (
 )
 from tests.modules.rope_product_color.fixtures import create_rope_product_color_fixture
 from tests.modules.rope_allowed_splice.fixtures import create_rope_allowed_splice_fixture
+from tests.modules.material_groups.fixtures import (
+    create_material_group_fixture,
+    create_material_group_translation_fixture,
+)
 
 __all__ = [
     "lifespan_for_tests",
@@ -66,4 +70,6 @@ __all__ = [
     "create_rope_variant_fixture",
     "create_rope_product_color_fixture",
     "create_rope_allowed_splice_fixture",
+    "create_material_group_fixture",
+    "create_material_group_translation_fixture",
 ]

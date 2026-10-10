@@ -1,4 +1,4 @@
-﻿from fastapi import FastAPI
+from fastapi import FastAPI
 from starlette.responses import JSONResponse
 
 from src.modules.base.exception import ServiceException, NoDataForUpdate, NotFoundData
@@ -15,6 +15,7 @@ from src.modules.splice_types.exception import (
     SpliceTypeTranslationDeleteError,
 )
 from src.modules.rope_product_color.exception import RopeProductColorAlreadyExists
+from src.modules.rope_allowed_splice.exception import RopeAllowedSpliceAlreadyExists
 
 def register_exception_handlers(app: FastAPI):
 
@@ -64,4 +65,8 @@ def register_exception_handlers(app: FastAPI):
 
     @app.exception_handler(RopeProductColorAlreadyExists)
     async def rope_product_color_already_exists_handler(request, exc):
+        return JSONResponse(status_code=409, content={"detail": str(exc)})
+
+    @app.exception_handler(RopeAllowedSpliceAlreadyExists)
+    async def rope_allowed_splice_already_exists_handler(request, exc):
         return JSONResponse(status_code=409, content={"detail": str(exc)})

@@ -1,4 +1,4 @@
-﻿import pytest_asyncio
+import pytest_asyncio
 
 from fixturs import *
 from src.modules.db_models import User
@@ -11,6 +11,7 @@ from src.modules.db_models import (
     Color,
     ColorTranslation,
     RopeProductColor,
+    RopeAllowedSplice,
     RopeProduct,
     Product,
     MaterialGroup,
@@ -34,6 +35,7 @@ async def start_test(config_fix, app_fastapi):
 async def clearing_db(session_db: AsyncSession):
     """Очищает базу данных"""
     # Удаляем обязательно в таком порядке
+    await session_db.execute(delete(RopeAllowedSplice))
     await session_db.execute(delete(RopeProductColor))
     await session_db.execute(delete(RopeProduct))
     await session_db.execute(delete(Product))

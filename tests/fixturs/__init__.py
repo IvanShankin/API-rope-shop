@@ -1,4 +1,4 @@
-﻿from tests.modules.handlers_files.fixtures import (
+from tests.modules.handlers_files.fixtures import (
     create_upload_file_fixture,
     create_image_bytes_fixture,
 )
@@ -33,6 +33,7 @@ from tests.modules.colors.fixtures import (
 )
 from tests.modules.rope_products.fixtures import create_rope_product_fixture
 from tests.modules.rope_product_color.fixtures import create_rope_product_color_fixture
+from tests.modules.rope_allowed_splice.fixtures import create_rope_allowed_splice_fixture
 
 __all__ = [
     "lifespan_for_tests",
@@ -60,4 +61,5 @@ __all__ = [
     "create_color_translation_fixture",
     "create_rope_product_fixture",
     "create_rope_product_color_fixture",
+    "create_rope_allowed_splice_fixture",
 ]

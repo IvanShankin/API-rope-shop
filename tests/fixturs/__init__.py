@@ -31,7 +31,10 @@ from tests.modules.colors.fixtures import (
     create_color_fixture,
     create_color_translation_fixture,
 )
-from tests.modules.rope_products.fixtures import create_rope_product_fixture
+from tests.modules.rope_products.fixtures import (
+    create_rope_product_fixture,
+    create_rope_variant_fixture,
+)
 from tests.modules.rope_product_color.fixtures import create_rope_product_color_fixture
 from tests.modules.rope_allowed_splice.fixtures import create_rope_allowed_splice_fixture
 
@@ -60,6 +63,7 @@ __all__ = [
     "create_color_fixture",
     "create_color_translation_fixture",
     "create_rope_product_fixture",
+    "create_rope_variant_fixture",
     "create_rope_product_color_fixture",
     "create_rope_allowed_splice_fixture",
 ]

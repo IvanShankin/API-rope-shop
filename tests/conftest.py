@@ -12,6 +12,7 @@ from src.modules.db_models import (
     ColorTranslation,
     RopeProductColor,
     RopeAllowedSplice,
+    RopeVariant,
     RopeProduct,
     Product,
     MaterialGroup,
@@ -37,6 +38,7 @@ async def clearing_db(session_db: AsyncSession):
     # Удаляем обязательно в таком порядке
     await session_db.execute(delete(RopeAllowedSplice))
     await session_db.execute(delete(RopeProductColor))
+    await session_db.execute(delete(RopeVariant))
     await session_db.execute(delete(RopeProduct))
     await session_db.execute(delete(Product))
     await session_db.execute(delete(MaterialGroupTranslation))

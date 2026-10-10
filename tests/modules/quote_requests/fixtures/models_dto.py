@@ -11,46 +11,46 @@ from src.modules.quote_requests.models import (
 class CreateQuoteRopeItemFixtureDTO(BaseModel):
     rope_product_id: Optional[int] = None
     color_id: Optional[int] = None
-    product_name_snapshot: Optional[str] = None
-    color_name_snapshot: Optional[str] = None
-    diameter_mm: Optional[float] = None
-    length_m: Optional[float] = None
-    quantity: Optional[int] = None
-    price_per_meter_snapshot: Optional[float] = None
-    total_rope_cost: Optional[float] = None
+    product_name_snapshot: Optional[str] = "Standard Yacht Rope"
+    color_name_snapshot: Optional[str] = "Red"
+    diameter_mm: float = 10.0
+    length_m: float = 20.0
+    quantity: int = 1
+    price_per_meter_snapshot: float = 5.0
+    total_rope_cost: float = 100.0
     end_a_type_id: Optional[int] = None
     end_a_name_snapshot: Optional[str] = None
     end_a_eye_size_cm: Optional[float] = None
-    end_a_cost: Optional[float] = None
+    end_a_cost: float = 0.0
     end_b_type_id: Optional[int] = None
     end_b_name_snapshot: Optional[str] = None
     end_b_eye_size_cm: Optional[float] = None
-    end_b_cost: Optional[float] = None
+    end_b_cost: float = 0.0
 
 
 class CreateQuoteServiceItemFixtureDTO(BaseModel):
     splice_type_id: Optional[int] = None
     splice_material_id: Optional[int] = None
-    service_name_snapshot: Optional[str] = None
-    material_name_snapshot: Optional[str] = None
-    diameter_mm: Optional[float] = None
-    eye_size_cm: Optional[float] = None
-    quantity: Optional[int] = None
-    unit_price_snapshot: Optional[float] = None
-    total_cost: Optional[float] = None
+    service_name_snapshot: Optional[str] = "Augspleiss"
+    material_name_snapshot: Optional[str] = "Kern-Mantel"
+    diameter_mm: float = 10.0
+    eye_size_cm: Optional[float] = 15.0
+    quantity: int = 1
+    unit_price_snapshot: float = 15.0
+    total_cost: float = 15.0
 
 
 class CreateQuoteRequestFixtureDTO(BaseModel):
     request_number: Optional[str] = None
-    configurator_type: Optional[ConfiguratorType] = None
-    name: Optional[str] = None
-    email: Optional[str] = None
-    phone: Optional[str] = None
-    comment: Optional[str] = None
-    currency: Optional[Currency] = None
-    total_price: Optional[float] = None
-    vat_rate: Optional[float] = None
-    is_urgent: Optional[bool] = None
-    status: Optional[QuoteRequestStatus] = None
-    rope_items: List[CreateQuoteRopeItemFixtureDTO] = []
-    service_items: List[CreateQuoteServiceItemFixtureDTO] = []
+    configurator_type: ConfiguratorType = ConfiguratorType.ROPE_WITH_SPLICE
+    name: str = "Test Customer"
+    email: str = "customer@example.com"
+    phone: Optional[str] = "+49 123 456789"
+    comment: Optional[str] = "Standard test quote request"
+    currency: Currency = Currency.EUR
+    total_price: float = 100.0
+    vat_rate: float = 0.0
+    is_urgent: bool = False
+    status: QuoteRequestStatus = QuoteRequestStatus.NEW
+    rope_items: Optional[List[CreateQuoteRopeItemFixtureDTO]] = None
+    service_items: Optional[List[CreateQuoteServiceItemFixtureDTO]] = None

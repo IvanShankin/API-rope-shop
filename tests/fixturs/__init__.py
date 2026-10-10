@@ -45,7 +45,11 @@ from tests.modules.materials.fixtures import (
     create_material_fixture,
     create_material_translation_fixture,
 )
-from tests.modules.quote_requests.fixtures import create_quote_request_fixture
+from tests.modules.quote_requests.fixtures import (
+    create_quote_request_fixture,
+    create_quote_rope_item_fixture,
+    create_quote_service_item_fixture,
+)
 
 __all__ = [
     "lifespan_for_tests",
@@ -80,4 +84,6 @@ __all__ = [
     "create_material_fixture",
     "create_material_translation_fixture",
     "create_quote_request_fixture",
+    "create_quote_rope_item_fixture",
+    "create_quote_service_item_fixture",
 ]

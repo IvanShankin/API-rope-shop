@@ -200,17 +200,11 @@ class TestsForSuccess:
     async def test_create_quote_request_urgent_surcharge(
         self,
         client_for_tests,
-        create_splice_material_fixture,
-        create_splice_type_fixture,
         create_splice_price_rule_fixture,
     ):
         """Расчет надбавки за срочность (is_urgent=True)."""
-        splice_mat = await create_splice_material_fixture()
-        splice_type = await create_splice_type_fixture()
-        await create_splice_price_rule_fixture(
+        rule = await create_splice_price_rule_fixture(
             CreateSplicePriceRuleFixtureDTO(
-                splice_material_id=splice_mat.id,
-                splice_type_id=splice_type.id,
                 diameter_from_mm=8.0,
                 diameter_to_mm=12.0,
                 price=20.00,
@@ -224,8 +218,8 @@ class TestsForSuccess:
             is_urgent=True,
             service_items=[
                 QuoteServiceItemCreate(
-                    splice_type_id=splice_type.id,
-                    splice_material_id=splice_mat.id,
+                    splice_type_id=rule.splice_type_id,
+                    splice_material_id=rule.splice_material_id,
                     diameter_mm=10.0,
                     quantity=2,
                 )
@@ -369,7 +363,7 @@ class TestsForSuccess:
     ):
         """Изменение статуса заявки администратором."""
         admin, token = await create_user_fixture(CreateUserFixtureDTO(role=UserRole.ADMIN))
-        q = await create_quote_request_fixture(CreateQuoteRequestFixtureDTO(status=QuoteRequestStatus.NEW))
+        q = await create_quote_request_fixture()
 
         response = await client_for_tests.patch(
             f"/quote_requests/{q.id}/status",
@@ -479,18 +473,12 @@ class TestsForFailures:
     async def test_create_quote_request_variant_not_found(
         self,
         client_for_tests,
-        create_material_group_fixture,
-        create_splice_material_fixture,
         create_color_fixture,
         create_rope_product_fixture,
     ):
         """Несуществующий диаметр для каната -> 404."""
-        group = await create_material_group_fixture()
-        splice_mat = await create_splice_material_fixture()
         color = await create_color_fixture()
-        product = await create_rope_product_fixture(
-            CreateRopeProductFixtureDTO(material_group_id=group.id, splice_material_id=splice_mat.id)
-        )
+        product = await create_rope_product_fixture()
 
         req_body = QuoteRequestCreate(
             configurator_type=ConfiguratorType.ROPE_WITH_SPLICE,
@@ -512,19 +500,13 @@ class TestsForFailures:
     async def test_create_quote_request_color_not_allowed(
         self,
         client_for_tests,
-        create_material_group_fixture,
-        create_splice_material_fixture,
         create_color_fixture,
         create_rope_product_fixture,
         create_rope_variant_fixture,
         create_rope_product_color_fixture,
     ):
         """Цвет существует, но не привязан к данному товару -> 400 Bad Request."""
-        group = await create_material_group_fixture()
-        splice_mat = await create_splice_material_fixture()
-        product = await create_rope_product_fixture(
-            CreateRopeProductFixtureDTO(material_group_id=group.id, splice_material_id=splice_mat.id)
-        )
+        product = await create_rope_product_fixture()
         await create_rope_variant_fixture(
             CreateRopeVariantFixtureDTO(rope_product_id=product.product_id, diameter_mm=10.0)
         )
@@ -556,8 +538,6 @@ class TestsForFailures:
     async def test_create_quote_request_splice_price_rule_not_found(
         self,
         client_for_tests,
-        create_material_group_fixture,
-        create_splice_material_fixture,
         create_splice_type_fixture,
         create_color_fixture,
         create_rope_product_fixture,
@@ -566,16 +546,10 @@ class TestsForFailures:
         create_rope_allowed_splice_fixture,
     ):
         """Для выбранного сращивания и диаметра нет ценового правила в прайс-листе -> 400 Bad Request."""
-        group = await create_material_group_fixture()
-        splice_mat = await create_splice_material_fixture()
         splice_type = await create_splice_type_fixture()
         color = await create_color_fixture()
         product = await create_rope_product_fixture(
-            CreateRopeProductFixtureDTO(
-                material_group_id=group.id,
-                splice_material_id=splice_mat.id,
-                can_be_spliced=True,
-            )
+            CreateRopeProductFixtureDTO(can_be_spliced=True)
         )
         await create_rope_variant_fixture(
             CreateRopeVariantFixtureDTO(rope_product_id=product.product_id, diameter_mm=10.0)

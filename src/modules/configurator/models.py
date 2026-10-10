@@ -1,10 +1,15 @@
-﻿from typing import List, Optional
+﻿import enum
+from typing import List, Optional
 from datetime import datetime
-from sqlalchemy import String, Integer, Boolean, ForeignKey, UniqueConstraint, DateTime, func, Text, Numeric
+from sqlalchemy import String, Integer, Boolean, ForeignKey, UniqueConstraint, DateTime, func, Text, Numeric, Enum
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from src.core.database.database import Base
 from src.modules.base.database_model import BaseTranslation
+
+
+class Currency(str, enum.Enum):
+    EUR = "EUR"
 
 
 class ConfiguratorExtra(Base):
@@ -13,7 +18,17 @@ class ConfiguratorExtra(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     code: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     price: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
-    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="EUR")
+    currency: Mapped[Currency] = mapped_column(
+        Enum(
+            Currency,
+            values_callable=lambda x: [e.value for e in x],
+            name="configurator_type",
+            native_enum=False,
+            length=50
+        ),
+        nullable=False,
+        default=Currency.EUR.value,
+    )
     billing_type: Mapped[str] = mapped_column(String(30), nullable=False)
     index: Mapped[int] = mapped_column(Integer, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
@@ -64,7 +79,17 @@ class ConfiguratorSetting(Base):
     standard_turnaround_hours: Mapped[int] = mapped_column(Integer, nullable=False)
     urgent_turnaround_hours: Mapped[int] = mapped_column(Integer, nullable=False)
     
-    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="EUR")
+    currency: Mapped[Currency] = mapped_column(
+        Enum(
+            Currency,
+            values_callable=lambda x: [e.value for e in x],
+            name="configurator_type",
+            native_enum=False,
+            length=50
+        ),
+        nullable=False,
+        default=Currency.EUR.value,
+    )
     
     vat_rate: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False, default=0)
     vat_note: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

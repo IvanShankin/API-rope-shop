@@ -11,7 +11,7 @@ from src.modules.rope_products.models import RopeProduct, RopeVariant
 from src.modules.splice_prices.models import SplicePriceRule
 from src.modules.splice_materials.models import SpliceMaterial
 from src.modules.configurator.models import ConfiguratorExtra, ConfiguratorExtraTranslation, ConfiguratorSetting
-from src.modules.quote_requests.models import QuoteRequest
+from src.modules.quote_requests.models import QuoteRequest, QuoteRopeItem, QuoteServiceItem
 
 __all__ = [
     "User",
@@ -36,4 +36,6 @@ __all__ = [
     "ConfiguratorExtraTranslation",
     "ConfiguratorSetting",
     "QuoteRequest",
+    "QuoteRopeItem",
+    "QuoteServiceItem",
 ]

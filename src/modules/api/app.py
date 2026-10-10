@@ -1,10 +1,11 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from passlib.context import CryptContext
 
-from src.core.config import create_config
+from src.core.config import create_config, Config
 from src.modules.api.exception_handler import register_exception_handlers
 from src.modules.auth.views import router as auth_router
 from src.modules.users.views import router as user_router
@@ -18,6 +19,19 @@ from src.modules.rope_products.views import router as rope_products_router, vari
 from src.modules.material_groups.views import router as material_groups_router
 from src.modules.materials.views import router as materials_router
 from src.modules.quote_requests.views import router as quote_requests_router
+
+
+def _include_middlewares(app: FastAPI, config: Config) -> FastAPI:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=config.cors.allow_origins,
+        allow_origin_regex=config.cors.allow_origin_regex,
+        allow_credentials=config.cors.allow_credentials,
+        allow_methods=config.cors.allow_methods,
+        allow_headers=config.cors.allow_headers,
+        expose_headers=config.cors.expose_headers,
+    )
+    return app
 
 
 def _include_routers(app: FastAPI) -> FastAPI:
@@ -45,6 +59,8 @@ def init_fastapi_app() -> FastAPI:
 
     config = create_config()
     app.state.config = config
+
+    _include_middlewares(app, config)
     register_exception_handlers(app)
 
     # Раздача медиа файлов (статических изображений)

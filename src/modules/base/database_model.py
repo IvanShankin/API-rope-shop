@@ -14,6 +14,7 @@ DTOType = TypeVar("DTOType", bound="BaseModel")
 
 
 class Language(str, enum.Enum):
+    RUS = "rus"
     ENG = "eng"
     GER = "ger"
 

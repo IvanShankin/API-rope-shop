@@ -7,13 +7,13 @@ from src.modules.auth.depends import get_auth_service, get_token_service, get_cu
 from src.modules.auth.models_dto import TokenResponse, RefreshTokenRequest, LogoutRequest, LogoutResponse
 from src.modules.auth.token_service import TokenService
 from src.modules.users.depends import get_user_service
-from src.modules.users.models_dto import UsersDTO, RegisterUserRequestDTO
+from src.modules.users.models_dto import UserDTO, RegisterUserRequestDTO
 from src.modules.users.service import UsersService
 
 router = APIRouter(prefix="/auth")
 
 
-@router.post("/register", response_model=UsersDTO, status_code=status.HTTP_200_OK)
+@router.post("/register", response_model=UserDTO, status_code=status.HTTP_200_OK)
 async def register_user(
     data: RegisterUserRequestDTO,
     user_service: UsersService = Depends(get_user_service)
@@ -46,7 +46,7 @@ async def refresh_tokens(
 @router.post('/logout', response_model=LogoutResponse)
 async def logout(
     token: LogoutRequest,
-    current_user: UsersDTO = Depends(get_current_user), # проверка на наличие прав
+    current_user: UserDTO = Depends(get_current_user), # проверка на наличие прав
     token_service: TokenService = Depends(get_token_service)
 ):
     """Удаляет refresh токен только который передаётся"""

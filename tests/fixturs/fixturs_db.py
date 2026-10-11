@@ -23,7 +23,7 @@ async def session_db(config_fix: Config):
 
 
 @pytest_asyncio.fixture(scope="function")
-async def not_open_session_db(config_fix: Config) -> sessionmaker:
+async def not_open_session_db(config_fix: Config):
     engine = create_async_engine(config_fix.db_connection.sql_db_url)
 
     async_session = sessionmaker(
@@ -33,4 +33,6 @@ async def not_open_session_db(config_fix: Config) -> sessionmaker:
         autoflush=False
     )
 
-    return async_session
+    yield async_session
+
+    await engine.dispose()

@@ -1,4 +1,4 @@
-import enum
+﻿import enum
 from datetime import datetime
 from typing import TYPE_CHECKING, List
 
@@ -13,8 +13,8 @@ if TYPE_CHECKING:
 
 
 class UserRole(str, enum.Enum):
-    TEACHER = "admin"
-    STUDENT = "user"
+    ADMIN = "admin"
+    USER = "user"
 
 
 class User(Base):
@@ -29,7 +29,7 @@ class User(Base):
             values_callable=lambda x: [e.value for e in x],
             name="role"
         ),
-        nullable=False
+        nullable=False, default=UserRole.USER
     )
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
@@ -37,3 +37,4 @@ class User(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     refresh_tokens: Mapped[List["RefreshToken"]] = relationship("RefreshToken", back_populates="user")
+

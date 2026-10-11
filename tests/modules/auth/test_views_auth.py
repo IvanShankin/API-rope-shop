@@ -4,7 +4,7 @@ from sqlalchemy import select
 from src.modules.auth.models_dto import TokenResponse, RefreshTokenRequest, LogoutRequest
 from src.modules.refresh_tokens.models import RefreshToken
 from src.modules.users.models import User
-from src.modules.users.models_dto import RegisterUserRequestDTO, UsersDTO
+from src.modules.users.models_dto import RegisterUserRequestDTO, UserDTO
 from tests.modules.refresh_tokens.fixtures.fixtures import create_refresh_token_fixture
 from tests.modules.refresh_tokens.fixtures.models_dto import CreateRefreshTokenFixtureDTO
 from tests.modules.users.fixtures.models_dto import CreateUserFixtureDTO
@@ -30,7 +30,7 @@ class TestsForSuccess:
 
         assert response.status_code == 200
 
-        new_user = UsersDTO.model_validate(response.json())
+        new_user = UserDTO.model_validate(response.json())
 
         result_db = await session_db.execute(select(User).where(User.id == new_user.id))
         user_from_db = result_db.scalar_one_or_none()

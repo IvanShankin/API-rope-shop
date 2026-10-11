@@ -3,14 +3,18 @@ from datetime import datetime
 from pydantic import EmailStr, BaseModel, ConfigDict
 
 from src.modules.base.orm_dto import ORMDTO
+from src.modules.users.models import UserRole
 
 
-class UsersDTO(ORMDTO):
+class UserDTO(ORMDTO):
     id: int
     email: EmailStr
     username: str
+    role: UserRole
     hashed_password: str
+    is_active: bool
     created_at: datetime
+    updated_at: datetime
 
 
 class UserResponse(ORMDTO):

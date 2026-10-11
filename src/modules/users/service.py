@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.base.exception import ServiceException
 from src.modules.users.exception import UserAlreadyExit
-from src.modules.users.models_dto import UsersDTO, RegisterUserRequestDTO, CreateUserDTO
+from src.modules.users.models_dto import UserDTO, RegisterUserRequestDTO, CreateUserDTO
 from src.modules.users.repository import UsersRepository
 
 
@@ -33,22 +33,22 @@ class UsersService:
         """
         return self.cr_context.verify(plain_password, hashed_password)
 
-    async def get_user_by_username_or_email(self, username_or_email: str) -> UsersDTO | None:
+    async def get_user_by_username_or_email(self, username_or_email: str) -> UserDTO | None:
         result = await self.users_repo.get_user_by_username_or_email(username_or_email)
-        return UsersDTO.model_validate(result) if result else None
+        return UserDTO.model_validate(result) if result else None
 
-    async def get_user_by_id(self, user_id: int) -> UsersDTO | None:
+    async def get_user_by_id(self, user_id: int) -> UserDTO | None:
         result = await self.users_repo.get_user_by_id(user_id)
-        return UsersDTO.model_validate(result) if result else None
+        return UserDTO.model_validate(result) if result else None
 
-    async def get_user_by_email(self, email: str) -> UsersDTO | None:
+    async def get_user_by_email(self, email: str) -> UserDTO | None:
         result = await self.users_repo.get_user_by_email(email)
-        return UsersDTO.model_validate(result) if result else None
+        return UserDTO.model_validate(result) if result else None
 
     async def create_user(
         self,
         new_user: RegisterUserRequestDTO
-    ) -> UsersDTO:
+    ) -> UserDTO:
         """
         :raises UserAlreadyExit:
         """
@@ -73,7 +73,7 @@ class UsersService:
             else:
                 raise ServiceException() from e
 
-        return UsersDTO.model_validate(result)
+        return UserDTO.model_validate(result)
 
 
 

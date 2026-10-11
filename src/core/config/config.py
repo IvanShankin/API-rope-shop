@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngine
@@ -10,14 +10,15 @@ from src.core.config.base import init_env
 
 
 class Config:
-    def __init__(self):
+    def __init__(self) -> None:
         init_env()
 
-        self.env = EnvConfig.build()
-        self.db_connection = DbConnectionConfig.build(self.env)
-        self.paths = PathsConfig.build()
-        self.tokens = TokensConfig.build()
-        self.allowed_extensions = AllowedExtensions.build()
+        self.env: EnvConfig = EnvConfig.build()
+        self.db_connection: DbConnectionConfig = DbConnectionConfig.build(self.env)
+        self.paths: PathsConfig = PathsConfig.build()
+        self.tokens: TokensConfig = TokensConfig.build()
+        self.allowed_extensions: AllowedExtensions = AllowedExtensions.build()
+        self.cors: CorsConfig = CorsConfig.build()
 
 
 class EnvConfig(BaseModel):
@@ -88,17 +89,37 @@ class DbConnectionConfig(BaseModel):
 class PathsConfig(BaseModel):
     base: Path
     media: Path
+    products: Path
+    splice_types: Path
+    work_photos: Path
+    charity_photos: Path
+    temp: Path
 
     @classmethod
-    def build(cls) -> "PathsConfig":
+    def build(cls, postscript: Optional[str] = '') -> "PathsConfig":
         base = Path(__file__).resolve().parents[3]
         media = base / Path("media")
+        products = media / Path(f"products{postscript}")
+        splice_types = media / Path(f"splice_types{postscript}")
+        work_photos = media / Path(f"work_photos{postscript}")
+        charity_photos = media / Path(f"charity_photos{postscript}")
+        temp = media / Path(f"temp{postscript}")
 
         media.mkdir(exist_ok=True)
+        products.mkdir(exist_ok=True)
+        splice_types.mkdir(exist_ok=True)
+        work_photos.mkdir(exist_ok=True)
+        charity_photos.mkdir(exist_ok=True)
+        temp.mkdir(exist_ok=True)
 
         return cls(
             base=base,
             media=media,
+            products=products,
+            splice_types=splice_types,
+            work_photos=work_photos,
+            charity_photos=charity_photos,
+            temp=temp,
         )
 
 
@@ -123,4 +144,51 @@ class AllowedExtensions(BaseModel):
     def build(cls) -> "AllowedExtensions":
         return cls(
             for_image=["jpg", ".jpeg", "gif", ".png", "webp", "heic", "heif"],
+        )
+
+
+class CorsConfig(BaseModel):
+    allow_origins: List[str]
+    allow_origin_regex: Optional[str] = None
+    allow_credentials: bool = True
+    allow_methods: List[str] = ["*"]
+    allow_headers: List[str] = ["*"]
+    expose_headers: List[str] = ["*"]
+
+    @classmethod
+    def build(cls) -> "CorsConfig":
+        default_origins = [
+            "http://localhost",
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://localhost:8080",
+            "http://localhost:4200",
+            "http://localhost:5500",
+            "http://127.0.0.1",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:5173",
+            "http://127.0.0.1:8080",
+            "http://127.0.0.1:4200",
+            "http://127.0.0.1:5500",
+        ]
+
+        env_origins = os.getenv("CORS_ORIGINS")
+        origins = (
+            [origin.strip() for origin in env_origins.split(",") if origin.strip()]
+            if env_origins
+            else default_origins
+        )
+
+        origin_regex = os.getenv(
+            "CORS_ORIGIN_REGEX",
+            r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
+        )
+
+        return cls(
+            allow_origins=origins,
+            allow_origin_regex=origin_regex,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+            expose_headers=["*"],
         )

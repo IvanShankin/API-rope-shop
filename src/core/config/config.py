@@ -30,16 +30,10 @@ class EnvConfig(BaseModel):
     db_password: str
     db_name: str
 
-    redis_host: str
-    redis_port: int
-    redis_url: str
-
     mode: str
 
     @classmethod
     def build(cls) -> "EnvConfig":
-        redis_host = os.environ['REDIS_HOST']
-        redis_port = int(os.environ['REDIS_PORT'])
 
         return cls(
             secret_key=os.environ['SECRET_KEY'],
@@ -48,10 +42,6 @@ class EnvConfig(BaseModel):
             db_user=os.environ['DB_USER'],
             db_password=os.environ['DB_PASSWORD'],
             db_name=os.environ['DB_NAME'],
-
-            redis_host=redis_host,
-            redis_port=redis_port,
-            redis_url=f"redis://{redis_host}:{redis_port}",
 
             mode=os.environ['MODE']
         )

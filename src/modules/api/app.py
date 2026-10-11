@@ -60,8 +60,9 @@ def init_fastapi_app() -> FastAPI:
         title="Auth Service",
         lifespan=lifespan
     )
-
     config = create_config()
+    app.mount("/media", StaticFiles(directory=config.paths.media), name="media")
+
     register_exception_handlers(app=app)
     _include_middlewares(app=app, config=config)
     _include_routers(app=app)

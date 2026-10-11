@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from src.core.config import Config
 
 # Не удалять. Используется для подгрузки всех моделей БД
+from src.modules.db_models import *
 from src.core.database.database import Base
 
 async def create_database():

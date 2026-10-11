@@ -13,6 +13,14 @@ class QuoteServiceItemNotFound(NotFoundData):
     pass
 
 
+class QuoteExtraItemNotFound(NotFoundData):
+    pass
+
+
+class ConfiguratorExtraNotFoundForQuote(NotFoundData):
+    pass
+
+
 class QuoteRequestValidationError(ServiceException):
     pass
 

@@ -33,6 +33,10 @@ class QuoteServiceItemCreate(BaseModel):
     quantity: int = Field(default=1, ge=1, description="Quantity")
 
 
+class QuoteExtraItemCreate(BaseModel):
+    extra_id: int = Field(..., description="ID of the configurator extra")
+
+
 # ==================== QuoteRequest Input DTOs ====================
 
 class QuoteRequestCreate(BaseModel):
@@ -51,6 +55,18 @@ class QuoteRequestCreate(BaseModel):
     service_items: List[QuoteServiceItemCreate] = Field(
         default_factory=list,
         description="List of services / splices (for LOOP_ONLY or SPLICE_ONLY)"
+    )
+    extra_items: List[QuoteExtraItemCreate] = Field(
+        default_factory=list,
+        description="List of configurator extras"
+    )
+    extra_ids: List[int] = Field(
+        default_factory=list,
+        description="Convenience shortcut: list of extra IDs"
+    )
+    extras: Optional[List[int]] = Field(
+        None,
+        description="Alias for extra_ids from configurator payloads"
     )
 
 
@@ -124,6 +140,15 @@ class ResolvedServiceItemDTO(BaseModel):
         return self.quantity
 
 
+class ResolvedExtraItemDTO(BaseModel):
+    extra_id: int
+    name_snapshot: str
+    billing_type_snapshot: str
+    quantity: int
+    unit_price_snapshot: float
+    total_cost: float
+
+
 class QuoteRequestTotalsDTO(BaseModel):
     subtotal: float
     urgent_surcharge: float
@@ -159,6 +184,16 @@ class QuoteServiceItemInsertDTO(BaseModel):
     material_name_snapshot: str
     diameter_mm: float
     eye_size_cm: Optional[float] = None
+    quantity: int
+    unit_price_snapshot: float
+    total_cost: float
+
+
+class QuoteExtraItemInsertDTO(BaseModel):
+    quote_request_id: int
+    extra_id: int
+    name_snapshot: str
+    billing_type_snapshot: str
     quantity: int
     unit_price_snapshot: float
     total_cost: float
@@ -216,6 +251,17 @@ class QuoteServiceItemResponseDTO(ORMDTO):
     total_cost: float
 
 
+class QuoteExtraItemResponseDTO(ORMDTO):
+    id: int
+    quote_request_id: int
+    extra_id: Optional[int]
+    name_snapshot: str
+    billing_type_snapshot: str
+    quantity: int
+    unit_price_snapshot: float
+    total_cost: float
+
+
 class QuoteRequestResponseDTO(ORMDTO):
     id: int
     request_number: str
@@ -233,6 +279,7 @@ class QuoteRequestResponseDTO(ORMDTO):
     updated_at: datetime
     rope_items: List[QuoteRopeItemResponseDTO] = []
     service_items: List[QuoteServiceItemResponseDTO] = []
+    extra_items: List[QuoteExtraItemResponseDTO] = []
 
 
 class QuoteRequestShortResponseDTO(ORMDTO):

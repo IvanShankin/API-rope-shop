@@ -8,12 +8,14 @@ from tests.modules.quote_requests.fixtures.models_dto import (
     CreateQuoteRequestFixtureDTO,
     CreateQuoteRopeItemFixtureDTO,
     CreateQuoteServiceItemFixtureDTO,
+    CreateQuoteExtraItemFixtureDTO,
 )
 from src.modules.configurator_setting.models import Currency
 from src.modules.quote_requests.models import (
     QuoteRequest,
     QuoteRopeItem,
     QuoteServiceItem,
+    QuoteExtraItem,
     ConfiguratorType,
     QuoteRequestStatus,
 )
@@ -22,6 +24,7 @@ from tests.modules.rope_products.fixtures.factory import create_rope_product_fac
 from tests.modules.colors.fixtures.factory import create_color_factory
 from tests.modules.splice_types.fixtures.factory import create_splice_type_factory
 from tests.modules.splice_materials.fixtures.factory import create_splice_material_factory
+from tests.modules.configurator_extra.fixtures.factory import create_configurator_extra_factory
 
 
 async def create_quote_request_factory(
@@ -54,6 +57,8 @@ async def create_quote_request_factory(
     else:
         rope_items_dtos = new_request.rope_items if new_request.rope_items is not None else []
         service_items_dtos = new_request.service_items if new_request.service_items is not None else []
+
+    extra_items_dtos = new_request.extra_items if new_request.extra_items is not None else []
 
     # 2. Resolve dependencies for rope items
     resolved_rope_items: List[QuoteRopeItem] = []
@@ -145,7 +150,31 @@ async def create_quote_request_factory(
             )
         )
 
-    # 4. Create QuoteRequest
+    # 4. Resolve dependencies for extra items
+    resolved_extra_items: List[QuoteExtraItem] = []
+    for e_dto in extra_items_dtos:
+        if e_dto.extra_id is None:
+            ex = await create_configurator_extra_factory(session_db=session_db)
+            extra_id = ex.id
+            default_extra_name = ex.translations[0].name if getattr(ex, "translations", None) else "Leather Protection"
+            default_billing = ex.billing_type.value if hasattr(ex.billing_type, "value") else str(ex.billing_type)
+        else:
+            extra_id = e_dto.extra_id
+            default_extra_name = "Leather Protection"
+            default_billing = "per_item"
+
+        resolved_extra_items.append(
+            QuoteExtraItem(
+                extra_id=extra_id,
+                name_snapshot=e_dto.name_snapshot or default_extra_name,
+                billing_type_snapshot=e_dto.billing_type_snapshot or default_billing,
+                quantity=e_dto.quantity if e_dto.quantity is not None else 1,
+                unit_price_snapshot=e_dto.unit_price_snapshot if e_dto.unit_price_snapshot is not None else 15.0,
+                total_cost=e_dto.total_cost if e_dto.total_cost is not None else 15.0,
+            )
+        )
+
+    # 5. Create QuoteRequest
     quote_request = QuoteRequest(
         request_number=request_number,
         configurator_type=configurator_type,
@@ -160,6 +189,7 @@ async def create_quote_request_factory(
         status=new_request.status if new_request.status is not None else QuoteRequestStatus.NEW,
         rope_items=resolved_rope_items,
         service_items=resolved_service_items,
+        extra_items=resolved_extra_items,
     )
     session_db.add(quote_request)
     await session_db.commit()
@@ -169,6 +199,7 @@ async def create_quote_request_factory(
         .options(
             selectinload(QuoteRequest.rope_items),
             selectinload(QuoteRequest.service_items),
+            selectinload(QuoteRequest.extra_items),
         )
         .where(QuoteRequest.id == quote_request.id)
     )
@@ -287,6 +318,46 @@ async def create_quote_service_item_factory(
         material_name_snapshot=new_item.material_name_snapshot or default_mat_name,
         diameter_mm=new_item.diameter_mm if new_item.diameter_mm is not None else 10.0,
         eye_size_cm=new_item.eye_size_cm if new_item.eye_size_cm is not None else 15.0,
+        quantity=new_item.quantity if new_item.quantity is not None else 1,
+        unit_price_snapshot=new_item.unit_price_snapshot if new_item.unit_price_snapshot is not None else 15.0,
+        total_cost=new_item.total_cost if new_item.total_cost is not None else 15.0,
+    )
+    session_db.add(item)
+    await session_db.commit()
+    await session_db.refresh(item)
+    return item
+
+
+async def create_quote_extra_item_factory(
+    session_db: AsyncSession,
+    quote_request_id: Optional[int] = None,
+    new_item: CreateQuoteExtraItemFixtureDTO = CreateQuoteExtraItemFixtureDTO(),
+) -> QuoteExtraItem:
+    if quote_request_id is None:
+        qr = await create_quote_request_factory(
+            session_db=session_db,
+            new_request=CreateQuoteRequestFixtureDTO(
+                configurator_type=ConfiguratorType.ROPE_WITH_SPLICE,
+                extra_items=[],
+            ),
+        )
+        quote_request_id = qr.id
+
+    if new_item.extra_id is None:
+        ex = await create_configurator_extra_factory(session_db=session_db)
+        extra_id = ex.id
+        default_extra_name = ex.translations[0].name if getattr(ex, "translations", None) else "Leather Protection"
+        default_billing = ex.billing_type.value if hasattr(ex.billing_type, "value") else str(ex.billing_type)
+    else:
+        extra_id = new_item.extra_id
+        default_extra_name = "Leather Protection"
+        default_billing = "per_item"
+
+    item = QuoteExtraItem(
+        quote_request_id=quote_request_id,
+        extra_id=extra_id,
+        name_snapshot=new_item.name_snapshot or default_extra_name,
+        billing_type_snapshot=new_item.billing_type_snapshot or default_billing,
         quantity=new_item.quantity if new_item.quantity is not None else 1,
         unit_price_snapshot=new_item.unit_price_snapshot if new_item.unit_price_snapshot is not None else 15.0,
         total_cost=new_item.total_cost if new_item.total_cost is not None else 15.0,

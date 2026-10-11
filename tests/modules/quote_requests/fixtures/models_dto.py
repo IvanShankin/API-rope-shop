@@ -40,6 +40,15 @@ class CreateQuoteServiceItemFixtureDTO(BaseModel):
     total_cost: float = 15.0
 
 
+class CreateQuoteExtraItemFixtureDTO(BaseModel):
+    extra_id: Optional[int] = None
+    name_snapshot: Optional[str] = "Leather Protection"
+    billing_type_snapshot: Optional[str] = "per_item"
+    quantity: int = 1
+    unit_price_snapshot: float = 15.0
+    total_cost: float = 15.0
+
+
 class CreateQuoteRequestFixtureDTO(BaseModel):
     request_number: Optional[str] = None
     configurator_type: ConfiguratorType = ConfiguratorType.ROPE_WITH_SPLICE
@@ -54,3 +63,4 @@ class CreateQuoteRequestFixtureDTO(BaseModel):
     status: QuoteRequestStatus = QuoteRequestStatus.NEW
     rope_items: Optional[List[CreateQuoteRopeItemFixtureDTO]] = None
     service_items: Optional[List[CreateQuoteServiceItemFixtureDTO]] = None
+    extra_items: Optional[List[CreateQuoteExtraItemFixtureDTO]] = None

@@ -49,6 +49,7 @@ from tests.modules.quote_requests.fixtures import (
     create_quote_request_fixture,
     create_quote_rope_item_fixture,
     create_quote_service_item_fixture,
+    create_quote_extra_item_fixture,
 )
 from tests.modules.configurator_extra.fixtures import (
     create_configurator_extra_fixture,
@@ -93,6 +94,7 @@ __all__ = [
     "create_quote_request_fixture",
     "create_quote_rope_item_fixture",
     "create_quote_service_item_fixture",
+    "create_quote_extra_item_fixture",
     "create_configurator_extra_fixture",
     "create_configurator_extra_translation_fixture",
     "create_configurator_setting_fixture",

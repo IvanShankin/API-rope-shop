@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from src.modules.colors.models import Color
     from src.modules.splice_types.models import SpliceType
     from src.modules.splice_materials.models import SpliceMaterial
+    from src.modules.configurator_extra.models import ConfiguratorExtra
 
 
 class ConfiguratorType(str, enum.Enum):
@@ -91,6 +92,11 @@ class QuoteRequest(Base):
     )
     service_items: Mapped[List["QuoteServiceItem"]] = relationship(
         "QuoteServiceItem",
+        back_populates="quote_request",
+        cascade="all, delete-orphan",
+    )
+    extra_items: Mapped[List["QuoteExtraItem"]] = relationship(
+        "QuoteExtraItem",
         back_populates="quote_request",
         cascade="all, delete-orphan",
     )
@@ -194,3 +200,34 @@ class QuoteServiceItem(Base):
     quote_request: Mapped["QuoteRequest"] = relationship("QuoteRequest", back_populates="service_items")
     splice_type: Mapped[Optional["SpliceType"]] = relationship("SpliceType")
     splice_material: Mapped[Optional["SpliceMaterial"]] = relationship("SpliceMaterial")
+
+
+class QuoteExtraItem(Base):
+    """Выбранная дополнительная опция к заявке (чехол, тест на разрыв, бирка и т.д.)."""
+    __tablename__ = "quote_extra_items"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    quote_request_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("quote_requests.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+
+    # Внешний ключ на каталог доп. опций (SET NULL при удалении из админки)
+    extra_id: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        ForeignKey("configurator_extras.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
+    # Исторический снимок (Snapshot)
+    name_snapshot: Mapped[str] = mapped_column(String(255), nullable=False)
+    billing_type_snapshot: Mapped[str] = mapped_column(String(50), nullable=False)  # 'per_item', 'fixed', 'per_meter'
+
+    quantity: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
+    unit_price_snapshot: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
+    total_cost: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
+
+    # Relationships
+    quote_request: Mapped["QuoteRequest"] = relationship("QuoteRequest", back_populates="extra_items")
+    extra: Mapped[Optional["ConfiguratorExtra"]] = relationship("ConfiguratorExtra")

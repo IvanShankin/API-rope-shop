@@ -15,15 +15,23 @@ from tests.modules.rope_products.fixtures.models_dto import (
 )
 from tests.modules.rope_product_color.fixtures.models_dto import CreateRopeProductColorFixtureDTO
 from tests.modules.rope_allowed_splice.fixtures.models_dto import CreateRopeAllowedSpliceFixtureDTO
+from tests.modules.configurator_extra.fixtures.models_dto import CreateConfiguratorExtraFixtureDTO
+from tests.modules.configurator_setting.fixtures.models_dto import (
+    CreateConfiguratorSettingFixtureDTO,
+)
 from tests.modules.quote_requests.fixtures.models_dto import (
     CreateQuoteRequestFixtureDTO,
     CreateQuoteRopeItemFixtureDTO,
     CreateQuoteServiceItemFixtureDTO,
+    CreateQuoteExtraItemFixtureDTO,
 )
 from src.modules.splice_types.models import SpliceCategory
+from src.modules.configurator_extra.models import BillingType
 from src.modules.quote_requests.models import (
     QuoteRequest,
     QuoteRopeItem,
+    QuoteServiceItem,
+    QuoteExtraItem,
     ConfiguratorType,
     QuoteRequestStatus,
 )
@@ -31,6 +39,7 @@ from src.modules.quote_requests.models_dto import (
     QuoteRequestCreate,
     QuoteRopeItemCreate,
     QuoteServiceItemCreate,
+    QuoteExtraItemCreate,
     QuoteRequestUpdateDTO,
     QuoteRequestUpdateStatusDTO,
     QuoteRequestResponseDTO,
@@ -141,6 +150,152 @@ class TestsForSuccess:
         assert r_item.end_a_name_snapshot == "Augspleiss"
         assert r_item.end_b_cost == 0.00
         assert dto.total_price == 105.00  # 90 + 15
+
+    @pytest.mark.asyncio
+    async def test_create_quote_request_with_extras_calculation(
+        self,
+        client_for_tests,
+        create_material_group_fixture,
+        create_splice_material_fixture,
+        create_splice_type_fixture,
+        create_splice_price_rule_fixture,
+        create_color_fixture,
+        create_rope_product_fixture,
+        create_rope_variant_fixture,
+        create_rope_product_color_fixture,
+        create_rope_allowed_splice_fixture,
+        create_configurator_extra_fixture,
+    ):
+        """
+        Создание заявки с дополнительными опциями (ConfiguratorExtra).
+        Проверяется корректность расчета стоимости и снимков для всех трех billing_type:
+        - FIXED: фиксированная надбавка к заказу (10.00)
+        - PER_ITEM: 15.00 * 2 штуки изделий = 30.00
+        - PER_METER: 0.50 * 40 метров (2 изделия по 20м) = 20.00
+        """
+        group = await create_material_group_fixture()
+        splice_mat = await create_splice_material_fixture()
+        splice_type = await create_splice_type_fixture()
+        color = await create_color_fixture()
+
+        product = await create_rope_product_fixture(
+            CreateRopeProductFixtureDTO(
+                material_group_id=group.id,
+                splice_material_id=splice_mat.id,
+                can_be_spliced=True,
+            )
+        )
+        await create_rope_variant_fixture(
+            CreateRopeVariantFixtureDTO(
+                rope_product_id=product.product_id,
+                diameter_mm=10.0,
+                price_per_meter=4.50,
+            )
+        )
+        await create_rope_product_color_fixture(
+            CreateRopeProductColorFixtureDTO(
+                rope_product_id=product.product_id,
+                color_id=color.id,
+            )
+        )
+        await create_rope_allowed_splice_fixture(
+            CreateRopeAllowedSpliceFixtureDTO(
+                rope_product_id=product.product_id,
+                splice_type_id=splice_type.id,
+            )
+        )
+        await create_splice_price_rule_fixture(
+            CreateSplicePriceRuleFixtureDTO(
+                splice_material_id=splice_mat.id,
+                splice_type_id=splice_type.id,
+                diameter_from_mm=8.0,
+                diameter_to_mm=12.0,
+                price=15.00,
+            )
+        )
+
+        # 3 дополнительных опции с разными BillingType
+        extra_fixed = await create_configurator_extra_fixture(
+            CreateConfiguratorExtraFixtureDTO(
+                code="cert_fixed",
+                name="Certificate",
+                billing_type=BillingType.FIXED,
+                price=10.00,
+            )
+        )
+        extra_per_item = await create_configurator_extra_fixture(
+            CreateConfiguratorExtraFixtureDTO(
+                code="leather_item",
+                name="Leather Protector",
+                billing_type=BillingType.PER_ITEM,
+                price=15.00,
+            )
+        )
+        extra_per_meter = await create_configurator_extra_fixture(
+            CreateConfiguratorExtraFixtureDTO(
+                code="coating_meter",
+                name="Protective Coating",
+                billing_type=BillingType.PER_METER,
+                price=0.50,
+            )
+        )
+
+        req_body = QuoteRequestCreate(
+            configurator_type=ConfiguratorType.ROPE_WITH_SPLICE,
+            name="Alex Client",
+            email="alex@ocean.de",
+            rope_items=[
+                QuoteRopeItemCreate(
+                    rope_product_id=product.product_id,
+                    color_id=color.id,
+                    diameter_mm=10.0,
+                    length_m=20.0,
+                    quantity=2,  # 2 штуки по 20м = всего 40м
+                    end_a_type_id=splice_type.id,
+                )
+            ],
+            extra_ids=[extra_fixed.id, extra_per_item.id, extra_per_meter.id],
+        )
+
+        response = await client_for_tests.post("/quote_requests", json=req_body.model_dump())
+        assert response.status_code == 201
+
+        dto = QuoteRequestResponseDTO.model_validate(response.json())
+        assert len(dto.extra_items) == 3
+
+        # Проверка снимков позиций доп. опций
+        extras_by_id = {e.extra_id: e for e in dto.extra_items}
+
+        # 1. FIXED
+        fix_snap = extras_by_id[extra_fixed.id]
+        assert fix_snap.name_snapshot == "Certificate"
+        assert fix_snap.billing_type_snapshot == "fixed"
+        assert fix_snap.quantity == 1
+        assert fix_snap.unit_price_snapshot == 10.00
+        assert fix_snap.total_cost == 10.00
+
+        # 2. PER_ITEM: 2 изделия -> qty 2 -> 15.00 * 2 = 30.00
+        item_snap = extras_by_id[extra_per_item.id]
+        assert item_snap.name_snapshot == "Leather Protector"
+        assert item_snap.billing_type_snapshot == "per_item"
+        assert item_snap.quantity == 2
+        assert item_snap.unit_price_snapshot == 15.00
+        assert item_snap.total_cost == 30.00
+
+        # 3. PER_METER: 40м всего -> 0.50 * 40 = 20.00
+        meter_snap = extras_by_id[extra_per_meter.id]
+        assert meter_snap.name_snapshot == "Protective Coating"
+        assert meter_snap.billing_type_snapshot == "per_meter"
+        assert meter_snap.quantity == 40
+        assert meter_snap.unit_price_snapshot == 0.50
+        assert meter_snap.total_cost == 20.00
+
+        # Итоговая цена:
+        # Канат: 20м * 4.50 * 2 = 180.00
+        # Петля A: 15.00 * 2 = 30.00
+        # Доп. опции: 10.00 + 30.00 + 20.00 = 60.00
+        # Итого: 180 + 30 + 60 = 270.00
+        assert dto.total_price == 270.00
 
     @pytest.mark.asyncio
     async def test_create_quote_request_service_only(
@@ -316,7 +471,8 @@ class TestsForSuccess:
         admin, token = await create_user_fixture(CreateUserFixtureDTO(role=UserRole.ADMIN))
         q = await create_quote_request_fixture(
             CreateQuoteRequestFixtureDTO(
-                rope_items=[CreateQuoteRopeItemFixtureDTO(product_name_snapshot="Racer Rope")]
+                rope_items=[CreateQuoteRopeItemFixtureDTO(product_name_snapshot="Racer Rope")],
+                extra_items=[CreateQuoteExtraItemFixtureDTO(name_snapshot="Custom Sheath")],
             )
         )
 
@@ -330,6 +486,8 @@ class TestsForSuccess:
         assert dto.id == q.id
         assert len(dto.rope_items) == 1
         assert dto.rope_items[0].product_name_snapshot == "Racer Rope"
+        assert len(dto.extra_items) == 1
+        assert dto.extra_items[0].name_snapshot == "Custom Sheath"
 
     @pytest.mark.asyncio
     async def test_update_quote_request_admin(
@@ -383,12 +541,13 @@ class TestsForSuccess:
         create_user_fixture,
         create_quote_request_fixture,
     ):
-        """Удаление заявки и каскадное удаление ее позиций."""
+        """Удаление заявки и каскадное удаление всех ее позиций (включая extra_items)."""
         admin, token = await create_user_fixture(CreateUserFixtureDTO(role=UserRole.ADMIN))
         q = await create_quote_request_fixture(
             CreateQuoteRequestFixtureDTO(
                 rope_items=[CreateQuoteRopeItemFixtureDTO()],
                 service_items=[CreateQuoteServiceItemFixtureDTO()],
+                extra_items=[CreateQuoteExtraItemFixtureDTO()],
             )
         )
 
@@ -401,9 +560,12 @@ class TestsForSuccess:
         res = await session_db.execute(select(QuoteRequest).where(QuoteRequest.id == q.id))
         assert res.scalar_one_or_none() is None
 
-        # Проверка удаления дочерних элементов
+        # Проверка каскадного удаления дочерних элементов
         res_r = await session_db.execute(select(QuoteRopeItem).where(QuoteRopeItem.quote_request_id == q.id))
         assert res_r.scalars().all() == []
+
+        res_e = await session_db.execute(select(QuoteExtraItem).where(QuoteExtraItem.quote_request_id == q.id))
+        assert res_e.scalars().all() == []
 
 
 class TestsForFailures:
@@ -420,6 +582,185 @@ class TestsForFailures:
             email="empty@example.com",
             rope_items=[],
             service_items=[],
+        )
+        response = await client_for_tests.post("/quote_requests", json=req_body.model_dump())
+        assert response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_create_quote_request_rope_length_out_of_bounds(
+        self,
+        client_for_tests,
+        create_color_fixture,
+        create_rope_product_fixture,
+        create_rope_variant_fixture,
+        create_rope_product_color_fixture,
+        create_configurator_setting_fixture,
+    ):
+        """Проверка соблюдения min_length_m и max_length_m из ConfiguratorSetting -> 400."""
+        await create_configurator_setting_fixture(
+            CreateConfiguratorSettingFixtureDTO(min_length_m=5.0, max_length_m=100.0)
+        )
+        product = await create_rope_product_fixture()
+        await create_rope_variant_fixture(
+            CreateRopeVariantFixtureDTO(rope_product_id=product.product_id, diameter_mm=10.0)
+        )
+        color = await create_color_fixture()
+        await create_rope_product_color_fixture(
+            CreateRopeProductColorFixtureDTO(rope_product_id=product.product_id, color_id=color.id)
+        )
+
+        # 1. Меньше min_length_m (2.0 < 5.0)
+        req_too_short = QuoteRequestCreate(
+            configurator_type=ConfiguratorType.ROPE_WITH_SPLICE,
+            name="Short Client",
+            email="short@example.com",
+            rope_items=[
+                QuoteRopeItemCreate(
+                    rope_product_id=product.product_id,
+                    color_id=color.id,
+                    diameter_mm=10.0,
+                    length_m=2.0,
+                )
+            ],
+        )
+        resp1 = await client_for_tests.post("/quote_requests", json=req_too_short.model_dump())
+        assert resp1.status_code == 400
+
+        # 2. Больше max_length_m (150.0 > 100.0)
+        req_too_long = QuoteRequestCreate(
+            configurator_type=ConfiguratorType.ROPE_WITH_SPLICE,
+            name="Long Client",
+            email="long@example.com",
+            rope_items=[
+                QuoteRopeItemCreate(
+                    rope_product_id=product.product_id,
+                    color_id=color.id,
+                    diameter_mm=10.0,
+                    length_m=150.0,
+                )
+            ],
+        )
+        resp2 = await client_for_tests.post("/quote_requests", json=req_too_long.model_dump())
+        assert resp2.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_create_quote_request_urgent_max_splices_exceeded(
+        self,
+        client_for_tests,
+        create_splice_price_rule_fixture,
+        create_configurator_setting_fixture,
+    ):
+        """Проверка превышения лимита срочных сплесней (urgent_max_splices) -> 400."""
+        await create_configurator_setting_fixture(
+            CreateConfiguratorSettingFixtureDTO(urgent_max_splices=2)
+        )
+        rule = await create_splice_price_rule_fixture(
+            CreateSplicePriceRuleFixtureDTO(
+                diameter_from_mm=8.0,
+                diameter_to_mm=12.0,
+                price=10.0,
+            )
+        )
+
+        # Запрашиваем 3 сплесня в срочном заказе при максимуме 2
+        req = QuoteRequestCreate(
+            configurator_type=ConfiguratorType.LOOP_ONLY,
+            name="Greedy Urgent Client",
+            email="greedy@example.com",
+            is_urgent=True,
+            service_items=[
+                QuoteServiceItemCreate(
+                    splice_type_id=rule.splice_type_id,
+                    splice_material_id=rule.splice_material_id,
+                    diameter_mm=10.0,
+                    quantity=3,
+                )
+            ],
+        )
+        resp = await client_for_tests.post("/quote_requests", json=req.model_dump())
+        assert resp.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_create_quote_request_extra_not_found(
+        self,
+        client_for_tests,
+        create_splice_price_rule_fixture,
+    ):
+        """Несуществующий extra_id -> 404 Not Found."""
+        rule = await create_splice_price_rule_fixture()
+        req_body = QuoteRequestCreate(
+            configurator_type=ConfiguratorType.LOOP_ONLY,
+            name="Test Client",
+            email="test@example.com",
+            service_items=[
+                QuoteServiceItemCreate(
+                    splice_type_id=rule.splice_type_id,
+                    splice_material_id=rule.splice_material_id,
+                    diameter_mm=10.0,
+                    quantity=1,
+                )
+            ],
+            extra_ids=[999999],
+        )
+        response = await client_for_tests.post("/quote_requests", json=req_body.model_dump())
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_create_quote_request_extra_inactive(
+        self,
+        client_for_tests,
+        create_splice_price_rule_fixture,
+        create_configurator_extra_fixture,
+    ):
+        """Попытка добавления неактивной доп. опции -> 400 Bad Request."""
+        rule = await create_splice_price_rule_fixture()
+        inactive_extra = await create_configurator_extra_fixture(
+            CreateConfiguratorExtraFixtureDTO(is_active=False)
+        )
+
+        req_body = QuoteRequestCreate(
+            configurator_type=ConfiguratorType.LOOP_ONLY,
+            name="Test Client",
+            email="test@example.com",
+            service_items=[
+                QuoteServiceItemCreate(
+                    splice_type_id=rule.splice_type_id,
+                    splice_material_id=rule.splice_material_id,
+                    diameter_mm=10.0,
+                    quantity=1,
+                )
+            ],
+            extra_ids=[inactive_extra.id],
+        )
+        response = await client_for_tests.post("/quote_requests", json=req_body.model_dump())
+        assert response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_create_quote_request_per_meter_extra_invalid_order_type(
+        self,
+        client_for_tests,
+        create_splice_price_rule_fixture,
+        create_configurator_extra_fixture,
+    ):
+        """Попытка применения опции PER_METER в заказе без канатов (LOOP_ONLY) -> 400."""
+        rule = await create_splice_price_rule_fixture()
+        per_meter_extra = await create_configurator_extra_fixture(
+            CreateConfiguratorExtraFixtureDTO(billing_type=BillingType.PER_METER)
+        )
+
+        req_body = QuoteRequestCreate(
+            configurator_type=ConfiguratorType.LOOP_ONLY,
+            name="Test Client",
+            email="test@example.com",
+            service_items=[
+                QuoteServiceItemCreate(
+                    splice_type_id=rule.splice_type_id,
+                    splice_material_id=rule.splice_material_id,
+                    diameter_mm=10.0,
+                    quantity=1,
+                )
+            ],
+            extra_ids=[per_meter_extra.id],
         )
         response = await client_for_tests.post("/quote_requests", json=req_body.model_dump())
         assert response.status_code == 400

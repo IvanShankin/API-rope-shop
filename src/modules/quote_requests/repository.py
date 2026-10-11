@@ -10,6 +10,7 @@ from src.modules.quote_requests.models import (
     QuoteRequest,
     QuoteRopeItem,
     QuoteServiceItem,
+    QuoteExtraItem,
     QuoteRequestStatus,
     ConfiguratorType,
 )
@@ -17,6 +18,7 @@ from src.modules.quote_requests.models_dto import (
     QuoteRequestInsertDTO,
     QuoteRopeItemInsertDTO,
     QuoteServiceItemInsertDTO,
+    QuoteExtraItemInsertDTO,
 )
 
 
@@ -40,6 +42,7 @@ class QuoteRequestRepository(BaseRepository):
             stmt = stmt.options(
                 selectinload(QuoteRequest.rope_items),
                 selectinload(QuoteRequest.service_items),
+                selectinload(QuoteRequest.extra_items),
             )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
@@ -55,6 +58,7 @@ class QuoteRequestRepository(BaseRepository):
             stmt = stmt.options(
                 selectinload(QuoteRequest.rope_items),
                 selectinload(QuoteRequest.service_items),
+                selectinload(QuoteRequest.extra_items),
             )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
@@ -87,6 +91,7 @@ class QuoteRequestRepository(BaseRepository):
         stmt = select(QuoteRequest).options(
             selectinload(QuoteRequest.rope_items),
             selectinload(QuoteRequest.service_items),
+            selectinload(QuoteRequest.extra_items),
         )
 
         # Фильтры
@@ -187,4 +192,25 @@ class QuoteServiceItemRepository(BaseRepository):
     async def delete_item(self, item_id: int) -> None:
         """Удаление позиции услуги."""
         stmt = delete(QuoteServiceItem).where(QuoteServiceItem.id == item_id)
+        await self.session.execute(stmt)
+
+
+class QuoteExtraItemRepository(BaseRepository):
+
+    def __init__(self, session: AsyncSession):
+        super().__init__(session=session, model=QuoteExtraItem)
+
+    async def add_item(self, data: Union[QuoteExtraItemInsertDTO, dict, Any]) -> QuoteExtraItem:
+        """Добавление позиции доп. опции."""
+        return self.add(data)
+
+    async def get_by_id(self, item_id: int) -> QuoteExtraItem | None:
+        """Получение позиции доп. опции по ID."""
+        stmt = select(QuoteExtraItem).where(QuoteExtraItem.id == item_id)
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def delete_item(self, item_id: int) -> None:
+        """Удаление позиции доп. опции."""
+        stmt = delete(QuoteExtraItem).where(QuoteExtraItem.id == item_id)
         await self.session.execute(stmt)

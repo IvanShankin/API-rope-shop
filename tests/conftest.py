@@ -22,6 +22,7 @@ from src.modules.db_models import (
     QuoteRequest,
     QuoteRopeItem,
     QuoteServiceItem,
+    QuoteExtraItem,
     ConfiguratorExtra,
     ConfiguratorExtraTranslation,
     ConfiguratorSetting,
@@ -46,6 +47,7 @@ async def clearing_db(session_db: AsyncSession):
     # Удаляем обязательно в таком порядке
     await session_db.execute(delete(QuoteRopeItem))
     await session_db.execute(delete(QuoteServiceItem))
+    await session_db.execute(delete(QuoteExtraItem))
     await session_db.execute(delete(QuoteRequest))
     await session_db.execute(delete(ConfiguratorSetting))
     await session_db.execute(delete(ConfiguratorExtraTranslation))

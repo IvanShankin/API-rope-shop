@@ -3,12 +3,14 @@ from datetime import datetime
 import random
 import string
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.base.database_model import Language
 from src.modules.base.exception import NoDataForUpdate
 from src.modules.configurator_setting.models import ConfiguratorSetting, Currency
+from src.modules.configurator_setting.repository import ConfiguratorSettingRepository
+from src.modules.configurator_extra.models import BillingType
+from src.modules.configurator_extra.repository import ConfiguratorExtraRepository
 from src.modules.colors.repository import ColorRepository
 from src.modules.rope_products.models import RopeProduct
 from src.modules.rope_products.repository import RopeProductRepository, RopeVariantRepository
@@ -23,24 +25,30 @@ from src.modules.quote_requests.models_dto import (
     QuoteRequestCreate,
     QuoteRopeItemCreate,
     QuoteServiceItemCreate,
+    QuoteExtraItemCreate,
     QuoteRequestUpdateDTO,
     QuoteRequestResponseDTO,
     ResolvedRopeItemDTO,
     ResolvedServiceItemDTO,
+    ResolvedExtraItemDTO,
     ResolvedEndSpliceDTO,
     QuoteRequestTotalsDTO,
     QuoteRopeItemInsertDTO,
     QuoteServiceItemInsertDTO,
+    QuoteExtraItemInsertDTO,
     QuoteRequestInsertDTO,
 )
 from src.modules.quote_requests.repository import (
     QuoteRequestRepository,
     QuoteRopeItemRepository,
     QuoteServiceItemRepository,
+    QuoteExtraItemRepository,
 )
 from src.modules.quote_requests.exception import (
     QuoteRequestNotFound,
     QuoteRequestValidationError,
+    QuoteExtraItemNotFound,
+    ConfiguratorExtraNotFoundForQuote,
     RopeProductNotFoundForQuote,
     RopeVariantNotFoundForQuote,
     ColorNotFoundForQuote,
@@ -59,23 +67,29 @@ class QuoteRequestService:
         quote_repo: QuoteRequestRepository,
         rope_item_repo: QuoteRopeItemRepository,
         service_item_repo: QuoteServiceItemRepository,
+        extra_item_repo: QuoteExtraItemRepository,
         rope_product_repo: RopeProductRepository,
         variant_repo: RopeVariantRepository,
         color_repo: ColorRepository,
         splice_type_repo: SpliceTypeRepository,
         splice_material_repo: SpliceMaterialRepository,
         splice_price_repo: SplicePriceRuleRepository,
+        extra_repo: ConfiguratorExtraRepository,
+        configurator_setting_repo: ConfiguratorSettingRepository,
         session: AsyncSession,
     ):
         self.quote_repo = quote_repo
         self.rope_item_repo = rope_item_repo
         self.service_item_repo = service_item_repo
+        self.extra_item_repo = extra_item_repo
         self.rope_product_repo = rope_product_repo
         self.variant_repo = variant_repo
         self.color_repo = color_repo
         self.splice_type_repo = splice_type_repo
         self.splice_material_repo = splice_material_repo
         self.splice_price_repo = splice_price_repo
+        self.extra_repo = extra_repo
+        self.configurator_setting_repo = configurator_setting_repo
         self.session = session
 
     async def create_quote_request(
@@ -84,32 +98,43 @@ class QuoteRequestService:
     ) -> QuoteRequestResponseDTO:
         """
         Создание новой заявки с автоматическим формированием снимков (Order Snapshot),
-        валидацией связанных сущностей каталога и расчетом финальной стоимости.
+        валидацией связанных сущностей каталога, дополнительных опций (ConfiguratorExtra)
+        и расчетом финальной стоимости на основе актуальных настроек (ConfiguratorSetting).
         """
-        # 1. Валидация входных позиций
-        self._validate_request_items(data)
+        # 1. Получение системных настроек конфигуратора
+        setting = await self.configurator_setting_repo.get_settings()
+
+        # 2. Валидация входных позиций (включая лимиты длины из ConfiguratorSetting)
+        self._validate_request_items(data, setting)
 
         locale = data.locale or Language.ENG
 
-        # 2. Получение настроек конфигуратора
-        currency, vat_rate, urgent_surcharge_per_splice = await self._get_configurator_setting()
+        currency = setting.currency if setting else Currency.EUR
+        vat_rate = float(setting.vat_rate) if setting else 0.0
 
-        # 3. Разрешение позиций канатов и услуг в DTO-снимки
+        # 3. Разрешение позиций канатов, услуг и доп. опций в DTO-снимки
         resolved_rope_items = await self._resolve_rope_items(data.rope_items, locale)
         resolved_service_items = await self._resolve_service_items(data.service_items, locale)
+        resolved_extra_items = await self._resolve_extra_items(
+            data=data,
+            rope_items=resolved_rope_items,
+            service_items=resolved_service_items,
+            locale=locale,
+        )
 
-        # 4. Расчет итогов заказа
+        # 4. Расчет итогов заказа (с проверкой urgent_max_splices)
         totals = self._calculate_totals(
             rope_items=resolved_rope_items,
             service_items=resolved_service_items,
+            extra_items=resolved_extra_items,
             is_urgent=data.is_urgent,
-            urgent_surcharge_per_splice=urgent_surcharge_per_splice,
+            setting=setting,
         )
 
         # 5. Генерация уникального бизнес-номера заявки
         request_number = await self._generate_request_number()
 
-        # 6. Сохранение заявки и позиций через репозиторий с DTO
+        # 6. Сохранение заявки и позиций через репозитории с использованием DTO
         quote_request_id = await self._save_quote_request(
             data=data,
             request_number=request_number,
@@ -118,37 +143,44 @@ class QuoteRequestService:
             total_price=totals.total_price,
             rope_items=resolved_rope_items,
             service_items=resolved_service_items,
+            extra_items=resolved_extra_items,
         )
 
         loaded = await self.quote_repo.get_by_id(quote_request_id)
         return QuoteRequestResponseDTO.model_validate(loaded)
 
-    def _validate_request_items(self, data: QuoteRequestCreate) -> None:
+    def _validate_request_items(
+        self,
+        data: QuoteRequestCreate,
+        setting: Optional[ConfiguratorSetting],
+    ) -> None:
         """Валидация наличия и состава позиций заявки для выбранного типа конфигуратора."""
         if not data.rope_items and not data.service_items:
-            raise QuoteRequestValidationError("Quote request must contain at least one item.")
+            raise QuoteRequestValidationError("Quote request must contain at least one rope or service item.")
 
         if data.configurator_type == ConfiguratorType.ROPE_WITH_SPLICE and not data.rope_items:
             raise QuoteRequestValidationError(
-                "Rope with splice configurator_extra requires at least one rope item."
+                "Rope with splice configurator requires at least one rope item."
             )
 
         if data.configurator_type in (ConfiguratorType.LOOP_ONLY, ConfiguratorType.SPLICE_ONLY) and not data.service_items:
             raise QuoteRequestValidationError(
-                f"{data.configurator_type.value} configurator_extra requires at least one service item."
+                f"{data.configurator_type.value} configurator requires at least one service item."
             )
 
-    async def _get_configurator_setting(self) -> Tuple[Currency, float, float]:
-        """Получение системных параметров конфигуратора (валюта, ставка НДС, тариф за срочность)."""
-        stmt_setting = select(ConfiguratorSetting).limit(1)
-        setting_res = await self.session.execute(stmt_setting)
-        setting = setting_res.scalar_one_or_none()
-
-        currency = setting.currency if setting else Currency.EUR
-        vat_rate = float(setting.vat_rate) if setting else 0.0
-        urgent_surcharge = float(setting.urgent_surcharge_per_splice) if setting else 10.0
-
-        return currency, vat_rate, urgent_surcharge
+        # Валидация длины каната по глобальным настройкам конфигуратора
+        if setting and data.rope_items:
+            min_len = float(setting.min_length_m)
+            max_len = float(setting.max_length_m)
+            for r_item in data.rope_items:
+                if r_item.length_m < min_len:
+                    raise QuoteRequestValidationError(
+                        f"Rope length ({r_item.length_m} m) is less than minimum allowed ({min_len} m)."
+                    )
+                if r_item.length_m > max_len:
+                    raise QuoteRequestValidationError(
+                        f"Rope length ({r_item.length_m} m) exceeds maximum allowed ({max_len} m)."
+                    )
 
     async def _resolve_rope_items(
         self,
@@ -361,20 +393,123 @@ class QuoteRequestService:
             total_cost=total_cost,
         )
 
+    async def _resolve_extra_items(
+        self,
+        data: QuoteRequestCreate,
+        rope_items: List[ResolvedRopeItemDTO],
+        service_items: List[ResolvedServiceItemDTO],
+        locale: Language,
+    ) -> List[ResolvedExtraItemDTO]:
+        """
+        Разрешение дополнительных опций конфигуратора с безопасным расчетом стоимости:
+        Пользователь отправляет только ID опций (в extra_ids или extra_items). Сервер валидирует
+        наличие, активность, формирует снимок и рассчитывает цену согласно BillingType:
+        - FIXED: фиксированная надбавка за заказ (quantity = 1).
+        - PER_ITEM: price * количество изделий в заказе.
+        - PER_METER: price * длина каната в заказе.
+        """
+        all_item_requests: List[QuoteExtraItemCreate] = list(data.extra_items)
+        flat_ids = list(data.extra_ids)
+        if data.extras:
+            flat_ids.extend(data.extras)
+
+        for fid in flat_ids:
+            all_item_requests.append(QuoteExtraItemCreate(extra_id=fid))
+
+        # Дедупликация опций по extra_id
+        seen_ids = set()
+        unique_requests: List[QuoteExtraItemCreate] = []
+        for it in all_item_requests:
+            if it.extra_id not in seen_ids:
+                seen_ids.add(it.extra_id)
+                unique_requests.append(it)
+
+        resolved_extras: List[ResolvedExtraItemDTO] = []
+        for req in unique_requests:
+            extra = await self.extra_repo.get_by_id(req.extra_id)
+            if not extra:
+                raise ConfiguratorExtraNotFoundForQuote(
+                    f"ConfiguratorExtra with id {req.extra_id} not found."
+                )
+            if not extra.is_active:
+                raise QuoteRequestValidationError(
+                    f"ConfiguratorExtra with id {req.extra_id} is inactive."
+                )
+
+            name_snapshot = extra._get_field_with_translation(
+                lambda t: t.name, locale
+            ) or extra.code
+            unit_price = float(extra.price)
+            billing_type = extra.billing_type
+
+            if billing_type == BillingType.FIXED:
+                quantity = 1
+                total_cost = round(unit_price, 2)
+
+            elif billing_type == BillingType.PER_ITEM:
+                # Количество берется автоматически по объему заказа
+                if data.configurator_type == ConfiguratorType.ROPE_WITH_SPLICE:
+                    order_items_qty = sum(r.quantity for r in rope_items)
+                else:
+                    order_items_qty = sum(s.quantity for s in service_items)
+
+                quantity = max(1, order_items_qty)
+                total_cost = round(unit_price * quantity, 2)
+
+            elif billing_type == BillingType.PER_METER:
+                if data.configurator_type != ConfiguratorType.ROPE_WITH_SPLICE:
+                    raise QuoteRequestValidationError(
+                        f"Extra '{extra.code}' with per-meter billing cannot be applied to {data.configurator_type.value} orders."
+                    )
+                total_length = sum(float(r.length_m) * r.quantity for r in rope_items)
+                if total_length <= 0:
+                    raise QuoteRequestValidationError(
+                        f"Extra '{extra.code}' with per-meter billing requires rope items with length."
+                    )
+                quantity = max(1, int(round(total_length)))
+                total_cost = round(unit_price * total_length, 2)
+
+            else:
+                quantity = 1
+                total_cost = round(unit_price, 2)
+
+            resolved_extras.append(
+                ResolvedExtraItemDTO(
+                    extra_id=extra.id,
+                    name_snapshot=name_snapshot,
+                    billing_type_snapshot=billing_type.value,
+                    quantity=quantity,
+                    unit_price_snapshot=unit_price,
+                    total_cost=total_cost,
+                )
+            )
+
+        return resolved_extras
+
     def _calculate_totals(
         self,
         rope_items: List[ResolvedRopeItemDTO],
         service_items: List[ResolvedServiceItemDTO],
+        extra_items: List[ResolvedExtraItemDTO],
         is_urgent: bool,
-        urgent_surcharge_per_splice: float,
+        setting: Optional[ConfiguratorSetting],
     ) -> QuoteRequestTotalsDTO:
-        """Расчет общей стоимости заявки, включая надбавку за срочность."""
-        subtotal = sum(r.total_cost for r in rope_items) + sum(s.total_cost for s in service_items)
+        """Расчет общей стоимости заявки, включая надбавку за срочность и доп. опции."""
+        subtotal = (
+            sum(r.total_cost for r in rope_items)
+            + sum(s.total_cost for s in service_items)
+            + sum(e.total_cost for e in extra_items)
+        )
 
         urgent_surcharge = 0.0
         if is_urgent:
             total_splices = sum(r.splices_count for r in rope_items) + sum(s.splices_count for s in service_items)
-            urgent_surcharge = total_splices * urgent_surcharge_per_splice
+            if setting and total_splices > setting.urgent_max_splices:
+                raise QuoteRequestValidationError(
+                    f"Urgent orders allow a maximum of {setting.urgent_max_splices} splices, but {total_splices} were requested."
+                )
+            surcharge_rate = float(setting.urgent_surcharge_per_splice) if setting else 10.0
+            urgent_surcharge = total_splices * surcharge_rate
 
         total_price = round(subtotal + urgent_surcharge, 2)
         return QuoteRequestTotalsDTO(
@@ -392,6 +527,7 @@ class QuoteRequestService:
         total_price: float,
         rope_items: List[ResolvedRopeItemDTO],
         service_items: List[ResolvedServiceItemDTO],
+        extra_items: List[ResolvedExtraItemDTO],
     ) -> int:
         """Сохранение сущности QuoteRequest и ее дочерних снимков с использованием DTO."""
         quote_insert_dto = QuoteRequestInsertDTO(
@@ -447,6 +583,18 @@ class QuoteRequestService:
                 total_cost=s_dto.total_cost,
             )
             await self.service_item_repo.add_item(service_item_dto)
+
+        for e_dto in extra_items:
+            extra_item_dto = QuoteExtraItemInsertDTO(
+                quote_request_id=quote_request.id,
+                extra_id=e_dto.extra_id,
+                name_snapshot=e_dto.name_snapshot,
+                billing_type_snapshot=e_dto.billing_type_snapshot,
+                quantity=e_dto.quantity,
+                unit_price_snapshot=e_dto.unit_price_snapshot,
+                total_cost=e_dto.total_cost,
+            )
+            await self.extra_item_repo.add_item(extra_item_dto)
 
         await self.session.commit()
         return quote_request.id

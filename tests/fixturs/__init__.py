@@ -54,6 +54,9 @@ from tests.modules.configurator_extra.fixtures import (
     create_configurator_extra_fixture,
     create_configurator_extra_translation_fixture,
 )
+from tests.modules.configurator_setting.fixtures import (
+    create_configurator_setting_fixture,
+)
 
 __all__ = [
     "lifespan_for_tests",
@@ -92,4 +95,5 @@ __all__ = [
     "create_quote_service_item_fixture",
     "create_configurator_extra_fixture",
     "create_configurator_extra_translation_fixture",
+    "create_configurator_setting_fixture",
 ]

@@ -48,6 +48,7 @@ from src.modules.configurator_extra.exception import (
     ConfiguratorExtraTranslationDeleteError,
     ConfiguratorExtraHasDependencies,
 )
+from src.modules.configurator_setting.exception import ConfiguratorSettingValidationError
 
 def register_exception_handlers(app: FastAPI):
 
@@ -189,4 +190,8 @@ def register_exception_handlers(app: FastAPI):
 
     @app.exception_handler(ConfiguratorExtraHasDependencies)
     async def configurator_extra_has_dependencies_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(ConfiguratorSettingValidationError)
+    async def configurator_setting_validation_handler(request, exc):
         return JSONResponse(status_code=400, content={"detail": str(exc)})

@@ -5,22 +5,34 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from passlib.context import CryptContext
 
-from src.core.config import create_config, Config
+from src.core.config import Config, create_config
 from src.modules.api.exception_handler import register_exception_handlers
 from src.modules.auth.views import router as auth_router
-from src.modules.users.views import router as user_router
-from src.modules.splice_types.views import router as splice_types_router
-from src.modules.splice_materials.views import router as splice_materials_router
-from src.modules.splice_prices.views import router as splice_prices_router
 from src.modules.colors.views import router as colors_router
-from src.modules.rope_product_color.views import router as rope_product_colors_router
-from src.modules.rope_allowed_splice.views import router as rope_allowed_splices_router
-from src.modules.rope_products.views import router as rope_products_router, variants_router as rope_variants_router
+from src.modules.configurator_extra.views import (
+    router as configurator_extras_router,
+)
+from src.modules.configurator_setting.views import (
+    router as configurator_settings_router,
+)
 from src.modules.material_groups.views import router as material_groups_router
 from src.modules.materials.views import router as materials_router
 from src.modules.quote_requests.views import router as quote_requests_router
-from src.modules.configurator_extra.views import router as configurator_extras_router
-from src.modules.configurator_setting.views import router as configurator_settings_router
+from src.modules.rope_allowed_splice.views import (
+    router as rope_allowed_splices_router,
+)
+from src.modules.rope_product_color.views import (
+    router as rope_product_colors_router,
+)
+from src.modules.rope_products.views import (
+    router as rope_products_router,
+    variants_router as rope_variants_router,
+)
+from src.modules.splice_materials.views import router as splice_materials_router
+from src.modules.splice_prices.views import router as splice_prices_router
+from src.modules.splice_types.views import router as splice_types_router
+from src.modules.users.views import router as user_router
+from src.tools.init_configurator_setting import init_configurator_setting
 
 
 def _include_middlewares(app: FastAPI, config: Config) -> FastAPI:
@@ -58,7 +70,7 @@ def _include_routers(app: FastAPI) -> FastAPI:
 def init_fastapi_app() -> FastAPI:
     app = FastAPI(
         title="Auth Service",
-        lifespan=lifespan
+        lifespan=lifespan,
     )
     config = create_config()
     app.mount("/media", StaticFiles(directory=config.paths.media), name="media")
@@ -75,6 +87,7 @@ async def lifespan(app: FastAPI):
     # При старте приложения инициализируем сервисы
     app.state.config = create_config()
     app.state.cr_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    await init_configurator_setting(config=app.state.config)
     yield
     # При завершении приложения освобождаем ресурсы
     pass

@@ -15,6 +15,9 @@ from src.modules.configurator_extra.views import (
 from src.modules.configurator_setting.views import (
     router as configurator_settings_router,
 )
+from src.modules.configurators.views import (
+    router as configurators_router,
+)
 from src.modules.material_groups.views import router as material_groups_router
 from src.modules.materials.views import router as materials_router
 from src.modules.quote_requests.views import router as quote_requests_router
@@ -64,6 +67,7 @@ def _include_routers(app: FastAPI) -> FastAPI:
     app.include_router(quote_requests_router)
     app.include_router(configurator_extras_router)
     app.include_router(configurator_settings_router)
+    app.include_router(configurators_router)
     return app
 
 

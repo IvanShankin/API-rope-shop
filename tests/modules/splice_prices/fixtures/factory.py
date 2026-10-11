@@ -25,7 +25,8 @@ async def create_splice_price_rule_factory(
         splice_material_id=splice_material_id,
         diameter_from_mm=10.0 if new_rule.diameter_from_mm is None else new_rule.diameter_from_mm,
         diameter_to_mm=20.0 if new_rule.diameter_to_mm is None else new_rule.diameter_to_mm,
-        price=100.50 if new_rule.price is None else new_rule.price
+        price=100.50 if new_rule.price is None else new_rule.price,
+        is_active=True if new_rule.is_active is None else new_rule.is_active,
     )
     session_db.add(rule)
     await session_db.commit()

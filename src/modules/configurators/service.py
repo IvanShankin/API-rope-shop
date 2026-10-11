@@ -1,0 +1,218 @@
+from typing import Optional, List
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.modules.base.database_model import Language
+from src.modules.quote_requests.models import ConfiguratorType
+from src.modules.configurator_setting.models_dto import ConfiguratorSettingResponseDTO
+from src.modules.configurator_extra.models import ConfiguratorExtra, BillingType
+from src.modules.configurator_extra.models_dto import ConfiguratorExtraLocalizedResponseDTO
+from src.modules.splice_materials.models_dto import SpliceMaterialResponseDTO
+from src.modules.splice_types.models import SpliceType, SpliceCategory
+from src.modules.splice_types.models_dto import SpliceTypeLocalizedResponseDTO
+from src.modules.splice_prices.models_dto import SplicePriceRuleResponseDTO
+from src.modules.colors.models_dto import ColorLocalizedResponseDTO
+from src.modules.rope_products.models import RopeProduct
+from src.modules.rope_products.models_dto import RopeVariantResponseDTO
+from src.modules.rope_product_color.models_dto import RopeProductColorLocalizedResponseDTO
+from src.modules.rope_allowed_splice.models_dto import RopeAllowedSpliceLocalizedResponseDTO
+from src.modules.configurators.models_dto import (
+    ConfiguratorDataResponseDTO,
+    ConfiguratorRopeProductResponseDTO,
+)
+from src.modules.configurators.repository import ConfiguratorRepository
+
+
+class ConfiguratorService:
+    def __init__(
+        self,
+        repo: ConfiguratorRepository,
+        session: AsyncSession,
+    ):
+        self.repo = repo
+        self.session = session
+
+    async def get_configurator_data(
+        self,
+        configurator_type: Optional[ConfiguratorType] = None,
+        locale: Language = Language.ENG,
+    ) -> ConfiguratorDataResponseDTO:
+        """
+        Получение агрегированных данных для конфигураторов.
+        При указании configurator_type возвращает целевой набор сущностей и правил для выбранного сценария:
+        - ROPE_WITH_SPLICE: канат + варианты + цвета + разрешенные заделки, матрица цен, настройки и все доп. опции.
+        - LOOP_ONLY: только услуги петель (LOOP), матрица цен на петли, тарифные группы материалов и применимые доп. опции.
+        - SPLICE_ONLY: только услуги сращиваний (SPLICE), матрица цен, тарифные группы материалов и применимые доп. опции.
+        - None: полный сводный пакет для всех трех конфигураторов.
+        """
+        # 1. Системные настройки
+        setting_orm = await self.repo.get_setting()
+        settings_dto = ConfiguratorSettingResponseDTO.model_validate(setting_orm) if setting_orm else None
+
+        # 2. Дополнительные опции
+        extras_orm = await self.repo.get_extras(is_active=True)
+        if configurator_type in (ConfiguratorType.LOOP_ONLY, ConfiguratorType.SPLICE_ONLY):
+            # Для услуг без покупки каната опции с пометовой тарификацией неприменимы
+            extras_orm = [e for e in extras_orm if e.billing_type != BillingType.PER_METER]
+        extras_dto = [self._localize_extra(e, locale) for e in extras_orm]
+
+        # 3. Тарифные группы материалов заделок
+        materials_orm = await self.repo.get_splice_materials()
+        materials_dto = [SpliceMaterialResponseDTO.model_validate(m) for m in materials_orm]
+
+        # 4. Категория заделок по типу конфигуратора
+        target_category: Optional[SpliceCategory] = None
+        if configurator_type == ConfiguratorType.LOOP_ONLY:
+            target_category = SpliceCategory.LOOP
+        elif configurator_type == ConfiguratorType.SPLICE_ONLY:
+            target_category = SpliceCategory.SPLICE
+
+        # 5. Услуги заделок
+        types_orm = await self.repo.get_splice_types(category=target_category, is_active=True)
+        types_dto = [self._localize_splice_type(t, locale) for t in types_orm]
+
+        # 6. Матрица цен на заделки
+        rules_orm = await self.repo.get_splice_price_rules(category=target_category, is_active=True)
+        rules_dto = [SplicePriceRuleResponseDTO.model_validate(r) for r in rules_orm]
+
+        # 7. Каталог канатов (только для каната со сплайсом или при общем запросе)
+        rope_products_dto: Optional[List[ConfiguratorRopeProductResponseDTO]] = None
+        if configurator_type is None or configurator_type == ConfiguratorType.ROPE_WITH_SPLICE:
+            ropes_orm = await self.repo.get_rope_products()
+            rope_products_dto = [self._localize_rope_product(r, locale) for r in ropes_orm]
+
+        return ConfiguratorDataResponseDTO(
+            configurator_type=configurator_type,
+            locale=locale,
+            settings=settings_dto,
+            extras=extras_dto,
+            splice_materials=materials_dto,
+            splice_types=types_dto,
+            splice_price_rules=rules_dto,
+            rope_products=rope_products_dto,
+        )
+
+    def _localize_extra(
+        self,
+        extra: ConfiguratorExtra,
+        locale: Language,
+    ) -> ConfiguratorExtraLocalizedResponseDTO:
+        """Локализация названия и описания дополнительной опции."""
+        name = extra._get_field_with_translation(lambda t: t.name, locale) or extra.code
+        description = extra._get_field_with_translation(lambda t: t.description, locale)
+        return ConfiguratorExtraLocalizedResponseDTO(
+            id=extra.id,
+            code=extra.code,
+            price=float(extra.price),
+            currency=extra.currency,
+            billing_type=extra.billing_type,
+            index=extra.index,
+            is_active=extra.is_active,
+            name=name,
+            description=description,
+            created_at=extra.created_at,
+            updated_at=extra.updated_at,
+        )
+
+    def _localize_splice_type(
+        self,
+        splice_type: SpliceType,
+        locale: Language,
+    ) -> SpliceTypeLocalizedResponseDTO:
+        """Локализация названия и описания типа заделки."""
+        name = splice_type._get_field_with_translation(lambda t: t.name, locale) or splice_type.code
+        description = splice_type._get_field_with_translation(lambda t: t.description, locale)
+        return SpliceTypeLocalizedResponseDTO(
+            id=splice_type.id,
+            created_at=splice_type.created_at,
+            updated_at=splice_type.updated_at,
+            code=splice_type.code,
+            category=splice_type.category,
+            visual_type=splice_type.visual_type,
+            image_url=splice_type.image_url,
+            index=splice_type.index,
+            is_active=splice_type.is_active,
+            name=name,
+            description=description,
+        )
+
+    def _localize_rope_product(
+        self,
+        rope: RopeProduct,
+        locale: Language,
+    ) -> ConfiguratorRopeProductResponseDTO:
+        """Локализация характеристик каната, связанных цветов и разрешенных заделок."""
+        mat_group_name = None
+        if rope.material_group:
+            mat_group_name = rope.material_group._get_field_with_translation(
+                lambda t: t.name, locale
+            )
+
+        variants_dto = [
+            RopeVariantResponseDTO.model_validate(v)
+            for v in (rope.variants or [])
+            if v.is_active
+        ]
+
+        colors_dto: List[RopeProductColorLocalizedResponseDTO] = []
+        for rc in (rope.colors or []):
+            color_loc = None
+            if rc.color and rc.color.is_active:
+                c_name = rc.color._get_field_with_translation(
+                    lambda t: t.name, locale
+                ) or rc.color.code
+                color_loc = ColorLocalizedResponseDTO(
+                    id=rc.color.id,
+                    code=rc.color.code,
+                    hex=rc.color.hex,
+                    index=rc.color.index,
+                    is_active=rc.color.is_active,
+                    name=c_name,
+                )
+            colors_dto.append(
+                RopeProductColorLocalizedResponseDTO(
+                    id=rc.id,
+                    rope_product_id=rc.rope_product_id,
+                    color_id=rc.color_id,
+                    index=rc.index,
+                    color=color_loc,
+                )
+            )
+
+        splices_dto: List[RopeAllowedSpliceLocalizedResponseDTO] = []
+        for rs in (rope.allowed_splices or []):
+            st_loc = None
+            if rs.splice_type and rs.splice_type.is_active:
+                st_loc = self._localize_splice_type(rs.splice_type, locale)
+            splices_dto.append(
+                RopeAllowedSpliceLocalizedResponseDTO(
+                    rope_product_id=rs.rope_product_id,
+                    splice_type_id=rs.splice_type_id,
+                    splice_type=st_loc,
+                )
+            )
+
+        splice_material_dto = (
+            SpliceMaterialResponseDTO.model_validate(rope.splice_material)
+            if rope.splice_material
+            else None
+        )
+
+        return ConfiguratorRopeProductResponseDTO(
+            product_id=rope.product_id,
+            material_group_id=rope.material_group_id,
+            material_group_name=mat_group_name,
+            splice_material_id=rope.splice_material_id,
+            construction=rope.construction,
+            core_description=rope.core_description,
+            cover_description=rope.cover_description,
+            working_stretch_percent=(
+                float(rope.working_stretch_percent)
+                if rope.working_stretch_percent is not None
+                else None
+            ),
+            can_be_spliced=rope.can_be_spliced,
+            variants=variants_dto,
+            colors=colors_dto,
+            allowed_splices=splices_dto,
+            splice_material=splice_material_dto,
+        )

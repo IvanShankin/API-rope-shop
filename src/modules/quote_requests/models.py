@@ -5,7 +5,7 @@ from sqlalchemy import String, Integer, Boolean, ForeignKey, DateTime, func, Tex
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from src.core.database.database import Base
-from src.modules.configurator.models import Currency
+from src.modules.configurator_setting.models import Currency
 
 if TYPE_CHECKING:
     from src.modules.rope_products.models import RopeProduct

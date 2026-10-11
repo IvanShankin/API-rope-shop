@@ -1,7 +1,7 @@
 from typing import Optional, List
 from pydantic import BaseModel
 
-from src.modules.configurator.models import Currency
+from src.modules.configurator_setting.models import Currency
 from src.modules.quote_requests.models import (
     ConfiguratorType,
     QuoteRequestStatus,

@@ -9,7 +9,7 @@ from tests.modules.quote_requests.fixtures.models_dto import (
     CreateQuoteRopeItemFixtureDTO,
     CreateQuoteServiceItemFixtureDTO,
 )
-from src.modules.configurator.models import Currency
+from src.modules.configurator_setting.models import Currency
 from src.modules.quote_requests.models import (
     QuoteRequest,
     QuoteRopeItem,

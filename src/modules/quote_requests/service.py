@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.base.database_model import Language
 from src.modules.base.exception import NoDataForUpdate
-from src.modules.configurator.models import ConfiguratorSetting, Currency
+from src.modules.configurator_setting.models import ConfiguratorSetting, Currency
 from src.modules.colors.repository import ColorRepository
 from src.modules.rope_products.models import RopeProduct
 from src.modules.rope_products.repository import RopeProductRepository, RopeVariantRepository
@@ -130,12 +130,12 @@ class QuoteRequestService:
 
         if data.configurator_type == ConfiguratorType.ROPE_WITH_SPLICE and not data.rope_items:
             raise QuoteRequestValidationError(
-                "Rope with splice configurator requires at least one rope item."
+                "Rope with splice configurator_extra requires at least one rope item."
             )
 
         if data.configurator_type in (ConfiguratorType.LOOP_ONLY, ConfiguratorType.SPLICE_ONLY) and not data.service_items:
             raise QuoteRequestValidationError(
-                f"{data.configurator_type.value} configurator requires at least one service item."
+                f"{data.configurator_type.value} configurator_extra requires at least one service item."
             )
 
     async def _get_configurator_setting(self) -> Tuple[Currency, float, float]:

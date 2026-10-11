@@ -31,7 +31,7 @@ async def create_quote_request(
     service: QuoteRequestService = Depends(get_quote_request_service),
 ):
     """
-    Submit a new quote request from any configurator (public).
+    Submit a new quote request from any configurator_extra (public).
     Snapshots and prices are automatically resolved and calculated by backend.
     """
     return await service.create_quote_request(data=data)
@@ -44,7 +44,7 @@ async def create_quote_request(
 )
 async def list_quote_requests(
     status_filter: Optional[QuoteRequestStatus] = Query(None, alias="status", description="Filter by status"),
-    configurator_type: Optional[ConfiguratorType] = Query(None, description="Filter by configurator type"),
+    configurator_type: Optional[ConfiguratorType] = Query(None, description="Filter by configurator_extra type"),
     name: Optional[str] = Query(None, description="Filter by customer name (partial)"),
     email: Optional[str] = Query(None, description="Filter by email (partial)"),
     phone: Optional[str] = Query(None, description="Filter by phone (partial)"),

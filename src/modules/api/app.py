@@ -19,6 +19,7 @@ from src.modules.rope_products.views import router as rope_products_router, vari
 from src.modules.material_groups.views import router as material_groups_router
 from src.modules.materials.views import router as materials_router
 from src.modules.quote_requests.views import router as quote_requests_router
+from src.modules.configurator_extra.views import router as configurator_extras_router
 
 
 def _include_middlewares(app: FastAPI, config: Config) -> FastAPI:
@@ -48,6 +49,7 @@ def _include_routers(app: FastAPI) -> FastAPI:
     app.include_router(material_groups_router)
     app.include_router(materials_router)
     app.include_router(quote_requests_router)
+    app.include_router(configurator_extras_router)
     return app
 
 
@@ -58,29 +60,21 @@ def init_fastapi_app() -> FastAPI:
     )
 
     config = create_config()
-    app.state.config = config
+    register_exception_handlers(app=app)
+    _include_middlewares(app=app, config=config)
+    _include_routers(app=app)
 
-    _include_middlewares(app, config)
-    register_exception_handlers(app)
-
-    # Раздача медиа файлов (статических изображений)
+    # Раздача медиа файлов (статических изображений
     app.mount("/media", StaticFiles(directory=config.paths.media), name="media")
-
-    _include_routers(app)
 
     return app
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    config = create_config()
-    app.state.config = config
-    app.state.cr_context = CryptContext(
-        schemes=["bcrypt"],
-        deprecated="auto"
-    )
-
-    try:
-        yield
-    finally:
-        pass
+    # При старте приложения инициализируем сервисы
+    app.state.config = create_config()
+    app.state.cr_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    yield
+    # При завершении приложения освобождаем ресурсы
+    pass

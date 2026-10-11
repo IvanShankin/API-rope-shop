@@ -1,21 +1,26 @@
-﻿import enum
+import enum
 from typing import List, Optional
 from datetime import datetime
 from sqlalchemy import String, Integer, Boolean, ForeignKey, UniqueConstraint, DateTime, func, Text, Numeric, Enum
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
-from src.core.database.database import Base
-from src.modules.base.database_model import BaseTranslation
+from src.modules.base.database_model import BaseTranslation, BaseModelWithRelationshipTranslation
 from src.modules.configurator_setting.models import Currency
 
 
 class BillingType(str, enum.Enum):
-    FIXED = "fixed"
-    PER_ITEM = "per_item"
-    PER_METER = "per_meter"
+    FIXED = "fixed"         # Фиксированная цена за весь заказ
+    PER_ITEM = "per_item"   # За каждое готовое изделие (за штуку)
+    PER_METER = "per_meter" # За каждый метр длины каната
 
 
-class ConfiguratorExtra(Base):
+class ConfiguratorExtra(BaseModelWithRelationshipTranslation):
+    """
+    Формулы формирования надбавки к цене в зависимости от BillingType:
+    FIXED = фиксированная надбавка
+    PER_ITEM = price * quantity.
+    PER_METER = price * length_m * quantity.
+    """
     __tablename__ = "configurator_extras"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -25,16 +30,25 @@ class ConfiguratorExtra(Base):
         Enum(
             Currency,
             values_callable=lambda x: [e.value for e in x],
-            name="configurator_type",
+            name="currency",
             native_enum=False,
             length=50
         ),
         nullable=False,
         default=Currency.EUR.value,
     )
-    billing_type: Mapped[str] = mapped_column(String(30), nullable=False)
+    billing_type: Mapped[BillingType] = mapped_column(
+        Enum(
+            BillingType,
+            values_callable=lambda x: [e.value for e in x],
+            name="billing_type",
+            native_enum=False,
+            length=50
+        ),
+        nullable=False,
+    )
     index: Mapped[int] = mapped_column(Integer, nullable=False)
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="true")
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
@@ -50,7 +64,11 @@ class ConfiguratorExtraTranslation(BaseTranslation):
     __tablename__ = "configurator_extra_translations"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    extra_id: Mapped[int] = mapped_column(Integer, ForeignKey("configurator_extras.id", ondelete="CASCADE"), nullable=False)
+    extra_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("configurator_extras.id", ondelete="CASCADE"),
+        nullable=False
+    )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 

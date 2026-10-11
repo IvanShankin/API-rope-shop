@@ -22,6 +22,8 @@ from src.modules.db_models import (
     QuoteRequest,
     QuoteRopeItem,
     QuoteServiceItem,
+    ConfiguratorExtra,
+    ConfiguratorExtraTranslation,
 )
 from src.tools.creating_db import create_database
 
@@ -44,6 +46,8 @@ async def clearing_db(session_db: AsyncSession):
     await session_db.execute(delete(QuoteRopeItem))
     await session_db.execute(delete(QuoteServiceItem))
     await session_db.execute(delete(QuoteRequest))
+    await session_db.execute(delete(ConfiguratorExtraTranslation))
+    await session_db.execute(delete(ConfiguratorExtra))
     await session_db.execute(delete(RopeAllowedSplice))
     await session_db.execute(delete(RopeProductColor))
     await session_db.execute(delete(RopeVariant))

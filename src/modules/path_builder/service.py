@@ -39,6 +39,33 @@ class PathBuilder:
 
         return root_dir / f"{file_name}.webp"
 
+    # --- category ---
+
+    def get_category_original(
+        self,
+        category_id: int,
+        file_name: str,
+        file_type: str,
+    ) -> Path:
+        root_dir = self._prepare_directory(
+            self.config.paths.categories
+            / str(category_id)
+            / "original"
+        )
+
+        return root_dir / f"{file_name}.{file_type}"
+
+    def get_category(
+        self,
+        category_id: int,
+        file_name: str,
+    ) -> Path:
+        root_dir = self._prepare_directory(
+            self.config.paths.categories / str(category_id)
+        )
+
+        return root_dir / f"{file_name}.webp"
+
     # --- splice_type ---
 
     def get_splice_type_original(

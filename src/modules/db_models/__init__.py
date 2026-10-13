@@ -1,3 +1,4 @@
+from src.modules.categories.models import Category, CategoryTranslation
 from src.modules.products.models import Product
 from src.modules.rope_product_color.models import RopeProductColor
 from src.modules.rope_allowed_splice.models import RopeAllowedSplice
@@ -26,6 +27,8 @@ __all__ = [
     "MaterialTranslation",
     "Color",
     "ColorTranslation",
+    "Category",
+    "CategoryTranslation",
     "Product",
     "RopeProduct",
     "RopeVariant",

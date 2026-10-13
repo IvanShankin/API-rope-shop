@@ -15,6 +15,8 @@ from src.modules.db_models import (
     RopeVariant,
     RopeProduct,
     Product,
+    Category,
+    CategoryTranslation,
     MaterialGroup,
     MaterialGroupTranslation,
     Material,
@@ -57,6 +59,8 @@ async def clearing_db(session_db: AsyncSession):
     await session_db.execute(delete(RopeVariant))
     await session_db.execute(delete(RopeProduct))
     await session_db.execute(delete(Product))
+    await session_db.execute(delete(CategoryTranslation))
+    await session_db.execute(delete(Category))
     await session_db.execute(delete(MaterialTranslation))
     await session_db.execute(delete(Material))
     await session_db.execute(delete(MaterialGroupTranslation))

@@ -8,6 +8,7 @@ from passlib.context import CryptContext
 from src.core.config import Config, create_config
 from src.modules.api.exception_handler import register_exception_handlers
 from src.modules.auth.views import router as auth_router
+from src.modules.categories.views import router as categories_router
 from src.modules.colors.views import router as colors_router
 from src.modules.configurator_extra.views import (
     router as configurator_extras_router,
@@ -69,6 +70,7 @@ def _include_routers(app: FastAPI) -> FastAPI:
     app.include_router(configurator_extras_router)
     app.include_router(configurator_settings_router)
     app.include_router(configurators_router)
+    app.include_router(categories_router)
     return app
 
 

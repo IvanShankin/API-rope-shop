@@ -81,6 +81,7 @@ class PathsConfig(BaseModel):
     base: Path
     media: Path
     products: Path
+    categories: Path
     splice_types: Path
     work_photos: Path
     charity_photos: Path
@@ -91,6 +92,7 @@ class PathsConfig(BaseModel):
         base = Path(__file__).resolve().parents[3]
         media = base / Path("media")
         products = media / Path(f"products{postscript}")
+        categories = media / Path(f"categories{postscript}")
         splice_types = media / Path(f"splice_types{postscript}")
         work_photos = media / Path(f"work_photos{postscript}")
         charity_photos = media / Path(f"charity_photos{postscript}")
@@ -98,6 +100,7 @@ class PathsConfig(BaseModel):
 
         media.mkdir(exist_ok=True)
         products.mkdir(exist_ok=True)
+        categories.mkdir(exist_ok=True)
         splice_types.mkdir(exist_ok=True)
         work_photos.mkdir(exist_ok=True)
         charity_photos.mkdir(exist_ok=True)
@@ -107,6 +110,7 @@ class PathsConfig(BaseModel):
             base=base,
             media=media,
             products=products,
+            categories=categories,
             splice_types=splice_types,
             work_photos=work_photos,
             charity_photos=charity_photos,

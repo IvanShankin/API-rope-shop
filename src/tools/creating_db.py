@@ -43,6 +43,10 @@ async def create_database():
         async with engine.begin() as conn:
             logging.info("Creating database tables...")
             await conn.run_sync(Base.metadata.create_all)
+            # Применяем миграции для добавленных колонок к существующим таблицам
+            await conn.execute(
+                text("ALTER TABLE products ADD COLUMN IF NOT EXISTS category_id INTEGER REFERENCES categories(id) ON DELETE RESTRICT;")
+            )
             logging.info("Database tables created successfully")
     except Exception as e:
         logging.error(f"Error creating tables: {e}")
@@ -54,4 +58,3 @@ async def create_database():
 
 if __name__ == "__main__":
     asyncio.run(create_database())
-

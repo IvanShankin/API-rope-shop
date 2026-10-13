@@ -35,6 +35,7 @@ from src.modules.splice_materials.views import router as splice_materials_router
 from src.modules.splice_prices.views import router as splice_prices_router
 from src.modules.splice_types.views import router as splice_types_router
 from src.modules.users.views import router as user_router
+from src.tools.init_admin import init_admin
 from src.tools.init_configurator_setting import init_configurator_setting
 
 
@@ -92,6 +93,7 @@ async def lifespan(app: FastAPI):
     app.state.config = create_config()
     app.state.cr_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     await init_configurator_setting(config=app.state.config)
+    await init_admin(config=app.state.config, cr_context=app.state.cr_context)
     yield
     # При завершении приложения освобождаем ресурсы
     pass

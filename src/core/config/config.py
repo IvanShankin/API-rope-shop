@@ -19,6 +19,7 @@ class Config:
         self.tokens: TokensConfig = TokensConfig.build()
         self.allowed_extensions: AllowedExtensions = AllowedExtensions.build()
         self.cors: CorsConfig = CorsConfig.build()
+        self.admin: AdminConfig = AdminConfig.build()
 
 
 class EnvConfig(BaseModel):
@@ -181,4 +182,18 @@ class CorsConfig(BaseModel):
             allow_methods=["*"],
             allow_headers=["*"],
             expose_headers=["*"],
+        )
+
+
+class AdminConfig(BaseModel):
+    email: str
+    username: str
+    password: str
+
+    @classmethod
+    def build(cls) -> "AdminConfig":
+        return cls(
+            email=os.environ.get("ADMIN_EMAIL", "admin@example.com"),
+            username=os.environ.get("ADMIN_USERNAME", "admin"),
+            password=os.environ.get("ADMIN_PASSWORD", "admin12345"),
         )

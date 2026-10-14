@@ -47,6 +47,24 @@ async def create_database():
             await conn.execute(
                 text("ALTER TABLE products ADD COLUMN IF NOT EXISTS category_id INTEGER REFERENCES categories(id) ON DELETE RESTRICT;")
             )
+            await conn.execute(
+                text("ALTER TABLE products ADD COLUMN IF NOT EXISTS slug VARCHAR(150) UNIQUE;")
+            )
+            await conn.execute(
+                text("ALTER TABLE products ADD COLUMN IF NOT EXISTS product_type VARCHAR(50) DEFAULT 'rope';")
+            )
+            await conn.execute(
+                text("ALTER TABLE products ADD COLUMN IF NOT EXISTS index INTEGER DEFAULT 0;")
+            )
+            await conn.execute(
+                text("ALTER TABLE products ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;")
+            )
+            await conn.execute(
+                text("ALTER TABLE products ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;")
+            )
+            await conn.execute(
+                text("ALTER TABLE products ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;")
+            )
             logging.info("Database tables created successfully")
     except Exception as e:
         logging.error(f"Error creating tables: {e}")

@@ -21,6 +21,7 @@ from src.modules.configurators.views import (
 )
 from src.modules.material_groups.views import router as material_groups_router
 from src.modules.materials.views import router as materials_router
+from src.modules.products.views import router as products_router
 from src.modules.quote_requests.views import router as quote_requests_router
 from src.modules.rope_allowed_splice.views import (
     router as rope_allowed_splices_router,
@@ -71,6 +72,7 @@ def _include_routers(app: FastAPI) -> FastAPI:
     app.include_router(configurator_settings_router)
     app.include_router(configurators_router)
     app.include_router(categories_router)
+    app.include_router(products_router)
     return app
 
 

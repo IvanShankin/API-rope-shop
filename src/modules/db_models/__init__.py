@@ -1,5 +1,6 @@
 from src.modules.categories.models import Category, CategoryTranslation
-from src.modules.products.models import Product
+from src.modules.product_images.models import ProductImage
+from src.modules.products.models import Product, ProductTranslation, ProductType
 from src.modules.rope_product_color.models import RopeProductColor
 from src.modules.rope_allowed_splice.models import RopeAllowedSplice
 from src.modules.users.models import User
@@ -30,6 +31,9 @@ __all__ = [
     "Category",
     "CategoryTranslation",
     "Product",
+    "ProductTranslation",
+    "ProductType",
+    "ProductImage",
     "RopeProduct",
     "RopeVariant",
     "RopeProductColor",

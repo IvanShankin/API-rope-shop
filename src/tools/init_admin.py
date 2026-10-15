@@ -25,8 +25,8 @@ async def init_admin(
 ) -> User:
     """
     Инициализирует единственного администратора на основе настроек из конфигурации (.env).
-    Если администраторы уже существуют, они удаляются вместе со связанными записями токенов,
-    после чего создаётся единственный администратор.
+    Если администраторы уже существуют, ничего не создаёт.
+    Если нет, то создаётся единственный администратор.
 
     :param session: Опциональная асинхронная сессия SQLAlchemy.
     :param config: Опциональный объект конфигурации Config.
@@ -59,8 +59,8 @@ async def _recreate_admin_if_needed(
 ) -> User:
     """
     Проверяет наличие администраторов (или пользователей с конфликтующим email/username).
-    При наличии удаляет их вместе с токенами в таблице refresh_tokens, после чего
-    создаёт единственного администратора с учётными данными из конфигурации.
+    При наличии ничего не делает.
+    Если их нет, то создаёт единственного администратора с учётными данными из конфигурации.
     """
     stmt = select(User).where(
         or_(
@@ -72,18 +72,8 @@ async def _recreate_admin_if_needed(
     existing_users = (await session.execute(stmt)).scalars().all()
 
     if existing_users:
-        user_ids = [u.id for u in existing_users]
-        logger.info(
-            f"Found {len(user_ids)} existing admin(s)/conflicting user(s). "
-            f"Deleting them along with associated refresh tokens..."
-        )
-        await session.execute(
-            delete(RefreshToken).where(RefreshToken.user_id.in_(user_ids))
-        )
-        await session.execute(
-            delete(User).where(User.id.in_(user_ids))
-        )
-        await session.flush()
+        logger.info("The admin has been found; a new one will not be created.")
+        return existing_users[0]
     else:
         logger.info("No existing admin found. Creating new admin...")
 

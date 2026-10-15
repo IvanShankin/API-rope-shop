@@ -43,6 +43,11 @@ from tests.modules.product_specification.fixtures import (
     create_product_specification_fixture,
     create_product_specification_translation_fixture,
 )
+from tests.modules.product_application.fixtures import (
+    create_product_application_fixture,
+    create_product_application_translation_fixture,
+    create_product_assigned_application_fixture,
+)
 from tests.modules.rope_products.fixtures import (
     create_rope_product_fixture,
     create_rope_variant_fixture,
@@ -99,6 +104,9 @@ __all__ = [
     "create_product_translation_fixture",
     "create_product_specification_fixture",
     "create_product_specification_translation_fixture",
+    "create_product_application_fixture",
+    "create_product_application_translation_fixture",
+    "create_product_assigned_application_fixture",
     "create_rope_product_fixture",
     "create_rope_variant_fixture",
     "create_rope_product_color_fixture",

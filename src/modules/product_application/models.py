@@ -1,6 +1,6 @@
 from typing import List, TYPE_CHECKING
 
-from sqlalchemy import Boolean, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import Boolean, ForeignKey, Index, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.core.database.database import Base
@@ -13,8 +13,8 @@ if TYPE_CHECKING:
     from src.modules.products.models import Product
 
 
-
 class ProductApplication(BaseModelWithRelationshipTranslation):
+    """Связка с назначениями для фильтрации"""
     __tablename__ = "product_applications"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -26,11 +26,11 @@ class ProductApplication(BaseModelWithRelationshipTranslation):
         "ProductApplicationTranslation",
         back_populates="application",
         cascade="all, delete-orphan",
+        order_by="ProductApplicationTranslation.id",
     )
     assigned_products: Mapped[List["ProductAssignedApplication"]] = relationship(
         "ProductAssignedApplication",
         back_populates="application",
-        cascade="all, delete-orphan",
     )
 
 
@@ -55,6 +55,7 @@ class ProductApplicationTranslation(BaseTranslation):
 class ProductAssignedApplication(Base):
     __tablename__ = "product_assigned_applications"
     __table_args__ = (
+        Index("idx_product_assigned_apps", "application_id", "product_id"),
         UniqueConstraint("product_id", "application_id", name="uq_product_assigned_app"),
     )
 
@@ -65,7 +66,7 @@ class ProductAssignedApplication(Base):
     )
     application_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("product_applications.id", ondelete="CASCADE"),
+        ForeignKey("product_applications.id", ondelete="RESTRICT"),
         primary_key=True,
     )
 

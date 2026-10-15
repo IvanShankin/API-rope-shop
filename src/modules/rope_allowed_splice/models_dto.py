@@ -6,12 +6,12 @@ from src.modules.splice_types.models_dto import SpliceTypeResponseDTO, SpliceTyp
 
 
 class RopeAllowedSpliceBase(BaseModel):
-    rope_product_id: int
+    product_id: int
     splice_type_id: int
 
 
 class RopeAllowedSpliceCreate(BaseModel):
-    rope_product_id: int
+    product_id: int
     splice_type_id: int
 
 

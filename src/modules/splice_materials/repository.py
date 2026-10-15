@@ -7,7 +7,7 @@ from sqlalchemy.orm import selectinload
 from src.modules.base.repository_model import BaseRepository
 from src.modules.splice_materials.models import SpliceMaterial
 from src.modules.splice_prices.models import SplicePriceRule
-from src.modules.rope_products.models import RopeProduct
+from src.modules.rope_products.models import RopeConfiguratorSetting
 from src.modules.splice_types.models import SpliceType
 
 
@@ -55,15 +55,15 @@ class SpliceMaterialRepository(BaseRepository):
     async def has_dependencies(self, material_id: int) -> bool:
         """Проверка наличия связей (правила цен или привязанные веревки)."""
         rules_exist_stmt = select(exists().where(SplicePriceRule.splice_material_id == material_id))
-        ropes_exist_stmt = select(exists().where(RopeProduct.splice_material_id == material_id))
+        ropes_exist_stmt = select(exists().where(RopeConfiguratorSetting.splice_material_id == material_id))
         
         has_rules = await self.session.scalar(rules_exist_stmt)
         has_ropes = await self.session.scalar(ropes_exist_stmt)
         
-        return has_rules or has_ropes
+        return bool(has_rules or has_ropes)
 
     async def update_material(self, material_id: int, update_data: dict) -> None:
-        """Обновление группы материалов."""
+        """Обновление полей группы материалов."""
         stmt = update(SpliceMaterial).where(SpliceMaterial.id == material_id).values(**update_data)
         await self.session.execute(stmt)
 

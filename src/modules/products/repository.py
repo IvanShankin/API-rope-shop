@@ -1,4 +1,4 @@
-from typing import Optional, Sequence
+from typing import Any, Optional, Sequence, Union
 from sqlalchemy import delete, exists, func, select, update
 from sqlalchemy.orm import selectinload
 
@@ -14,7 +14,7 @@ from src.modules.products.models_dto import (
     ProductBase,
     ProductTranslationInsert,
 )
-from src.modules.rope_products.models import RopeProduct
+from src.modules.rope_products.models import RopeConfiguratorSetting
 
 
 class ProductRepository(BaseIndexedRepository):
@@ -63,13 +63,14 @@ class ProductRepository(BaseIndexedRepository):
                 selectinload(Product.images),
                 selectinload(Product.category),
             )
+            .order_by(Product.index)
         )
-
-        if category_slug is not None:
-            stmt = stmt.join(Product.category).where(Category.slug == category_slug)
 
         if category_id is not None:
             stmt = stmt.where(Product.category_id == category_id)
+
+        if category_slug is not None:
+            stmt = stmt.join(Product.category).where(Category.slug == category_slug)
 
         if product_type is not None:
             stmt = stmt.where(Product.product_type == product_type)
@@ -77,14 +78,15 @@ class ProductRepository(BaseIndexedRepository):
         if is_active is not None:
             stmt = stmt.where(Product.is_active == is_active)
 
-        stmt = stmt.order_by(Product.index).offset(skip)
+        if skip:
+            stmt = stmt.offset(skip)
         if limit is not None:
             stmt = stmt.limit(limit)
 
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
-    async def count(
+    async def count_products(
         self,
         category_id: Optional[int] = None,
         category_slug: Optional[str] = None,
@@ -93,11 +95,11 @@ class ProductRepository(BaseIndexedRepository):
     ) -> int:
         stmt = select(func.count(Product.id))
 
-        if category_slug is not None:
-            stmt = stmt.join(Product.category).where(Category.slug == category_slug)
-
         if category_id is not None:
             stmt = stmt.where(Product.category_id == category_id)
+
+        if category_slug is not None:
+            stmt = stmt.join(Product.category).where(Category.slug == category_slug)
 
         if product_type is not None:
             stmt = stmt.where(Product.product_type == product_type)
@@ -109,8 +111,8 @@ class ProductRepository(BaseIndexedRepository):
         return result.scalar_one()
 
     async def has_dependencies(self, product_id: int) -> bool:
-        """Проверка наличия связанных записей в rope_products или product_images."""
-        rope_stmt = select(exists().where(RopeProduct.product_id == product_id))
+        """Проверка наличия связанных записей в rope_configurator_settings или product_images."""
+        rope_stmt = select(exists().where(RopeConfiguratorSetting.product_id == product_id))
         images_stmt = select(exists().where(ProductImage.product_id == product_id))
 
         has_rope = (await self.session.execute(rope_stmt)).scalar() or False
@@ -146,25 +148,12 @@ class ProductTranslationRepository(BaseRepository):
     def __init__(self, session):
         super().__init__(session=session, model=ProductTranslation)
 
-    async def add_translation(self, data: ProductTranslationInsert) -> ProductTranslation:
-        trans = ProductTranslation(
-            product_id=data.product_id,
-            locale=data.locale,
-            name=data.name,
-            description=data.description,
-        )
-        self.session.add(trans)
-        return trans
-
-    async def get_by_id(self, translation_id: int) -> Optional[ProductTranslation]:
-        stmt = select(ProductTranslation).where(ProductTranslation.id == translation_id)
-        result = await self.session.execute(stmt)
-        return result.scalar_one_or_none()
+    async def add_translation(self, data: Union[dict, Any]) -> ProductTranslation:
+        """Добавление перевода товара."""
+        return self.add(data)
 
     async def get_by_product_and_locale(
-        self,
-        product_id: int,
-        locale: Language,
+        self, product_id: int, locale: Language
     ) -> Optional[ProductTranslation]:
         stmt = select(ProductTranslation).where(
             ProductTranslation.product_id == product_id,
@@ -173,7 +162,28 @@ class ProductTranslationRepository(BaseRepository):
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
+    async def upsert_translation(
+        self, product_id: int, data: ProductTranslationInsert
+    ) -> ProductTranslation:
+        existing = await self.get_by_product_and_locale(product_id, data.locale)
+        if existing:
+            existing.name = data.name
+            existing.subtitle = data.subtitle
+            existing.description = data.description
+            return existing
+
+        translation = ProductTranslation(
+            product_id=product_id,
+            locale=data.locale,
+            name=data.name,
+            subtitle=data.subtitle,
+            description=data.description,
+        )
+        self.session.add(translation)
+        return translation
+
     async def update_translation(self, translation_id: int, update_data: dict) -> None:
+        """Обновление перевода товара."""
         stmt = (
             update(ProductTranslation)
             .where(ProductTranslation.id == translation_id)
@@ -182,12 +192,18 @@ class ProductTranslationRepository(BaseRepository):
         await self.session.execute(stmt)
 
     async def delete_translation(self, translation_id: int) -> None:
+        """Удаление перевода товара."""
         stmt = delete(ProductTranslation).where(ProductTranslation.id == translation_id)
         await self.session.execute(stmt)
 
     async def count_by_product_id(self, product_id: int) -> int:
-        stmt = select(func.count(ProductTranslation.id)).where(
+        """Количество переводов товара."""
+        stmt = select(func.count(ProductTranslation.id)).where(ProductTranslation.product_id == product_id)
+        result = await self.session.execute(stmt)
+        return int(result.scalar_one())
+
+    async def delete_by_product_id(self, product_id: int) -> None:
+        stmt = delete(ProductTranslation).where(
             ProductTranslation.product_id == product_id
         )
-        result = await self.session.execute(stmt)
-        return result.scalar_one()
+        await self.session.execute(stmt)

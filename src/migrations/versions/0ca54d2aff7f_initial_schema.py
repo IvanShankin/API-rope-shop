@@ -254,7 +254,7 @@ def upgrade() -> None:
     op.create_table('quote_rope_items',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('quote_request_id', sa.Integer(), nullable=False),
-    sa.Column('rope_product_id', sa.Integer(), nullable=True),
+    sa.Column('product_id', sa.Integer(), nullable=True),
     sa.Column('color_id', sa.Integer(), nullable=True),
     sa.Column('product_name_snapshot', sa.String(length=255), nullable=False),
     sa.Column('color_name_snapshot', sa.String(length=100), nullable=False),
@@ -275,30 +275,30 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['end_a_type_id'], ['splice_types.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['end_b_type_id'], ['splice_types.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['quote_request_id'], ['quote_requests.id'], ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['rope_product_id'], ['rope_products.product_id'], ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['product_id'], ['rope_products.product_id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('rope_allowed_splices',
-    sa.Column('rope_product_id', sa.Integer(), nullable=False),
+    sa.Column('product_id', sa.Integer(), nullable=False),
     sa.Column('splice_type_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['rope_product_id'], ['rope_products.product_id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['product_id'], ['rope_products.product_id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['splice_type_id'], ['splice_types.id'], ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('rope_product_id', 'splice_type_id'),
-    sa.UniqueConstraint('rope_product_id', 'splice_type_id', name='uq_rope_allowed_splice')
+    sa.PrimaryKeyConstraint('product_id', 'splice_type_id'),
+    sa.UniqueConstraint('product_id', 'splice_type_id', name='uq_rope_allowed_splice')
     )
     op.create_table('rope_product_colors',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('rope_product_id', sa.Integer(), nullable=False),
+    sa.Column('product_id', sa.Integer(), nullable=False),
     sa.Column('color_id', sa.Integer(), nullable=False),
     sa.Column('index', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['color_id'], ['colors.id'], ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['rope_product_id'], ['rope_products.product_id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['product_id'], ['rope_products.product_id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('rope_product_id', 'color_id', name='uq_rope_product_color')
+    sa.UniqueConstraint('product_id', 'color_id', name='uq_rope_product_color')
     )
     op.create_table('rope_variants',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('rope_product_id', sa.Integer(), nullable=False),
+    sa.Column('product_id', sa.Integer(), nullable=False),
     sa.Column('diameter_mm', sa.Numeric(precision=6, scale=2), nullable=False),
     sa.Column('breaking_load_dan', sa.Numeric(precision=10, scale=2), nullable=True),
     sa.Column('weight_g_per_m', sa.Numeric(precision=10, scale=2), nullable=True),
@@ -307,7 +307,7 @@ def upgrade() -> None:
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.ForeignKeyConstraint(['rope_product_id'], ['rope_products.product_id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['product_id'], ['rope_products.product_id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###

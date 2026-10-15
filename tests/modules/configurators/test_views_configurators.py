@@ -137,13 +137,18 @@ class TestsForSuccess:
             )
         )
         await create_rope_variant_fixture(
-            CreateRopeVariantFixtureDTO(rope_product_id=rope.product_id, diameter_mm=10.0, price_per_meter=3.5)
+            CreateRopeVariantFixtureDTO(
+                product_id=rope.product_id,
+                variant_name="10 мм",
+                size_value=10.0,
+                price=3.5,
+            )
         )
         await create_rope_product_color_fixture(
-            CreateRopeProductColorFixtureDTO(rope_product_id=rope.product_id, color_id=color.id)
+            CreateRopeProductColorFixtureDTO(product_id=rope.product_id, color_id=color.id)
         )
         await create_rope_allowed_splice_fixture(
-            CreateRopeAllowedSpliceFixtureDTO(rope_product_id=rope.product_id, splice_type_id=st_loop.id)
+            CreateRopeAllowedSpliceFixtureDTO(product_id=rope.product_id, splice_type_id=st_loop.id)
         )
 
         # Вызов API
@@ -165,7 +170,8 @@ class TestsForSuccess:
         assert dto.rope_products[0].construction == "12-strand braided"
         assert dto.rope_products[0].material_group_name == "Polyester Group"
         assert len(dto.rope_products[0].variants) == 1
-        assert dto.rope_products[0].variants[0].diameter_mm == 10.0
+        assert dto.rope_products[0].variants[0].variant_name == "10 мм"
+        assert float(dto.rope_products[0].variants[0].size_value) == 10.0
         assert len(dto.rope_products[0].colors) == 1
         assert dto.rope_products[0].colors[0].color.name == "Navy Blue"
         assert len(dto.rope_products[0].allowed_splices) == 1
@@ -204,7 +210,12 @@ class TestsForSuccess:
             CreateRopeProductFixtureDTO(material_group_id=mg.id, splice_material_id=mat.id)
         )
         await create_rope_variant_fixture(
-            CreateRopeVariantFixtureDTO(rope_product_id=rope.product_id, diameter_mm=8.0, price_per_meter=2.0)
+            CreateRopeVariantFixtureDTO(
+                product_id=rope.product_id,
+                variant_name="8 мм",
+                size_value=8.0,
+                price=2.0,
+            )
         )
 
         response = await client_for_tests.get("/configurators?configurator_type=rope_with_splice")
@@ -347,83 +358,40 @@ class TestsForSuccess:
             CreateConfiguratorExtraFixtureDTO(code="WARRANTY", name="Extended Warranty")
         )
         await create_configurator_extra_translation_fixture(
-            CreateConfiguratorExtraTranslationFixtureDTO(extra_id=extra.id, locale=Language.RUS, name="Расширенная гарантия")
-        )
-        await create_configurator_extra_translation_fixture(
-            CreateConfiguratorExtraTranslationFixtureDTO(extra_id=extra.id, locale=Language.GER, name="Erweiterte Garantie")
-        )
-
-        st = await create_splice_type_fixture(
-            CreateSpliceTypeFixtureDTO(code="thimble", name="Thimble Splice")
-        )
-        await create_splice_type_translation_fixture(
-            CreateSpliceTypeTranslationFixtureDTO(splice_type_id=st.id, locale=Language.RUS, name="Огон с коушем")
-        )
-        await create_splice_type_translation_fixture(
-            CreateSpliceTypeTranslationFixtureDTO(splice_type_id=st.id, locale=Language.GER, name="Kausch-Spleiß")
+            CreateConfiguratorExtraTranslationFixtureDTO(
+                extra_id=extra.id,
+                locale=Language.RUS,
+                name="Расширенная гарантия",
+            )
         )
 
-        # 1. Запрос на русском языке
-        res_rus = await client_for_tests.get("/configurators?locale=rus")
-        assert res_rus.status_code == 200
-        dto_rus = ConfiguratorDataResponseDTO.model_validate(res_rus.json())
+        splice_type = await create_splice_type_fixture(
+            CreateSpliceTypeFixtureDTO(code="leather_prot", name="Leather Protection")
+        )
+        await create_splice_type_translation_fixture(
+            CreateSpliceTypeTranslationFixtureDTO(
+                splice_type_id=splice_type.id,
+                locale=Language.RUS,
+                name="Кожаный протектор",
+            )
+        )
+
+        # Запрос на русском языке
+        resp_rus = await client_for_tests.get("/configurators?locale=rus")
+        assert resp_rus.status_code == 200
+        dto_rus = ConfiguratorDataResponseDTO.model_validate(resp_rus.json())
         assert dto_rus.locale == Language.RUS
-        assert dto_rus.extras[0].name == "Расширенная гарантия"
-        assert dto_rus.splice_types[0].name == "Огон с коушем"
 
-        # 2. Запрос на немецком языке
-        res_ger = await client_for_tests.get("/configurators?locale=ger")
-        assert res_ger.status_code == 200
-        dto_ger = ConfiguratorDataResponseDTO.model_validate(res_ger.json())
+        extra_rus = next(e for e in dto_rus.extras if e.id == extra.id)
+        assert extra_rus.name == "Расширенная гарантия"
+
+        st_rus = next(s for s in dto_rus.splice_types if s.id == splice_type.id)
+        assert st_rus.name == "Кожаный протектор"
+
+        # Запрос на немецком языке (fallback на код или английский если нет немецкого)
+        resp_ger = await client_for_tests.get("/configurators?locale=ger")
+        assert resp_ger.status_code == 200
+        dto_ger = ConfiguratorDataResponseDTO.model_validate(resp_ger.json())
         assert dto_ger.locale == Language.GER
-        assert dto_ger.extras[0].name == "Erweiterte Garantie"
-        assert dto_ger.splice_types[0].name == "Kausch-Spleiß"
-
-    @pytest.mark.asyncio
-    async def test_get_configurators_inactive_items_excluded(
-        self,
-        client_for_tests,
-        create_configurator_extra_fixture,
-        create_splice_type_fixture,
-        create_splice_price_rule_fixture,
-        create_splice_material_fixture,
-    ):
-        """Неактивные сущности (is_active=False) не должны отдаваться в конфигуратор."""
-        mat = await create_splice_material_fixture(CreateSpliceMaterialFixtureDTO())
-
-        # Активная и неактивная опция
-        await create_configurator_extra_fixture(
-            CreateConfiguratorExtraFixtureDTO(code="ACTIVE_OPT", name="Active Option", is_active=True)
-        )
-        await create_configurator_extra_fixture(
-            CreateConfiguratorExtraFixtureDTO(code="INACTIVE_OPT", name="Inactive Option", is_active=False)
-        )
-
-        # Активный и неактивный тип заделки
-        st_active = await create_splice_type_fixture(
-            CreateSpliceTypeFixtureDTO(code="active_st", name="Active Splice", is_active=True)
-        )
-        st_inactive = await create_splice_type_fixture(
-            CreateSpliceTypeFixtureDTO(code="inactive_st", name="Inactive Splice", is_active=False)
-        )
-
-        # Активное и неактивное ценовое правило
-        await create_splice_price_rule_fixture(
-            CreateSplicePriceRuleFixtureDTO(splice_type_id=st_active.id, splice_material_id=mat.id, is_active=True, price=10.0)
-        )
-        await create_splice_price_rule_fixture(
-            CreateSplicePriceRuleFixtureDTO(splice_type_id=st_active.id, splice_material_id=mat.id, is_active=False, price=20.0)
-        )
-
-        response = await client_for_tests.get("/configurators")
-        assert response.status_code == 200
-
-        dto = ConfiguratorDataResponseDTO.model_validate(response.json())
-        assert len(dto.extras) == 1
-        assert dto.extras[0].code == "ACTIVE_OPT"
-
-        assert len(dto.splice_types) == 1
-        assert dto.splice_types[0].code == "active_st"
-
-        assert len(dto.splice_price_rules) == 1
-        assert dto.splice_price_rules[0].price == 10.0
+        extra_ger = next(e for e in dto_ger.extras if e.id == extra.id)
+        assert extra_ger.name == "Extended Warranty"

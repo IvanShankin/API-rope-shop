@@ -25,7 +25,7 @@ async def create_database():
             )
             database_exists = result.scalar() == 1
 
-            if not database_exists: # если БД нет
+            if not database_exists:
                 logging.info(f"Creating database {conf.env.db_name}...")
                 await conn.execute(text(f"CREATE DATABASE {conf.env.db_name}"))
                 logging.info(f"Database {conf.env.db_name} created successfully")
@@ -41,37 +41,18 @@ async def create_database():
     engine = create_async_engine(conf.db_connection.sql_db_url)
     try:
         async with engine.begin() as conn:
-            logging.info("Creating database tables...")
+            logging.info("Cleaning obsolete tables and creating database tables...")
+            await conn.execute(text("DROP TABLE IF EXISTS rope_variants CASCADE;"))
+            await conn.execute(text("DROP TABLE IF EXISTS rope_product_colors CASCADE;"))
+            await conn.execute(text("DROP TABLE IF EXISTS rope_products CASCADE;"))
+            await conn.run_sync(Base.metadata.drop_all)
             await conn.run_sync(Base.metadata.create_all)
-            # Применяем миграции для добавленных колонок к существующим таблицам
-            await conn.execute(
-                text("ALTER TABLE products ADD COLUMN IF NOT EXISTS category_id INTEGER REFERENCES categories(id) ON DELETE RESTRICT;")
-            )
-            await conn.execute(
-                text("ALTER TABLE products ADD COLUMN IF NOT EXISTS slug VARCHAR(150) UNIQUE;")
-            )
-            await conn.execute(
-                text("ALTER TABLE products ADD COLUMN IF NOT EXISTS product_type VARCHAR(50) DEFAULT 'rope';")
-            )
-            await conn.execute(
-                text("ALTER TABLE products ADD COLUMN IF NOT EXISTS index INTEGER DEFAULT 0;")
-            )
-            await conn.execute(
-                text("ALTER TABLE products ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;")
-            )
-            await conn.execute(
-                text("ALTER TABLE products ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;")
-            )
-            await conn.execute(
-                text("ALTER TABLE products ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;")
-            )
             logging.info("Database tables created successfully")
     except Exception as e:
         logging.error(f"Error creating tables: {e}")
         raise
     finally:
         await engine.dispose()
-
 
 
 if __name__ == "__main__":

@@ -59,6 +59,7 @@ class CategoryTranslation(BaseTranslation):
         nullable=False,
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
+    subtitle: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
     category: Mapped["Category"] = relationship(
         "Category",

@@ -3,8 +3,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from src.modules.base.database_model import Language
-from src.modules.categories.models import Category
 from src.modules.product_images.models import ProductImage
+from src.modules.rope_products.models import RopeConfiguratorSetting
 from src.modules.products.models import Product, ProductTranslation, ProductType
 from src.modules.products.models_dto import (
     ProductCreate,
@@ -16,7 +16,6 @@ from src.modules.products.models_dto import (
     ProductUpdate,
     ProductUpdateIndexDTO,
 )
-from src.modules.rope_products.models import RopeProduct
 from src.modules.users.models import UserRole
 from tests.helpers.functions import comparison_models
 from tests.modules.categories.fixtures.models_dto import CreateCategoryFixtureDTO
@@ -837,7 +836,7 @@ class TestsForErrors:
         create_material_group_fixture,
         create_splice_material_fixture,
     ):
-        """Попытка удаления товара, к которому привязан RopeProduct -> 400 Bad Request."""
+        """Попытка удаления товара, к которому привязан Product -> 400 Bad Request."""
         admin_user, access_token = await create_user_fixture(
             CreateUserFixtureDTO(role=UserRole.ADMIN)
         )
@@ -845,7 +844,7 @@ class TestsForErrors:
         mg = await create_material_group_fixture()
         sm = await create_splice_material_fixture()
 
-        rope_prod = RopeProduct(
+        rope_prod = RopeConfiguratorSetting(
             product_id=prod.id,
             material_group_id=mg.id,
             splice_material_id=sm.id,

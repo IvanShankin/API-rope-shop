@@ -22,11 +22,20 @@ class BaseRepository:
         self.session.add(instance)
         return instance
 
-    async def get_by_id(self, model: ModelType, obj_id: int) -> ModelType | None:
+    async def get_by_id(
+        self,
+        arg1: Union[Type[ModelType], int],
+        arg2: Optional[int] = None,
+    ) -> ModelType | None:
+        if arg2 is not None:
+            model = arg1
+            obj_id = arg2
+        else:
+            model = self.model
+            obj_id = arg1
+
         stmt = select(model).where(model.id == obj_id)
-
         result = await self.session.execute(stmt)
-
         return result.scalar_one_or_none()
 
 

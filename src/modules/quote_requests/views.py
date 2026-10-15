@@ -14,6 +14,7 @@ from src.modules.quote_requests.models_dto import (
     QuoteRequestUpdateDTO,
     QuoteRequestUpdateStatusDTO,
     QuoteRequestResponseDTO,
+    QuoteRequestListResponseDTO,
 )
 from src.modules.quote_requests.service import QuoteRequestService
 from src.modules.quote_requests.depends import get_quote_request_service
@@ -39,7 +40,7 @@ async def create_quote_request(
 
 @router.get(
     "",
-    response_model=List[QuoteRequestResponseDTO],
+    response_model=QuoteRequestListResponseDTO,
     status_code=status.HTTP_200_OK,
 )
 async def list_quote_requests(
@@ -77,6 +78,19 @@ async def list_quote_requests(
         skip=skip,
         limit=limit,
     )
+
+
+@router.get(
+    "/number/{request_number}",
+    response_model=QuoteRequestResponseDTO,
+    status_code=status.HTTP_200_OK,
+)
+async def get_quote_request_by_number(
+    request_number: str,
+    service: QuoteRequestService = Depends(get_quote_request_service),
+):
+    """Get quote request details by business request number (public)."""
+    return await service.get_by_request_number(request_number=request_number)
 
 
 @router.get(

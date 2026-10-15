@@ -14,11 +14,11 @@ async def create_rope_allowed_splice_factory(
     session_db: AsyncSession,
     new_item: CreateRopeAllowedSpliceFixtureDTO = CreateRopeAllowedSpliceFixtureDTO(),
 ) -> RopeAllowedSpliceResponseDTO:
-    if new_item.rope_product_id is None:
+    if new_item.product_id is None:
         rp = await create_rope_product_factory(session_db=session_db)
-        rope_product_id = rp.product_id
+        product_id = rp.product_id
     else:
-        rope_product_id = new_item.rope_product_id
+        product_id = new_item.product_id
 
     if new_item.splice_type_id is None:
         st = await create_splice_type_factory(session_db=session_db)
@@ -27,7 +27,7 @@ async def create_rope_allowed_splice_factory(
         splice_type_id = new_item.splice_type_id
 
     item = RopeAllowedSplice(
-        rope_product_id=rope_product_id,
+        product_id=product_id,
         splice_type_id=splice_type_id,
     )
     session_db.add(item)
@@ -40,7 +40,7 @@ async def create_rope_allowed_splice_factory(
             .selectinload(SpliceType.translations)
         )
         .where(
-            RopeAllowedSplice.rope_product_id == rope_product_id,
+            RopeAllowedSplice.product_id == product_id,
             RopeAllowedSplice.splice_type_id == splice_type_id,
         )
     )

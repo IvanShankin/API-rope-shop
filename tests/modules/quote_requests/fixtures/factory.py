@@ -63,12 +63,12 @@ async def create_quote_request_factory(
     # 2. Resolve dependencies for rope items
     resolved_rope_items: List[QuoteRopeItem] = []
     for r_dto in rope_items_dtos:
-        if r_dto.rope_product_id is None:
+        if r_dto.product_id is None:
             rp = await create_rope_product_factory(session_db=session_db)
-            rope_product_id = rp.product_id
+            product_id = rp.product_id
             default_prod_name = rp.construction or "Standard Yacht Rope"
         else:
-            rope_product_id = r_dto.rope_product_id
+            product_id = r_dto.product_id
             default_prod_name = "Standard Yacht Rope"
 
         if r_dto.color_id is None:
@@ -97,7 +97,7 @@ async def create_quote_request_factory(
 
         resolved_rope_items.append(
             QuoteRopeItem(
-                rope_product_id=rope_product_id,
+                product_id=product_id,
                 color_id=color_id,
                 product_name_snapshot=r_dto.product_name_snapshot or default_prod_name,
                 color_name_snapshot=r_dto.color_name_snapshot or default_color_name,
@@ -221,12 +221,12 @@ async def create_quote_rope_item_factory(
         )
         quote_request_id = qr.id
 
-    if new_item.rope_product_id is None:
+    if new_item.product_id is None:
         rp = await create_rope_product_factory(session_db=session_db)
-        rope_product_id = rp.product_id
+        product_id = rp.product_id
         default_prod_name = rp.construction or "Standard Yacht Rope"
     else:
-        rope_product_id = new_item.rope_product_id
+        product_id = new_item.product_id
         default_prod_name = "Standard Yacht Rope"
 
     if new_item.color_id is None:
@@ -255,7 +255,7 @@ async def create_quote_rope_item_factory(
 
     item = QuoteRopeItem(
         quote_request_id=quote_request_id,
-        rope_product_id=rope_product_id,
+        product_id=product_id,
         color_id=color_id,
         product_name_snapshot=new_item.product_name_snapshot or default_prod_name,
         color_name_snapshot=new_item.color_name_snapshot or default_color_name,

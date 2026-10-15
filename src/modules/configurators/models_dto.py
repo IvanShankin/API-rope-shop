@@ -9,13 +9,13 @@ from src.modules.configurator_extra.models_dto import ConfiguratorExtraLocalized
 from src.modules.splice_materials.models_dto import SpliceMaterialResponseDTO
 from src.modules.splice_types.models_dto import SpliceTypeLocalizedResponseDTO
 from src.modules.splice_prices.models_dto import SplicePriceRuleResponseDTO
-from src.modules.rope_products.models_dto import RopeVariantResponseDTO
-from src.modules.rope_product_color.models_dto import RopeProductColorLocalizedResponseDTO
+from src.modules.rope_products.models_dto import ProductVariantResponseDTO
+from src.modules.rope_product_color.models_dto import ProductColorLocalizedResponseDTO
 from src.modules.rope_allowed_splice.models_dto import RopeAllowedSpliceLocalizedResponseDTO
 
 
 class ConfiguratorRopeProductResponseDTO(ORMDTO):
-    """Канат с вариантами диаметров, цветами и разрешенными заделками для конфигуратора."""
+    """Канат с вариантами диаметров, цветами и разрешёнными заделками для конфигуратора."""
     product_id: int
     material_group_id: int
     material_group_name: Optional[str] = None
@@ -23,10 +23,9 @@ class ConfiguratorRopeProductResponseDTO(ORMDTO):
     construction: Optional[str] = None
     core_description: Optional[str] = None
     cover_description: Optional[str] = None
-    working_stretch_percent: Optional[float] = None
     can_be_spliced: bool = True
-    variants: List[RopeVariantResponseDTO] = []
-    colors: List[RopeProductColorLocalizedResponseDTO] = []
+    variants: List[ProductVariantResponseDTO] = []
+    colors: List[ProductColorLocalizedResponseDTO] = []
     allowed_splices: List[RopeAllowedSpliceLocalizedResponseDTO] = []
     splice_material: Optional[SpliceMaterialResponseDTO] = None
 

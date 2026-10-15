@@ -7,7 +7,7 @@ from sqlalchemy.orm import selectinload
 from src.modules.base.database_model import Language
 from src.modules.base.repository_model import BaseIndexedRepository, BaseRepository
 from src.modules.colors.models import Color, ColorTranslation
-from src.modules.rope_product_color.models import RopeProductColor
+from src.modules.rope_product_color.models import ProductColor
 
 
 class ColorRepository(BaseIndexedRepository):
@@ -51,7 +51,7 @@ class ColorRepository(BaseIndexedRepository):
 
     async def has_dependencies(self, color_id: int) -> bool:
         """Проверка наличия связей (например, привязанные веревки)."""
-        stmt = select(exists().where(RopeProductColor.color_id == color_id))
+        stmt = select(exists().where(ProductColor.color_id == color_id))
         result = await self.session.scalar(stmt)
         return bool(result)
 

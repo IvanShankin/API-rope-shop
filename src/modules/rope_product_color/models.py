@@ -7,29 +7,29 @@ from src.core.database.database import Base
 
 
 if TYPE_CHECKING:
-    from src.modules.rope_products.models import RopeProduct
+    from src.modules.products.models import Product
     from src.modules.colors.models import Color
 
 
-class RopeProductColor(Base):
-    __tablename__ = "rope_product_colors"
+class ProductColor(Base):
+    __tablename__ = "product_colors"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    rope_product_id: Mapped[int] = mapped_column(
+    product_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("rope_products.product_id", ondelete="CASCADE"),
-        nullable=False
+        ForeignKey("products.id", ondelete="CASCADE"),
+        nullable=False,
     )
     color_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("colors.id", ondelete="CASCADE"),
-        nullable=False
+        nullable=False,
     )
     index: Mapped[int] = mapped_column(Integer, nullable=False)
 
     __table_args__ = (
-        UniqueConstraint("rope_product_id", "color_id", name="uq_rope_product_color"),
+        UniqueConstraint("product_id", "color_id", name="uq_product_color"),
     )
 
-    rope_product: Mapped["RopeProduct"] = relationship("RopeProduct", back_populates="colors")
+    product: Mapped["Product"] = relationship("Product", back_populates="colors")
     color: Mapped["Color"] = relationship("Color")

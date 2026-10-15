@@ -11,10 +11,9 @@ from src.modules.quote_requests.models import (
 )
 
 
-# ==================== Items Input DTOs ====================
-
+# ==================== Items Input DTOs ====================\n
 class QuoteRopeItemCreate(BaseModel):
-    rope_product_id: int = Field(..., description="ID of the configured rope product")
+    product_id: int = Field(..., description="ID of the configured product")
     color_id: int = Field(..., description="ID of the selected color")
     diameter_mm: float = Field(..., gt=0, description="Diameter in mm")
     length_m: float = Field(..., gt=0, description="Rope length in meters")
@@ -92,7 +91,7 @@ class ResolvedEndSpliceDTO(BaseModel):
 
 
 class ResolvedRopeItemDTO(BaseModel):
-    rope_product_id: int
+    product_id: int
     color_id: int
     product_name_snapshot: str
     color_name_snapshot: str
@@ -157,7 +156,7 @@ class QuoteRequestTotalsDTO(BaseModel):
 
 class QuoteRopeItemInsertDTO(BaseModel):
     quote_request_id: int
-    rope_product_id: int
+    product_id: int
     color_id: int
     product_name_snapshot: str
     color_name_snapshot: str
@@ -218,8 +217,8 @@ class QuoteRequestInsertDTO(BaseModel):
 class QuoteRopeItemResponseDTO(ORMDTO):
     id: int
     quote_request_id: int
-    rope_product_id: Optional[int]
-    color_id: Optional[int]
+    product_id: Optional[int] = None
+    color_id: Optional[int] = None
     product_name_snapshot: str
     color_name_snapshot: str
     diameter_mm: float
@@ -227,25 +226,25 @@ class QuoteRopeItemResponseDTO(ORMDTO):
     quantity: int
     price_per_meter_snapshot: float
     total_rope_cost: float
-    end_a_type_id: Optional[int]
-    end_a_name_snapshot: Optional[str]
-    end_a_eye_size_cm: Optional[float]
+    end_a_type_id: Optional[int] = None
+    end_a_name_snapshot: Optional[str] = None
+    end_a_eye_size_cm: Optional[float] = None
     end_a_cost: float
-    end_b_type_id: Optional[int]
-    end_b_name_snapshot: Optional[str]
-    end_b_eye_size_cm: Optional[float]
+    end_b_type_id: Optional[int] = None
+    end_b_name_snapshot: Optional[str] = None
+    end_b_eye_size_cm: Optional[float] = None
     end_b_cost: float
 
 
 class QuoteServiceItemResponseDTO(ORMDTO):
     id: int
     quote_request_id: int
-    splice_type_id: Optional[int]
-    splice_material_id: Optional[int]
+    splice_type_id: Optional[int] = None
+    splice_material_id: Optional[int] = None
     service_name_snapshot: str
     material_name_snapshot: str
     diameter_mm: float
-    eye_size_cm: Optional[float]
+    eye_size_cm: Optional[float] = None
     quantity: int
     unit_price_snapshot: float
     total_cost: float
@@ -254,7 +253,7 @@ class QuoteServiceItemResponseDTO(ORMDTO):
 class QuoteExtraItemResponseDTO(ORMDTO):
     id: int
     quote_request_id: int
-    extra_id: Optional[int]
+    extra_id: Optional[int] = None
     name_snapshot: str
     billing_type_snapshot: str
     quantity: int
@@ -268,8 +267,8 @@ class QuoteRequestResponseDTO(ORMDTO):
     configurator_type: ConfiguratorType
     name: str
     email: str
-    phone: Optional[str]
-    comment: Optional[str]
+    phone: Optional[str] = None
+    comment: Optional[str] = None
     currency: Currency
     total_price: float
     vat_rate: float
@@ -282,18 +281,8 @@ class QuoteRequestResponseDTO(ORMDTO):
     extra_items: List[QuoteExtraItemResponseDTO] = []
 
 
-class QuoteRequestShortResponseDTO(ORMDTO):
-    id: int
-    request_number: str
-    configurator_type: ConfiguratorType
-    name: str
-    email: str
-    phone: Optional[str]
-    currency: Currency
-    total_price: float
-    vat_rate: float
-    is_urgent: bool
-    status: QuoteRequestStatus
-    created_at: datetime
-    updated_at: datetime
-    items_count: int = 0
+class QuoteRequestListResponseDTO(BaseModel):
+    items: List[QuoteRequestResponseDTO]
+    total: int
+    skip: int = 0
+    limit: int = 50

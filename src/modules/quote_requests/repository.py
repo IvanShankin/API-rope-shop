@@ -1,4 +1,4 @@
-from typing import Optional, Sequence, Union, Any
+from typing import Optional, Sequence
 from datetime import datetime
 
 from sqlalchemy import select, update, delete, func, or_, desc, asc
@@ -27,9 +27,9 @@ class QuoteRequestRepository(BaseRepository):
     def __init__(self, session: AsyncSession):
         super().__init__(session=session, model=QuoteRequest)
 
-    async def add_quote_request(self, data: Union[QuoteRequestInsertDTO, dict, Any]) -> QuoteRequest:
+    async def add_quote_request(self, data: QuoteRequestInsertDTO) -> QuoteRequest:
         """Добавление новой заявки."""
-        return self.add(data)
+        return self.add(data.model_dump())
 
     async def get_by_id(
         self,
@@ -94,7 +94,6 @@ class QuoteRequestRepository(BaseRepository):
             selectinload(QuoteRequest.extra_items),
         )
 
-        # Фильтры
         if status is not None:
             stmt = stmt.where(QuoteRequest.status == status)
         if configurator_type is not None:
@@ -125,18 +124,65 @@ class QuoteRequestRepository(BaseRepository):
                 )
             )
 
-        # Сортировка
         sort_column = getattr(QuoteRequest, sort_by, QuoteRequest.created_at)
         if sort_order.lower() == "asc":
             stmt = stmt.order_by(asc(sort_column))
         else:
             stmt = stmt.order_by(desc(sort_column))
 
-        # Пагинация
         stmt = stmt.offset(skip).limit(limit)
 
         result = await self.session.execute(stmt)
         return result.scalars().all()
+
+    async def count_all(
+        self,
+        status: Optional[QuoteRequestStatus] = None,
+        configurator_type: Optional[ConfiguratorType] = None,
+        name: Optional[str] = None,
+        email: Optional[str] = None,
+        phone: Optional[str] = None,
+        request_number: Optional[str] = None,
+        is_urgent: Optional[bool] = None,
+        created_from: Optional[datetime] = None,
+        created_to: Optional[datetime] = None,
+        search: Optional[str] = None,
+    ) -> int:
+        """Подсчет общего числа заявок с учетом тех же фильтров, что и в get_all."""
+        stmt = select(func.count(QuoteRequest.id))
+
+        if status is not None:
+            stmt = stmt.where(QuoteRequest.status == status)
+        if configurator_type is not None:
+            stmt = stmt.where(QuoteRequest.configurator_type == configurator_type)
+        if name:
+            stmt = stmt.where(QuoteRequest.name.ilike(f"%{name}%"))
+        if email:
+            stmt = stmt.where(QuoteRequest.email.ilike(f"%{email}%"))
+        if phone:
+            stmt = stmt.where(QuoteRequest.phone.ilike(f"%{phone}%"))
+        if request_number:
+            stmt = stmt.where(QuoteRequest.request_number.ilike(f"%{request_number}%"))
+        if is_urgent is not None:
+            stmt = stmt.where(QuoteRequest.is_urgent == is_urgent)
+        if created_from is not None:
+            stmt = stmt.where(QuoteRequest.created_at >= created_from)
+        if created_to is not None:
+            stmt = stmt.where(QuoteRequest.created_at <= created_to)
+
+        if search:
+            search_pattern = f"%{search}%"
+            stmt = stmt.where(
+                or_(
+                    QuoteRequest.request_number.ilike(search_pattern),
+                    QuoteRequest.name.ilike(search_pattern),
+                    QuoteRequest.email.ilike(search_pattern),
+                    QuoteRequest.phone.ilike(search_pattern),
+                )
+            )
+
+        result = await self.session.execute(stmt)
+        return int(result.scalar_one())
 
     async def update_quote_request(self, request_id: int, update_data: dict) -> None:
         """Обновление данных заявки."""
@@ -149,7 +195,7 @@ class QuoteRequestRepository(BaseRepository):
         await self.session.execute(stmt)
 
     async def has_dependencies(self, request_id: int) -> bool:
-        """Проверка наличия внешних зависимостей (Правило 5.1)."""
+        """Проверка наличия внешних зависимостей."""
         return False
 
 
@@ -158,9 +204,9 @@ class QuoteRopeItemRepository(BaseRepository):
     def __init__(self, session: AsyncSession):
         super().__init__(session=session, model=QuoteRopeItem)
 
-    async def add_item(self, data: Union[QuoteRopeItemInsertDTO, dict, Any]) -> QuoteRopeItem:
+    async def add_item(self, data: QuoteRopeItemInsertDTO) -> QuoteRopeItem:
         """Добавление позиции каната."""
-        return self.add(data)
+        return self.add(data.model_dump())
 
     async def get_by_id(self, item_id: int) -> QuoteRopeItem | None:
         """Получение позиции каната по ID."""
@@ -179,9 +225,9 @@ class QuoteServiceItemRepository(BaseRepository):
     def __init__(self, session: AsyncSession):
         super().__init__(session=session, model=QuoteServiceItem)
 
-    async def add_item(self, data: Union[QuoteServiceItemInsertDTO, dict, Any]) -> QuoteServiceItem:
+    async def add_item(self, data: QuoteServiceItemInsertDTO) -> QuoteServiceItem:
         """Добавление позиции услуги."""
-        return self.add(data)
+        return self.add(data.model_dump())
 
     async def get_by_id(self, item_id: int) -> QuoteServiceItem | None:
         """Получение позиции услуги по ID."""
@@ -200,9 +246,9 @@ class QuoteExtraItemRepository(BaseRepository):
     def __init__(self, session: AsyncSession):
         super().__init__(session=session, model=QuoteExtraItem)
 
-    async def add_item(self, data: Union[QuoteExtraItemInsertDTO, dict, Any]) -> QuoteExtraItem:
+    async def add_item(self, data: QuoteExtraItemInsertDTO) -> QuoteExtraItem:
         """Добавление позиции доп. опции."""
-        return self.add(data)
+        return self.add(data.model_dump())
 
     async def get_by_id(self, item_id: int) -> QuoteExtraItem | None:
         """Получение позиции доп. опции по ID."""

@@ -17,13 +17,17 @@ class RopeVariantAlreadyExists(ServiceException):
     pass
 
 
+class RopeProductHasDependencies(ServiceException):
+    pass
+
+
 class MaterialGroupNotFound(NotFoundData):
     pass
 
 
-class SpliceMaterialNotFound(NotFoundData):
+class MaterialNotFound(NotFoundData):
     pass
 
 
-class RopeProductHasDependencies(ServiceException):
+class SpliceMaterialNotFound(NotFoundData):
     pass

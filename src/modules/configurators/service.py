@@ -11,9 +11,9 @@ from src.modules.splice_types.models import SpliceType, SpliceCategory
 from src.modules.splice_types.models_dto import SpliceTypeLocalizedResponseDTO
 from src.modules.splice_prices.models_dto import SplicePriceRuleResponseDTO
 from src.modules.colors.models_dto import ColorLocalizedResponseDTO
-from src.modules.rope_products.models import RopeProduct
-from src.modules.rope_products.models_dto import RopeVariantResponseDTO
-from src.modules.rope_product_color.models_dto import RopeProductColorLocalizedResponseDTO
+from src.modules.rope_products.models import RopeConfiguratorSetting
+from src.modules.rope_products.models_dto import ProductVariantResponseDTO
+from src.modules.rope_product_color.models_dto import ProductColorLocalizedResponseDTO
 from src.modules.rope_allowed_splice.models_dto import RopeAllowedSpliceLocalizedResponseDTO
 from src.modules.configurators.models_dto import (
     ConfiguratorDataResponseDTO,
@@ -137,7 +137,7 @@ class ConfiguratorService:
 
     def _localize_rope_product(
         self,
-        rope: RopeProduct,
+        rope: RopeConfiguratorSetting,
         locale: Language,
     ) -> ConfiguratorRopeProductResponseDTO:
         """Локализация характеристик каната, связанных цветов и разрешенных заделок."""
@@ -147,14 +147,19 @@ class ConfiguratorService:
                 lambda t: t.name, locale
             )
 
+        product = rope.product
+        variants_list = product.variants if product and product.variants else []
+        colors_list = product.colors if product and product.colors else []
+        splices_list = product.allowed_splices if product and product.allowed_splices else []
+
         variants_dto = [
-            RopeVariantResponseDTO.model_validate(v)
-            for v in (rope.variants or [])
+            ProductVariantResponseDTO.model_validate(v)
+            for v in variants_list
             if v.is_active
         ]
 
-        colors_dto: List[RopeProductColorLocalizedResponseDTO] = []
-        for rc in (rope.colors or []):
+        colors_dto: List[ProductColorLocalizedResponseDTO] = []
+        for rc in colors_list:
             color_loc = None
             if rc.color and rc.color.is_active:
                 c_name = rc.color._get_field_with_translation(
@@ -169,9 +174,9 @@ class ConfiguratorService:
                     name=c_name,
                 )
             colors_dto.append(
-                RopeProductColorLocalizedResponseDTO(
+                ProductColorLocalizedResponseDTO(
                     id=rc.id,
-                    rope_product_id=rc.rope_product_id,
+                    product_id=rc.product_id,
                     color_id=rc.color_id,
                     index=rc.index,
                     color=color_loc,
@@ -179,13 +184,13 @@ class ConfiguratorService:
             )
 
         splices_dto: List[RopeAllowedSpliceLocalizedResponseDTO] = []
-        for rs in (rope.allowed_splices or []):
+        for rs in splices_list:
             st_loc = None
             if rs.splice_type and rs.splice_type.is_active:
                 st_loc = self._localize_splice_type(rs.splice_type, locale)
             splices_dto.append(
                 RopeAllowedSpliceLocalizedResponseDTO(
-                    rope_product_id=rs.rope_product_id,
+                    product_id=rs.product_id,
                     splice_type_id=rs.splice_type_id,
                     splice_type=st_loc,
                 )
@@ -205,11 +210,6 @@ class ConfiguratorService:
             construction=rope.construction,
             core_description=rope.core_description,
             cover_description=rope.cover_description,
-            working_stretch_percent=(
-                float(rope.working_stretch_percent)
-                if rope.working_stretch_percent is not None
-                else None
-            ),
             can_be_spliced=rope.can_be_spliced,
             variants=variants_dto,
             colors=colors_dto,

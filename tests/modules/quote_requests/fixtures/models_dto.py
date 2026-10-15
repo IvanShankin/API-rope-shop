@@ -9,7 +9,7 @@ from src.modules.quote_requests.models import (
 
 
 class CreateQuoteRopeItemFixtureDTO(BaseModel):
-    rope_product_id: Optional[int] = None
+    product_id: Optional[int] = None
     color_id: Optional[int] = None
     product_name_snapshot: Optional[str] = "Standard Yacht Rope"
     color_name_snapshot: Optional[str] = "Red"

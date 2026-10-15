@@ -10,11 +10,16 @@ from src.modules.db_models import (
     SpliceTypeTranslation,
     Color,
     ColorTranslation,
-    RopeProductColor,
+    ProductColor,
     RopeAllowedSplice,
-    RopeVariant,
-    RopeProduct,
+    ProductVariant,
+    RopeConfiguratorSetting,
     ProductImage,
+    ProductSpecificationTranslation,
+    ProductSpecification,
+    ProductAssignedApplication,
+    ProductApplicationTranslation,
+    ProductApplication,
     ProductTranslation,
     Product,
     Category,
@@ -57,9 +62,14 @@ async def clearing_db(session_db: AsyncSession):
     await session_db.execute(delete(ConfiguratorExtraTranslation))
     await session_db.execute(delete(ConfiguratorExtra))
     await session_db.execute(delete(RopeAllowedSplice))
-    await session_db.execute(delete(RopeProductColor))
-    await session_db.execute(delete(RopeVariant))
-    await session_db.execute(delete(RopeProduct))
+    await session_db.execute(delete(ProductColor))
+    await session_db.execute(delete(ProductVariant))
+    await session_db.execute(delete(RopeConfiguratorSetting))
+    await session_db.execute(delete(ProductSpecificationTranslation))
+    await session_db.execute(delete(ProductSpecification))
+    await session_db.execute(delete(ProductAssignedApplication))
+    await session_db.execute(delete(ProductApplicationTranslation))
+    await session_db.execute(delete(ProductApplication))
     await session_db.execute(delete(ProductImage))
     await session_db.execute(delete(ProductTranslation))
     await session_db.execute(delete(Product))

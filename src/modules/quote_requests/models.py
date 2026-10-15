@@ -8,7 +8,7 @@ from src.core.database.database import Base
 from src.modules.configurator_setting.models import Currency
 
 if TYPE_CHECKING:
-    from src.modules.rope_products.models import RopeProduct
+    from src.modules.products.models import Product
     from src.modules.colors.models import Color
     from src.modules.splice_types.models import SpliceType
     from src.modules.splice_materials.models import SpliceMaterial
@@ -114,9 +114,9 @@ class QuoteRopeItem(Base):
     )
 
     # Связь с товаром (nullable с защитой on delete set null)
-    rope_product_id: Mapped[Optional[int]] = mapped_column(
+    product_id: Mapped[Optional[int]] = mapped_column(
         Integer,
-        ForeignKey("rope_products.product_id", ondelete="SET NULL"),
+        ForeignKey("products.id", ondelete="SET NULL"),
         nullable=True,
     )
     color_id: Mapped[Optional[int]] = mapped_column(
@@ -157,7 +157,7 @@ class QuoteRopeItem(Base):
 
     # Relationships
     quote_request: Mapped["QuoteRequest"] = relationship("QuoteRequest", back_populates="rope_items")
-    rope_product: Mapped[Optional["RopeProduct"]] = relationship("RopeProduct")
+    product: Mapped[Optional["Product"]] = relationship("Product")
     color: Mapped[Optional["Color"]] = relationship("Color")
     end_a_type: Mapped[Optional["SpliceType"]] = relationship("SpliceType", foreign_keys=[end_a_type_id])
     end_b_type: Mapped[Optional["SpliceType"]] = relationship("SpliceType", foreign_keys=[end_b_type_id])

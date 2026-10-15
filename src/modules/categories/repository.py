@@ -7,7 +7,6 @@ from sqlalchemy.orm import selectinload
 from src.modules.base.database_model import Language
 from src.modules.base.repository_model import BaseIndexedRepository, BaseRepository
 from src.modules.categories.models import Category, CategoryTranslation
-from src.modules.products.models import Product
 
 
 class CategoryRepository(BaseIndexedRepository):
@@ -28,22 +27,18 @@ class CategoryRepository(BaseIndexedRepository):
     ) -> Sequence[Category]:
         """Получение списка всех категорий с предзагрузкой переводов."""
         stmt = select(Category).options(selectinload(Category.translations))
-
         if is_active is not None:
             stmt = stmt.where(Category.is_active == is_active)
-
         stmt = stmt.order_by(Category.index)
-
-        if skip > 0:
+        if skip:
             stmt = stmt.offset(skip)
-        if limit is not None:
+        if limit:
             stmt = stmt.limit(limit)
-
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
-    async def get_by_id(self, category_id: int) -> Category | None:
-        """Получение категории по ID с предзагрузкой переводов."""
+    async def get_by_category_id(self, category_id: int) -> Optional[Category]:
+        """Получение категории по ID с переводами."""
         stmt = (
             select(Category)
             .options(selectinload(Category.translations))
@@ -52,8 +47,12 @@ class CategoryRepository(BaseIndexedRepository):
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_by_slug(self, slug: str) -> Category | None:
-        """Получение категории по slug с предзагрузкой переводов."""
+    async def get_by_id(self, category_id: int) -> Optional[Category]:
+        """Получение категории по ID с переводами."""
+        return await self.get_by_category_id(category_id)
+
+    async def get_by_slug(self, slug: str) -> Optional[Category]:
+        """Получение категории по слагу с переводами."""
         stmt = (
             select(Category)
             .options(selectinload(Category.translations))
@@ -70,12 +69,14 @@ class CategoryRepository(BaseIndexedRepository):
 
     async def has_dependencies(self, category_id: int) -> bool:
         """Проверка наличия связанных товаров у категории."""
+        from src.modules.products.models import Product
         stmt = select(exists().where(Product.category_id == category_id))
         result = await self.session.scalar(stmt)
         return bool(result)
 
     async def get_products_count(self, category_id: int) -> int:
         """Подсчет количества активных товаров в категории."""
+        from src.modules.products.models import Product
         stmt = select(func.count(Product.id)).where(Product.category_id == category_id)
         result = await self.session.scalar(stmt)
         return int(result or 0)
@@ -105,24 +106,36 @@ class CategoryTranslationRepository(BaseRepository):
         """Добавление перевода категории."""
         return self.add(data)
 
-    async def get_by_id(self, translation_id: int) -> CategoryTranslation | None:
-        """Получение перевода по ID."""
-        stmt = select(CategoryTranslation).where(CategoryTranslation.id == translation_id)
-        result = await self.session.execute(stmt)
-        return result.scalar_one_or_none()
-
     async def get_by_category_and_locale(
         self,
         category_id: int,
         locale: Language,
-    ) -> CategoryTranslation | None:
-        """Получение перевода для конкретной категории и языка."""
+    ) -> Optional[CategoryTranslation]:
         stmt = select(CategoryTranslation).where(
             CategoryTranslation.category_id == category_id,
             CategoryTranslation.locale == locale,
         )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
+
+    async def upsert_translation(
+        self,
+        category_id: int,
+        locale: Language,
+        name: str,
+    ) -> CategoryTranslation:
+        existing = await self.get_by_category_and_locale(category_id, locale)
+        if existing:
+            existing.name = name
+            return existing
+
+        translation = CategoryTranslation(
+            category_id=category_id,
+            locale=locale,
+            name=name,
+        )
+        self.session.add(translation)
+        return translation
 
     async def update_translation(self, translation_id: int, update_data: dict) -> None:
         """Обновление перевода категории."""
@@ -136,4 +149,10 @@ class CategoryTranslationRepository(BaseRepository):
     async def delete_translation(self, translation_id: int) -> None:
         """Удаление перевода категории."""
         stmt = delete(CategoryTranslation).where(CategoryTranslation.id == translation_id)
+        await self.session.execute(stmt)
+
+    async def delete_by_category_id(self, category_id: int) -> None:
+        stmt = delete(CategoryTranslation).where(
+            CategoryTranslation.category_id == category_id
+        )
         await self.session.execute(stmt)

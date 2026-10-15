@@ -10,12 +10,12 @@ from tests.modules.colors.fixtures.models_dto import (
 )
 from tests.modules.rope_products.fixtures.models_dto import CreateRopeProductFixtureDTO
 from tests.modules.rope_product_color.fixtures.models_dto import CreateRopeProductColorFixtureDTO
-from src.modules.rope_product_color.models import RopeProductColor
+from src.modules.rope_product_color.models import ProductColor
 from src.modules.rope_product_color.models_dto import (
-    RopeProductColorCreate,
-    RopeProductColorUpdateIndexDTO,
-    RopeProductColorResponseDTO,
-    RopeProductColorLocalizedResponseDTO,
+    ProductColorCreate,
+    ProductColorUpdateIndexDTO,
+    ProductColorResponseDTO,
+    ProductColorLocalizedResponseDTO,
 )
 from tests.helpers.functions import comparison_models
 
@@ -41,14 +41,14 @@ class TestsForSuccess:
 
         link_1 = await create_rope_product_color_fixture(
             CreateRopeProductColorFixtureDTO(
-                rope_product_id=product.product_id,
+                product_id=product.product_id,
                 color_id=color_1.id,
                 index=1,
             )
         )
         link_2 = await create_rope_product_color_fixture(
             CreateRopeProductColorFixtureDTO(
-                rope_product_id=product.product_id,
+                product_id=product.product_id,
                 color_id=color_2.id,
                 index=2,
             )
@@ -60,7 +60,7 @@ class TestsForSuccess:
         assert response.status_code == 200
 
         data = [
-            RopeProductColorLocalizedResponseDTO.model_validate(item)
+            ProductColorLocalizedResponseDTO.model_validate(item)
             for item in response.json()
         ]
         assert len(data) == 2
@@ -100,7 +100,7 @@ class TestsForSuccess:
 
         link = await create_rope_product_color_fixture(
             CreateRopeProductColorFixtureDTO(
-                rope_product_id=product.product_id,
+                product_id=product.product_id,
                 color_id=color.id,
                 index=1,
             )
@@ -113,7 +113,7 @@ class TestsForSuccess:
         assert response.status_code == 200
 
         data = [
-            RopeProductColorLocalizedResponseDTO.model_validate(item)
+            ProductColorLocalizedResponseDTO.model_validate(item)
             for item in response.json()
         ]
         assert len(data) == 1
@@ -136,7 +136,7 @@ class TestsForSuccess:
         assert response.status_code == 200
 
         data = [
-            RopeProductColorLocalizedResponseDTO.model_validate(item)
+            ProductColorLocalizedResponseDTO.model_validate(item)
             for item in response.json()
         ]
         assert data == []
@@ -153,9 +153,9 @@ class TestsForSuccess:
         response = await client_for_tests.get(f"/rope_product_colors/{link.id}")
         assert response.status_code == 200
 
-        resp_dto = RopeProductColorResponseDTO.model_validate(response.json())
+        resp_dto = ProductColorResponseDTO.model_validate(response.json())
         assert resp_dto.id == link.id
-        assert resp_dto.rope_product_id == link.rope_product_id
+        assert resp_dto.product_id == link.product_id
         assert resp_dto.color_id == link.color_id
         assert resp_dto.index == link.index
         assert resp_dto.color is not None
@@ -177,8 +177,8 @@ class TestsForSuccess:
         product = await create_rope_product_fixture()
         color = await create_color_fixture()
 
-        req_data = RopeProductColorCreate(
-            rope_product_id=product.product_id,
+        req_data = ProductColorCreate(
+            product_id=product.product_id,
             color_id=color.id,
         )
 
@@ -189,8 +189,8 @@ class TestsForSuccess:
         )
         assert response.status_code == 201
 
-        resp_dto = RopeProductColorResponseDTO.model_validate(response.json())
-        assert resp_dto.rope_product_id == product.product_id
+        resp_dto = ProductColorResponseDTO.model_validate(response.json())
+        assert resp_dto.product_id == product.product_id
         assert resp_dto.color_id == color.id
         assert resp_dto.index == 1
         assert resp_dto.color is not None
@@ -198,11 +198,11 @@ class TestsForSuccess:
 
         # Проверка в БД
         res = await session_db.execute(
-            select(RopeProductColor).where(RopeProductColor.id == resp_dto.id)
+            select(ProductColor).where(ProductColor.id == resp_dto.id)
         )
         db_item = res.scalar_one_or_none()
         assert db_item is not None
-        assert db_item.rope_product_id == product.product_id
+        assert db_item.product_id == product.product_id
         assert db_item.color_id == color.id
         assert db_item.index == 1
 
@@ -226,14 +226,14 @@ class TestsForSuccess:
 
         await create_rope_product_color_fixture(
             CreateRopeProductColorFixtureDTO(
-                rope_product_id=product.product_id,
+                product_id=product.product_id,
                 color_id=color_1.id,
                 index=1,
             )
         )
 
-        req_data = RopeProductColorCreate(
-            rope_product_id=product.product_id,
+        req_data = ProductColorCreate(
+            product_id=product.product_id,
             color_id=color_2.id,
         )
 
@@ -244,8 +244,8 @@ class TestsForSuccess:
         )
         assert response.status_code == 201
 
-        resp_dto = RopeProductColorResponseDTO.model_validate(response.json())
-        assert resp_dto.rope_product_id == product.product_id
+        resp_dto = ProductColorResponseDTO.model_validate(response.json())
+        assert resp_dto.product_id == product.product_id
         assert resp_dto.color_id == color_2.id
         assert resp_dto.index == 2
 
@@ -271,27 +271,27 @@ class TestsForSuccess:
 
         link_1 = await create_rope_product_color_fixture(
             CreateRopeProductColorFixtureDTO(
-                rope_product_id=product.product_id, color_id=c1.id, index=1
+                product_id=product.product_id, color_id=c1.id, index=1
             )
         )
         link_2 = await create_rope_product_color_fixture(
             CreateRopeProductColorFixtureDTO(
-                rope_product_id=product.product_id, color_id=c2.id, index=2
+                product_id=product.product_id, color_id=c2.id, index=2
             )
         )
         link_3 = await create_rope_product_color_fixture(
             CreateRopeProductColorFixtureDTO(
-                rope_product_id=product.product_id, color_id=c3.id, index=3
+                product_id=product.product_id, color_id=c3.id, index=3
             )
         )
         link_4 = await create_rope_product_color_fixture(
             CreateRopeProductColorFixtureDTO(
-                rope_product_id=product.product_id, color_id=c4.id, index=4
+                product_id=product.product_id, color_id=c4.id, index=4
             )
         )
 
         # Перемещаем link_4 с индекса 4 на индекс 2
-        req_data = RopeProductColorUpdateIndexDTO(new_index=2)
+        req_data = ProductColorUpdateIndexDTO(new_index=2)
         response = await client_for_tests.patch(
             f"/rope_product_colors/{link_4.id}/index",
             headers={"Authorization": f"Bearer {access_token}"},
@@ -299,15 +299,15 @@ class TestsForSuccess:
         )
         assert response.status_code == 200
 
-        updated_dto = RopeProductColorResponseDTO.model_validate(response.json())
+        updated_dto = ProductColorResponseDTO.model_validate(response.json())
         assert updated_dto.id == link_4.id
         assert updated_dto.index == 2
 
         session_db.expire_all()
-        db_1 = (await session_db.execute(select(RopeProductColor).where(RopeProductColor.id == link_1.id))).scalar_one()
-        db_2 = (await session_db.execute(select(RopeProductColor).where(RopeProductColor.id == link_2.id))).scalar_one()
-        db_3 = (await session_db.execute(select(RopeProductColor).where(RopeProductColor.id == link_3.id))).scalar_one()
-        db_4 = (await session_db.execute(select(RopeProductColor).where(RopeProductColor.id == link_4.id))).scalar_one()
+        db_1 = (await session_db.execute(select(ProductColor).where(ProductColor.id == link_1.id))).scalar_one()
+        db_2 = (await session_db.execute(select(ProductColor).where(ProductColor.id == link_2.id))).scalar_one()
+        db_3 = (await session_db.execute(select(ProductColor).where(ProductColor.id == link_3.id))).scalar_one()
+        db_4 = (await session_db.execute(select(ProductColor).where(ProductColor.id == link_4.id))).scalar_one()
 
         assert db_1.index == 1
         assert db_4.index == 2
@@ -335,17 +335,17 @@ class TestsForSuccess:
 
         link_1 = await create_rope_product_color_fixture(
             CreateRopeProductColorFixtureDTO(
-                rope_product_id=product.product_id, color_id=c1.id, index=1
+                product_id=product.product_id, color_id=c1.id, index=1
             )
         )
         link_2 = await create_rope_product_color_fixture(
             CreateRopeProductColorFixtureDTO(
-                rope_product_id=product.product_id, color_id=c2.id, index=2
+                product_id=product.product_id, color_id=c2.id, index=2
             )
         )
         link_3 = await create_rope_product_color_fixture(
             CreateRopeProductColorFixtureDTO(
-                rope_product_id=product.product_id, color_id=c3.id, index=3
+                product_id=product.product_id, color_id=c3.id, index=3
             )
         )
 
@@ -357,14 +357,14 @@ class TestsForSuccess:
         )
         assert response.status_code == 200
 
-        updated_dto = RopeProductColorResponseDTO.model_validate(response.json())
+        updated_dto = ProductColorResponseDTO.model_validate(response.json())
         assert updated_dto.id == link_1.id
         assert updated_dto.index == 3
 
         session_db.expire_all()
-        db_1 = (await session_db.execute(select(RopeProductColor).where(RopeProductColor.id == link_1.id))).scalar_one()
-        db_2 = (await session_db.execute(select(RopeProductColor).where(RopeProductColor.id == link_2.id))).scalar_one()
-        db_3 = (await session_db.execute(select(RopeProductColor).where(RopeProductColor.id == link_3.id))).scalar_one()
+        db_1 = (await session_db.execute(select(ProductColor).where(ProductColor.id == link_1.id))).scalar_one()
+        db_2 = (await session_db.execute(select(ProductColor).where(ProductColor.id == link_2.id))).scalar_one()
+        db_3 = (await session_db.execute(select(ProductColor).where(ProductColor.id == link_3.id))).scalar_one()
 
         assert db_2.index == 1
         assert db_3.index == 2
@@ -392,7 +392,7 @@ class TestsForSuccess:
         )
         assert response.status_code == 200
 
-        updated_dto = RopeProductColorResponseDTO.model_validate(response.json())
+        updated_dto = ProductColorResponseDTO.model_validate(response.json())
         assert updated_dto.index == 5
 
     @pytest.mark.asyncio
@@ -416,17 +416,17 @@ class TestsForSuccess:
 
         link_1 = await create_rope_product_color_fixture(
             CreateRopeProductColorFixtureDTO(
-                rope_product_id=product.product_id, color_id=c1.id, index=1
+                product_id=product.product_id, color_id=c1.id, index=1
             )
         )
         link_2 = await create_rope_product_color_fixture(
             CreateRopeProductColorFixtureDTO(
-                rope_product_id=product.product_id, color_id=c2.id, index=2
+                product_id=product.product_id, color_id=c2.id, index=2
             )
         )
         link_3 = await create_rope_product_color_fixture(
             CreateRopeProductColorFixtureDTO(
-                rope_product_id=product.product_id, color_id=c3.id, index=3
+                product_id=product.product_id, color_id=c3.id, index=3
             )
         )
 
@@ -440,13 +440,13 @@ class TestsForSuccess:
         session_db.expire_all()
         # Проверяем, что link_2 удален
         res_del = await session_db.execute(
-            select(RopeProductColor).where(RopeProductColor.id == link_2.id)
+            select(ProductColor).where(ProductColor.id == link_2.id)
         )
         assert res_del.scalar_one_or_none() is None
 
         # Проверяем оставшиеся индексы
-        db_1 = (await session_db.execute(select(RopeProductColor).where(RopeProductColor.id == link_1.id))).scalar_one()
-        db_3 = (await session_db.execute(select(RopeProductColor).where(RopeProductColor.id == link_3.id))).scalar_one()
+        db_1 = (await session_db.execute(select(ProductColor).where(ProductColor.id == link_1.id))).scalar_one()
+        db_3 = (await session_db.execute(select(ProductColor).where(ProductColor.id == link_3.id))).scalar_one()
 
         assert db_1.index == 1
         assert db_3.index == 2
@@ -490,7 +490,7 @@ class TestsForErrors:
         response = await client_for_tests.post(
             "/rope_product_colors",
             headers={"Authorization": f"Bearer {access_token}"},
-            json={"rope_product_id": product.product_id, "color_id": color.id},
+            json={"product_id": product.product_id, "color_id": color.id},
         )
         assert response.status_code == 403
 
@@ -507,7 +507,7 @@ class TestsForErrors:
 
         response = await client_for_tests.post(
             "/rope_product_colors",
-            json={"rope_product_id": product.product_id, "color_id": color.id},
+            json={"product_id": product.product_id, "color_id": color.id},
         )
         assert response.status_code == 401
 
@@ -518,7 +518,7 @@ class TestsForErrors:
         create_user_fixture,
         create_color_fixture,
     ):
-        """Создание привязки с несуществующим rope_product_id."""
+        """Создание привязки с несуществующим product_id."""
         admin_user, access_token = await create_user_fixture(
             CreateUserFixtureDTO(role=UserRole.ADMIN)
         )
@@ -527,7 +527,7 @@ class TestsForErrors:
         response = await client_for_tests.post(
             "/rope_product_colors",
             headers={"Authorization": f"Bearer {access_token}"},
-            json={"rope_product_id": 99999, "color_id": color.id},
+            json={"product_id": 99999, "color_id": color.id},
         )
         assert response.status_code == 404
 
@@ -547,7 +547,7 @@ class TestsForErrors:
         response = await client_for_tests.post(
             "/rope_product_colors",
             headers={"Authorization": f"Bearer {access_token}"},
-            json={"rope_product_id": product.product_id, "color_id": 99999},
+            json={"product_id": product.product_id, "color_id": 99999},
         )
         assert response.status_code == 404
 
@@ -569,7 +569,7 @@ class TestsForErrors:
 
         await create_rope_product_color_fixture(
             CreateRopeProductColorFixtureDTO(
-                rope_product_id=product.product_id,
+                product_id=product.product_id,
                 color_id=color.id,
             )
         )
@@ -577,7 +577,7 @@ class TestsForErrors:
         response = await client_for_tests.post(
             "/rope_product_colors",
             headers={"Authorization": f"Bearer {access_token}"},
-            json={"rope_product_id": product.product_id, "color_id": color.id},
+            json={"product_id": product.product_id, "color_id": color.id},
         )
         assert response.status_code == 409
 

@@ -3,95 +3,112 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 from src.modules.base.orm_dto import ORMDTO
-from src.modules.rope_product_color.models_dto import RopeProductColorResponseDTO
+from src.modules.rope_product_color.models_dto import ProductColorResponseDTO
 from src.modules.rope_allowed_splice.models_dto import RopeAllowedSpliceResponseDTO
 from src.modules.splice_materials.models_dto import SpliceMaterialResponseDTO
 
 
-# ===================== RopeVariant DTOs =====================
+# ===================== ProductVariant DTOs =====================
 
-class RopeVariantBase(BaseModel):
-    rope_product_id: int
-    diameter_mm: float
+class ProductVariantBase(BaseModel):
+    product_id: int
+    variant_name: str
+    size_value: Optional[float] = None
     breaking_load_dan: Optional[float] = None
-    weight_g_per_m: Optional[float] = None
-    price_per_meter: float
-    index: int
+    working_load_dan: Optional[float] = None
+    working_stretch_percent: Optional[float] = None
+    weight_g: Optional[float] = None
+    price: float
+    sku: Optional[str] = None
+    index: int = 0
     is_active: bool = True
 
 
-class RopeVariantCreate(BaseModel):
-    rope_product_id: int
-    diameter_mm: float = Field(..., gt=0, description="Diameter in millimeters (> 0)")
+class ProductVariantCreate(BaseModel):
+    product_id: int
+    variant_name: str = Field(..., max_length=100, description="Variant name (e.g. '8 мм', '70 мм / M8')")
+    size_value: Optional[float] = Field(None, gt=0, description="Size/diameter value (e.g. 8.0)")
     breaking_load_dan: Optional[float] = Field(None, ge=0, description="Breaking load in daN")
-    weight_g_per_m: Optional[float] = Field(None, ge=0, description="Weight in g/m")
-    price_per_meter: float = Field(..., ge=0, description="Price per meter (>= 0)")
+    working_load_dan: Optional[float] = Field(None, ge=0, description="Working load in daN")
+    working_stretch_percent: Optional[float] = Field(None, ge=0, description="Working stretch percent")
+    weight_g: Optional[float] = Field(None, ge=0, description="Weight in g")
+    price: float = Field(..., ge=0, description="Price (>= 0)")
+    sku: Optional[str] = Field(None, max_length=100)
     is_active: bool = True
 
 
-class RopeVariantCreateForProduct(BaseModel):
-    diameter_mm: float = Field(..., gt=0, description="Diameter in millimeters (> 0)")
+class ProductVariantCreateForProduct(BaseModel):
+    variant_name: str = Field(..., max_length=100, description="Variant name (e.g. '8 мм')")
+    size_value: Optional[float] = Field(None, gt=0, description="Size/diameter value (e.g. 8.0)")
     breaking_load_dan: Optional[float] = Field(None, ge=0, description="Breaking load in daN")
-    weight_g_per_m: Optional[float] = Field(None, ge=0, description="Weight in g/m")
-    price_per_meter: float = Field(..., ge=0, description="Price per meter (>= 0)")
+    working_load_dan: Optional[float] = Field(None, ge=0, description="Working load in daN")
+    working_stretch_percent: Optional[float] = Field(None, ge=0, description="Working stretch percent")
+    weight_g: Optional[float] = Field(None, ge=0, description="Weight in g")
+    price: float = Field(..., ge=0, description="Price (>= 0)")
+    sku: Optional[str] = Field(None, max_length=100)
     is_active: bool = True
 
 
-class RopeVariantUpdate(BaseModel):
-    diameter_mm: Optional[float] = Field(None, gt=0, description="Diameter in millimeters (> 0)")
-    breaking_load_dan: Optional[float] = Field(None, ge=0, description="Breaking load in daN")
-    weight_g_per_m: Optional[float] = Field(None, ge=0, description="Weight in g/m")
-    price_per_meter: Optional[float] = Field(None, ge=0, description="Price per meter (>= 0)")
+class ProductVariantUpdate(BaseModel):
+    variant_name: Optional[str] = Field(None, max_length=100)
+    size_value: Optional[float] = Field(None, gt=0)
+    breaking_load_dan: Optional[float] = Field(None, ge=0)
+    working_load_dan: Optional[float] = Field(None, ge=0)
+    working_stretch_percent: Optional[float] = Field(None, ge=0)
+    weight_g: Optional[float] = Field(None, ge=0)
+    price: Optional[float] = Field(None, ge=0)
+    sku: Optional[str] = Field(None, max_length=100)
     is_active: Optional[bool] = None
 
 
-class RopeVariantUpdateIndexDTO(BaseModel):
+class ProductVariantUpdateIndexDTO(BaseModel):
     new_index: int = Field(..., ge=0, description="New position index (>= 0)")
 
 
-class RopeVariantResponseDTO(RopeVariantBase, ORMDTO):
+class ProductVariantResponseDTO(ProductVariantBase, ORMDTO):
     id: int
     created_at: datetime
     updated_at: datetime
 
 
-# ===================== RopeProduct DTOs =====================
+# ===================== RopeConfiguratorSetting DTOs =====================
 
-class RopeProductBase(BaseModel):
+class RopeConfiguratorSettingBase(BaseModel):
+    product_id: Optional[int] = None
     material_group_id: int
+    material_id: Optional[int] = None
     splice_material_id: int
     construction: Optional[str] = None
     core_description: Optional[str] = None
     cover_description: Optional[str] = None
-    working_stretch_percent: Optional[float] = None
     can_be_spliced: bool = True
 
 
-class RopeProductCreate(RopeProductBase):
+class RopeConfiguratorSettingCreate(RopeConfiguratorSettingBase):
     product_id: Optional[int] = Field(
         None,
         description="Optional base product ID. If not provided, a base Product will be created automatically."
     )
 
 
-class RopeProductUpdate(BaseModel):
+class RopeConfiguratorSettingUpdate(BaseModel):
     material_group_id: Optional[int] = None
+    material_id: Optional[int] = None
     splice_material_id: Optional[int] = None
     construction: Optional[str] = None
     core_description: Optional[str] = None
     cover_description: Optional[str] = None
-    working_stretch_percent: Optional[float] = None
     can_be_spliced: Optional[bool] = None
 
 
-class RopeProductResponseDTO(RopeProductBase, ORMDTO):
+class RopeConfiguratorSettingResponseDTO(RopeConfiguratorSettingBase, ORMDTO):
     product_id: int
     created_at: datetime
     updated_at: datetime
 
 
-class RopeProductDetailResponseDTO(RopeProductResponseDTO):
-    variants: List[RopeVariantResponseDTO] = []
-    colors: List[RopeProductColorResponseDTO] = []
+class RopeConfiguratorSettingDetailResponseDTO(RopeConfiguratorSettingResponseDTO):
+    variants: List[ProductVariantResponseDTO] = []
+    colors: List[ProductColorResponseDTO] = []
     allowed_splices: List[RopeAllowedSpliceResponseDTO] = []
     splice_material: Optional[SpliceMaterialResponseDTO] = None

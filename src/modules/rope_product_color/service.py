@@ -3,13 +3,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.base.database_model import Language
 from src.modules.colors.models_dto import ColorLocalizedResponseDTO
-from src.modules.rope_product_color.repository import RopeProductColorRepository
+from src.modules.rope_product_color.repository import ProductColorRepository
 from src.modules.rope_product_color.models_dto import (
-    RopeProductColorBase,
-    RopeProductColorCreate,
-    RopeProductColorUpdateIndexDTO,
-    RopeProductColorResponseDTO,
-    RopeProductColorLocalizedResponseDTO,
+    ProductColorBase,
+    ProductColorCreate,
+    ProductColorUpdateIndexDTO,
+    ProductColorResponseDTO,
+    ProductColorLocalizedResponseDTO,
 )
 from src.modules.rope_product_color.exception import (
     RopeProductColorNotFound,
@@ -22,7 +22,7 @@ from src.modules.rope_product_color.exception import (
 class RopeProductColorService:
     def __init__(
         self,
-        repo: RopeProductColorRepository,
+        repo: ProductColorRepository,
         session: AsyncSession,
     ):
         self.repo = repo
@@ -30,12 +30,12 @@ class RopeProductColorService:
 
     async def create_rope_product_color(
         self,
-        data: RopeProductColorCreate
-    ) -> RopeProductColorResponseDTO:
-        """Привязка цвета к товару-веревке с добавлением в конец списка (максимальный индекс + 1)."""
-        if not await self.repo.exists_product(data.rope_product_id):
+        data: ProductColorCreate
+    ) -> ProductColorResponseDTO:
+        """Привязка цвета к товару с добавлением в конец списка (максимальный индекс + 1)."""
+        if not await self.repo.exists_product(data.product_id):
             raise RopeProductNotFound(
-                f"RopeProduct with id {data.rope_product_id} not found."
+                f"Product with id {data.product_id} not found."
             )
 
         if not await self.repo.exists_color(data.color_id):
@@ -44,21 +44,21 @@ class RopeProductColorService:
             )
 
         existing = await self.repo.get_by_product_and_color(
-            rope_product_id=data.rope_product_id,
+            product_id=data.product_id,
             color_id=data.color_id
         )
         if existing:
             raise RopeProductColorAlreadyExists(
-                f"Color with id {data.color_id} is already linked to RopeProduct with id {data.rope_product_id}."
+                f"Color with id {data.color_id} is already linked to Product with id {data.product_id}."
             )
 
         max_index = await self.repo.get_max_index(
-            rope_product_id=data.rope_product_id
+            product_id=data.product_id
         )
         target_index = max_index + 1
 
-        item_dto = RopeProductColorBase(
-            rope_product_id=data.rope_product_id,
+        item_dto = ProductColorBase(
+            product_id=data.product_id,
             color_id=data.color_id,
             index=target_index
         )
@@ -66,23 +66,23 @@ class RopeProductColorService:
         await self.session.commit()
 
         loaded_item = await self.repo.get_by_id(new_item.id)
-        return RopeProductColorResponseDTO.model_validate(loaded_item)
+        return ProductColorResponseDTO.model_validate(loaded_item)
 
     async def get_colors_by_product_id(
         self,
-        rope_product_id: int,
+        product_id: int,
         locale: Optional[Language] = None
-    ) -> List[RopeProductColorLocalizedResponseDTO]:
+    ) -> List[ProductColorLocalizedResponseDTO]:
         """Получение списка цветов для товара с локализацией названий цветов."""
-        if not await self.repo.exists_product(rope_product_id):
+        if not await self.repo.exists_product(product_id):
             raise RopeProductNotFound(
-                f"RopeProduct with id {rope_product_id} not found."
+                f"Product with id {product_id} not found."
             )
 
-        items = await self.repo.get_by_product_id(rope_product_id)
+        items = await self.repo.get_by_product_id(product_id)
         target_locale = locale or Language.ENG
 
-        result: List[RopeProductColorLocalizedResponseDTO] = []
+        result: List[ProductColorLocalizedResponseDTO] = []
         for item in items:
             localized_color: Optional[ColorLocalizedResponseDTO] = None
             if item.color:
@@ -100,9 +100,9 @@ class RopeProductColorService:
                 )
 
             result.append(
-                RopeProductColorLocalizedResponseDTO(
+                ProductColorLocalizedResponseDTO(
                     id=item.id,
-                    rope_product_id=item.rope_product_id,
+                    product_id=item.product_id,
                     color_id=item.color_id,
                     index=item.index,
                     color=localized_color
@@ -111,25 +111,25 @@ class RopeProductColorService:
 
         return result
 
-    async def get_by_id(self, item_id: int) -> RopeProductColorResponseDTO:
+    async def get_by_id(self, item_id: int) -> ProductColorResponseDTO:
         """Получение привязки цвета по ID."""
         item = await self.repo.get_by_id(item_id)
         if not item:
             raise RopeProductColorNotFound(
-                f"RopeProductColor with id {item_id} not found."
+                f"ProductColor with id {item_id} not found."
             )
-        return RopeProductColorResponseDTO.model_validate(item)
+        return ProductColorResponseDTO.model_validate(item)
 
     async def reorder_color(
         self,
         item_id: int,
-        data: RopeProductColorUpdateIndexDTO
-    ) -> RopeProductColorResponseDTO:
+        data: ProductColorUpdateIndexDTO
+    ) -> ProductColorResponseDTO:
         """Изменение позиции цвета внутри конкретного товара со сдвигом соседей."""
         item = await self.repo.get_by_id(item_id)
         if not item:
             raise RopeProductColorNotFound(
-                f"RopeProductColor with id {item_id} not found."
+                f"ProductColor with id {item_id} not found."
             )
 
         if item.index != data.new_index:
@@ -137,27 +137,27 @@ class RopeProductColorService:
                 obj_id=item_id,
                 old_index=item.index,
                 new_index=data.new_index,
-                rope_product_id=item.rope_product_id
+                product_id=item.product_id
             )
             await self.session.commit()
 
         updated_item = await self.repo.get_by_id(item_id)
-        return RopeProductColorResponseDTO.model_validate(updated_item)
+        return ProductColorResponseDTO.model_validate(updated_item)
 
     async def delete_rope_product_color(self, item_id: int) -> None:
         """Удаление привязки цвета и сдвиг оставшихся индексов для устранения пробелов."""
         item = await self.repo.get_by_id(item_id)
         if not item:
             raise RopeProductColorNotFound(
-                f"RopeProductColor with id {item_id} not found."
+                f"ProductColor with id {item_id} not found."
             )
 
         deleted_index = item.index
-        product_id = item.rope_product_id
+        product_id = item.product_id
 
         await self.repo.delete_item(item_id)
         await self.repo.shift_indexes_after_delete(
             deleted_index=deleted_index,
-            rope_product_id=product_id
+            product_id=product_id
         )
         await self.session.commit()

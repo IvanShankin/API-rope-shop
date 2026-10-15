@@ -1,4 +1,4 @@
-from typing import Optional, Sequence, List
+from typing import Optional, Sequence
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -9,8 +9,9 @@ from src.modules.configurator_extra.models import ConfiguratorExtra, BillingType
 from src.modules.splice_materials.models import SpliceMaterial
 from src.modules.splice_types.models import SpliceType, SpliceCategory
 from src.modules.splice_prices.models import SplicePriceRule
-from src.modules.rope_products.models import RopeProduct
-from src.modules.rope_product_color.models import RopeProductColor
+from src.modules.products.models import Product
+from src.modules.rope_products.models import RopeConfiguratorSetting
+from src.modules.rope_product_color.models import ProductColor
 from src.modules.colors.models import Color
 from src.modules.rope_allowed_splice.models import RopeAllowedSplice
 from src.modules.material_groups.models import MaterialGroup
@@ -86,27 +87,30 @@ class ConfiguratorRepository(BaseRepository):
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
-    async def get_rope_products(self) -> Sequence[RopeProduct]:
+    async def get_rope_products(self) -> Sequence[RopeConfiguratorSetting]:
         """Получение каталога канатов со всеми связанными вариантами, цветами и разрешенными заделками."""
         stmt = (
-            select(RopeProduct)
+            select(RopeConfiguratorSetting)
             .options(
-                selectinload(RopeProduct.variants),
-                selectinload(RopeProduct.colors)
-                .selectinload(RopeProductColor.color)
+                selectinload(RopeConfiguratorSetting.product)
+                .selectinload(Product.variants),
+                selectinload(RopeConfiguratorSetting.product)
+                .selectinload(Product.colors)
+                .selectinload(ProductColor.color)
                 .selectinload(Color.translations),
-                selectinload(RopeProduct.allowed_splices)
+                selectinload(RopeConfiguratorSetting.product)
+                .selectinload(Product.allowed_splices)
                 .selectinload(RopeAllowedSplice.splice_type)
                 .selectinload(SpliceType.translations),
-                selectinload(RopeProduct.material_group)
+                selectinload(RopeConfiguratorSetting.material_group)
                 .selectinload(MaterialGroup.translations),
-                selectinload(RopeProduct.splice_material),
+                selectinload(RopeConfiguratorSetting.splice_material),
             )
-            .order_by(RopeProduct.product_id)
+            .order_by(RopeConfiguratorSetting.product_id)
         )
         result = await self.session.execute(stmt)
         items = result.scalars().all()
         for item in items:
-            if item.variants:
-                item.variants.sort(key=lambda v: v.index)
+            if item.product and item.product.variants:
+                item.product.variants.sort(key=lambda v: v.index)
         return items

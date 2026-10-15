@@ -4,7 +4,6 @@ from typing import List, Optional, TYPE_CHECKING
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.core.database.database import Base
 from src.modules.base.database_model import (
     BaseModelWithRelationshipTranslation,
     BaseTranslation,
@@ -14,6 +13,8 @@ if TYPE_CHECKING:
     from src.modules.categories.models import Category
     from src.modules.product_images.models import ProductImage
     from src.modules.rope_products.models import RopeConfiguratorSetting, ProductVariant
+    from src.modules.product_specification.models import ProductSpecification
+    from src.modules.product_application.models import ProductAssignedApplication
     from src.modules.rope_product_color.models import ProductColor
     from src.modules.rope_allowed_splice.models import RopeAllowedSplice
 
@@ -139,103 +140,3 @@ class ProductTranslation(BaseTranslation):
 
     product: Mapped["Product"] = relationship("Product", back_populates="translations")
 
-
-# ==================== Product Specifications (Catalog) ====================
-
-class ProductSpecification(BaseModelWithRelationshipTranslation):
-    __tablename__ = "product_specifications"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    product_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("products.id", ondelete="CASCADE"),
-        nullable=False,
-    )
-    index: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
-
-    product: Mapped["Product"] = relationship("Product", back_populates="specifications")
-    translations: Mapped[List["ProductSpecificationTranslation"]] = relationship(
-        "ProductSpecificationTranslation",
-        back_populates="specification",
-        cascade="all, delete-orphan",
-    )
-
-
-class ProductSpecificationTranslation(BaseTranslation):
-    __tablename__ = "product_specification_translations"
-    __table_args__ = (
-        UniqueConstraint("specification_id", "locale", name="uq_product_spec_trans_spec_locale"),
-    )
-
-    specification_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("product_specifications.id", ondelete="CASCADE"),
-        nullable=False,
-    )
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
-    value: Mapped[str] = mapped_column(String(500), nullable=False)
-
-    specification: Mapped["ProductSpecification"] = relationship(
-        "ProductSpecification", back_populates="translations"
-    )
-
-
-# ==================== Product Applications (Catalog) ====================
-
-class ProductApplication(BaseModelWithRelationshipTranslation):
-    __tablename__ = "product_applications"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    code: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
-    index: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="true")
-
-    translations: Mapped[List["ProductApplicationTranslation"]] = relationship(
-        "ProductApplicationTranslation",
-        back_populates="application",
-        cascade="all, delete-orphan",
-    )
-    assigned_products: Mapped[List["ProductAssignedApplication"]] = relationship(
-        "ProductAssignedApplication",
-        back_populates="application",
-        cascade="all, delete-orphan",
-    )
-
-
-class ProductApplicationTranslation(BaseTranslation):
-    __tablename__ = "product_application_translations"
-    __table_args__ = (
-        UniqueConstraint("application_id", "locale", name="uq_product_app_trans_app_locale"),
-    )
-
-    application_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("product_applications.id", ondelete="CASCADE"),
-        nullable=False,
-    )
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
-
-    application: Mapped["ProductApplication"] = relationship(
-        "ProductApplication", back_populates="translations"
-    )
-
-
-class ProductAssignedApplication(Base):
-    __tablename__ = "product_assigned_applications"
-    __table_args__ = (
-        UniqueConstraint("product_id", "application_id", name="uq_product_assigned_app"),
-    )
-
-    product_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("products.id", ondelete="CASCADE"),
-        primary_key=True,
-    )
-    application_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("product_applications.id", ondelete="CASCADE"),
-        primary_key=True,
-    )
-
-    product: Mapped["Product"] = relationship("Product", back_populates="assigned_applications")
-    application: Mapped["ProductApplication"] = relationship("ProductApplication", back_populates="assigned_products")

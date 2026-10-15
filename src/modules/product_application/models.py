@@ -1,5 +1,4 @@
 from typing import List, TYPE_CHECKING
-from typing import List, TYPE_CHECKING
 
 from sqlalchemy import Boolean, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship

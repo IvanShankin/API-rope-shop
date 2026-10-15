@@ -4,11 +4,15 @@ from src.modules.products.models import (
     Product,
     ProductTranslation,
     ProductType,
-    ProductSpecification,
-    ProductSpecificationTranslation,
+)
+from src.modules.product_application.models import (
     ProductApplication,
     ProductApplicationTranslation,
     ProductAssignedApplication,
+)
+from src.modules.product_specification.models import (
+    ProductSpecification,
+    ProductSpecificationTranslation,
 )
 from src.modules.rope_products.models import RopeConfiguratorSetting, ProductVariant
 from src.modules.rope_product_color.models import ProductColor

@@ -64,6 +64,14 @@ from src.modules.products.exception import (
     ProductTranslationDeleteError,
     ProductTranslationNotFound,
 )
+from src.modules.product_specification.exception import (
+    ProductSpecificationNotFound,
+    ProductSpecificationAlreadyExists,
+    ProductSpecificationInvalidBatch,
+    ProductSpecificationTranslationNotFound,
+    ProductSpecificationTranslationAlreadyExists,
+    ProductSpecificationTranslationDeleteError,
+)
 
 def register_exception_handlers(app: FastAPI):
 
@@ -253,4 +261,28 @@ def register_exception_handlers(app: FastAPI):
 
     @app.exception_handler(ProductHasDependencies)
     async def product_has_dependencies_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(ProductSpecificationNotFound)
+    async def product_specification_not_found_handler(request, exc):
+        return JSONResponse(status_code=404, content={"detail": str(exc)})
+
+    @app.exception_handler(ProductSpecificationAlreadyExists)
+    async def product_specification_already_exists_handler(request, exc):
+        return JSONResponse(status_code=409, content={"detail": str(exc)})
+
+    @app.exception_handler(ProductSpecificationInvalidBatch)
+    async def product_specification_invalid_batch_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(ProductSpecificationTranslationNotFound)
+    async def product_specification_translation_not_found_handler(request, exc):
+        return JSONResponse(status_code=404, content={"detail": str(exc)})
+
+    @app.exception_handler(ProductSpecificationTranslationAlreadyExists)
+    async def product_specification_translation_already_exists_handler(request, exc):
+        return JSONResponse(status_code=409, content={"detail": str(exc)})
+
+    @app.exception_handler(ProductSpecificationTranslationDeleteError)
+    async def product_specification_translation_delete_error_handler(request, exc):
         return JSONResponse(status_code=400, content={"detail": str(exc)})

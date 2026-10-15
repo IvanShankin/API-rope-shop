@@ -21,6 +21,9 @@ from src.modules.configurators.views import (
 )
 from src.modules.material_groups.views import router as material_groups_router
 from src.modules.materials.views import router as materials_router
+from src.modules.product_specification.views import (
+    router as product_specifications_router,
+)
 from src.modules.products.views import router as products_router
 from src.modules.quote_requests.views import router as quote_requests_router
 from src.modules.rope_allowed_splice.views import (
@@ -73,6 +76,7 @@ def _include_routers(app: FastAPI) -> FastAPI:
     app.include_router(configurators_router)
     app.include_router(categories_router)
     app.include_router(products_router)
+    app.include_router(product_specifications_router)
     return app
 
 
@@ -98,6 +102,3 @@ async def lifespan(app: FastAPI):
     app.state.cr_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     await init_configurator_setting(config=app.state.config)
     await init_admin(config=app.state.config, cr_context=app.state.cr_context)
-    yield
-    # При завершении приложения освобождаем ресурсы
-    pass

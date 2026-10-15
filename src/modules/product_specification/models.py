@@ -31,6 +31,7 @@ class ProductSpecification(BaseModelWithRelationshipTranslation):
         "ProductSpecificationTranslation",
         back_populates="specification",
         cascade="all, delete-orphan",
+        order_by="ProductSpecificationTranslation.id",
     )
 
 

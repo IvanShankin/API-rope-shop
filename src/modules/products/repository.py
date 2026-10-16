@@ -28,7 +28,6 @@ class ProductRepository(BaseIndexedRepository):
         )
         from src.modules.product_specification.models import ProductSpecification
         from src.modules.rope_product_color.models import ProductColor
-        from src.modules.rope_products.models import ProductVariant
 
         return [
             selectinload(Product.translations),

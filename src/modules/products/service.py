@@ -8,6 +8,7 @@ from src.modules.base.exception import NoDataForUpdate
 from src.modules.categories.repository import CategoryRepository
 from src.modules.colors.models_dto import ColorLocalizedResponseDTO
 from src.modules.product_application.models_dto import ProductApplicationLocalizedResponseDTO
+from src.modules.product_images.models_dto import ProductImageResponseDTO
 from src.modules.product_specification.models_dto import ProductSpecificationLocalizedResponseDTO
 from src.modules.products.exception import (
     ProductAlreadyExists,
@@ -22,7 +23,6 @@ from src.modules.products.models import Product
 from src.modules.products.models_dto import (
     ProductBase,
     ProductCreate,
-    ProductImageResponseDTO,
     ProductLocalizedResponseDTO,
     ProductResponseDTO,
     ProductTranslationCreate,

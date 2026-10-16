@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -7,7 +9,9 @@ from src.modules.products.repository import (
     ProductRepository,
     ProductTranslationRepository,
 )
-from src.modules.products.service import ProductService
+
+if TYPE_CHECKING:
+    from src.modules.products.service import ProductService
 
 
 async def get_product_repository(
@@ -33,7 +37,9 @@ async def get_product_service(
     translation_repo: ProductTranslationRepository = Depends(get_product_translation_repository),
     category_repo: CategoryRepository = Depends(get_category_repository),
     session: AsyncSession = Depends(get_db),
-) -> ProductService:
+) -> "ProductService":
+    from src.modules.products.service import ProductService
+
     return ProductService(
         product_repo=product_repo,
         translation_repo=translation_repo,

@@ -19,7 +19,7 @@ class Config:
         self.tokens: TokensConfig = TokensConfig.build()
         self.allowed_extensions: AllowedExtensions = AllowedExtensions.build()
         self.cors: CorsConfig = CorsConfig.build()
-        self.admin: AdminConfig = AdminConfig.build()
+        self.admin: AdminConfig = AdminConfig.build(self.env)
 
 
 class EnvConfig(BaseModel):
@@ -192,12 +192,39 @@ class CorsConfig(BaseModel):
 class AdminConfig(BaseModel):
     email: str
     username: str
-    password: str
+    password: Optional[str] = None
 
     @classmethod
-    def build(cls) -> "AdminConfig":
+    def build(cls, conf_env: Optional[EnvConfig] = None) -> "AdminConfig":
+        env_mode = (conf_env.mode if conf_env else os.getenv("MODE", "")).upper()
+        email = os.environ.get("ADMIN_EMAIL", "admin@example.com")
+        username = os.environ.get("ADMIN_USERNAME", "admin")
+        password = os.environ.get("ADMIN_PASSWORD")
+
+        if not password:
+            if env_mode == "TEST":
+                password = "admin12345"
+            elif env_mode in ("PROD", "PRODUCTION"):
+                raise ValueError(
+                    "ADMIN_PASSWORD environment variable must be set in production mode and cannot be empty."
+                )
+            else:
+                import secrets
+                password = secrets.token_urlsafe(16)
+        else:
+            if env_mode in ("PROD", "PRODUCTION") and password.lower() in (
+                "admin12345",
+                "admin",
+                "password",
+                "12345678",
+                "root",
+            ):
+                raise ValueError(
+                    f"Default or insecure password '{password}' is not allowed for ADMIN_PASSWORD in production."
+                )
+
         return cls(
-            email=os.environ.get("ADMIN_EMAIL", "admin@example.com"),
-            username=os.environ.get("ADMIN_USERNAME", "admin"),
-            password=os.environ.get("ADMIN_PASSWORD", "admin12345"),
+            email=email,
+            username=username,
+            password=password,
         )

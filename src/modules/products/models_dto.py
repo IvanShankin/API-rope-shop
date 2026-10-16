@@ -37,18 +37,6 @@ class ProductTranslationResponseDTO(ProductTranslationBase, ORMDTO):
     product_id: int
 
 
-# ===================== Product Image DTO =====================
-
-
-class ProductImageResponseDTO(ORMDTO):
-    id: int
-    product_id: int
-    image_url: str
-    is_main: bool = False
-    index: int = 0
-    is_active: bool = True
-
-
 # ===================== Product Base / Create / Update DTOs =====================
 
 
@@ -121,6 +109,7 @@ from src.modules.product_application.models_dto import (  # noqa: E402
     ProductApplicationResponseDTO,
     ProductAssignedApplicationResponseDTO,
 )
+from src.modules.product_images.models_dto import ProductImageResponseDTO  # noqa: E402
 from src.modules.product_specification.models_dto import (  # noqa: E402
     ProductSpecificationLocalizedResponseDTO,
     ProductSpecificationResponseDTO,

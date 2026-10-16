@@ -24,6 +24,7 @@ from src.modules.materials.views import router as materials_router
 from src.modules.product_application.views import (
     router as product_applications_router,
 )
+from src.modules.product_images.views import router as product_images_router
 from src.modules.product_specification.views import (
     router as product_specifications_router,
 )
@@ -79,6 +80,7 @@ def _include_routers(app: FastAPI) -> FastAPI:
     app.include_router(configurators_router)
     app.include_router(categories_router)
     app.include_router(products_router)
+    app.include_router(product_images_router)
     app.include_router(product_specifications_router)
     app.include_router(product_applications_router)
     return app
@@ -106,3 +108,4 @@ async def lifespan(app: FastAPI):
     app.state.cr_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     await init_configurator_setting(config=app.state.config)
     await init_admin(config=app.state.config, cr_context=app.state.cr_context)
+    yield

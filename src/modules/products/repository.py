@@ -8,7 +8,6 @@ from src.modules.base.repository_model import (
     BaseRepository,
 )
 from src.modules.categories.models import Category
-from src.modules.product_images.models import ProductImage
 from src.modules.products.models import Product, ProductTranslation
 from src.modules.products.models_dto import (
     ProductBase,
@@ -131,7 +130,7 @@ class ProductRepository(BaseIndexedRepository):
                 variant_conds.append(ProductVariant.size_value >= diameter_min)
             if diameter_max is not None:
                 variant_conds.append(ProductVariant.size_value <= diameter_max)
-            stmt = stmt.where(exists().where(*variant_conds))
+            stmt = stmt.where(exists().where(*variant_conds))\
 
         if skip:
             stmt = stmt.offset(skip)
@@ -212,6 +211,7 @@ class ProductRepository(BaseIndexedRepository):
 
     async def has_dependencies(self, product_id: int) -> bool:
         """Проверка наличия связанных записей в rope_configurator_settings или product_images."""
+        from src.modules.product_images.models import ProductImage
         from src.modules.rope_products.models import RopeConfiguratorSetting
 
         rope_stmt = select(exists().where(RopeConfiguratorSetting.product_id == product_id))

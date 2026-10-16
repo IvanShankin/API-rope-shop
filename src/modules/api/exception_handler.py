@@ -64,6 +64,11 @@ from src.modules.products.exception import (
     ProductTranslationDeleteError,
     ProductTranslationNotFound,
 )
+from src.modules.product_images.exception import (
+    ProductImageAlreadyExists,
+    ProductImageHasDependencies,
+    ProductImageNotFound,
+)
 from src.modules.product_specification.exception import (
     ProductSpecificationNotFound,
     ProductSpecificationAlreadyExists,
@@ -271,6 +276,18 @@ def register_exception_handlers(app: FastAPI):
 
     @app.exception_handler(ProductHasDependencies)
     async def product_has_dependencies_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(ProductImageNotFound)
+    async def product_image_not_found_handler(request, exc):
+        return JSONResponse(status_code=404, content={"detail": str(exc)})
+
+    @app.exception_handler(ProductImageAlreadyExists)
+    async def product_image_already_exists_handler(request, exc):
+        return JSONResponse(status_code=409, content={"detail": str(exc)})
+
+    @app.exception_handler(ProductImageHasDependencies)
+    async def product_image_has_dependencies_handler(request, exc):
         return JSONResponse(status_code=400, content={"detail": str(exc)})
 
     @app.exception_handler(ProductSpecificationNotFound)

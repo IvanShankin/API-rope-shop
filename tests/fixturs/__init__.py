@@ -39,6 +39,7 @@ from tests.modules.products.fixtures import (
     create_product_fixture,
     create_product_translation_fixture,
 )
+from tests.modules.product_images.fixtures import create_product_image_fixture
 from tests.modules.product_specification.fixtures import (
     create_product_specification_fixture,
     create_product_specification_translation_fixture,
@@ -102,6 +103,7 @@ __all__ = [
     "create_category_translation_fixture",
     "create_product_fixture",
     "create_product_translation_fixture",
+    "create_product_image_fixture",
     "create_product_specification_fixture",
     "create_product_specification_translation_fixture",
     "create_product_application_fixture",

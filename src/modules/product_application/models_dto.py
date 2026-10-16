@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 from pydantic import BaseModel, Field
 
 from src.modules.base.database_model import Language
@@ -85,4 +85,4 @@ class AssignApplicationToProductDTO(BaseModel):
 class ProductAssignedApplicationResponseDTO(ORMDTO):
     product_id: int
     application_id: int
-    application: Optional[ProductApplicationLocalizedResponseDTO] = None
+    application: Optional[Union[ProductApplicationResponseDTO, ProductApplicationLocalizedResponseDTO]] = None

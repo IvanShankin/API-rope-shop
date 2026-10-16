@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from src.modules.product_images.models import ProductImage
     from src.modules.rope_products.models import RopeConfiguratorSetting, ProductVariant
     from src.modules.product_specification.models import ProductSpecification
-    from src.modules.product_application.models import ProductAssignedApplication
+    from src.modules.product_application.models import ProductAssignedApplication, ProductApplication
     from src.modules.rope_product_color.models import ProductColor
     from src.modules.rope_allowed_splice.models import RopeAllowedSplice
 
@@ -114,6 +114,8 @@ class Product(BaseModelWithRelationshipTranslation):
 
     @property
     def main_image_url(self) -> Optional[str]:
+        if "images" not in self.__dict__ or not self.images:
+            return None
         for img in self.images:
             if img.is_active and img.is_main:
                 return img.image_url
@@ -121,6 +123,55 @@ class Product(BaseModelWithRelationshipTranslation):
             if img.is_active:
                 return img.image_url
         return None
+
+    @property
+    def price_from(self) -> Optional[float]:
+        if "variants" not in self.__dict__ or not self.variants:
+            return None
+        active_prices = [
+            float(v.price)
+            for v in self.variants
+            if getattr(v, "is_active", True) and getattr(v, "price", None) is not None
+        ]
+        return min(active_prices) if active_prices else None
+
+    @property
+    def size_min(self) -> Optional[float]:
+        if "variants" not in self.__dict__ or not self.variants:
+            return None
+        active_sizes = [
+            float(v.size_value)
+            for v in self.variants
+            if getattr(v, "is_active", True) and getattr(v, "size_value", None) is not None
+        ]
+        return min(active_sizes) if active_sizes else None
+
+    @property
+    def size_max(self) -> Optional[float]:
+        if "variants" not in self.__dict__ or not self.variants:
+            return None
+        active_sizes = [
+            float(v.size_value)
+            for v in self.variants
+            if getattr(v, "is_active", True) and getattr(v, "size_value", None) is not None
+        ]
+        return max(active_sizes) if active_sizes else None
+
+    @property
+    def variants_count(self) -> int:
+        if "variants" not in self.__dict__ or not self.variants:
+            return 0
+        return sum(1 for v in self.variants if getattr(v, "is_active", True))
+
+    @property
+    def applications(self) -> list:
+        if "assigned_applications" not in self.__dict__ or not self.assigned_applications:
+            return []
+        return [
+            assigned.application
+            for assigned in self.assigned_applications
+            if getattr(assigned, "application", None) is not None
+        ]
 
 
 class ProductTranslation(BaseTranslation):
@@ -139,4 +190,3 @@ class ProductTranslation(BaseTranslation):
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     product: Mapped["Product"] = relationship("Product", back_populates="translations")
-

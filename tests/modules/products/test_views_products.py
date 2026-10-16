@@ -19,9 +19,25 @@ from src.modules.products.models_dto import (
 from src.modules.users.models import UserRole
 from tests.helpers.functions import comparison_models
 from tests.modules.categories.fixtures.models_dto import CreateCategoryFixtureDTO
+from tests.modules.material_groups.fixtures.models_dto import CreateMaterialGroupFixtureDTO
+from tests.modules.materials.fixtures.models_dto import CreateMaterialFixtureDTO
+from tests.modules.product_application.fixtures.models_dto import (
+    CreateProductApplicationFixtureDTO,
+    CreateProductAssignedApplicationFixtureDTO,
+)
+from tests.modules.product_specification.fixtures.models_dto import (
+    CreateProductSpecificationFixtureDTO,
+)
 from tests.modules.products.fixtures.models_dto import (
     CreateProductFixtureDTO,
     CreateProductTranslationFixtureDTO,
+)
+from tests.modules.rope_products.fixtures.models_dto import (
+    CreateRopeProductFixtureDTO,
+    CreateRopeVariantFixtureDTO,
+)
+from tests.modules.splice_materials.fixtures.models_dto import (
+    CreateSpliceMaterialFixtureDTO,
 )
 from tests.modules.users.fixtures.models_dto import CreateUserFixtureDTO
 
@@ -135,6 +151,134 @@ class TestsForSuccess:
         assert p_rope.id not in ids
 
     @pytest.mark.asyncio
+    async def test_get_all_products_filter_by_construction_type(
+        self,
+        client_for_tests,
+        create_product_fixture,
+    ):
+        p_hollow = await create_product_fixture(
+            CreateProductFixtureDTO(construction_type="hollow")
+        )
+        p_core = await create_product_fixture(
+            CreateProductFixtureDTO(construction_type="hm_core")
+        )
+
+        resp = await client_for_tests.get("/products", params={"construction_type": "hollow"})
+        assert resp.status_code == 200
+
+        items = [ProductLocalizedResponseDTO.model_validate(i) for i in resp.json()]
+        ids = [i.id for i in items]
+        assert p_hollow.id in ids
+        assert p_core.id not in ids
+
+    @pytest.mark.asyncio
+    async def test_get_all_products_filter_by_material_id(
+        self,
+        client_for_tests,
+        create_product_fixture,
+        create_material_group_fixture,
+        create_material_fixture,
+        create_splice_material_fixture,
+        create_rope_product_fixture,
+    ):
+        mg = await create_material_group_fixture()
+        mat1 = await create_material_fixture(CreateMaterialFixtureDTO(material_group_id=mg.id))
+        mat2 = await create_material_fixture(CreateMaterialFixtureDTO(material_group_id=mg.id))
+        sm = await create_splice_material_fixture()
+
+        p1 = await create_product_fixture()
+        p2 = await create_product_fixture()
+
+        await create_rope_product_fixture(
+            CreateRopeProductFixtureDTO(
+                product_id=p1.id,
+                material_group_id=mg.id,
+                material_id=mat1.id,
+                splice_material_id=sm.id,
+            )
+        )
+        await create_rope_product_fixture(
+            CreateRopeProductFixtureDTO(
+                product_id=p2.id,
+                material_group_id=mg.id,
+                material_id=mat2.id,
+                splice_material_id=sm.id,
+            )
+        )
+
+        resp = await client_for_tests.get("/products", params={"material_id": mat1.id})
+        assert resp.status_code == 200
+
+        items = [ProductLocalizedResponseDTO.model_validate(i) for i in resp.json()]
+        ids = [i.id for i in items]
+        assert p1.id in ids
+        assert p2.id not in ids
+
+    @pytest.mark.asyncio
+    async def test_get_all_products_filter_by_application_codes(
+        self,
+        client_for_tests,
+        create_product_fixture,
+        create_product_application_fixture,
+        create_product_assigned_application_fixture,
+    ):
+        app_winch = await create_product_application_fixture(
+            CreateProductApplicationFixtureDTO(code="winch_test")
+        )
+        app_sheet = await create_product_application_fixture(
+            CreateProductApplicationFixtureDTO(code="sheet_test")
+        )
+
+        p1 = await create_product_fixture()
+        p2 = await create_product_fixture()
+
+        await create_product_assigned_application_fixture(
+            CreateProductAssignedApplicationFixtureDTO(product_id=p1.id, application_id=app_winch.id)
+        )
+        await create_product_assigned_application_fixture(
+            CreateProductAssignedApplicationFixtureDTO(product_id=p2.id, application_id=app_sheet.id)
+        )
+
+        resp = await client_for_tests.get("/products", params={"application_codes": "winch_test"})
+        assert resp.status_code == 200
+
+        items = [ProductLocalizedResponseDTO.model_validate(i) for i in resp.json()]
+        ids = [i.id for i in items]
+        assert p1.id in ids
+        assert p2.id not in ids
+
+    @pytest.mark.asyncio
+    async def test_get_all_products_filter_by_diameter(
+        self,
+        client_for_tests,
+        create_product_fixture,
+        create_rope_variant_fixture,
+    ):
+        p_thin = await create_product_fixture()
+        p_thick = await create_product_fixture()
+
+        await create_rope_variant_fixture(
+            CreateRopeVariantFixtureDTO(product_id=p_thin.id, size_value=4.0, price=10.0)
+        )
+        await create_rope_variant_fixture(
+            CreateRopeVariantFixtureDTO(product_id=p_thick.id, size_value=12.0, price=20.0)
+        )
+
+        resp = await client_for_tests.get("/products", params={"diameter_min": 10.0})
+        assert resp.status_code == 200
+        items = [ProductLocalizedResponseDTO.model_validate(i) for i in resp.json()]
+        ids = [i.id for i in items]
+        assert p_thick.id in ids
+        assert p_thin.id not in ids
+
+        resp_max = await client_for_tests.get("/products", params={"diameter_max": 6.0})
+        assert resp_max.status_code == 200
+        items_max = [ProductLocalizedResponseDTO.model_validate(i) for i in resp_max.json()]
+        ids_max = [i.id for i in items_max]
+        assert p_thin.id in ids_max
+        assert p_thick.id not in ids_max
+
+    @pytest.mark.asyncio
     async def test_get_all_products_filter_by_is_active(
         self,
         client_for_tests,
@@ -209,11 +353,40 @@ class TestsForSuccess:
         self,
         client_for_tests,
         create_product_fixture,
+        create_product_specification_fixture,
+        create_product_application_fixture,
+        create_product_assigned_application_fixture,
+        create_rope_variant_fixture,
     ):
         prod = await create_product_fixture(
             CreateProductFixtureDTO(slug="marine-cord", name="Marine Cord")
         )
+        await create_product_specification_fixture(
+            CreateProductSpecificationFixtureDTO(
+                product_id=prod.id,
+                name="Material",
+                value="Polyester",
+            )
+        )
+        app = await create_product_application_fixture(
+            CreateProductApplicationFixtureDTO(code="sheet_app", name="Sheet")
+        )
+        await create_product_assigned_application_fixture(
+            CreateProductAssignedApplicationFixtureDTO(
+                product_id=prod.id,
+                application_id=app.id,
+            )
+        )
+        await create_rope_variant_fixture(
+            CreateRopeVariantFixtureDTO(
+                product_id=prod.id,
+                variant_name="8 mm",
+                size_value=8.0,
+                price=5.50,
+            )
+        )
 
+        # 1. Full Response (without locale)
         response = await client_for_tests.get(f"/products/{prod.id}")
         assert response.status_code == 200
 
@@ -222,23 +395,81 @@ class TestsForSuccess:
         assert resp_dto.slug == "marine-cord"
         assert len(resp_dto.translations) >= 1
         assert resp_dto.translations[0].name == "Marine Cord"
+        assert len(resp_dto.specifications) == 1
+        assert resp_dto.specifications[0].translations[0].name == "Material"
+        assert len(resp_dto.assigned_applications) == 1
+        assert resp_dto.assigned_applications[0].application is not None
+        assert len(resp_dto.applications) == 1
+        assert resp_dto.applications[0].code == "sheet_app"
+        assert len(resp_dto.variants) == 1
+        assert resp_dto.price_from == 5.50
+        assert resp_dto.variants_count == 1
+
+        # 2. Localized Response (with locale)
+        loc_resp = await client_for_tests.get(f"/products/{prod.id}", params={"locale": "eng"})
+        assert loc_resp.status_code == 200
+        loc_dto = ProductLocalizedResponseDTO.model_validate(loc_resp.json())
+        assert loc_dto.id == prod.id
+        assert loc_dto.name == "Marine Cord"
+        assert len(loc_dto.specifications) == 1
+        assert loc_dto.specifications[0].name == "Material"
+        assert loc_dto.specifications[0].value == "Polyester"
+        assert len(loc_dto.applications) == 1
+        assert loc_dto.applications[0].code == "sheet_app"
+        assert loc_dto.price_from == 5.50
+        assert loc_dto.variants_count == 1
 
     @pytest.mark.asyncio
     async def test_get_product_by_slug(
         self,
         client_for_tests,
         create_product_fixture,
+        create_product_specification_fixture,
+        create_product_application_fixture,
+        create_product_assigned_application_fixture,
     ):
         prod = await create_product_fixture(
             CreateProductFixtureDTO(slug="super-line", name="Super Line")
         )
+        await create_product_specification_fixture(
+            CreateProductSpecificationFixtureDTO(
+                product_id=prod.id,
+                name="Core",
+                value="Dyneema",
+            )
+        )
+        app = await create_product_application_fixture(
+            CreateProductApplicationFixtureDTO(code="halyard_app", name="Halyard")
+        )
+        await create_product_assigned_application_fixture(
+            CreateProductAssignedApplicationFixtureDTO(
+                product_id=prod.id,
+                application_id=app.id,
+            )
+        )
 
+        # 1. Full Response (without locale)
         response = await client_for_tests.get("/products/by-slug/super-line")
         assert response.status_code == 200
 
         resp_dto = ProductResponseDTO.model_validate(response.json())
         assert resp_dto.id == prod.id
         assert resp_dto.slug == "super-line"
+        assert len(resp_dto.specifications) == 1
+        assert len(resp_dto.applications) == 1
+
+        # 2. Localized Response (with locale)
+        loc_response = await client_for_tests.get("/products/by-slug/super-line", params={"locale": "eng"})
+        assert loc_response.status_code == 200
+
+        loc_dto = ProductLocalizedResponseDTO.model_validate(loc_response.json())
+        assert loc_dto.id == prod.id
+        assert loc_dto.slug == "super-line"
+        assert loc_dto.name == "Super Line"
+        assert len(loc_dto.specifications) == 1
+        assert loc_dto.specifications[0].name == "Core"
+        assert len(loc_dto.applications) == 1
+        assert loc_dto.applications[0].code == "halyard_app"
 
     @pytest.mark.asyncio
     async def test_create_product(
@@ -299,7 +530,20 @@ class TestsForSuccess:
         assert comparison_models(
             resp_dto,
             db_prod,
-            keys_not_checked=["translations", "main_image_url"],
+            keys_not_checked=[
+                "translations",
+                "main_image_url",
+                "price_from",
+                "size_min",
+                "size_max",
+                "variants_count",
+                "images",
+                "specifications",
+                "assigned_applications",
+                "applications",
+                "variants",
+                "colors",
+            ],
         )
         assert len(db_prod.translations) == 2
 

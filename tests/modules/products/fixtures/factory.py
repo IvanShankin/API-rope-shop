@@ -8,11 +8,18 @@ from tests.modules.products.fixtures.models_dto import (
     CreateProductTranslationFixtureDTO,
 )
 from src.modules.base.database_model import Language
+from src.modules.colors.models import Color
+from src.modules.product_application.models import (
+    ProductApplication,
+    ProductAssignedApplication,
+)
+from src.modules.product_specification.models import ProductSpecification
 from src.modules.products.models import Product, ProductTranslation, ProductType
 from src.modules.products.models_dto import (
     ProductResponseDTO,
     ProductTranslationResponseDTO,
 )
+from src.modules.rope_product_color.models import ProductColor
 
 
 async def create_product_factory(
@@ -29,6 +36,9 @@ async def create_product_factory(
         category_id=category_id,
         slug=random_string() if new_product.slug is None else new_product.slug,
         product_type=new_product.product_type or ProductType.ROPE.value,
+        price_unit="meter" if new_product.price_unit is None else new_product.price_unit,
+        has_configurator=False if new_product.has_configurator is None else new_product.has_configurator,
+        construction_type=new_product.construction_type,
         index=1 if new_product.index is None else new_product.index,
         is_active=True if new_product.is_active is None else new_product.is_active,
     )
@@ -40,6 +50,7 @@ async def create_product_factory(
         product_id=product.id,
         locale=new_product.locale if new_product.locale is not None else Language.ENG,
         name=new_product.name if new_product.name is not None else random_string(),
+        subtitle=new_product.subtitle,
         description=new_product.description,
     )
     session_db.add(trans)
@@ -52,6 +63,12 @@ async def create_product_factory(
             selectinload(Product.translations),
             selectinload(Product.images),
             selectinload(Product.category),
+            selectinload(Product.specifications).selectinload(ProductSpecification.translations),
+            selectinload(Product.assigned_applications)
+            .selectinload(ProductAssignedApplication.application)
+            .selectinload(ProductApplication.translations),
+            selectinload(Product.variants),
+            selectinload(Product.colors).selectinload(ProductColor.color).selectinload(Color.translations),
         )
     )
     product = result.scalar_one()
@@ -73,6 +90,7 @@ async def create_product_translation_factory(
         product_id=product_id,
         locale=new_trans.locale if new_trans.locale is not None else Language.GER,
         name=new_trans.name if new_trans.name is not None else random_string(),
+        subtitle=new_trans.subtitle,
         description=new_trans.description,
     )
     session_db.add(trans)

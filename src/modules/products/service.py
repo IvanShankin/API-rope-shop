@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,6 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.modules.base.database_model import Language
 from src.modules.base.exception import NoDataForUpdate
 from src.modules.categories.repository import CategoryRepository
+from src.modules.colors.models_dto import ColorLocalizedResponseDTO
+from src.modules.product_application.models_dto import ProductApplicationLocalizedResponseDTO
+from src.modules.product_specification.models_dto import ProductSpecificationLocalizedResponseDTO
 from src.modules.products.exception import (
     ProductAlreadyExists,
     ProductCategoryNotFound,
@@ -19,6 +22,7 @@ from src.modules.products.models import Product
 from src.modules.products.models_dto import (
     ProductBase,
     ProductCreate,
+    ProductImageResponseDTO,
     ProductLocalizedResponseDTO,
     ProductResponseDTO,
     ProductTranslationCreate,
@@ -32,6 +36,8 @@ from src.modules.products.repository import (
     ProductRepository,
     ProductTranslationRepository,
 )
+from src.modules.rope_product_color.models_dto import ProductColorLocalizedResponseDTO
+from src.modules.rope_products.models_dto import ProductVariantResponseDTO
 
 
 class ProductService:
@@ -87,6 +93,9 @@ class ProductService:
             category_id=data.category_id,
             slug=data.slug,
             product_type=data.product_type,
+            price_unit=data.price_unit,
+            has_configurator=data.has_configurator,
+            construction_type=data.construction_type,
             index=target_index,
             is_active=data.is_active,
         )
@@ -97,6 +106,7 @@ class ProductService:
             insert_dto = ProductTranslationInsert(
                 locale=trans_data.locale,
                 name=trans_data.name,
+                subtitle=trans_data.subtitle,
                 description=trans_data.description,
                 product_id=new_product.id,
             )
@@ -111,16 +121,37 @@ class ProductService:
         category_id: Optional[int] = None,
         category_slug: Optional[str] = None,
         product_type: Optional[str] = None,
+        material_id: Optional[int] = None,
+        construction_type: Optional[str] = None,
+        application_codes: Optional[Union[List[str], str]] = None,
+        diameter_min: Optional[float] = None,
+        diameter_max: Optional[float] = None,
         is_active: Optional[bool] = None,
         locale: Optional[Language] = None,
         skip: int = 0,
         limit: Optional[int] = None,
     ) -> List[ProductLocalizedResponseDTO]:
         """Получение списка товаров с фильтрацией, пагинацией и локализацией."""
+        parsed_app_codes: Optional[List[str]] = None
+        if application_codes:
+            if isinstance(application_codes, str):
+                parsed_app_codes = [c.strip() for c in application_codes.split(",") if c.strip()]
+            else:
+                parsed_app_codes = []
+                for item in application_codes:
+                    for sub in item.split(","):
+                        if sub.strip():
+                            parsed_app_codes.append(sub.strip())
+
         products = await self.product_repo.get_all(
             category_id=category_id,
             category_slug=category_slug,
             product_type=product_type,
+            material_id=material_id,
+            construction_type=construction_type,
+            application_codes=parsed_app_codes,
+            diameter_min=diameter_min,
+            diameter_max=diameter_max,
             is_active=is_active,
             skip=skip,
             limit=limit,
@@ -128,18 +159,26 @@ class ProductService:
 
         return [self._to_localized_dto(p, locale) for p in products]
 
-    async def get_product_by_id(self, product_id: int) -> ProductResponseDTO:
-        """Получение товара по ID со всеми переводами и изображениями."""
+    async def get_product_by_id(
+        self, product_id: int, locale: Optional[Language] = None
+    ) -> Union[ProductLocalizedResponseDTO, ProductResponseDTO]:
+        """Получение товара по ID со всеми переводами и связанными данными (или локализованного)."""
         product = await self.product_repo.get_by_id(product_id)
         if not product:
             raise ProductNotFound(f"Product with id {product_id} not found.")
+        if locale is not None:
+            return self._to_localized_dto(product, locale)
         return ProductResponseDTO.model_validate(product)
 
-    async def get_product_by_slug(self, slug: str) -> ProductResponseDTO:
-        """Получение товара по slug со всеми переводами и изображениями."""
+    async def get_product_by_slug(
+        self, slug: str, locale: Optional[Language] = None
+    ) -> Union[ProductLocalizedResponseDTO, ProductResponseDTO]:
+        """Получение товара по slug со всеми переводами и связанными данными (или локализованного)."""
         product = await self.product_repo.get_by_slug(slug)
         if not product:
             raise ProductNotFound(f"Product with slug '{slug}' not found.")
+        if locale is not None:
+            return self._to_localized_dto(product, locale)
         return ProductResponseDTO.model_validate(product)
 
     async def update_product(
@@ -235,6 +274,7 @@ class ProductService:
         insert_dto = ProductTranslationInsert(
             locale=data.locale,
             name=data.name,
+            subtitle=data.subtitle,
             description=data.description,
             product_id=product_id,
         )
@@ -289,10 +329,15 @@ class ProductService:
         product: Product,
         locale: Optional[Language],
     ) -> ProductLocalizedResponseDTO:
-        """Конвертация в локализованное DTO с fallback-логикой."""
+        """Конвертация в локализованное DTO с fallback-логикой и всеми подгруженными связями."""
         target_locale = locale or Language.ENG
         name = product._get_field_with_translation(
             lambda t: t.name,
+            target_locale,
+            fallback=Language.GER,
+        )
+        subtitle = product._get_field_with_translation(
+            lambda t: t.subtitle,
             target_locale,
             fallback=Language.GER,
         )
@@ -302,16 +347,109 @@ class ProductService:
             fallback=Language.GER,
         )
 
+        specs_dto: List[ProductSpecificationLocalizedResponseDTO] = []
+        for spec in getattr(product, "specifications", []):
+            spec_name = spec._get_field_with_translation(
+                lambda t: t.name,
+                target_locale,
+                fallback=Language.GER,
+            )
+            spec_value = spec._get_field_with_translation(
+                lambda t: t.value,
+                target_locale,
+                fallback=Language.GER,
+            )
+            specs_dto.append(
+                ProductSpecificationLocalizedResponseDTO(
+                    id=spec.id,
+                    product_id=spec.product_id,
+                    index=spec.index,
+                    name=spec_name if spec_name is not None else "",
+                    value=spec_value if spec_value is not None else "",
+                )
+            )
+
+        apps_dto: List[ProductApplicationLocalizedResponseDTO] = []
+        for assigned in getattr(product, "assigned_applications", []):
+            app = getattr(assigned, "application", None)
+            if app and getattr(app, "is_active", True):
+                app_name = app._get_field_with_translation(
+                    lambda t: t.name,
+                    target_locale,
+                    fallback=Language.GER,
+                )
+                apps_dto.append(
+                    ProductApplicationLocalizedResponseDTO(
+                        id=app.id,
+                        code=app.code,
+                        index=app.index,
+                        is_active=app.is_active,
+                        name=app_name if app_name is not None else app.code,
+                    )
+                )
+
+        images_dto = [
+            ProductImageResponseDTO.model_validate(img)
+            for img in getattr(product, "images", [])
+            if getattr(img, "is_active", True)
+        ]
+
+        variants_dto = [
+            ProductVariantResponseDTO.model_validate(v)
+            for v in getattr(product, "variants", [])
+            if getattr(v, "is_active", True)
+        ]
+
+        colors_dto: List[ProductColorLocalizedResponseDTO] = []
+        for pc in getattr(product, "colors", []):
+            c = getattr(pc, "color", None)
+            if c and getattr(c, "is_active", True):
+                c_name = c._get_field_with_translation(
+                    lambda t: t.name,
+                    target_locale,
+                    fallback=Language.GER,
+                )
+                color_loc = ColorLocalizedResponseDTO(
+                    id=c.id,
+                    code=c.code,
+                    hex=c.hex,
+                    index=c.index,
+                    is_active=c.is_active,
+                    name=c_name if c_name is not None else c.code,
+                )
+                colors_dto.append(
+                    ProductColorLocalizedResponseDTO(
+                        id=pc.id,
+                        product_id=pc.product_id,
+                        color_id=pc.color_id,
+                        index=pc.index,
+                        color=color_loc,
+                    )
+                )
+
         return ProductLocalizedResponseDTO(
             id=product.id,
             category_id=product.category_id,
             slug=product.slug,
             product_type=product.product_type,
+            price_unit=product.price_unit,
+            has_configurator=product.has_configurator,
+            construction_type=product.construction_type,
             index=product.index,
             is_active=product.is_active,
             name=name if name else "No Translation",
+            subtitle=subtitle,
             description=description,
             main_image_url=product.main_image_url,
+            price_from=product.price_from,
+            size_min=product.size_min,
+            size_max=product.size_max,
+            variants_count=product.variants_count,
+            images=images_dto,
+            specifications=specs_dto,
+            applications=apps_dto,
+            variants=variants_dto,
+            colors=colors_dto,
             created_at=product.created_at,
             updated_at=product.updated_at,
         )

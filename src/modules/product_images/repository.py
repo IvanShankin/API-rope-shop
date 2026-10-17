@@ -96,6 +96,11 @@ class ProductImageRepository(BaseIndexedRepository):
         stmt = delete(ProductImage).where(ProductImage.id == image_id)
         await self.session.execute(stmt)
 
+    async def delete_by_product_id(self, product_id: int) -> None:
+        """Удаление всех записей изображений конкретного товара."""
+        stmt = delete(ProductImage).where(ProductImage.product_id == product_id)
+        await self.session.execute(stmt)
+
     async def has_dependencies(self, image_id: int) -> bool:
         """Проверка зависимостей изображения (изображение не имеет дочерних связей)."""
         return False

@@ -209,17 +209,17 @@ class ProductRepository(BaseIndexedRepository):
         return int(result.scalar_one())
 
     async def has_dependencies(self, product_id: int) -> bool:
-        """Проверка наличия связанных записей в rope_configurator_settings или product_images."""
-        from src.modules.product_images.models import ProductImage
-        from src.modules.rope_products.models import RopeConfiguratorSetting
+        """
+        Проверка наличия блокирующих внешних зависимостей перед удалением товара.
 
-        rope_stmt = select(exists().where(RopeConfiguratorSetting.product_id == product_id))
-        images_stmt = select(exists().where(ProductImage.product_id == product_id))
-
-        has_rope = (await self.session.execute(rope_stmt)).scalar() or False
-        has_images = (await self.session.execute(images_stmt)).scalar() or False
-
-        return has_rope or has_images
+        Все дочерние сущности (ProductImage, ProductVariant, ProductSpecification,
+        RopeConfiguratorSetting, ProductColor, RopeAllowedSplice, ProductAssignedApplication,
+        ProductTranslation) удаляются каскадно/явно при удалении продукта (включая очистку медиафайлов).
+        Внешние ссылки из заявок (QuoteRopeItem) имеют ON DELETE SET NULL согласно
+        паттерну Order Snapshot и не блокируют удаление.
+        Блокирующие внешние зависимости отсутствуют.
+        """
+        return False
 
     async def add_product(self, data: ProductBase) -> Product:
         product = Product(
@@ -244,6 +244,76 @@ class ProductRepository(BaseIndexedRepository):
         await self.session.execute(stmt)
 
     async def delete_product(self, product_id: int) -> None:
+        """
+        Удаление товара и очистка всех ссылающихся на него зависимых данных.
+        Для QuoteRopeItem выполняется обнуление FK (ON DELETE SET NULL) для сохранения снимка заказа.
+        """
+        from src.modules.product_application.models import ProductAssignedApplication
+        from src.modules.product_images.models import ProductImage
+        from src.modules.product_specification.models import (
+            ProductSpecification,
+            ProductSpecificationTranslation,
+        )
+        from src.modules.products.models import ProductTranslation
+        from src.modules.quote_requests.models import QuoteRopeItem
+        from src.modules.rope_allowed_splice.models import RopeAllowedSplice
+        from src.modules.rope_product_color.models import ProductColor
+        from src.modules.rope_products.models import (
+            ProductVariant,
+            RopeConfiguratorSetting,
+        )
+
+        # 1. Обнуляем FK в QuoteRopeItem (согласно логике Order Snapshot)
+        await self.session.execute(
+            update(QuoteRopeItem)
+            .where(QuoteRopeItem.product_id == product_id)
+            .values(product_id=None)
+        )
+
+        # 2. Удаляем дочерние связанные сущности
+        await self.session.execute(
+            delete(ProductTranslation).where(ProductTranslation.product_id == product_id)
+        )
+        await self.session.execute(
+            delete(ProductImage).where(ProductImage.product_id == product_id)
+        )
+        await self.session.execute(
+            delete(ProductVariant).where(ProductVariant.product_id == product_id)
+        )
+        await self.session.execute(
+            delete(ProductColor).where(ProductColor.product_id == product_id)
+        )
+        await self.session.execute(
+            delete(RopeAllowedSplice).where(RopeAllowedSplice.product_id == product_id)
+        )
+        await self.session.execute(
+            delete(RopeConfiguratorSetting).where(RopeConfiguratorSetting.product_id == product_id)
+        )
+
+        # Для спецификаций предварительно удаляем их переводы
+        spec_ids_stmt = select(ProductSpecification.id).where(
+            ProductSpecification.product_id == product_id
+        )
+        spec_ids = (await self.session.execute(spec_ids_stmt)).scalars().all()
+        if spec_ids:
+            await self.session.execute(
+                delete(ProductSpecificationTranslation).where(
+                    ProductSpecificationTranslation.specification_id.in_(spec_ids)
+                )
+            )
+            await self.session.execute(
+                delete(ProductSpecification).where(
+                    ProductSpecification.id.in_(spec_ids)
+                )
+            )
+
+        await self.session.execute(
+            delete(ProductAssignedApplication).where(
+                ProductAssignedApplication.product_id == product_id
+            )
+        )
+
+        # 3. Удаляем сам продукт
         stmt = delete(Product).where(Product.id == product_id)
         await self.session.execute(stmt)
 

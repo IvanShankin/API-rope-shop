@@ -1,3 +1,4 @@
+import shutil
 from typing import List, Optional, Union
 
 from fastapi import HTTPException, status
@@ -32,6 +33,9 @@ from src.modules.products.models_dto import (
     ProductUpdate,
     ProductUpdateIndexDTO,
 )
+from src.modules.handlers_files.service import ImageManager
+from src.modules.path_builder.service import PathBuilder
+from src.modules.product_images.repository import ProductImageRepository
 from src.modules.products.repository import (
     ProductRepository,
     ProductTranslationRepository,
@@ -47,11 +51,17 @@ class ProductService:
         translation_repo: ProductTranslationRepository,
         category_repo: CategoryRepository,
         session: AsyncSession,
+        image_repo: Optional[ProductImageRepository] = None,
+        image_manager: Optional[ImageManager] = None,
+        path_builder: Optional[PathBuilder] = None,
     ):
         self.product_repo = product_repo
         self.translation_repo = translation_repo
         self.category_repo = category_repo
         self.session = session
+        self.image_repo = image_repo
+        self.image_manager = image_manager
+        self.path_builder = path_builder
 
     async def create_product(self, data: ProductCreate) -> ProductResponseDTO:
         """Создание нового товара с переводами."""
@@ -237,7 +247,7 @@ class ProductService:
         return ProductResponseDTO.model_validate(updated)
 
     async def delete_product(self, product_id: int) -> None:
-        """Удаление товара с проверкой связанных сущностей."""
+        """Удаление товара со всеми зависимыми сущностями и медиафайлами."""
         product = await self.product_repo.get_by_id(product_id)
         if not product:
             raise ProductNotFound(f"Product with id {product_id} not found.")
@@ -248,6 +258,29 @@ class ProductService:
                 f"Cannot delete Product with id {product_id} because it is referenced by other entities."
             )
 
+        # 1. Физическое удаление файлов изображений с диска
+        images = []
+        if self.image_repo:
+            images = await self.image_repo.get_by_product_id(product_id)
+        elif getattr(product, "images", None):
+            images = product.images
+
+        if self.image_manager and images:
+            for img in images:
+                if getattr(img, "image_url", None):
+                    self.image_manager.delete_image(img.image_url)
+
+        # Удаление всей директории товара на диске (включая папку original/ при наличии)
+        if self.path_builder:
+            product_dir = self.path_builder.get_product_dir(product_id)
+            if product_dir.exists() and product_dir.is_dir():
+                shutil.rmtree(product_dir, ignore_errors=True)
+
+        # 2. Удаление записей изображений через image_repo (если внедрен)
+        if self.image_repo:
+            await self.image_repo.delete_by_product_id(product_id)
+
+        # 3. Удаление самого товара и его зависимых данных через product_repo
         await self.product_repo.delete_product(product_id)
         await self.product_repo.shift_indexes_after_delete(product.index)
         await self.session.commit()

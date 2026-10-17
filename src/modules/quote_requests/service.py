@@ -357,6 +357,9 @@ class QuoteRequestService:
         name_snapshot = splice_type._get_field_with_translation(
             lambda t: t.name, locale
         ) or splice_type.code
+        # quantity — количество готовых изделий, а не отдельных концов.
+        # Стоимость выбранного типа сращивания для этого конца рассчитывается
+        # с учётом количества изделий.
         cost = round(float(unit_price) * quantity, 2)
 
         return ResolvedEndSpliceDTO(name_snapshot=name_snapshot, cost=cost)
@@ -522,6 +525,11 @@ class QuoteRequestService:
 
         urgent_surcharge = 0.0
         if is_urgent:
+            # Считаем общее количество сращиваний с учётом quantity:
+            # для канатных изделий учитываются обработанные концы каждого изделия,
+            # для отдельных услуг — количество заказанных услуг.
+            # Это количество используется для проверки лимита срочной обработки
+            # и расчёта надбавки за срочность.
             total_splices = sum(r.splices_count for r in rope_items) + sum(s.splices_count for s in service_items)
             if setting and total_splices > setting.urgent_max_splices:
                 raise QuoteRequestValidationError(

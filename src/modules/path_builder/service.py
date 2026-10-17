@@ -39,6 +39,12 @@ class PathBuilder:
 
         return root_dir / f"{file_name}.webp"
 
+    def get_product_dir(
+        self,
+        product_id: int,
+    ) -> Path:
+        return self.config.paths.products / str(product_id)
+
     # --- category ---
 
     def get_category_original(

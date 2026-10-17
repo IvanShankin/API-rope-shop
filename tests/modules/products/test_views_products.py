@@ -1071,7 +1071,7 @@ class TestsForErrors:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_delete_product_has_dependencies_rope(
+    async def test_delete_product_with_dependencies_rope(
         self,
         session_db,
         client_for_tests,
@@ -1080,7 +1080,7 @@ class TestsForErrors:
         create_material_group_fixture,
         create_splice_material_fixture,
     ):
-        """Попытка удаления товара, к которому привязан Product -> 400 Bad Request."""
+        """Удаление товара, у которого есть RopeConfiguratorSetting -> 204 No Content."""
         admin_user, access_token = await create_user_fixture(
             CreateUserFixtureDTO(role=UserRole.ADMIN)
         )
@@ -1100,26 +1100,41 @@ class TestsForErrors:
             f"/products/{prod.id}",
             headers={"Authorization": f"Bearer {access_token}"},
         )
-        assert response.status_code == 400
-        assert "referenced by other entities" in response.json()["detail"]
+        assert response.status_code == 204
+
+        res = await session_db.execute(select(Product).where(Product.id == prod.id))
+        assert res.scalar_one_or_none() is None
+
+        res_rope = await session_db.execute(
+            select(RopeConfiguratorSetting).where(RopeConfiguratorSetting.product_id == prod.id)
+        )
+        assert res_rope.scalar_one_or_none() is None
 
     @pytest.mark.asyncio
-    async def test_delete_product_has_dependencies_image(
+    async def test_delete_product_with_dependencies_image(
         self,
         session_db,
         client_for_tests,
         create_user_fixture,
         create_product_fixture,
+        config_fix,
     ):
-        """Попытка удаления товара, к которому привязано изображение -> 400 Bad Request."""
+        """Удаление товара с изображением и файлом на диске -> 204 No Content."""
         admin_user, access_token = await create_user_fixture(
             CreateUserFixtureDTO(role=UserRole.ADMIN)
         )
         prod = await create_product_fixture()
 
+        # Создаем физический файл изображения на диске
+        prod_dir = config_fix.paths.products / str(prod.id)
+        prod_dir.mkdir(parents=True, exist_ok=True)
+        test_file = prod_dir / "photo.webp"
+        test_file.write_text("fake image content")
+        assert test_file.exists()
+
         img = ProductImage(
             product_id=prod.id,
-            image_url="/media/products/photo.webp",
+            image_url=f"/media/products/{prod.id}/photo.webp",
             index=1,
             is_main=True,
         )
@@ -1130,8 +1145,65 @@ class TestsForErrors:
             f"/products/{prod.id}",
             headers={"Authorization": f"Bearer {access_token}"},
         )
-        assert response.status_code == 400
-        assert "referenced by other entities" in response.json()["detail"]
+        assert response.status_code == 204
+
+        res = await session_db.execute(select(Product).where(Product.id == prod.id))
+        assert res.scalar_one_or_none() is None
+
+        res_img = await session_db.execute(
+            select(ProductImage).where(ProductImage.product_id == prod.id)
+        )
+        assert res_img.scalar_one_or_none() is None
+
+        # Проверяем, что файл и папка удалены с диска
+        assert not test_file.exists()
+        assert not prod_dir.exists()
+
+    @pytest.mark.asyncio
+    async def test_delete_product_with_quote_rope_item(
+        self,
+        session_db,
+        client_for_tests,
+        create_user_fixture,
+        create_product_fixture,
+        create_quote_request_fixture,
+        create_quote_rope_item_fixture,
+    ):
+        """Удаление товара с позицией в заявке QuoteRopeItem -> 204, FK обнуляется (SET NULL)."""
+        from src.modules.quote_requests.models import QuoteRopeItem
+        from tests.modules.quote_requests.fixtures.models_dto import (
+            CreateQuoteRopeItemFixtureDTO,
+        )
+
+        admin_user, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        prod = await create_product_fixture()
+
+        qr = await create_quote_request_fixture()
+        item = await create_quote_rope_item_fixture(
+            quote_request_id=qr.id,
+            new_item=CreateQuoteRopeItemFixtureDTO(product_id=prod.id),
+        )
+
+        response = await client_for_tests.delete(
+            f"/products/{prod.id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert response.status_code == 204
+
+        res = await session_db.execute(select(Product).where(Product.id == prod.id))
+        assert res.scalar_one_or_none() is None
+
+        item_id = item.id
+        expected_snapshot = item.product_name_snapshot
+        session_db.expire_all()
+        res_item = await session_db.execute(
+            select(QuoteRopeItem).where(QuoteRopeItem.id == item_id)
+        )
+        db_item = res_item.scalar_one()
+        assert db_item.product_id is None
+        assert db_item.product_name_snapshot == expected_snapshot
 
     @pytest.mark.asyncio
     async def test_add_translation_product_not_found(

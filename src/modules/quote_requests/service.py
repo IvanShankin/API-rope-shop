@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.base.database_model import Language
-from src.modules.base.exception import NoDataForUpdate
+from src.modules.base.exception import NoDataForUpdate, ServiceException
 from src.modules.configurator_setting.models import ConfiguratorSetting, Currency
 from src.modules.configurator_setting.repository import ConfiguratorSettingRepository
 from src.modules.configurator_extra.models import BillingType
@@ -131,18 +131,21 @@ class QuoteRequestService:
         request_number = await self._generate_request_number()
 
         # 6. Сохранение заявки и дочерних снимков
-        quote_id = await self._save_quote_request(
-            data=data,
-            request_number=request_number,
-            currency=currency,
-            vat_rate=vat_rate,
-            total_price=totals.total_price,
-            rope_items=resolved_rope_items,
-            service_items=resolved_service_items,
-            extra_items=resolved_extra_items,
-        )
-
-        await self.session.commit()
+        try:
+            quote_id = await self._save_quote_request(
+                data=data,
+                request_number=request_number,
+                currency=currency,
+                vat_rate=vat_rate,
+                total_price=totals.total_price,
+                rope_items=resolved_rope_items,
+                service_items=resolved_service_items,
+                extra_items=resolved_extra_items,
+            )
+            await self.session.commit()
+        except:
+            await self.session.rollback()
+            raise ServiceException()
 
         loaded = await self.quote_repo.get_by_id(quote_id, include_relations=True)
         return QuoteRequestResponseDTO.model_validate(loaded)

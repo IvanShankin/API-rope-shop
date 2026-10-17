@@ -85,14 +85,22 @@ def _include_routers(app: FastAPI) -> FastAPI:
     app.include_router(product_applications_router)
     return app
 
-
 def init_fastapi_app() -> FastAPI:
+    config = create_config()
+
     app = FastAPI(
         title="Rope shop",
         lifespan=lifespan,
     )
-    config = create_config()
-    app.mount("/media", StaticFiles(directory=config.paths.media), name="media")
+
+    # Сохраняем единственный экземпляр конфигурации
+    app.state.config = config
+
+    app.mount(
+        "/media",
+        StaticFiles(directory=config.paths.media),
+        name="media",
+    )
 
     register_exception_handlers(app=app)
     _include_middlewares(app=app, config=config)
@@ -103,9 +111,17 @@ def init_fastapi_app() -> FastAPI:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # При старте приложения инициализируем сервисы
-    app.state.config = create_config()
-    app.state.cr_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    await init_configurator_setting(config=app.state.config)
-    await init_admin(config=app.state.config, cr_context=app.state.cr_context)
+    config = app.state.config
+
+    app.state.cr_context = CryptContext(
+        schemes=["bcrypt"],
+        deprecated="auto",
+    )
+
+    await init_configurator_setting(config=config)
+    await init_admin(
+        config=config,
+        cr_context=app.state.cr_context,
+    )
+
     yield

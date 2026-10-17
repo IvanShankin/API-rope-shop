@@ -34,6 +34,8 @@ from src.modules.quote_requests.models import (
     QuoteExtraItem,
     quote_request_number_seq,
 )
+from src.modules.work_photos.models import WorkPhoto
+from src.modules.charity_photos.models import CharityPhoto
 
 __all__ = [
     "User",
@@ -72,4 +74,6 @@ __all__ = [
     "QuoteServiceItem",
     "QuoteExtraItem",
     "quote_request_number_seq",
+    "WorkPhoto",
+    "CharityPhoto",
 ]

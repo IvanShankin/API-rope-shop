@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 from src.modules.base.database_model import Language
 from src.modules.base.orm_dto import ORMDTO
-from src.modules.products.models import ProductType
+from src.modules.products.models import PriceUnit, ProductType
 
 
 # ===================== Translation DTOs =====================
@@ -43,8 +43,8 @@ class ProductTranslationResponseDTO(ProductTranslationBase, ORMDTO):
 class ProductBase(BaseModel):
     category_id: int = Field(..., gt=0)
     slug: str = Field(..., min_length=1, max_length=150)
-    product_type: str = Field(ProductType.ROPE.value, min_length=1, max_length=50)
-    price_unit: str = Field("meter", min_length=1, max_length=20)
+    product_type: ProductType = ProductType.ROPE
+    price_unit: PriceUnit = PriceUnit.METER
     has_configurator: bool = False
     construction_type: Optional[str] = Field(None, max_length=50)
     index: int = Field(..., ge=0)
@@ -54,17 +54,13 @@ class ProductBase(BaseModel):
 class ProductCreate(BaseModel):
     category_id: int = Field(..., gt=0, description="Category ID this product belongs to")
     slug: str = Field(..., min_length=1, max_length=150, description="Unique human-readable slug")
-    product_type: str = Field(
-        ProductType.ROPE.value,
-        min_length=1,
-        max_length=50,
+    product_type: ProductType = Field(
+        ProductType.ROPE,
         description="Type of product (rope, finished_product, hardware)",
     )
-    price_unit: str = Field(
-        "meter",
-        min_length=1,
-        max_length=20,
-        description="Pricing unit ('meter', 'piece', 'set')",
+    price_unit: PriceUnit = Field(
+        PriceUnit.METER,
+        description="Pricing unit (meter, piece, set)",
     )
     has_configurator: bool = Field(
         False,
@@ -91,11 +87,12 @@ class ProductCreate(BaseModel):
 class ProductUpdate(BaseModel):
     category_id: Optional[int] = Field(None, gt=0)
     slug: Optional[str] = Field(None, min_length=1, max_length=150)
-    product_type: Optional[str] = Field(None, min_length=1, max_length=50)
-    price_unit: Optional[str] = Field(None, min_length=1, max_length=20)
+    product_type: Optional[ProductType] = None
+    price_unit: Optional[PriceUnit] = None
     has_configurator: Optional[bool] = None
     construction_type: Optional[str] = Field(None, max_length=50)
     is_active: Optional[bool] = None
+
 
 
 class ProductUpdateIndexDTO(BaseModel):
@@ -144,8 +141,8 @@ class ProductResponseDTO(ProductBase, ORMDTO):
 
 class ProductLocalizedResponseDTO(ORMDTO):
     id: int
-    category_id: Optional[int]
-    slug: Optional[str]
+    category_id: int
+    slug: str
     product_type: str
     price_unit: str = "meter"
     has_configurator: bool = False

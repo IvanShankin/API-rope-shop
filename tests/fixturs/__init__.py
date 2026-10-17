@@ -76,6 +76,8 @@ from tests.modules.configurator_extra.fixtures import (
 from tests.modules.configurator_setting.fixtures import (
     create_configurator_setting_fixture,
 )
+from tests.modules.work_photos.fixtures import create_work_photo_fixture
+from tests.modules.charity_photos.fixtures import create_charity_photo_fixture
 
 __all__ = [
     "lifespan_for_tests",
@@ -126,4 +128,6 @@ __all__ = [
     "create_configurator_extra_fixture",
     "create_configurator_extra_translation_fixture",
     "create_configurator_setting_fixture",
+    "create_work_photo_fixture",
+    "create_charity_photo_fixture",
 ]

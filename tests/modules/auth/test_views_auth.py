@@ -13,6 +13,7 @@ from tests.helpers.functions import comparison_models
 
 class TestsForSuccess:
 
+    @pytest.mark.skip(reason="Endpoint /register disabled pending project extension")
     @pytest.mark.asyncio
     async def test_register_user(
         self, 

@@ -17,10 +17,15 @@ async def create_rope_product_factory(
     new_product: CreateRopeProductFixtureDTO = CreateRopeProductFixtureDTO(),
 ) -> RopeConfiguratorSetting:
     if new_product.product_id is None:
-        product = Product()
-        session_db.add(product)
-        await session_db.flush()
-        product_id = product.id
+        from tests.modules.products.fixtures.factory import create_product_factory
+        from tests.modules.products.fixtures.models_dto import CreateProductFixtureDTO
+        prod_dto = await create_product_factory(
+            session_db=session_db,
+            new_product=CreateProductFixtureDTO(
+                name=new_product.construction or "Rope Product",
+            ),
+        )
+        product_id = prod_dto.id
     else:
         product_id = new_product.product_id
 

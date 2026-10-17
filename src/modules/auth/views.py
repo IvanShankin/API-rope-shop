@@ -7,14 +7,14 @@ from src.modules.auth.depends import get_auth_service, get_token_service, get_cu
 from src.modules.auth.models_dto import TokenResponse, RefreshTokenRequest, LogoutRequest, LogoutResponse
 from src.modules.auth.token_service import TokenService
 from src.modules.users.depends import get_user_service
-from src.modules.users.models_dto import UserDTO, RegisterUserRequestDTO
+from src.modules.users.models_dto import UserDTO, UserResponse, RegisterUserRequestDTO
 from src.modules.users.service import UsersService
 
-router = APIRouter(prefix="/auth")
+router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 #  Закомментировано до расширения проекта
 
-# @router.post("/register", response_model=UserDTO, status_code=status.HTTP_200_OK)
+# @router.post("/register", response_model=UserResponse, status_code=status.HTTP_200_OK)
 # async def register_user(
 #     data: RegisterUserRequestDTO,
 #     user_service: UsersService = Depends(get_user_service)
@@ -25,7 +25,7 @@ router = APIRouter(prefix="/auth")
 #     return await user_service.create_user(new_user=data)
 
 
-@router.post('/login', response_model=TokenResponse, tags=["Authentication"], )
+@router.post('/login', response_model=TokenResponse)
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     auth_service: AuthService = Depends(get_auth_service)
@@ -36,7 +36,7 @@ async def login(
     )
 
 
-@router.post('/refresh_tokens', response_model=TokenResponse, tags=["Authentication"], )
+@router.post('/refresh_tokens', response_model=TokenResponse)
 async def refresh_tokens(
     token: RefreshTokenRequest,
     token_service: TokenService = Depends(get_token_service)
@@ -47,11 +47,12 @@ async def refresh_tokens(
 @router.post('/logout', response_model=LogoutResponse)
 async def logout(
     token: LogoutRequest,
-    current_user: UserDTO = Depends(get_current_user), # проверка на наличие прав
+    current_user: UserDTO = Depends(get_current_user),  # проверка на наличие прав
     token_service: TokenService = Depends(get_token_service)
 ):
     """Удаляет refresh токен только который передаётся"""
     return await token_service.logout(token.refresh_token)
+
 
 
 

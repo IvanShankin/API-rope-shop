@@ -1,9 +1,11 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Union, TYPE_CHECKING
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.base.database_model import Language
 from src.modules.products.exception import ProductNotFound
-from src.modules.products.repository import ProductRepository
+
+if TYPE_CHECKING:
+    from src.modules.products.repository import ProductRepository
 from src.modules.product_specification.exception import (
     ProductSpecificationNotFound,
     ProductSpecificationTranslationDeleteError,
@@ -36,7 +38,7 @@ class ProductSpecificationService:
         self,
         spec_repo: ProductSpecificationRepository,
         trans_repo: ProductSpecificationTranslationRepository,
-        product_repo: ProductRepository,
+        product_repo: "ProductRepository",
         session_db: AsyncSession,
     ):
         self.spec_repo = spec_repo

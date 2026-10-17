@@ -1,6 +1,9 @@
+import logging
 from fastapi import FastAPI
 from sqlalchemy.exc import IntegrityError
 from starlette.responses import JSONResponse
+
+logger = logging.getLogger(__name__)
 
 from src.modules.base.exception import (
     DataAlreadyExists,
@@ -130,5 +133,11 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(ServiceException)
     async def service_handler(request, exc):
         return JSONResponse(status_code=500, content={"detail": "Server Error"})
+
+    @app.exception_handler(Exception)
+    async def unhandled_exception_handler(request, exc):
+        logger.error("Unhandled server exception: %s", exc, exc_info=True)
+        return JSONResponse(status_code=500, content={"detail": "Internal server error"})
+
 
 

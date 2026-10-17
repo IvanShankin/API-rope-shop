@@ -1,5 +1,5 @@
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -619,7 +619,7 @@ class QuoteRequestService:
 
     async def _generate_request_number(self) -> str:
         """Генерация уникального бизнес-номера заявки формата RPL-YYYY-NNNN."""
-        current_year = datetime.now().year
+        current_year = datetime.now(timezone.utc).year
         seq_num = await self.quote_repo.get_next_request_number_seq()
 
         return f"RPL-{current_year}-{seq_num:04d}"
@@ -630,7 +630,9 @@ class QuoteRequestService:
             raise QuoteRequestNotFound(f"QuoteRequest with id {request_id} not found.")
         return QuoteRequestResponseDTO.model_validate(item)
 
-    get_by_id = get_quote_request_by_id
+    async def get_by_id(self, request_id: int) -> QuoteRequestResponseDTO:
+        return await self.get_quote_request_by_id(request_id)
+
 
     async def get_by_request_number(self, request_number: str) -> QuoteRequestResponseDTO:
         item = await self.quote_repo.get_by_request_number(request_number, include_relations=True)

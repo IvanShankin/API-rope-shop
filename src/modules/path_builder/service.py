@@ -126,6 +126,12 @@ class PathBuilder:
 
         return root_dir / f"{file_name}.webp"
 
+    def get_work_photo_dir(
+        self,
+        work_photo_id: int,
+    ) -> Path:
+        return self.config.paths.work_photos / str(work_photo_id)
+
     # --- charity_photo ---
 
     def get_charity_photo_original(
@@ -152,6 +158,12 @@ class PathBuilder:
         )
 
         return root_dir / f"{file_name}.webp"
+
+    def get_charity_photo_dir(
+        self,
+        charity_photo_id: int,
+    ) -> Path:
+        return self.config.paths.charity_photos / str(charity_photo_id)
 
     # --- temp ---
 

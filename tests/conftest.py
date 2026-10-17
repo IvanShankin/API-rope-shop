@@ -35,6 +35,8 @@ from src.modules.db_models import (
     ConfiguratorExtra,
     ConfiguratorExtraTranslation,
     ConfiguratorSetting,
+    WorkPhoto,
+    CharityPhoto,
 )
 from src.tools.creating_db import create_database
 
@@ -54,6 +56,8 @@ async def start_test(config_fix, app_fastapi):
 async def clearing_db(session_db: AsyncSession):
     """Очищает базу данных"""
     # Удаляем обязательно в таком порядке
+    await session_db.execute(delete(WorkPhoto))
+    await session_db.execute(delete(CharityPhoto))
     await session_db.execute(delete(QuoteRopeItem))
     await session_db.execute(delete(QuoteServiceItem))
     await session_db.execute(delete(QuoteExtraItem))

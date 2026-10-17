@@ -34,6 +34,7 @@ class ValidationError(ServiceException):
     default_message = "Validation error"
 
 
-class NoDataForUpdate(RepositoryException):
-    pass
+class NoDataForUpdate(ServiceException):
+    default_message = "No data for update"
+
 

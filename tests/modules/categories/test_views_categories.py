@@ -751,7 +751,7 @@ class TestsForErrors:
         cat = await create_category_fixture(CreateCategoryFixtureDTO())
 
         # Создаем товар с этой категорией
-        product = Product(category_id=cat.id)
+        product = Product(category_id=cat.id, slug="cat-prod-test")
         session_db.add(product)
         await session_db.commit()
 

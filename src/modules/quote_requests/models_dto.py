@@ -59,7 +59,7 @@ class QuoteRequestCreate(BaseModel):
     phone: Optional[str] = Field(None, max_length=100, description="Client phone number")
     comment: Optional[str] = Field(None, description="Client notes / wishes")
     is_urgent: bool = Field(default=False, description="Urgent order flag")
-    locale: Optional[Language] = Field(Language.ENG, description="Language to use for item snapshots")
+    locale: Optional[Language] = Field(Language.GER, description="Language to use for item snapshots")
 
     rope_items: List[QuoteRopeItemCreate] = Field(
         default_factory=list,

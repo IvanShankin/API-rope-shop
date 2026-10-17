@@ -8,10 +8,21 @@ from src.modules.base.repository_model import (
     BaseRepository,
 )
 from src.modules.categories.models import Category
+from src.modules.colors.models import Color
+from src.modules.product_application.models import (
+    ProductApplication,
+    ProductAssignedApplication,
+)
+from src.modules.product_specification.models import ProductSpecification
 from src.modules.products.models import Product, ProductTranslation
 from src.modules.products.models_dto import (
     ProductBase,
     ProductTranslationInsert,
+)
+from src.modules.rope_product_color.models import ProductColor
+from src.modules.rope_products.models import (
+    ProductVariant,
+    RopeConfiguratorSetting,
 )
 
 
@@ -21,14 +32,6 @@ class ProductRepository(BaseIndexedRepository):
 
     @staticmethod
     def _default_product_options():
-        from src.modules.colors.models import Color
-        from src.modules.product_application.models import (
-            ProductApplication,
-            ProductAssignedApplication,
-        )
-        from src.modules.product_specification.models import ProductSpecification
-        from src.modules.rope_product_color.models import ProductColor
-
         return [
             selectinload(Product.translations),
             selectinload(Product.images),
@@ -90,15 +93,6 @@ class ProductRepository(BaseIndexedRepository):
         diameter_max: Optional[float] = None,
         is_active: Optional[bool] = None,
     ):
-        from src.modules.product_application.models import (
-            ProductApplication,
-            ProductAssignedApplication,
-        )
-        from src.modules.rope_products.models import (
-            ProductVariant,
-            RopeConfiguratorSetting,
-        )
-
         if category_id is not None:
             stmt = stmt.where(Product.category_id == category_id)
 

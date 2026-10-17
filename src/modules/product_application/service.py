@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Union, TYPE_CHECKING
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.base.database_model import Language
@@ -33,7 +33,9 @@ from src.modules.product_application.repository import (
     ProductAssignedApplicationRepository,
 )
 from src.modules.products.exception import ProductNotFound
-from src.modules.products.repository import ProductRepository
+
+if TYPE_CHECKING:
+    from src.modules.products.repository import ProductRepository
 
 
 class ProductApplicationService:
@@ -42,7 +44,7 @@ class ProductApplicationService:
         app_repo: ProductApplicationRepository,
         trans_repo: ProductApplicationTranslationRepository,
         assigned_repo: ProductAssignedApplicationRepository,
-        product_repo: ProductRepository,
+        product_repo: "ProductRepository",
         session_db: AsyncSession,
     ):
         self.app_repo = app_repo

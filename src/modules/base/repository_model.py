@@ -1,4 +1,4 @@
-from typing import Type, Union, Any, Optional
+from typing import Type, Union, Any, Optional, overload
 
 from sqlalchemy import select, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,6 +22,12 @@ class BaseRepository:
         self.session.add(instance)
         return instance
 
+    @overload
+    async def get_by_id(self, arg1: int, arg2: None = None) -> ModelType | None: ...
+
+    @overload
+    async def get_by_id(self, arg1: Type[ModelType], arg2: int) -> ModelType | None: ...
+
     async def get_by_id(
         self,
         arg1: Union[Type[ModelType], int],
@@ -37,6 +43,7 @@ class BaseRepository:
         stmt = select(model).where(model.id == obj_id)
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
+
 
 
 class BaseIndexedRepository(BaseRepository):

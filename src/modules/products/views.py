@@ -7,6 +7,8 @@ from src.modules.check_permission.depends import get_current_admin
 from src.modules.products.depends import get_product_service
 from src.modules.products.models_dto import (
     ProductCreate,
+    ProductDetailResponseDTO,
+    ProductListResponseDTO,
     ProductLocalizedResponseDTO,
     ProductResponseDTO,
     ProductTranslationCreate,
@@ -23,7 +25,7 @@ router = APIRouter(prefix="/products", tags=["Products"])
 
 @router.get(
     "",
-    response_model=List[ProductLocalizedResponseDTO],
+    response_model=ProductListResponseDTO,
     status_code=status.HTTP_200_OK,
     summary="Get all products",
     description="Get products with localized content. Supports filtering by category, type, material, construction, applications, diameter, active status, and pagination (public).",
@@ -42,7 +44,7 @@ async def get_all_products(
     skip: int = Query(0, ge=0, description="Pagination offset"),
     limit: Optional[int] = Query(None, ge=1, description="Pagination limit"),
     service: ProductService = Depends(get_product_service),
-) -> List[ProductLocalizedResponseDTO]:
+) -> ProductListResponseDTO:
     return await service.get_all_products(
         category_id=category_id,
         category_slug=category_slug,
@@ -61,31 +63,31 @@ async def get_all_products(
 
 @router.get(
     "/by-slug/{slug}",
-    response_model=Union[ProductLocalizedResponseDTO, ProductResponseDTO],
+    response_model=ProductDetailResponseDTO,
     status_code=status.HTTP_200_OK,
     summary="Get product by slug",
-    description="Get product details by slug. Returns localized DTO if locale is provided, full DTO with all translations otherwise (public).",
+    description="Get product details by slug. Returns localized content if locale is provided, full DTO with all translations otherwise (public).",
 )
 async def get_product_by_slug(
     slug: str,
     locale: Optional[Language] = Query(None, description="Language for translation localization"),
     service: ProductService = Depends(get_product_service),
-) -> Union[ProductLocalizedResponseDTO, ProductResponseDTO]:
+) -> ProductDetailResponseDTO:
     return await service.get_product_by_slug(slug=slug, locale=locale)
 
 
 @router.get(
     "/{product_id}",
-    response_model=Union[ProductLocalizedResponseDTO, ProductResponseDTO],
+    response_model=ProductDetailResponseDTO,
     status_code=status.HTTP_200_OK,
     summary="Get product by ID",
-    description="Get product details by ID. Returns localized DTO if locale is provided, full DTO with all translations otherwise (public).",
+    description="Get product details by ID. Returns localized content if locale is provided, full DTO with all translations otherwise (public).",
 )
 async def get_product_by_id(
     product_id: int,
     locale: Optional[Language] = Query(None, description="Language for translation localization"),
     service: ProductService = Depends(get_product_service),
-) -> Union[ProductLocalizedResponseDTO, ProductResponseDTO]:
+) -> ProductDetailResponseDTO:
     return await service.get_product_by_id(product_id=product_id, locale=locale)
 
 

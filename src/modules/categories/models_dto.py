@@ -82,3 +82,11 @@ class CategoryLocalizedResponseDTO(CategoryBase, ORMDTO):
     products_count: int = 0
     created_at: datetime
     updated_at: datetime
+
+
+class CategoryListResponseDTO(BaseModel):
+    """Ответ со списком категорий и метаданными пагинации."""
+    items: List[CategoryLocalizedResponseDTO]
+    total: int
+    skip: int = 0
+    limit: Optional[int] = None

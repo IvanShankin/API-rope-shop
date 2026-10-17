@@ -24,6 +24,8 @@ from src.modules.products.models import Product
 from src.modules.products.models_dto import (
     ProductBase,
     ProductCreate,
+    ProductDetailResponseDTO,
+    ProductListResponseDTO,
     ProductLocalizedResponseDTO,
     ProductResponseDTO,
     ProductTranslationCreate,
@@ -138,7 +140,7 @@ class ProductService:
         locale: Optional[Language] = None,
         skip: int = 0,
         limit: Optional[int] = None,
-    ) -> List[ProductLocalizedResponseDTO]:
+    ) -> ProductListResponseDTO:
         """Получение списка товаров с фильтрацией, пагинацией и локализацией."""
         parsed_app_codes: Optional[List[str]] = None
         if application_codes:
@@ -164,8 +166,24 @@ class ProductService:
             skip=skip,
             limit=limit,
         )
+        total = await self.product_repo.count_all(
+            category_id=category_id,
+            category_slug=category_slug,
+            product_type=product_type,
+            material_id=material_id,
+            construction_type=construction_type,
+            application_codes=parsed_app_codes,
+            diameter_min=diameter_min,
+            diameter_max=diameter_max,
+            is_active=is_active,
+        )
 
-        return [self._to_localized_dto(p, locale) for p in products]
+        return ProductListResponseDTO(
+            items=[self._to_localized_dto(p, locale) for p in products],
+            total=total,
+            skip=skip,
+            limit=limit,
+        )
 
     async def get_product_by_id(
         self, product_id: int, locale: Optional[Language] = None

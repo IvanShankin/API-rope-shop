@@ -37,6 +37,14 @@ class CategoryRepository(BaseIndexedRepository):
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
+    async def count_all(self, is_active: Optional[bool] = None) -> int:
+        """Подсчет общего числа категорий с учетом фильтрации."""
+        stmt = select(func.count(Category.id))
+        if is_active is not None:
+            stmt = stmt.where(Category.is_active == is_active)
+        result = await self.session.execute(stmt)
+        return result.scalar_one() or 0
+
     async def get_by_category_id(self, category_id: int) -> Optional[Category]:
         """Получение категории по ID с переводами."""
         stmt = (

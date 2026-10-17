@@ -77,15 +77,26 @@ class ProductRepository(BaseIndexedRepository):
             ProductApplication,
             ProductAssignedApplication,
         )
+    def _apply_filters(
+        self,
+        stmt,
+        category_id: Optional[int] = None,
+        category_slug: Optional[str] = None,
+        product_type: Optional[str] = None,
+        material_id: Optional[int] = None,
+        construction_type: Optional[str] = None,
+        application_codes: Optional[Union[List[str], str]] = None,
+        diameter_min: Optional[float] = None,
+        diameter_max: Optional[float] = None,
+        is_active: Optional[bool] = None,
+    ):
+        from src.modules.product_application.models import (
+            ProductApplication,
+            ProductAssignedApplication,
+        )
         from src.modules.rope_products.models import (
             ProductVariant,
             RopeConfiguratorSetting,
-        )
-
-        stmt = (
-            select(Product)
-            .options(*self._default_product_options())
-            .order_by(Product.index)
         )
 
         if category_id is not None:
@@ -129,8 +140,41 @@ class ProductRepository(BaseIndexedRepository):
                 variant_conds.append(ProductVariant.size_value >= diameter_min)
             if diameter_max is not None:
                 variant_conds.append(ProductVariant.size_value <= diameter_max)
-            stmt = stmt.where(exists().where(*variant_conds))\
+            stmt = stmt.where(exists().where(*variant_conds))
 
+        return stmt
+
+    async def get_all(
+        self,
+        category_id: Optional[int] = None,
+        category_slug: Optional[str] = None,
+        product_type: Optional[str] = None,
+        material_id: Optional[int] = None,
+        construction_type: Optional[str] = None,
+        application_codes: Optional[Union[List[str], str]] = None,
+        diameter_min: Optional[float] = None,
+        diameter_max: Optional[float] = None,
+        is_active: Optional[bool] = None,
+        skip: int = 0,
+        limit: Optional[int] = None,
+    ) -> Sequence[Product]:
+        stmt = (
+            select(Product)
+            .options(*self._default_product_options())
+            .order_by(Product.index)
+        )
+        stmt = self._apply_filters(
+            stmt,
+            category_id=category_id,
+            category_slug=category_slug,
+            product_type=product_type,
+            material_id=material_id,
+            construction_type=construction_type,
+            application_codes=application_codes,
+            diameter_min=diameter_min,
+            diameter_max=diameter_max,
+            is_active=is_active,
+        )
         if skip:
             stmt = stmt.offset(skip)
         if limit is not None:
@@ -138,6 +182,34 @@ class ProductRepository(BaseIndexedRepository):
 
         result = await self.session.execute(stmt)
         return result.scalars().all()
+
+    async def count_all(
+        self,
+        category_id: Optional[int] = None,
+        category_slug: Optional[str] = None,
+        product_type: Optional[str] = None,
+        material_id: Optional[int] = None,
+        construction_type: Optional[str] = None,
+        application_codes: Optional[Union[List[str], str]] = None,
+        diameter_min: Optional[float] = None,
+        diameter_max: Optional[float] = None,
+        is_active: Optional[bool] = None,
+    ) -> int:
+        stmt = select(func.count(Product.id.distinct()))
+        stmt = self._apply_filters(
+            stmt,
+            category_id=category_id,
+            category_slug=category_slug,
+            product_type=product_type,
+            material_id=material_id,
+            construction_type=construction_type,
+            application_codes=application_codes,
+            diameter_min=diameter_min,
+            diameter_max=diameter_max,
+            is_active=is_active,
+        )
+        result = await self.session.execute(stmt)
+        return result.scalar_one() or 0
 
     async def has_dependencies(self, product_id: int) -> bool:
         """

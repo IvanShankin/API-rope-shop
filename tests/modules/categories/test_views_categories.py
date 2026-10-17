@@ -17,6 +17,7 @@ from src.modules.categories.models import Category, CategoryTranslation
 from src.modules.categories.models_dto import (
     CategoryResponseDTO,
     CategoryLocalizedResponseDTO,
+    CategoryListResponseDTO,
     CategoryCreate,
     CategoryUpdate,
     CategoryUpdateIndexDTO,
@@ -45,10 +46,9 @@ class TestsForSuccess:
         response = await client_for_tests.get("/categories")
         assert response.status_code == 200
 
-        data = [
-            CategoryLocalizedResponseDTO.model_validate(item)
-            for item in response.json()
-        ]
+        list_dto = CategoryListResponseDTO.model_validate(response.json())
+        assert list_dto.total >= 2
+        data = list_dto.items
         assert len(data) >= 2
 
         ids = [item.id for item in data]
@@ -75,20 +75,16 @@ class TestsForSuccess:
 
         resp_active = await client_for_tests.get("/categories", params={"is_active": "true"})
         assert resp_active.status_code == 200
-        active_items = [
-            CategoryLocalizedResponseDTO.model_validate(item)
-            for item in resp_active.json()
-        ]
+        active_dto = CategoryListResponseDTO.model_validate(resp_active.json())
+        active_items = active_dto.items
         active_ids = [item.id for item in active_items]
         assert active_cat.id in active_ids
         assert inactive_cat.id not in active_ids
 
         resp_inactive = await client_for_tests.get("/categories", params={"is_active": "false"})
         assert resp_inactive.status_code == 200
-        inactive_items = [
-            CategoryLocalizedResponseDTO.model_validate(item)
-            for item in resp_inactive.json()
-        ]
+        inactive_dto = CategoryListResponseDTO.model_validate(resp_inactive.json())
+        inactive_items = inactive_dto.items
         inactive_ids = [item.id for item in inactive_items]
         assert inactive_cat.id in inactive_ids
         assert active_cat.id not in inactive_ids
@@ -103,15 +99,16 @@ class TestsForSuccess:
         await create_category_fixture(CreateCategoryFixtureDTO(index=2))
         await create_category_fixture(CreateCategoryFixtureDTO(index=3))
 
-        resp_limit = await client_for_tests.get("/categories", params={"limit": 2, "offset": 0})
+        resp_limit = await client_for_tests.get("/categories", params={"limit": 2, "skip": 0})
         assert resp_limit.status_code == 200
-        items_limit = resp_limit.json()
-        assert len(items_limit) == 2
+        dto_limit = CategoryListResponseDTO.model_validate(resp_limit.json())
+        assert len(dto_limit.items) == 2
+        assert dto_limit.total >= 3
 
-        resp_offset = await client_for_tests.get("/categories", params={"limit": 2, "offset": 2})
+        resp_offset = await client_for_tests.get("/categories", params={"limit": 2, "skip": 2})
         assert resp_offset.status_code == 200
-        items_offset = resp_offset.json()
-        assert len(items_offset) >= 1
+        dto_offset = CategoryListResponseDTO.model_validate(resp_offset.json())
+        assert len(dto_offset.items) >= 1
 
     @pytest.mark.asyncio
     async def test_get_all_categories_locale(
@@ -134,10 +131,8 @@ class TestsForSuccess:
         response = await client_for_tests.get("/categories", params={"locale": "ger"})
         assert response.status_code == 200
 
-        data = [
-            CategoryLocalizedResponseDTO.model_validate(item)
-            for item in response.json()
-        ]
+        dto = CategoryListResponseDTO.model_validate(response.json())
+        data = dto.items
         found = next(item for item in data if item.id == cat.id)
         assert found.name == "Schleppseile"
 

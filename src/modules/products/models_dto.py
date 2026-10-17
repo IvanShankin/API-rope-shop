@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -165,5 +165,46 @@ class ProductLocalizedResponseDTO(ORMDTO):
     applications: List[ProductApplicationLocalizedResponseDTO] = []
     variants: List[ProductVariantResponseDTO] = []
     colors: List[ProductColorLocalizedResponseDTO] = []
+    created_at: datetime
+    updated_at: datetime
+
+
+class ProductListResponseDTO(BaseModel):
+    """Ответ со списком товаров и метаданными пагинации."""
+    items: List[ProductLocalizedResponseDTO]
+    total: int
+    skip: int = 0
+    limit: Optional[int] = None
+
+
+class ProductDetailResponseDTO(ORMDTO):
+    """Единая схема детального ответа товара с опциональной локализацией и полными переводами."""
+    id: int
+    category_id: Optional[int] = None
+    slug: Optional[str] = None
+    product_type: str = "rope"
+    price_unit: str = "meter"
+    has_configurator: bool = False
+    construction_type: Optional[str] = None
+    index: int = 0
+    is_active: bool = True
+
+    name: Optional[str] = None
+    subtitle: Optional[str] = None
+    description: Optional[str] = None
+
+    main_image_url: Optional[str] = None
+    price_from: Optional[float] = None
+    size_min: Optional[float] = None
+    size_max: Optional[float] = None
+    variants_count: int = 0
+
+    translations: List[ProductTranslationResponseDTO] = []
+    images: List[ProductImageResponseDTO] = []
+    specifications: List[Any] = []
+    assigned_applications: List[ProductAssignedApplicationResponseDTO] = []
+    applications: List[Any] = []
+    variants: List[ProductVariantResponseDTO] = []
+    colors: List[Any] = []
     created_at: datetime
     updated_at: datetime

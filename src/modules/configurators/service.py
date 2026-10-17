@@ -18,8 +18,11 @@ from src.modules.rope_allowed_splice.models_dto import RopeAllowedSpliceLocalize
 from src.modules.configurators.models_dto import (
     ConfiguratorDataResponseDTO,
     ConfiguratorRopeProductResponseDTO,
+    SplicePriceCalculationResponseDTO,
 )
 from src.modules.configurators.repository import ConfiguratorRepository
+from src.modules.splice_prices.exception import SplicePriceRuleNotFound
+from src.modules.splice_prices.repository import SplicePriceRuleRepository
 
 
 class ConfiguratorService:
@@ -239,3 +242,30 @@ class ConfiguratorService:
             allowed_splices=splices_dto,
             splice_material=splice_material_dto,
         )
+
+    async def calculate_splice_price(
+        self,
+        material_id: int,
+        splice_type_id: int,
+        diameter_mm: float,
+    ) -> SplicePriceCalculationResponseDTO:
+        """Точечный расчет цены заделки по правилам матрицы цен."""
+        price_repo = SplicePriceRuleRepository(self.session)
+        price = await price_repo.get_price(
+            material_id=material_id,
+            type_id=splice_type_id,
+            diameter=diameter_mm,
+        )
+        if price is None:
+            raise SplicePriceRuleNotFound(
+                f"No splice price rule found for material_id={material_id}, "
+                f"splice_type_id={splice_type_id}, diameter={diameter_mm}mm"
+            )
+        return SplicePriceCalculationResponseDTO(
+            price=price,
+            currency="EUR",
+            material_id=material_id,
+            splice_type_id=splice_type_id,
+            diameter_mm=diameter_mm,
+        )
+

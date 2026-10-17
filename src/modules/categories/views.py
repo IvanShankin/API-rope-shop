@@ -7,6 +7,7 @@ from src.modules.check_permission.depends import get_current_admin
 from src.modules.categories.depends import get_category_service
 from src.modules.categories.models_dto import (
     CategoryCreate,
+    CategoryListResponseDTO,
     CategoryLocalizedResponseDTO,
     CategoryResponseDTO,
     CategoryTranslationCreate,
@@ -23,7 +24,7 @@ router = APIRouter(prefix="/categories", tags=["Categories"])
 
 @router.get(
     "",
-    response_model=List[CategoryLocalizedResponseDTO],
+    response_model=CategoryListResponseDTO,
     status_code=status.HTTP_200_OK,
     summary="Get all categories",
     description="Get all categories with localized names and product counts (public). Supports pagination and status filtering.",
@@ -34,7 +35,7 @@ async def get_all_categories(
     skip: int = Query(0, ge=0, description="Pagination offset"),
     limit: Optional[int] = Query(None, ge=1, description="Pagination limit"),
     service: CategoryService = Depends(get_category_service),
-) -> List[CategoryLocalizedResponseDTO]:
+) -> CategoryListResponseDTO:
     return await service.get_all_categories(
         locale=locale,
         is_active=is_active,

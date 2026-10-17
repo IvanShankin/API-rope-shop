@@ -432,17 +432,9 @@ class QuoteRequestService:
         locale: Language,
     ) -> List[ResolvedExtraItemDTO]:
         """Разрешение дополнительных опций конфигуратора."""
-        all_item_requests: List[QuoteExtraItemCreate] = list(data.extra_items)
-        flat_ids = list(data.extra_ids)
-        if data.extras:
-            flat_ids.extend(data.extras)
-
-        for fid in flat_ids:
-            all_item_requests.append(QuoteExtraItemCreate(extra_id=fid))
-
         seen_ids = set()
         unique_requests: List[QuoteExtraItemCreate] = []
-        for it in all_item_requests:
+        for it in data.extra_items:
             if it.extra_id not in seen_ids:
                 seen_ids.add(it.extra_id)
                 unique_requests.append(it)

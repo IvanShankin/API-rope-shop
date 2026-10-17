@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import List, Optional
 from datetime import datetime
 from pydantic import BaseModel, EmailStr, Field
@@ -9,6 +10,19 @@ from src.modules.quote_requests.models import (
     ConfiguratorType,
     QuoteRequestStatus,
 )
+
+
+class QuoteRequestSortBy(str, Enum):
+    CREATED_AT = "created_at"
+    UPDATED_AT = "updated_at"
+    TOTAL_PRICE = "total_price"
+    REQUEST_NUMBER = "request_number"
+    STATUS = "status"
+
+
+class SortOrder(str, Enum):
+    ASC = "asc"
+    DESC = "desc"
 
 
 # ==================== Items Input DTOs ====================\n
@@ -58,14 +72,6 @@ class QuoteRequestCreate(BaseModel):
     extra_items: List[QuoteExtraItemCreate] = Field(
         default_factory=list,
         description="List of configurator extras"
-    )
-    extra_ids: List[int] = Field(
-        default_factory=list,
-        description="Convenience shortcut: list of extra IDs"
-    )
-    extras: Optional[List[int]] = Field(
-        None,
-        description="Alias for extra_ids from configurator payloads"
     )
 
 
@@ -234,6 +240,7 @@ class QuoteRopeItemResponseDTO(ORMDTO):
     end_b_name_snapshot: Optional[str] = None
     end_b_eye_size_cm: Optional[float] = None
     end_b_cost: float
+    total_cost: float
 
 
 class QuoteServiceItemResponseDTO(ORMDTO):

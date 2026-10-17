@@ -18,6 +18,7 @@ from src.modules.categories.models import Category
 from src.modules.categories.models_dto import (
     CategoryBase,
     CategoryCreate,
+    CategoryListResponseDTO,
     CategoryLocalizedResponseDTO,
     CategoryResponseDTO,
     CategoryTranslationCreate,
@@ -101,19 +102,26 @@ class CategoryService:
         is_active: Optional[bool] = None,
         skip: int = 0,
         limit: Optional[int] = None,
-    ) -> List[CategoryLocalizedResponseDTO]:
+    ) -> CategoryListResponseDTO:
         """Получение списка всех категорий с локализованными названиями и количеством товаров."""
         categories = await self.category_repo.get_all(
             is_active=is_active,
             skip=skip,
             limit=limit,
         )
+        total = await self.category_repo.count_all(is_active=is_active)
 
-        result: List[CategoryLocalizedResponseDTO] = []
+        items: List[CategoryLocalizedResponseDTO] = []
         for cat in categories:
             count = await self.category_repo.get_products_count(cat.id)
-            result.append(self._to_localized_dto(cat, locale, count))
-        return result
+            items.append(self._to_localized_dto(cat, locale, count))
+
+        return CategoryListResponseDTO(
+            items=items,
+            total=total,
+            skip=skip,
+            limit=limit,
+        )
 
     async def get_category_by_id(self, category_id: int) -> CategoryResponseDTO:
         """Получение категории по ID со всеми переводами."""

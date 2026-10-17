@@ -164,6 +164,11 @@ class QuoteRopeItem(Base):
     end_a_type: Mapped[Optional["SpliceType"]] = relationship("SpliceType", foreign_keys=[end_a_type_id])
     end_b_type: Mapped[Optional["SpliceType"]] = relationship("SpliceType", foreign_keys=[end_b_type_id])
 
+    @property
+    def total_cost(self) -> float:
+        total = float(self.total_rope_cost or 0) + float(self.end_a_cost or 0) + float(self.end_b_cost or 0)
+        return round(total, 2)
+
 
 class QuoteServiceItem(Base):
     """Позиция услуги (для Конфигуратора 2: Только петли и Конфигуратора 3: Сращивание)."""

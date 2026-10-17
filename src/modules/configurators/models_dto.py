@@ -44,3 +44,13 @@ class ConfiguratorDataResponseDTO(BaseModel):
     splice_types: List[SpliceTypeLocalizedResponseDTO] = []
     splice_price_rules: List[SplicePriceRuleResponseDTO] = []
     rope_products: Optional[List[ConfiguratorRopeProductResponseDTO]] = None
+
+
+class SplicePriceCalculationResponseDTO(BaseModel):
+    """Результат точечного расчета цены за услугу заделки."""
+    price: float
+    currency: str = "EUR"
+    material_id: int
+    splice_type_id: int
+    diameter_mm: float
+

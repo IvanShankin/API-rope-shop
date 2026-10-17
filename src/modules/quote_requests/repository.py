@@ -130,8 +130,17 @@ class QuoteRequestRepository(BaseRepository):
                 )
             )
 
-        sort_column = getattr(QuoteRequest, sort_by, QuoteRequest.created_at)
-        if sort_order.lower() == "asc":
+        ALLOWED_SORT_COLUMNS = {
+            "created_at": QuoteRequest.created_at,
+            "updated_at": QuoteRequest.updated_at,
+            "total_price": QuoteRequest.total_price,
+            "request_number": QuoteRequest.request_number,
+            "status": QuoteRequest.status,
+        }
+        sort_key = sort_by.value if hasattr(sort_by, "value") else str(sort_by)
+        sort_column = ALLOWED_SORT_COLUMNS.get(sort_key, QuoteRequest.created_at)
+        order_val = sort_order.value if hasattr(sort_order, "value") else str(sort_order)
+        if order_val.lower() == "asc":
             stmt = stmt.order_by(asc(sort_column))
         else:
             stmt = stmt.order_by(desc(sort_column))

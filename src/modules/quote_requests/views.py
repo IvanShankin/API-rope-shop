@@ -15,6 +15,8 @@ from src.modules.quote_requests.models_dto import (
     QuoteRequestUpdateStatusDTO,
     QuoteRequestResponseDTO,
     QuoteRequestListResponseDTO,
+    QuoteRequestSortBy,
+    SortOrder,
 )
 from src.modules.quote_requests.service import QuoteRequestService
 from src.modules.quote_requests.depends import get_quote_request_service
@@ -54,8 +56,11 @@ async def list_quote_requests(
     created_from: Optional[datetime] = Query(None, description="Filter created on or after this timestamp"),
     created_to: Optional[datetime] = Query(None, description="Filter created on or before this timestamp"),
     search: Optional[str] = Query(None, description="Search text in number, name, email, phone"),
-    sort_by: str = Query("created_at", description="Field to sort by (created_at, updated_at, total_price, request_number, status)"),
-    sort_order: str = Query("desc", description="Sort order: 'asc' or 'desc'"),
+    sort_by: QuoteRequestSortBy = Query(
+        QuoteRequestSortBy.CREATED_AT,
+        description="Field to sort by (created_at, updated_at, total_price, request_number, status)",
+    ),
+    sort_order: SortOrder = Query(SortOrder.DESC, description="Sort order: 'asc' or 'desc'"),
     skip: int = Query(0, ge=0, description="Offset for pagination"),
     limit: int = Query(50, ge=1, le=100, description="Limit for pagination"),
     service: QuoteRequestService = Depends(get_quote_request_service),
@@ -88,7 +93,6 @@ async def list_quote_requests(
 async def get_quote_request_by_number(
     request_number: str,
     service: QuoteRequestService = Depends(get_quote_request_service),
-    admin: UserDTO = Depends(get_current_admin),
 ):
     """Get quote request details by business request number (public)."""
     return await service.get_by_request_number(request_number=request_number)

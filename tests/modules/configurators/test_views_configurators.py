@@ -4,7 +4,10 @@ from src.modules.base.database_model import Language
 from src.modules.quote_requests.models import ConfiguratorType
 from src.modules.configurator_extra.models import BillingType
 from src.modules.splice_types.models import SpliceCategory
-from src.modules.configurators.models_dto import ConfiguratorDataResponseDTO
+from src.modules.configurators.models_dto import (
+    ConfiguratorDataResponseDTO,
+    SplicePriceCalculationResponseDTO,
+)
 from tests.modules.configurator_setting.fixtures.models_dto import CreateConfiguratorSettingFixtureDTO
 from tests.modules.configurator_extra.fixtures.models_dto import (
     CreateConfiguratorExtraFixtureDTO,
@@ -500,3 +503,62 @@ class TestsForSuccess:
         assert rope_eng.subtitle == "High performance EN"
         assert rope_eng.slug == "magic-race-rope"
         assert rope_eng.main_image_url == "/media/products/magic_race.webp"
+
+    @pytest.mark.asyncio
+    async def test_calculate_splice_price_success(
+        self,
+        client_for_tests,
+        create_splice_material_fixture,
+        create_splice_type_fixture,
+        create_splice_price_rule_fixture,
+    ):
+        """Расчет стоимости заделки по material_id, splice_type_id и diameter_mm."""
+        sm = await create_splice_material_fixture(CreateSpliceMaterialFixtureDTO(code="core_calc"))
+        st = await create_splice_type_fixture(CreateSpliceTypeFixtureDTO(code="eye_splice_calc"))
+        await create_splice_price_rule_fixture(
+            CreateSplicePriceRuleFixtureDTO(
+                splice_material_id=sm.id,
+                splice_type_id=st.id,
+                diameter_from_mm=4.0,
+                diameter_to_mm=8.0,
+                price=32.50,
+            )
+        )
+
+        resp = await client_for_tests.get(
+            "/configurators/price",
+            params={
+                "material_id": sm.id,
+                "splice_type_id": st.id,
+                "diameter_mm": 6.0,
+            },
+        )
+        assert resp.status_code == 200
+        dto = SplicePriceCalculationResponseDTO.model_validate(resp.json())
+        assert dto.price == 32.50
+        assert dto.currency == "EUR"
+        assert dto.material_id == sm.id
+        assert dto.splice_type_id == st.id
+        assert dto.diameter_mm == 6.0
+
+    @pytest.mark.asyncio
+    async def test_calculate_splice_price_not_found(
+        self,
+        client_for_tests,
+        create_splice_material_fixture,
+        create_splice_type_fixture,
+    ):
+        """Если подходящее правило не найдено, возвращается ошибка."""
+        sm = await create_splice_material_fixture(CreateSpliceMaterialFixtureDTO(code="mat_unmatched"))
+        st = await create_splice_type_fixture(CreateSpliceTypeFixtureDTO(code="type_unmatched"))
+
+        resp = await client_for_tests.get(
+            "/configurators/price",
+            params={
+                "material_id": sm.id,
+                "splice_type_id": st.id,
+                "diameter_mm": 50.0,
+            },
+        )
+        assert resp.status_code in (400, 404)
+

@@ -8,6 +8,8 @@ from src.modules.rope_products.models import RopeConfiguratorSetting
 from src.modules.products.models import Product, ProductTranslation, ProductType
 from src.modules.products.models_dto import (
     ProductCreate,
+    ProductDetailResponseDTO,
+    ProductListResponseDTO,
     ProductLocalizedResponseDTO,
     ProductResponseDTO,
     ProductTranslationCreate,
@@ -72,10 +74,9 @@ class TestsForSuccess:
         response = await client_for_tests.get("/products")
         assert response.status_code == 200
 
-        data = [
-            ProductLocalizedResponseDTO.model_validate(item)
-            for item in response.json()
-        ]
+        list_dto = ProductListResponseDTO.model_validate(response.json())
+        data = list_dto.items
+        assert list_dto.total >= 2
         assert len(data) >= 2
 
         ids = [item.id for item in data]
@@ -103,7 +104,8 @@ class TestsForSuccess:
         resp = await client_for_tests.get("/products", params={"category_id": cat1.id})
         assert resp.status_code == 200
 
-        items = [ProductLocalizedResponseDTO.model_validate(i) for i in resp.json()]
+        list_dto = ProductListResponseDTO.model_validate(resp.json())
+        items = list_dto.items
         ids = [i.id for i in items]
         assert p1.id in ids
         assert p2.id not in ids
@@ -124,7 +126,8 @@ class TestsForSuccess:
         resp = await client_for_tests.get("/products", params={"category_slug": "yachting"})
         assert resp.status_code == 200
 
-        items = [ProductLocalizedResponseDTO.model_validate(i) for i in resp.json()]
+        list_dto = ProductListResponseDTO.model_validate(resp.json())
+        items = list_dto.items
         ids = [i.id for i in items]
         assert p1.id in ids
         assert p2.id not in ids
@@ -145,7 +148,8 @@ class TestsForSuccess:
         resp = await client_for_tests.get("/products", params={"product_type": "hardware"})
         assert resp.status_code == 200
 
-        items = [ProductLocalizedResponseDTO.model_validate(i) for i in resp.json()]
+        list_dto = ProductListResponseDTO.model_validate(resp.json())
+        items = list_dto.items
         ids = [i.id for i in items]
         assert p_hw.id in ids
         assert p_rope.id not in ids
@@ -166,7 +170,8 @@ class TestsForSuccess:
         resp = await client_for_tests.get("/products", params={"construction_type": "hollow"})
         assert resp.status_code == 200
 
-        items = [ProductLocalizedResponseDTO.model_validate(i) for i in resp.json()]
+        list_dto = ProductListResponseDTO.model_validate(resp.json())
+        items = list_dto.items
         ids = [i.id for i in items]
         assert p_hollow.id in ids
         assert p_core.id not in ids
@@ -209,7 +214,8 @@ class TestsForSuccess:
         resp = await client_for_tests.get("/products", params={"material_id": mat1.id})
         assert resp.status_code == 200
 
-        items = [ProductLocalizedResponseDTO.model_validate(i) for i in resp.json()]
+        list_dto = ProductListResponseDTO.model_validate(resp.json())
+        items = list_dto.items
         ids = [i.id for i in items]
         assert p1.id in ids
         assert p2.id not in ids
@@ -242,7 +248,8 @@ class TestsForSuccess:
         resp = await client_for_tests.get("/products", params={"application_codes": "winch_test"})
         assert resp.status_code == 200
 
-        items = [ProductLocalizedResponseDTO.model_validate(i) for i in resp.json()]
+        list_dto = ProductListResponseDTO.model_validate(resp.json())
+        items = list_dto.items
         ids = [i.id for i in items]
         assert p1.id in ids
         assert p2.id not in ids
@@ -266,14 +273,16 @@ class TestsForSuccess:
 
         resp = await client_for_tests.get("/products", params={"diameter_min": 10.0})
         assert resp.status_code == 200
-        items = [ProductLocalizedResponseDTO.model_validate(i) for i in resp.json()]
+        list_dto = ProductListResponseDTO.model_validate(resp.json())
+        items = list_dto.items
         ids = [i.id for i in items]
         assert p_thick.id in ids
         assert p_thin.id not in ids
 
         resp_max = await client_for_tests.get("/products", params={"diameter_max": 6.0})
         assert resp_max.status_code == 200
-        items_max = [ProductLocalizedResponseDTO.model_validate(i) for i in resp_max.json()]
+        list_dto_max = ProductListResponseDTO.model_validate(resp_max.json())
+        items_max = list_dto_max.items
         ids_max = [i.id for i in items_max]
         assert p_thin.id in ids_max
         assert p_thick.id not in ids_max
@@ -289,13 +298,15 @@ class TestsForSuccess:
 
         resp_active = await client_for_tests.get("/products", params={"is_active": "true"})
         assert resp_active.status_code == 200
-        active_ids = [i["id"] for i in resp_active.json()]
+        list_active = ProductListResponseDTO.model_validate(resp_active.json())
+        active_ids = [i.id for i in list_active.items]
         assert p_active.id in active_ids
         assert p_inactive.id not in active_ids
 
         resp_inactive = await client_for_tests.get("/products", params={"is_active": "false"})
         assert resp_inactive.status_code == 200
-        inactive_ids = [i["id"] for i in resp_inactive.json()]
+        list_inactive = ProductListResponseDTO.model_validate(resp_inactive.json())
+        inactive_ids = [i.id for i in list_inactive.items]
         assert p_inactive.id in inactive_ids
         assert p_active.id not in inactive_ids
 
@@ -311,11 +322,17 @@ class TestsForSuccess:
 
         resp_limit = await client_for_tests.get("/products", params={"limit": 2, "skip": 0})
         assert resp_limit.status_code == 200
-        assert len(resp_limit.json()) == 2
+        dto_limit = ProductListResponseDTO.model_validate(resp_limit.json())
+        assert len(dto_limit.items) == 2
+        assert dto_limit.total >= 3
+        assert dto_limit.skip == 0
+        assert dto_limit.limit == 2
 
         resp_skip = await client_for_tests.get("/products", params={"limit": 2, "skip": 2})
         assert resp_skip.status_code == 200
-        assert len(resp_skip.json()) >= 1
+        dto_skip = ProductListResponseDTO.model_validate(resp_skip.json())
+        assert len(dto_skip.items) >= 1
+        assert dto_skip.skip == 2
 
     @pytest.mark.asyncio
     async def test_get_all_products_locale(
@@ -343,7 +360,8 @@ class TestsForSuccess:
         resp = await client_for_tests.get("/products", params={"locale": "ger"})
         assert resp.status_code == 200
 
-        data = [ProductLocalizedResponseDTO.model_validate(i) for i in resp.json()]
+        list_dto = ProductListResponseDTO.model_validate(resp.json())
+        data = list_dto.items
         found = next(i for i in data if i.id == prod.id)
         assert found.name == "Schleppseil"
         assert found.description == "Schwere Ausführung"

@@ -17,8 +17,11 @@ from src.modules.rope_products.models_dto import (
     ProductVariantResponseDTO,
 )
 
-router = APIRouter(prefix="/rope_products", tags=["Rope Products"])
-variants_router = APIRouter(prefix="/rope_variants", tags=["Rope Variants"])
+router = APIRouter(
+    prefix="/rope_products",
+    tags=["Rope Products (Admin & Internal Settings)"],
+)
+variants_router = APIRouter(prefix="/rope_variants", tags=["Rope Variants (Admin & Internal Settings)"])
 
 
 # ==================== RopeConfiguratorSetting Endpoints ====================
@@ -33,7 +36,11 @@ async def get_all_rope_products(
     can_be_spliced: Optional[bool] = Query(None, description="Filter by spliceability"),
     service: RopeProductsService = Depends(get_rope_products_service),
 ):
-    """Get list of rope configurator settings (public)."""
+    """
+    Get list of rope configurator settings (admin/internal settings).
+    Note: For client-facing configurator initialization bundle (including cached price rules,
+    extras, splice types, and localized rope data in a single request), use GET /configurators.
+    """
     return await service.get_all_rope_products(
         material_group_id=material_group_id,
         can_be_spliced=can_be_spliced,

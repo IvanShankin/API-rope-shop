@@ -1,7 +1,5 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional
 from datetime import datetime
-import random
-import string
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -48,7 +46,6 @@ from src.modules.quote_requests.repository import (
 from src.modules.quote_requests.exception import (
     QuoteRequestNotFound,
     QuoteRequestValidationError,
-    QuoteExtraItemNotFound,
     ConfiguratorExtraNotFoundForQuote,
     RopeProductNotFoundForQuote,
     RopeVariantNotFoundForQuote,
@@ -620,9 +617,9 @@ class QuoteRequestService:
     async def _generate_request_number(self) -> str:
         """Генерация уникального бизнес-номера заявки формата RPL-YYYY-NNNN."""
         current_year = datetime.now().year
-        count = await self.quote_repo.count_requests_by_year(current_year)
-        random_suffix = "".join(random.choices(string.digits, k=2))
-        return f"RPL-{current_year}-{(count + 1):04d}-{random_suffix}"
+        seq_num = await self.quote_repo.get_next_request_number_seq()
+
+        return f"RPL-{current_year}-{seq_num:04d}"
 
     async def get_quote_request_by_id(self, request_id: int) -> QuoteRequestResponseDTO:
         item = await self.quote_repo.get_by_id(request_id, include_relations=True)

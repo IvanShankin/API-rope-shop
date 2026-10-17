@@ -63,6 +63,12 @@ class QuoteRequestRepository(BaseRepository):
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
+    async def get_next_request_number_seq(self) -> int:
+        """Получение следующего атомарного значения из последовательности PostgreSQL для номера заявки."""
+        stmt = select(func.nextval("quote_request_number_seq"))
+        result = await self.session.execute(stmt)
+        return int(result.scalar_one())
+
     async def count_requests_by_year(self, year: int) -> int:
         """Подсчет количества заявок с префиксом текущего года (для генератора номера)."""
         prefix = f"RPL-{year}-%"

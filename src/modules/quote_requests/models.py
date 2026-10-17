@@ -1,11 +1,13 @@
 import enum
 from typing import List, Optional, TYPE_CHECKING
 from datetime import datetime
-from sqlalchemy import String, Integer, Boolean, ForeignKey, DateTime, func, Text, Numeric, Enum
+from sqlalchemy import String, Integer, Boolean, ForeignKey, DateTime, func, Text, Numeric, Enum, Sequence
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from src.core.database.database import Base
 from src.modules.configurator_setting.models import Currency
+
+quote_request_number_seq = Sequence("quote_request_number_seq", metadata=Base.metadata)
 
 if TYPE_CHECKING:
     from src.modules.products.models import Product

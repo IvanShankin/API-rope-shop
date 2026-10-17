@@ -27,7 +27,13 @@ from src.modules.splice_prices.models import SplicePriceRule
 from src.modules.splice_materials.models import SpliceMaterial
 from src.modules.configurator_extra.models import ConfiguratorExtra, ConfiguratorExtraTranslation
 from src.modules.configurator_setting.models import ConfiguratorSetting
-from src.modules.quote_requests.models import QuoteRequest, QuoteRopeItem, QuoteServiceItem, QuoteExtraItem
+from src.modules.quote_requests.models import (
+    QuoteRequest,
+    QuoteRopeItem,
+    QuoteServiceItem,
+    QuoteExtraItem,
+    quote_request_number_seq,
+)
 
 __all__ = [
     "User",
@@ -65,4 +71,5 @@ __all__ = [
     "QuoteRopeItem",
     "QuoteServiceItem",
     "QuoteExtraItem",
+    "quote_request_number_seq",
 ]

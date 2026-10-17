@@ -12,16 +12,17 @@ from src.modules.users.service import UsersService
 
 router = APIRouter(prefix="/auth")
 
+#  Закомментировано до расширения проекта
 
-@router.post("/register", response_model=UserDTO, status_code=status.HTTP_200_OK)
-async def register_user(
-    data: RegisterUserRequestDTO,
-    user_service: UsersService = Depends(get_user_service)
-):
-    """
-    :raises UserAlreadyExists: 409 Если email занят
-    """
-    return await user_service.create_user(new_user=data)
+# @router.post("/register", response_model=UserDTO, status_code=status.HTTP_200_OK)
+# async def register_user(
+#     data: RegisterUserRequestDTO,
+#     user_service: UsersService = Depends(get_user_service)
+# ):
+#     """
+#     :raises UserAlreadyExists: 409 Если email занят
+#     """
+#     return await user_service.create_user(new_user=data)
 
 
 @router.post('/login', response_model=TokenResponse, tags=["Authentication"], )

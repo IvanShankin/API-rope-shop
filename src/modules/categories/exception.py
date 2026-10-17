@@ -1,11 +1,11 @@
-from src.modules.base.exception import ServiceException, NotFoundData
+from src.modules.base.exception import ServiceException, NotFoundData, DataAlreadyExists, DeleteError, HasDependencies
 
 
 class CategoryNotFound(NotFoundData):
     pass
 
 
-class CategoryAlreadyExists(ServiceException):
+class CategoryAlreadyExists(DataAlreadyExists):
     pass
 
 
@@ -13,13 +13,13 @@ class CategoryTranslationNotFound(NotFoundData):
     pass
 
 
-class CategoryTranslationAlreadyExists(ServiceException):
+class CategoryTranslationAlreadyExists(DataAlreadyExists):
     pass
 
 
-class CategoryTranslationDeleteError(ServiceException):
+class CategoryTranslationDeleteError(DeleteError):
     pass
 
 
-class CategoryHasDependencies(ServiceException):
+class CategoryHasDependencies(HasDependencies):
     pass

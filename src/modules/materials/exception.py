@@ -1,11 +1,11 @@
-from src.modules.base.exception import ServiceException, NotFoundData
+from src.modules.base.exception import NotFoundData, DataAlreadyExists, DeleteError, HasDependencies
 
 
 class MaterialNotFound(NotFoundData):
     pass
 
 
-class MaterialAlreadyExists(ServiceException):
+class MaterialAlreadyExists(DataAlreadyExists):
     pass
 
 
@@ -13,15 +13,15 @@ class MaterialTranslationNotFound(NotFoundData):
     pass
 
 
-class MaterialTranslationAlreadyExists(ServiceException):
+class MaterialTranslationAlreadyExists(DataAlreadyExists):
     pass
 
 
-class MaterialTranslationDeleteError(ServiceException):
+class MaterialTranslationDeleteError(DeleteError):
     pass
 
 
-class MaterialHasDependencies(ServiceException):
+class MaterialHasDependencies(HasDependencies):
     pass
 
 

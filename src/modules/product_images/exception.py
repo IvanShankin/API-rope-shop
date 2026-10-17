@@ -1,13 +1,13 @@
-from src.modules.base.exception import ServiceException
+from src.modules.base.exception import DataAlreadyExists, HasDependencies, NotFoundData
 
 
-class ProductImageNotFound(ServiceException):
+class ProductImageNotFound(NotFoundData):
     pass
 
 
-class ProductImageAlreadyExists(ServiceException):
+class ProductImageAlreadyExists(DataAlreadyExists):
     pass
 
 
-class ProductImageHasDependencies(ServiceException):
+class ProductImageHasDependencies(HasDependencies):
     pass

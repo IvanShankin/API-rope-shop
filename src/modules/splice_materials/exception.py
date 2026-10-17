@@ -1,10 +1,11 @@
-﻿from src.modules.base.exception import ServiceException, NotFoundData
+﻿from src.modules.base.exception import NotFoundData, DataAlreadyExists, HasDependencies
+
 
 class SpliceMaterialNotFound(NotFoundData):
     pass
 
-class SpliceMaterialAlreadyExists(ServiceException):
+class SpliceMaterialAlreadyExists(DataAlreadyExists):
     pass
 
-class SpliceMaterialHasDependencies(ServiceException):
+class SpliceMaterialHasDependencies(HasDependencies):
     pass

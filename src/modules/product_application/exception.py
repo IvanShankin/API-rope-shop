@@ -1,33 +1,33 @@
-from src.modules.base.exception import ServiceException
+from src.modules.base.exception import DataAlreadyExists, DeleteError, HasDependencies, NotFoundData
 
 
-class ProductApplicationNotFound(ServiceException):
+class ProductApplicationNotFound(NotFoundData):
     pass
 
 
-class ProductApplicationAlreadyExists(ServiceException):
+class ProductApplicationAlreadyExists(DataAlreadyExists):
     pass
 
 
-class ProductApplicationHasDependencies(ServiceException):
+class ProductApplicationHasDependencies(HasDependencies):
     pass
 
 
-class ProductApplicationTranslationNotFound(ServiceException):
+class ProductApplicationTranslationNotFound(NotFoundData):
     pass
 
 
-class ProductApplicationTranslationAlreadyExists(ServiceException):
+class ProductApplicationTranslationAlreadyExists(DataAlreadyExists):
     pass
 
 
-class ProductApplicationTranslationDeleteError(ServiceException):
+class ProductApplicationTranslationDeleteError(DeleteError):
     pass
 
 
-class ProductAssignedApplicationAlreadyExists(ServiceException):
+class ProductAssignedApplicationAlreadyExists(DataAlreadyExists):
     pass
 
 
-class ProductAssignedApplicationNotFound(ServiceException):
+class ProductAssignedApplicationNotFound(NotFoundData):
     pass

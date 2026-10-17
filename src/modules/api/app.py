@@ -88,7 +88,7 @@ def _include_routers(app: FastAPI) -> FastAPI:
 
 def init_fastapi_app() -> FastAPI:
     app = FastAPI(
-        title="Auth Service",
+        title="Rope shop",
         lifespan=lifespan,
     )
     config = create_config()

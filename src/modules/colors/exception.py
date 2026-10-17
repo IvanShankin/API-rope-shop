@@ -1,11 +1,11 @@
-from src.modules.base.exception import ServiceException, NotFoundData
+from src.modules.base.exception import NotFoundData, DataAlreadyExists, DeleteError, HasDependencies
 
 
 class ColorNotFound(NotFoundData):
     pass
 
 
-class ColorAlreadyExists(ServiceException):
+class ColorAlreadyExists(DataAlreadyExists):
     pass
 
 
@@ -13,13 +13,13 @@ class ColorTranslationNotFound(NotFoundData):
     pass
 
 
-class ColorTranslationAlreadyExists(ServiceException):
+class ColorTranslationAlreadyExists(DataAlreadyExists):
     pass
 
 
-class ColorTranslationDeleteError(ServiceException):
+class ColorTranslationDeleteError(DeleteError):
     pass
 
 
-class ColorHasDependencies(ServiceException):
+class ColorHasDependencies(HasDependencies):
     pass

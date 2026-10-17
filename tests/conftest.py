@@ -39,7 +39,7 @@ from src.modules.db_models import (
 from src.tools.creating_db import create_database
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import delete
+from sqlalchemy import delete, text
 
 
 @pytest_asyncio.fixture(scope='session', autouse=True)
@@ -58,6 +58,7 @@ async def clearing_db(session_db: AsyncSession):
     await session_db.execute(delete(QuoteServiceItem))
     await session_db.execute(delete(QuoteExtraItem))
     await session_db.execute(delete(QuoteRequest))
+    await session_db.execute(text("ALTER SEQUENCE IF EXISTS quote_request_number_seq RESTART WITH 1;"))
     await session_db.execute(delete(ConfiguratorSetting))
     await session_db.execute(delete(ConfiguratorExtraTranslation))
     await session_db.execute(delete(ConfiguratorExtra))

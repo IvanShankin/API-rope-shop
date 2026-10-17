@@ -1,11 +1,11 @@
-from src.modules.base.exception import ServiceException
+from src.modules.base.exception import ServiceException, DataAlreadyExists, DeleteError, NotFoundData
 
 
-class ProductSpecificationNotFound(ServiceException):
+class ProductSpecificationNotFound(NotFoundData):
     pass
 
 
-class ProductSpecificationAlreadyExists(ServiceException):
+class ProductSpecificationAlreadyExists(DataAlreadyExists):
     pass
 
 
@@ -13,13 +13,13 @@ class ProductSpecificationInvalidBatch(ServiceException):
     pass
 
 
-class ProductSpecificationTranslationNotFound(ServiceException):
+class ProductSpecificationTranslationNotFound(NotFoundData):
     pass
 
 
-class ProductSpecificationTranslationAlreadyExists(ServiceException):
+class ProductSpecificationTranslationAlreadyExists(DataAlreadyExists):
     pass
 
 
-class ProductSpecificationTranslationDeleteError(ServiceException):
+class ProductSpecificationTranslationDeleteError(DeleteError):
     pass

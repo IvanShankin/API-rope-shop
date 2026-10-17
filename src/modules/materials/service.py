@@ -1,7 +1,5 @@
 from typing import List, Optional
-from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette import status
 
 from src.modules.base.database_model import Language
 from src.modules.base.exception import NoDataForUpdate
@@ -24,6 +22,7 @@ from src.modules.materials.models_dto import (
 from src.modules.materials.exception import (
     MaterialNotFound,
     MaterialAlreadyExists,
+    MaterialValidationError,
     MaterialTranslationNotFound,
     MaterialTranslationAlreadyExists,
     MaterialTranslationDeleteError,
@@ -49,9 +48,8 @@ class MaterialService:
     ) -> MaterialResponseDTO:
         """Создание нового материала с обязательными переводами."""
         if not data.translations:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="At least one translation is required when creating a Material.",
+            raise MaterialValidationError(
+                "At least one translation is required when creating a Material."
             )
 
         if not await self.material_repo.exists_material_group(data.material_group_id):
@@ -68,9 +66,8 @@ class MaterialService:
         # Проверка уникальности локалей в переданном списке
         locales = [t.locale for t in data.translations]
         if len(locales) != len(set(locales)):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Duplicate locales found in translations.",
+            raise MaterialValidationError(
+                "Duplicate locales found in translations."
             )
 
         if data.index is None:

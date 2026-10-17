@@ -1,4 +1,10 @@
-from src.modules.base.exception import NotFoundData, DataAlreadyExists, DeleteError, HasDependencies
+from src.modules.base.exception import (
+    DataAlreadyExists,
+    DeleteError,
+    HasDependencies,
+    NotFoundData,
+    ValidationError,
+)
 
 
 class ColorNotFound(NotFoundData):
@@ -6,6 +12,10 @@ class ColorNotFound(NotFoundData):
 
 
 class ColorAlreadyExists(DataAlreadyExists):
+    pass
+
+
+class ColorValidationError(ValidationError):
     pass
 
 

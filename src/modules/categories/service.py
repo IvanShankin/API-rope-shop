@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from fastapi import HTTPException, UploadFile, status
+from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.base.database_model import Language
@@ -12,6 +12,7 @@ from src.modules.categories.exception import (
     CategoryTranslationAlreadyExists,
     CategoryTranslationDeleteError,
     CategoryTranslationNotFound,
+    CategoryValidationError,
 )
 from src.modules.categories.models import Category
 from src.modules.categories.models_dto import (
@@ -52,9 +53,8 @@ class CategoryService:
     async def create_category(self, data: CategoryCreate) -> CategoryResponseDTO:
         """Создание новой категории товаров с переводами."""
         if not data.translations:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="At least one translation is required when creating a Category.",
+            raise CategoryValidationError(
+                "At least one translation is required when creating a Category."
             )
 
         existing = await self.category_repo.get_by_slug(data.slug)
@@ -62,11 +62,8 @@ class CategoryService:
             raise CategoryAlreadyExists(f"Category with slug '{data.slug}' already exists.")
 
         locales = [t.locale for t in data.translations]
-        if len(locales) != len(set(locales)):\
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Duplicate locales found in translations.",
-            )
+        if len(locales) != len(set(locales)):
+            raise CategoryValidationError("Duplicate locales found in translations.")
 
         if data.index is None:
             max_index = await self.category_repo.get_max_index()

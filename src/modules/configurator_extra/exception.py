@@ -1,4 +1,10 @@
-from src.modules.base.exception import NotFoundData, DeleteError, DataAlreadyExists, HasDependencies
+from src.modules.base.exception import (
+    DataAlreadyExists,
+    DeleteError,
+    HasDependencies,
+    NotFoundData,
+    ValidationError,
+)
 
 
 class ConfiguratorExtraNotFound(NotFoundData):
@@ -6,6 +12,10 @@ class ConfiguratorExtraNotFound(NotFoundData):
 
 
 class ConfiguratorExtraAlreadyExists(DataAlreadyExists):
+    pass
+
+
+class ConfiguratorExtraValidationError(ValidationError):
     pass
 
 

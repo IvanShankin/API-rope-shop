@@ -30,6 +30,10 @@ class DeleteError(ServiceException):
     default_message = "Delete error"
 
 
+class ValidationError(ServiceException):
+    default_message = "Validation error"
+
+
 class NoDataForUpdate(RepositoryException):
     pass
 

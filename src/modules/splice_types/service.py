@@ -1,7 +1,6 @@
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import HTTPException, UploadFile
-from starlette import status
+from fastapi import UploadFile
 
 from src.modules.base.database_model import Language
 from src.modules.handlers_files.service import ImageManager
@@ -22,10 +21,11 @@ from src.modules.splice_types.models_dto import (
 from src.modules.splice_types.exception import (
     SpliceTypeNotFound,
     SpliceTypeAlreadyExists,
+    SpliceTypeValidationError,
     SpliceTypeTranslationNotFound,
     SpliceTypeTranslationAlreadyExists,
     SpliceTypeTranslationDeleteError,
-    SpliceTypeHasDependencies
+    SpliceTypeHasDependencies,
 )
 
 
@@ -46,10 +46,7 @@ class SpliceTypeService:
 
     async def create_splice_type(self, data: SpliceTypeCreate) -> SpliceTypeResponseDTO:
         if not data.translations:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="At least one translation is required when creating a SpliceType."
-            )
+            raise SpliceTypeValidationError("At least one translation is required when creating a SpliceType.")
 
         existing = await self.type_repo.get_by_code(data.code)
         if existing:

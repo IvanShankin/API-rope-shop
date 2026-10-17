@@ -2,8 +2,22 @@ from fastapi import FastAPI
 from sqlalchemy.exc import IntegrityError
 from starlette.responses import JSONResponse
 
-from src.modules.base.exception import ServiceException, NoDataForUpdate, NotFoundData, DataAlreadyExists, \
-    HasDependencies, DeleteError
+from src.modules.base.exception import (
+    DataAlreadyExists,
+    DeleteError,
+    HasDependencies,
+    NoDataForUpdate,
+    NotFoundData,
+    ServiceException,
+    ValidationError,
+)
+from src.modules.categories.exception import CategoryValidationError
+from src.modules.colors.exception import ColorValidationError
+from src.modules.configurator_extra.exception import ConfiguratorExtraValidationError
+from src.modules.materials.exception import MaterialValidationError
+from src.modules.material_groups.exception import MaterialGroupValidationError
+from src.modules.products.exception import ProductValidationError
+from src.modules.splice_types.exception import SpliceTypeValidationError
 from src.modules.check_permission.exception import PermissionErrorService
 from src.modules.configurator_setting.exception import ConfiguratorSettingValidationError
 from src.modules.product_specification.exception import (
@@ -21,6 +35,38 @@ from src.modules.quote_requests.exception import (
 def register_exception_handlers(app: FastAPI):
 
     # ==================== 400 Bad Request ====================
+    @app.exception_handler(ValidationError)
+    async def validation_error_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(CategoryValidationError)
+    async def category_validation_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(ColorValidationError)
+    async def color_validation_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(ConfiguratorExtraValidationError)
+    async def configurator_extra_validation_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(MaterialValidationError)
+    async def material_validation_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(MaterialGroupValidationError)
+    async def material_group_validation_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(ProductValidationError)
+    async def product_validation_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(SpliceTypeValidationError)
+    async def splice_type_validation_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
     @app.exception_handler(NoDataForUpdate)
     async def nodata_handler(request, exc):
         return JSONResponse(status_code=400, content={"detail": "Did not transmit data"})

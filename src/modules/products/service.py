@@ -1,7 +1,6 @@
 import shutil
 from typing import List, Optional, Union
 
-from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.base.database_model import Language
@@ -19,6 +18,7 @@ from src.modules.products.exception import (
     ProductTranslationAlreadyExists,
     ProductTranslationDeleteError,
     ProductTranslationNotFound,
+    ProductValidationError,
 )
 from src.modules.products.models import Product
 from src.modules.products.models_dto import (
@@ -66,16 +66,14 @@ class ProductService:
     async def create_product(self, data: ProductCreate) -> ProductResponseDTO:
         """Создание нового товара с переводами."""
         if not data.translations:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="At least one translation is required when creating a Product.",
+            raise ProductValidationError(
+                "At least one translation is required when creating a Product."
             )
 
         locales = [t.locale for t in data.translations]
         if len(locales) != len(set(locales)):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Duplicate locales found in translations.",
+            raise ProductValidationError(
+                "Duplicate locales found in translations."
             )
 
         # Проверка существования категории

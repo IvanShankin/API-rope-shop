@@ -1,7 +1,5 @@
 from typing import List, Optional
-from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette import status
 
 from src.modules.base.database_model import Language
 from src.modules.base.exception import NoDataForUpdate
@@ -25,6 +23,7 @@ from src.modules.configurator_extra.models_dto import (
 from src.modules.configurator_extra.exception import (
     ConfiguratorExtraNotFound,
     ConfiguratorExtraAlreadyExists,
+    ConfiguratorExtraValidationError,
     ConfiguratorExtraTranslationNotFound,
     ConfiguratorExtraTranslationAlreadyExists,
     ConfiguratorExtraTranslationDeleteError,
@@ -49,9 +48,8 @@ class ConfiguratorExtraService:
     ) -> ConfiguratorExtraResponseDTO:
         """Создание новой дополнительной опции конфигуратора с обязательными переводами."""
         if not data.translations:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="At least one translation is required when creating a ConfiguratorExtra.",
+            raise ConfiguratorExtraValidationError(
+                "At least one translation is required when creating a ConfiguratorExtra."
             )
 
         existing = await self.extra_repo.get_by_code(data.code)
@@ -62,9 +60,8 @@ class ConfiguratorExtraService:
 
         locales = [t.locale for t in data.translations]
         if len(locales) != len(set(locales)):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Duplicate locales found in translations.",
+            raise ConfiguratorExtraValidationError(
+                "Duplicate locales found in translations."
             )
 
         if data.index is None:

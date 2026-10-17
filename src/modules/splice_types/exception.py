@@ -1,4 +1,10 @@
-from src.modules.base.exception import NotFoundData, DataAlreadyExists, DeleteError, HasDependencies
+from src.modules.base.exception import (
+    DataAlreadyExists,
+    DeleteError,
+    HasDependencies,
+    NotFoundData,
+    ValidationError,
+)
 
 
 class SpliceTypeNotFound(NotFoundData):
@@ -6,6 +12,10 @@ class SpliceTypeNotFound(NotFoundData):
 
 
 class SpliceTypeAlreadyExists(DataAlreadyExists):
+    pass
+
+
+class SpliceTypeValidationError(ValidationError):
     pass
 
 

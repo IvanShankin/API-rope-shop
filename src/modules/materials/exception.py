@@ -1,4 +1,10 @@
-from src.modules.base.exception import NotFoundData, DataAlreadyExists, DeleteError, HasDependencies
+from src.modules.base.exception import (
+    DataAlreadyExists,
+    DeleteError,
+    HasDependencies,
+    NotFoundData,
+    ValidationError,
+)
 
 
 class MaterialNotFound(NotFoundData):
@@ -6,6 +12,10 @@ class MaterialNotFound(NotFoundData):
 
 
 class MaterialAlreadyExists(DataAlreadyExists):
+    pass
+
+
+class MaterialValidationError(ValidationError):
     pass
 
 

@@ -148,6 +148,25 @@ class ConfiguratorService:
             )
 
         product = rope.product
+        product_name = None
+        product_slug = None
+        product_main_image_url = None
+        product_subtitle = None
+
+        if product:
+            product_slug = product.slug
+            product_main_image_url = product.main_image_url
+            product_name = product._get_field_with_translation(
+                lambda t: t.name,
+                locale,
+                fallback=Language.ENG,
+            )
+            product_subtitle = product._get_field_with_translation(
+                lambda t: t.subtitle,
+                locale,
+                fallback=Language.ENG,
+            )
+
         variants_list = product.variants if product and product.variants else []
         colors_list = product.colors if product and product.colors else []
         splices_list = product.allowed_splices if product and product.allowed_splices else []
@@ -204,6 +223,10 @@ class ConfiguratorService:
 
         return ConfiguratorRopeProductResponseDTO(
             product_id=rope.product_id,
+            name=product_name,
+            slug=product_slug,
+            main_image_url=product_main_image_url,
+            subtitle=product_subtitle,
             material_group_id=rope.material_group_id,
             material_group_name=mat_group_name,
             splice_material_id=rope.splice_material_id,

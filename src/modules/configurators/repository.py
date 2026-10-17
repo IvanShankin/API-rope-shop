@@ -93,6 +93,10 @@ class ConfiguratorRepository(BaseRepository):
             select(RopeConfiguratorSetting)
             .options(
                 selectinload(RopeConfiguratorSetting.product)
+                .selectinload(Product.translations),
+                selectinload(RopeConfiguratorSetting.product)
+                .selectinload(Product.images),
+                selectinload(RopeConfiguratorSetting.product)
                 .selectinload(Product.variants),
                 selectinload(RopeConfiguratorSetting.product)
                 .selectinload(Product.colors)

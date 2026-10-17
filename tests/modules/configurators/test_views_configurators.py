@@ -24,6 +24,11 @@ from tests.modules.rope_products.fixtures.models_dto import (
 )
 from tests.modules.rope_product_color.fixtures.models_dto import CreateRopeProductColorFixtureDTO
 from tests.modules.rope_allowed_splice.fixtures.models_dto import CreateRopeAllowedSpliceFixtureDTO
+from tests.modules.products.fixtures.models_dto import (
+    CreateProductFixtureDTO,
+    CreateProductTranslationFixtureDTO,
+)
+from tests.modules.product_images.fixtures.models_dto import CreateProductImageFixtureDTO
 
 
 class TestsForSuccess:
@@ -395,3 +400,103 @@ class TestsForSuccess:
         assert dto_ger.locale == Language.GER
         extra_ger = next(e for e in dto_ger.extras if e.id == extra.id)
         assert extra_ger.name == "Extended Warranty"
+
+    @pytest.mark.asyncio
+    async def test_get_configurators_rope_product_name_and_image_localization(
+        self,
+        client_for_tests,
+        create_product_fixture,
+        create_product_translation_fixture,
+        create_product_image_fixture,
+        create_material_group_fixture,
+        create_splice_material_fixture,
+        create_rope_product_fixture,
+    ):
+        """Проверка наличия name, slug, main_image_url, subtitle и их корректной локализации в ConfiguratorRopeProductResponseDTO."""
+        mg = await create_material_group_fixture(CreateMaterialGroupFixtureDTO(name="Dyneema Group"))
+        sm = await create_splice_material_fixture(CreateSpliceMaterialFixtureDTO(code="core"))
+
+        # Создаем продукт с английским переводом (по умолчанию)
+        prod = await create_product_fixture(
+            CreateProductFixtureDTO(
+                slug="magic-race-rope",
+                name="Magic Race EN",
+                subtitle="High performance EN",
+                locale=Language.ENG,
+            )
+        )
+
+        # Добавляем русский перевод
+        await create_product_translation_fixture(
+            CreateProductTranslationFixtureDTO(
+                product_id=prod.id,
+                locale=Language.RUS,
+                name="Мэджик Рейс РУ",
+                subtitle="Высокая прочность РУ",
+            )
+        )
+
+        # Добавляем немецкий перевод
+        await create_product_translation_fixture(
+            CreateProductTranslationFixtureDTO(
+                product_id=prod.id,
+                locale=Language.GER,
+                name="Magic Race DE",
+                subtitle="Hochleistung DE",
+            )
+        )
+
+        # Добавляем главное изображение к продукту
+        await create_product_image_fixture(
+            CreateProductImageFixtureDTO(
+                product_id=prod.id,
+                image_url="/media/products/magic_race.webp",
+                is_main=True,
+                is_active=True,
+            )
+        )
+
+        # Привязываем канат к конфигуратору
+        await create_rope_product_fixture(
+            CreateRopeProductFixtureDTO(
+                product_id=prod.id,
+                material_group_id=mg.id,
+                splice_material_id=sm.id,
+                construction="12-strand braided",
+            )
+        )
+
+        # 1. Запрос с русской локалью
+        resp_rus = await client_for_tests.get("/configurators?locale=rus")
+        assert resp_rus.status_code == 200
+        dto_rus = ConfiguratorDataResponseDTO.model_validate(resp_rus.json())
+        assert dto_rus.rope_products is not None
+        assert len(dto_rus.rope_products) == 1
+        rope_rus = dto_rus.rope_products[0]
+        assert rope_rus.product_id == prod.id
+        assert rope_rus.name == "Мэджик Рейс РУ"
+        assert rope_rus.subtitle == "Высокая прочность РУ"
+        assert rope_rus.slug == "magic-race-rope"
+        assert rope_rus.main_image_url == "/media/products/magic_race.webp"
+
+        # 2. Запрос с немецкой локалью
+        resp_ger = await client_for_tests.get("/configurators?locale=ger")
+        assert resp_ger.status_code == 200
+        dto_ger = ConfiguratorDataResponseDTO.model_validate(resp_ger.json())
+        assert dto_ger.rope_products is not None
+        rope_ger = dto_ger.rope_products[0]
+        assert rope_ger.name == "Magic Race DE"
+        assert rope_ger.subtitle == "Hochleistung DE"
+        assert rope_ger.slug == "magic-race-rope"
+        assert rope_ger.main_image_url == "/media/products/magic_race.webp"
+
+        # 3. Запрос с английской локалью (по умолчанию)
+        resp_eng = await client_for_tests.get("/configurators")
+        assert resp_eng.status_code == 200
+        dto_eng = ConfiguratorDataResponseDTO.model_validate(resp_eng.json())
+        assert dto_eng.rope_products is not None
+        rope_eng = dto_eng.rope_products[0]
+        assert rope_eng.name == "Magic Race EN"
+        assert rope_eng.subtitle == "High performance EN"
+        assert rope_eng.slug == "magic-race-rope"
+        assert rope_eng.main_image_url == "/media/products/magic_race.webp"

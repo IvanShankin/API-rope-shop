@@ -17,6 +17,10 @@ from src.modules.rope_allowed_splice.models_dto import RopeAllowedSpliceLocalize
 class ConfiguratorRopeProductResponseDTO(ORMDTO):
     """Канат с вариантами диаметров, цветами и разрешёнными заделками для конфигуратора."""
     product_id: int
+    name: Optional[str] = None
+    slug: Optional[str] = None
+    main_image_url: Optional[str] = None
+    subtitle: Optional[str] = None
     material_group_id: int
     material_group_name: Optional[str] = None
     splice_material_id: int

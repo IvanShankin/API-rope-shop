@@ -11,3 +11,15 @@ class WorkPhotoAlreadyExists(DataAlreadyExists):
 
 class WorkPhotoHasDependencies(HasDependencies):
     pass
+
+
+class WorkPhotoTranslationNotFound(NotFoundData):
+    pass
+
+
+class WorkPhotoTranslationAlreadyExists(DataAlreadyExists):
+    pass
+
+
+class WorkPhotoTranslationDeleteError(Exception):
+    pass

@@ -1,7 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import Config
-from src.modules.charity_photos.models import CharityPhoto
+from src.modules.base.database_model import Language
+from src.modules.charity_photos.models import CharityPhoto, CharityPhotoTranslation
 from src.modules.charity_photos.models_dto import CharityPhotoResponseDTO
 from tests.helpers.functions import random_string
 from tests.modules.charity_photos.fixtures.models_dto import (
@@ -30,11 +31,17 @@ async def create_charity_photo_factory(
 
     photo = CharityPhoto(
         image_url=image_url,
-        title=title,
-        description=description,
         index=index,
         is_active=is_active,
     )
+    if title or description:
+        photo.translations.append(
+            CharityPhotoTranslation(
+                locale=Language.ENG,
+                title=title,
+                description=description,
+            )
+        )
     session_db.add(photo)
     await session_db.commit()
     await session_db.refresh(photo)

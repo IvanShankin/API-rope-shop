@@ -2,6 +2,7 @@ import pytest
 from sqlalchemy import select
 
 from src.core.config import Config
+from src.modules.base.database_model import Language
 from src.modules.users.models import UserRole
 from src.modules.work_photos.models import WorkPhoto
 from src.modules.work_photos.models_dto import (
@@ -302,6 +303,93 @@ class TestsForSuccess:
         # p1 сдвинулся на index 0
         remaining = await session_db.scalar(select(WorkPhoto).where(WorkPhoto.id == p1.id))
         assert remaining.index == 0
+
+    @pytest.mark.asyncio
+    async def test_get_work_photos_with_locale(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_work_photo_fixture,
+    ):
+        """Получение фотографий работ с запросом определенной локали."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        photo = await create_work_photo_fixture(
+            CreateWorkPhotoFixtureDTO(title="English Title", description="English Desc")
+        )
+        # Добавляем перевод на русский через API
+        add_res = await client_for_tests.post(
+            f"/work_photos/{photo.id}/translations",
+            headers={"Authorization": f"Bearer {access_token}"},
+            json={
+                "locale": "rus",
+                "title": "Русское название",
+                "description": "Русское описание",
+            },
+        )
+        assert add_res.status_code == 201
+
+        # Запрос с locale=ru
+        resp_ru = await client_for_tests.get(f"/work_photos/{photo.id}?locale=ru")
+        assert resp_ru.status_code == 200
+        dto_ru = WorkPhotoResponseDTO.model_validate(resp_ru.json())
+        assert dto_ru.title == "Русское название"
+        assert dto_ru.description == "Русское описание"
+        assert len(dto_ru.translations) == 2
+
+        # Запрос с locale=en
+        resp_en = await client_for_tests.get(f"/work_photos/{photo.id}?locale=en")
+        assert resp_en.status_code == 200
+        dto_en = WorkPhotoResponseDTO.model_validate(resp_en.json())
+        assert dto_en.title == "English Title"
+
+    @pytest.mark.asyncio
+    async def test_work_photo_translations_crud(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_work_photo_fixture,
+    ):
+        """CRUD операции с переводами фотографии работы (админ)."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        photo = await create_work_photo_fixture(
+            CreateWorkPhotoFixtureDTO(title="Work EN", description="Desc EN")
+        )
+
+        # 1. Добавление перевода (ger)
+        add_res = await client_for_tests.post(
+            f"/work_photos/{photo.id}/translations",
+            headers={"Authorization": f"Bearer {access_token}"},
+            json={
+                "locale": "ger",
+                "title": "Arbeit DE",
+                "description": "Beschreibung DE",
+            },
+        )
+        assert add_res.status_code == 201
+        tr_data = add_res.json()
+        assert tr_data["locale"] == "ger"
+        assert tr_data["title"] == "Arbeit DE"
+        tr_id = tr_data["id"]
+
+        # 2. Обновление перевода
+        patch_res = await client_for_tests.patch(
+            f"/work_photos/{photo.id}/translations/{tr_id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+            json={"title": "Aktualisierte Arbeit DE"},
+        )
+        assert patch_res.status_code == 200
+        assert patch_res.json()["title"] == "Aktualisierte Arbeit DE"
+
+        # 3. Удаление перевода
+        del_res = await client_for_tests.delete(
+            f"/work_photos/{photo.id}/translations/{tr_id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert del_res.status_code == 204
 
 
 class TestsForFailed:

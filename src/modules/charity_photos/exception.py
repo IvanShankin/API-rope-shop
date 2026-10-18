@@ -11,3 +11,15 @@ class CharityPhotoAlreadyExists(DataAlreadyExists):
 
 class CharityPhotoHasDependencies(HasDependencies):
     pass
+
+
+class CharityPhotoTranslationNotFound(NotFoundData):
+    pass
+
+
+class CharityPhotoTranslationAlreadyExists(DataAlreadyExists):
+    pass
+
+
+class CharityPhotoTranslationDeleteError(Exception):
+    pass

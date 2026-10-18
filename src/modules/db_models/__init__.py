@@ -34,8 +34,8 @@ from src.modules.quote_requests.models import (
     QuoteExtraItem,
     quote_request_number_seq,
 )
-from src.modules.work_photos.models import WorkPhoto
-from src.modules.charity_photos.models import CharityPhoto
+from src.modules.work_photos.models import WorkPhoto, WorkPhotoTranslation
+from src.modules.charity_photos.models import CharityPhoto, CharityPhotoTranslation
 from src.modules.reviews.models import Review, ReviewTranslation
 from src.modules.content_blocks.models import (
     ContentBlock,
@@ -81,7 +81,9 @@ __all__ = [
     "QuoteExtraItem",
     "quote_request_number_seq",
     "WorkPhoto",
+    "WorkPhotoTranslation",
     "CharityPhoto",
+    "CharityPhotoTranslation",
     "Review",
     "ReviewTranslation",
     "ContentBlock",

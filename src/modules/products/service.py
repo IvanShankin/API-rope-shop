@@ -142,6 +142,8 @@ class ProductService:
         application_codes: Optional[Union[List[str], str]] = None,
         diameter_min: Optional[float] = None,
         diameter_max: Optional[float] = None,
+        price_min: Optional[float] = None,
+        price_max: Optional[float] = None,
         is_active: Optional[bool] = None,
         locale: Optional[Language] = None,
         skip: int = 0,
@@ -168,6 +170,8 @@ class ProductService:
             application_codes=parsed_app_codes,
             diameter_min=diameter_min,
             diameter_max=diameter_max,
+            price_min=price_min,
+            price_max=price_max,
             is_active=is_active,
             skip=skip,
             limit=limit,
@@ -181,11 +185,16 @@ class ProductService:
             application_codes=parsed_app_codes,
             diameter_min=diameter_min,
             diameter_max=diameter_max,
+            price_min=price_min,
+            price_max=price_max,
             is_active=is_active,
         )
 
+        product_ids = [p.id for p in products]
+        aggregates = await self.product_repo.get_variants_aggregates(product_ids)
+
         return ProductListResponseDTO(
-            items=[self._to_localized_dto(p, locale) for p in products],
+            items=[self._to_localized_dto(p, locale, aggregates) for p in products],
             total=total,
             skip=skip,
             limit=limit,
@@ -199,7 +208,8 @@ class ProductService:
         if not product:
             raise ProductNotFound(f"Product with id {product_id} not found.")
         if locale is not None:
-            return self._to_localized_dto(product, locale)
+            aggregates = await self.product_repo.get_variants_aggregates([product.id])
+            return self._to_localized_dto(product, locale, aggregates)
         return ProductResponseDTO.model_validate(product)
 
     async def get_product_by_slug(
@@ -210,7 +220,8 @@ class ProductService:
         if not product:
             raise ProductNotFound(f"Product with slug '{slug}' not found.")
         if locale is not None:
-            return self._to_localized_dto(product, locale)
+            aggregates = await self.product_repo.get_variants_aggregates([product.id])
+            return self._to_localized_dto(product, locale, aggregates)
         return ProductResponseDTO.model_validate(product)
 
     async def get_catalog_filters(
@@ -440,6 +451,7 @@ class ProductService:
         self,
         product: Product,
         locale: Optional[Language],
+        aggregates: Optional[dict] = None,
     ) -> ProductLocalizedResponseDTO:
         """Конвертация в локализованное DTO с fallback-логикой и всеми подгруженными связями."""
         target_locale = locale or Language.ENG
@@ -539,6 +551,18 @@ class ProductService:
                     )
                 )
 
+        agg = (aggregates or {}).get(product.id) if aggregates else None
+        if agg:
+            price_from = agg.get("price_from")
+            size_min = agg.get("size_min")
+            size_max = agg.get("size_max")
+            variants_count = agg.get("variants_count", 0)
+        else:
+            price_from = product.price_from
+            size_min = product.size_min
+            size_max = product.size_max
+            variants_count = product.variants_count
+
         return ProductLocalizedResponseDTO(
             id=product.id,
             category_id=product.category_id,
@@ -553,10 +577,10 @@ class ProductService:
             subtitle=subtitle,
             description=description,
             main_image_url=product.main_image_url,
-            price_from=product.price_from,
-            size_min=product.size_min,
-            size_max=product.size_max,
-            variants_count=product.variants_count,
+            price_from=price_from,
+            size_min=size_min,
+            size_max=size_max,
+            variants_count=variants_count,
             images=images_dto,
             specifications=specs_dto,
             applications=apps_dto,

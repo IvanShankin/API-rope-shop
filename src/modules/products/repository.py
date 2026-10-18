@@ -88,6 +88,8 @@ class ProductRepository(BaseIndexedRepository):
         application_codes: Optional[Union[List[str], str]] = None,
         diameter_min: Optional[float] = None,
         diameter_max: Optional[float] = None,
+        price_min: Optional[float] = None,
+        price_max: Optional[float] = None,
         is_active: Optional[bool] = None,
     ):
         if category_id is not None:
@@ -133,6 +135,17 @@ class ProductRepository(BaseIndexedRepository):
                 variant_conds.append(ProductVariant.size_value <= diameter_max)
             stmt = stmt.where(exists().where(*variant_conds))
 
+        if price_min is not None or price_max is not None:
+            price_conds = [
+                ProductVariant.product_id == Product.id,
+                ProductVariant.is_active.is_(True),
+            ]
+            if price_min is not None:
+                price_conds.append(ProductVariant.price >= price_min)
+            if price_max is not None:
+                price_conds.append(ProductVariant.price <= price_max)
+            stmt = stmt.where(exists().where(*price_conds))
+
         return stmt
 
     async def get_all(
@@ -145,6 +158,8 @@ class ProductRepository(BaseIndexedRepository):
         application_codes: Optional[Union[List[str], str]] = None,
         diameter_min: Optional[float] = None,
         diameter_max: Optional[float] = None,
+        price_min: Optional[float] = None,
+        price_max: Optional[float] = None,
         is_active: Optional[bool] = None,
         skip: int = 0,
         limit: Optional[int] = None,
@@ -164,6 +179,8 @@ class ProductRepository(BaseIndexedRepository):
             application_codes=application_codes,
             diameter_min=diameter_min,
             diameter_max=diameter_max,
+            price_min=price_min,
+            price_max=price_max,
             is_active=is_active,
         )
         if skip:
@@ -184,6 +201,8 @@ class ProductRepository(BaseIndexedRepository):
         application_codes: Optional[Union[List[str], str]] = None,
         diameter_min: Optional[float] = None,
         diameter_max: Optional[float] = None,
+        price_min: Optional[float] = None,
+        price_max: Optional[float] = None,
         is_active: Optional[bool] = None,
     ) -> int:
         stmt = select(func.count(Product.id.distinct()))
@@ -197,10 +216,43 @@ class ProductRepository(BaseIndexedRepository):
             application_codes=application_codes,
             diameter_min=diameter_min,
             diameter_max=diameter_max,
+            price_min=price_min,
+            price_max=price_max,
             is_active=is_active,
         )
         result = await self.session.execute(stmt)
         return result.scalar_one() or 0
+
+    async def get_variants_aggregates(
+        self, product_ids: Sequence[int]
+    ) -> dict[int, dict]:
+        """Пакетный расчет минимальной цены, диапазона размеров и количества вариантов в SQL."""
+        if not product_ids:
+            return {}
+        stmt = (
+            select(
+                ProductVariant.product_id,
+                func.min(ProductVariant.price),
+                func.min(ProductVariant.size_value),
+                func.max(ProductVariant.size_value),
+                func.count(ProductVariant.id),
+            )
+            .where(
+                ProductVariant.product_id.in_(product_ids),
+                ProductVariant.is_active.is_(True),
+            )
+            .group_by(ProductVariant.product_id)
+        )
+        result = await self.session.execute(stmt)
+        aggregates = {}
+        for pid, min_price, min_size, max_size, cnt in result.all():
+            aggregates[pid] = {
+                "price_from": float(min_price) if min_price is not None else None,
+                "size_min": float(min_size) if min_size is not None else None,
+                "size_max": float(max_size) if max_size is not None else None,
+                "variants_count": int(cnt or 0),
+            }
+        return aggregates
 
     async def has_dependencies(self, product_id: int) -> bool:
         """

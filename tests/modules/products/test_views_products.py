@@ -289,6 +289,49 @@ class TestsForSuccess:
         assert p_thick.id not in ids_max
 
     @pytest.mark.asyncio
+    async def test_get_all_products_filter_by_price_and_aggregates(
+        self,
+        client_for_tests,
+        create_product_fixture,
+        create_rope_variant_fixture,
+    ):
+        p_cheap = await create_product_fixture()
+        p_expensive = await create_product_fixture()
+
+        await create_rope_variant_fixture(
+            CreateRopeVariantFixtureDTO(product_id=p_cheap.id, size_value=4.0, price=10.0)
+        )
+        await create_rope_variant_fixture(
+            CreateRopeVariantFixtureDTO(product_id=p_cheap.id, size_value=6.0, price=15.0)
+        )
+        await create_rope_variant_fixture(
+            CreateRopeVariantFixtureDTO(product_id=p_expensive.id, size_value=12.0, price=50.0)
+        )
+
+        # Test price_min
+        resp_min = await client_for_tests.get("/products", params={"price_min": 30.0})
+        assert resp_min.status_code == 200
+        list_min = ProductListResponseDTO.model_validate(resp_min.json())
+        ids_min = [i.id for i in list_min.items]
+        assert p_expensive.id in ids_min
+        assert p_cheap.id not in ids_min
+
+        # Test price_max
+        resp_max = await client_for_tests.get("/products", params={"price_max": 20.0})
+        assert resp_max.status_code == 200
+        list_max = ProductListResponseDTO.model_validate(resp_max.json())
+        ids_max = [i.id for i in list_max.items]
+        assert p_cheap.id in ids_max
+        assert p_expensive.id not in ids_max
+
+        # Verify SQL aggregates in response DTO
+        cheap_dto = next(i for i in list_max.items if i.id == p_cheap.id)
+        assert cheap_dto.price_from == 10.0
+        assert cheap_dto.size_min == 4.0
+        assert cheap_dto.size_max == 6.0
+        assert cheap_dto.variants_count == 2
+
+    @pytest.mark.asyncio
     async def test_get_all_products_filter_by_is_active(
         self,
         client_for_tests,

@@ -1,4 +1,4 @@
-from .models import Product, ProductTranslation, ProductType
+from .models import Product, ProductTranslation, ProductType, ProductVariant
 from .models_dto import (
     ProductCreate,
     ProductLocalizedResponseDTO,
@@ -17,6 +17,7 @@ __all__ = [
     "Product",
     "ProductTranslation",
     "ProductType",
+    "ProductVariant",
     "ProductCreate",
     "ProductUpdate",
     "ProductUpdateIndexDTO",

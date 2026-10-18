@@ -4,6 +4,7 @@ from src.modules.products.models import (
     Product,
     ProductTranslation,
     ProductType,
+    ProductVariant,
 )
 from src.modules.product_application.models import (
     ProductApplication,
@@ -14,7 +15,7 @@ from src.modules.product_specification.models import (
     ProductSpecification,
     ProductSpecificationTranslation,
 )
-from src.modules.rope_products.models import RopeConfiguratorSetting, ProductVariant
+from src.modules.rope_products.models import RopeConfiguratorSetting
 from src.modules.rope_product_color.models import ProductColor
 from src.modules.rope_allowed_splice.models import RopeAllowedSplice
 from src.modules.users.models import User

@@ -14,16 +14,13 @@ from src.modules.product_application.models import (
     ProductAssignedApplication,
 )
 from src.modules.product_specification.models import ProductSpecification
-from src.modules.products.models import Product, ProductTranslation
+from src.modules.products.models import Product, ProductTranslation, ProductVariant
 from src.modules.products.models_dto import (
     ProductBase,
     ProductTranslationInsert,
 )
 from src.modules.rope_product_color.models import ProductColor
-from src.modules.rope_products.models import (
-    ProductVariant,
-    RopeConfiguratorSetting,
-)
+from src.modules.rope_products.models import RopeConfiguratorSetting
 
 
 class ProductRepository(BaseIndexedRepository):

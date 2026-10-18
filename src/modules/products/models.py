@@ -1,9 +1,10 @@
 from datetime import datetime
 from enum import Enum
 from typing import List, Optional, TYPE_CHECKING
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Numeric, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from src.core.database.database import Base
 from src.modules.base.database_model import (
     BaseModelWithRelationshipTranslation,
     BaseTranslation,
@@ -12,7 +13,7 @@ from src.modules.base.database_model import (
 if TYPE_CHECKING:
     from src.modules.categories.models import Category
     from src.modules.product_images.models import ProductImage
-    from src.modules.rope_products.models import RopeConfiguratorSetting, ProductVariant
+    from src.modules.rope_products.models import RopeConfiguratorSetting
     from src.modules.product_specification.models import ProductSpecification
     from src.modules.product_application.models import ProductAssignedApplication
     from src.modules.rope_product_color.models import ProductColor
@@ -190,3 +191,30 @@ class ProductTranslation(BaseTranslation):
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     product: Mapped["Product"] = relationship("Product", back_populates="translations")
+
+
+class ProductVariant(Base):
+    __tablename__ = "product_variants"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    product_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False
+    )
+
+    variant_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    size_value: Mapped[Optional[float]] = mapped_column(Numeric(6, 2), nullable=True)
+
+    breaking_load_dan: Mapped[Optional[float]] = mapped_column(Numeric(10, 2), nullable=True)
+    working_load_dan: Mapped[Optional[float]] = mapped_column(Numeric(10, 2), nullable=True)
+    working_stretch_percent: Mapped[Optional[float]] = mapped_column(Numeric(5, 2), nullable=True)
+    weight_g: Mapped[Optional[float]] = mapped_column(Numeric(10, 2), nullable=True)
+
+    price: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
+    sku: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    index: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="true")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    product: Mapped["Product"] = relationship("Product", back_populates="variants")

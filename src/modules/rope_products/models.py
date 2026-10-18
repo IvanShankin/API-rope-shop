@@ -44,28 +44,5 @@ class RopeConfiguratorSetting(Base):
     splice_material: Mapped["SpliceMaterial"] = relationship("SpliceMaterial")
 
 
-class ProductVariant(Base):
-    __tablename__ = "product_variants"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    product_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False
-    )
-
-    variant_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    size_value: Mapped[Optional[float]] = mapped_column(Numeric(6, 2), nullable=True)
-
-    breaking_load_dan: Mapped[Optional[float]] = mapped_column(Numeric(10, 2), nullable=True)
-    working_load_dan: Mapped[Optional[float]] = mapped_column(Numeric(10, 2), nullable=True)
-    working_stretch_percent: Mapped[Optional[float]] = mapped_column(Numeric(5, 2), nullable=True)
-    weight_g: Mapped[Optional[float]] = mapped_column(Numeric(10, 2), nullable=True)
-
-    price: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
-    sku: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    index: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
-
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="true")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-
-    product: Mapped["Product"] = relationship("Product", back_populates="variants")
+# Re-export ProductVariant from products.models for backward compatibility
+from src.modules.products.models import ProductVariant

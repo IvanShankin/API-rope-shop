@@ -1,8 +1,9 @@
 from passlib.context import CryptContext
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.base.exception import ServiceException
-from src.modules.users.exception import UserAlreadyExit
+from src.modules.users.exception import UserAlreadyExists, UserAlreadyExit
 from src.modules.users.models_dto import UserDTO, RegisterUserRequestDTO, CreateUserDTO
 from src.modules.users.repository import UsersRepository
 
@@ -45,15 +46,22 @@ class UsersService:
         result = await self.users_repo.get_user_by_email(email)
         return UserDTO.model_validate(result) if result else None
 
+    async def get_user_by_username(self, username: str) -> UserDTO | None:
+        result = await self.users_repo.get_user_by_username(username)
+        return UserDTO.model_validate(result) if result else None
+
     async def create_user(
         self,
         new_user: RegisterUserRequestDTO
     ) -> UserDTO:
         """
-        :raises UserAlreadyExit:
+        :raises UserAlreadyExists:
         """
-        if await self.get_user_by_username_or_email(new_user.email):
-            raise UserAlreadyExit()
+        if (
+            await self.users_repo.get_user_by_email(new_user.email)
+            or await self.users_repo.get_user_by_username(new_user.username)
+        ):
+            raise UserAlreadyExists()
 
         hashed_password = self._get_hash_password(new_user.password)
 
@@ -67,11 +75,12 @@ class UsersService:
             )
             await self.session_db.commit()
             await self.session_db.refresh(result)
+        except IntegrityError as e:
+            await self.session_db.rollback()
+            raise UserAlreadyExists() from e
         except Exception as e:
-            if 'email' in str(e).lower() or 'duplicate key' in str(e).lower():
-                raise UserAlreadyExit()
-            else:
-                raise ServiceException() from e
+            await self.session_db.rollback()
+            raise ServiceException(str(e)) from e
 
         return UserDTO.model_validate(result)
 

@@ -36,5 +36,9 @@ class UsersRepository(BaseRepository):
         result_db = await self.session.execute(select(User).where(User.email == email))
         return result_db.scalar_one_or_none()
 
+    async def get_user_by_username(self, username: str) -> User | None:
+        result_db = await self.session.execute(select(User).where(User.username == username))
+        return result_db.scalar_one_or_none()
+
 
 

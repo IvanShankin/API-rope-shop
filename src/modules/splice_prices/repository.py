@@ -1,4 +1,4 @@
-from src.modules.splice_types.models import SpliceType
+from decimal import Decimal
 from typing import Optional, Sequence, Union, Any, List
 
 from sqlalchemy import select, update, delete, or_
@@ -7,6 +7,7 @@ from sqlalchemy.orm import selectinload
 
 from src.modules.base.repository_model import BaseRepository
 from src.modules.splice_prices.models import SplicePriceRule
+from src.modules.splice_types.models import SpliceType
 
 
 class SplicePriceRuleRepository(BaseRepository):
@@ -81,10 +82,10 @@ class SplicePriceRuleRepository(BaseRepository):
         material_id: int,
         type_id: int,
         diameter: float
-    ) -> float | None:
+    ) -> Decimal | None:
         """
         Универсальная функция расчета цены за конкретную услугу.
-        Возвращает цену (float) или None, если правило не найдено.
+        Возвращает цену (Decimal) или None, если правило не найдено.
         Полностью соответствует логике calculate_splice_price из configurators_logic.md.
         """
         stmt = (
@@ -111,7 +112,7 @@ class SplicePriceRuleRepository(BaseRepository):
         
         result = await self.session.execute(stmt)
         price = result.scalars().first()
-        return float(price) if price is not None else None
+        return Decimal(str(price)) if price is not None else None
 
     async def update_rule(self, rule_id: int, update_data: dict) -> None:
         """Обновление ценового правила."""

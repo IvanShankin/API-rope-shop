@@ -1,3 +1,4 @@
+from decimal import Decimal, ROUND_HALF_UP
 from enum import Enum
 from typing import List, Optional
 from datetime import datetime
@@ -119,7 +120,8 @@ class ResolvedRopeItemDTO(BaseModel):
 
     @property
     def total_cost(self) -> float:
-        return round(self.total_rope_cost + self.end_a_cost + self.end_b_cost, 2)
+        total = Decimal(str(self.total_rope_cost)) + Decimal(str(self.end_a_cost)) + Decimal(str(self.end_b_cost))
+        return float(total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
 
     @property
     def splices_count(self) -> int:

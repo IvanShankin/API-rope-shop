@@ -1,3 +1,4 @@
+from decimal import Decimal, ROUND_HALF_UP
 import enum
 from typing import List, Optional, TYPE_CHECKING
 from datetime import datetime
@@ -66,10 +67,10 @@ class QuoteRequest(Base):
         nullable=False,
         default=Currency.EUR.value,
     )
-    subtotal: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False, default=0, server_default="0")
-    urgent_surcharge: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False, default=0, server_default="0")
-    total_price: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
-    vat_rate: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False, default=0, server_default="0")
+    subtotal: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False, default=Decimal("0.00"), server_default="0")
+    urgent_surcharge: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False, default=Decimal("0.00"), server_default="0")
+    total_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    vat_rate: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False, default=Decimal("0.00"), server_default="0")
 
     is_urgent: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
     status: Mapped[QuoteRequestStatus] = mapped_column(
@@ -136,8 +137,8 @@ class QuoteRopeItem(Base):
     length_m: Mapped[float] = mapped_column(Numeric(8, 2), nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
 
-    price_per_meter_snapshot: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
-    total_rope_cost: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
+    price_per_meter_snapshot: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    total_rope_cost: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
 
     # Оснастка Конца A
     end_a_type_id: Mapped[Optional[int]] = mapped_column(
@@ -147,7 +148,7 @@ class QuoteRopeItem(Base):
     )
     end_a_name_snapshot: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     end_a_eye_size_cm: Mapped[Optional[float]] = mapped_column(Numeric(6, 2), nullable=True)
-    end_a_cost: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False, default=0, server_default="0")
+    end_a_cost: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False, default=Decimal("0.00"), server_default="0")
 
     # Оснастка Конца B
     end_b_type_id: Mapped[Optional[int]] = mapped_column(
@@ -157,7 +158,7 @@ class QuoteRopeItem(Base):
     )
     end_b_name_snapshot: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     end_b_eye_size_cm: Mapped[Optional[float]] = mapped_column(Numeric(6, 2), nullable=True)
-    end_b_cost: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False, default=0, server_default="0")
+    end_b_cost: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False, default=Decimal("0.00"), server_default="0")
 
     # Relationships
     quote_request: Mapped["QuoteRequest"] = relationship("QuoteRequest", back_populates="rope_items")
@@ -168,8 +169,8 @@ class QuoteRopeItem(Base):
 
     @property
     def total_cost(self) -> float:
-        total = float(self.total_rope_cost or 0) + float(self.end_a_cost or 0) + float(self.end_b_cost or 0)
-        return round(total, 2)
+        total = Decimal(str(self.total_rope_cost or 0)) + Decimal(str(self.end_a_cost or 0)) + Decimal(str(self.end_b_cost or 0))
+        return float(total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
 
 
 class QuoteServiceItem(Base):
@@ -202,8 +203,8 @@ class QuoteServiceItem(Base):
     eye_size_cm: Mapped[Optional[float]] = mapped_column(Numeric(6, 2), nullable=True)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
 
-    unit_price_snapshot: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
-    total_cost: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
+    unit_price_snapshot: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    total_cost: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
 
     # Relationships
     quote_request: Mapped["QuoteRequest"] = relationship("QuoteRequest", back_populates="service_items")
@@ -234,8 +235,8 @@ class QuoteExtraItem(Base):
     billing_type_snapshot: Mapped[str] = mapped_column(String(50), nullable=False)  # 'per_item', 'fixed', 'per_meter'
 
     quantity: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
-    unit_price_snapshot: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
-    total_cost: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
+    unit_price_snapshot: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    total_cost: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
 
     # Relationships
     quote_request: Mapped["QuoteRequest"] = relationship("QuoteRequest", back_populates="extra_items")

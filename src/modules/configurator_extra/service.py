@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -272,7 +273,7 @@ class ConfiguratorExtraService:
         return ConfiguratorExtraLocalizedResponseDTO(
             id=extra.id,
             code=extra.code,
-            price=float(extra.price),
+            price=float(Decimal(str(extra.price))),
             currency=extra.currency,
             billing_type=extra.billing_type,
             index=extra.index,

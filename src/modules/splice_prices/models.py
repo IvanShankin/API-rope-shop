@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import Optional, TYPE_CHECKING
 from datetime import datetime
 from sqlalchemy import  Integer, Boolean, ForeignKey, DateTime, func, Numeric
@@ -21,7 +22,7 @@ class SplicePriceRule(Base):
     diameter_from_mm: Mapped[Optional[float]] = mapped_column(Numeric(6, 2), nullable=True)
     diameter_to_mm: Mapped[Optional[float]] = mapped_column(Numeric(6, 2), nullable=True)
 
-    price: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
+    price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
 
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 

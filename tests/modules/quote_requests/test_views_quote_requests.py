@@ -367,6 +367,93 @@ class TestsForSuccess:
         dto = QuoteRequestResponseDTO.model_validate(response.json())
         assert dto.status == QuoteRequestStatus.CONFIRMED
 
+    @pytest.mark.asyncio
+    async def test_create_quote_request_decimal_precision(
+        self,
+        client_for_tests,
+        create_configurator_setting_fixture,
+        create_material_group_fixture,
+        create_splice_material_fixture,
+        create_color_fixture,
+        create_rope_product_fixture,
+        create_rope_variant_fixture,
+        create_rope_product_color_fixture,
+        create_configurator_extra_fixture,
+    ):
+        """Проверка точности финансовых расчетов с использованием Decimal (исключение погрешностей IEEE-754)."""
+        await create_configurator_setting_fixture(
+            CreateConfiguratorSettingFixtureDTO(
+                min_length_m=0.1,
+                max_length_m=200.0,
+                splice_allowance_until_mm=12.0,
+                splice_allowance_until_m=0.0,
+                splice_allowance_over_m=0.0,
+                urgent_surcharge_per_splice=0.0,
+                vat_rate=0.0,
+            )
+        )
+        group = await create_material_group_fixture()
+        splice_mat = await create_splice_material_fixture()
+        color = await create_color_fixture()
+
+        product = await create_rope_product_fixture(
+            CreateRopeProductFixtureDTO(
+                material_group_id=group.id,
+                splice_material_id=splice_mat.id,
+                can_be_spliced=True,
+            )
+        )
+        # Цена 0.10 за метр
+        await create_rope_variant_fixture(
+            CreateRopeVariantFixtureDTO(
+                product_id=product.product_id,
+                variant_name="8 мм",
+                size_value=8.0,
+                price=0.10,
+            )
+        )
+        await create_rope_product_color_fixture(
+            CreateRopeProductColorFixtureDTO(
+                product_id=product.product_id,
+                color_id=color.id,
+            )
+        )
+        # Доп. опция с ценой 0.20
+        extra = await create_configurator_extra_fixture(
+            CreateConfiguratorExtraFixtureDTO(
+                code="EXTRA_PRECISION",
+                billing_type=BillingType.FIXED,
+                price=0.20,
+            )
+        )
+
+        req_body = QuoteRequestCreate(
+            configurator_type=ConfiguratorType.ROPE_WITH_SPLICE,
+            name="Decimal Precision Test",
+            email="precision@example.com",
+            rope_items=[
+                QuoteRopeItemCreate(
+                    product_id=product.product_id,
+                    color_id=color.id,
+                    diameter_mm=8.0,
+                    length_m=1.0,
+                    quantity=1,
+                )
+            ],
+            extra_items=[
+                QuoteExtraItemCreate(extra_id=extra.id),
+            ],
+        )
+
+        response = await client_for_tests.post("/quote_requests", json=req_body.model_dump())
+        assert response.status_code == 201
+
+        dto = QuoteRequestResponseDTO.model_validate(response.json())
+        # В IEEE-754 0.1 + 0.2 = 0.30000000000000004
+        # С Decimal subtotal и total_price должны быть строго равны 0.30
+        assert dto.subtotal == 0.30
+        assert dto.total_price == 0.30
+
 
 class TestsForFailures:
 

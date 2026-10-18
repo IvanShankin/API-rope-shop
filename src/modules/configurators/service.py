@@ -262,7 +262,7 @@ class ConfiguratorService:
                 f"splice_type_id={splice_type_id}, diameter={diameter_mm}mm"
             )
         return SplicePriceCalculationResponseDTO(
-            price=price,
+            price=float(price),
             currency="EUR",
             material_id=material_id,
             splice_type_id=splice_type_id,

@@ -1,3 +1,4 @@
+from decimal import Decimal, ROUND_HALF_UP
 import logging
 from typing import List, Optional
 from datetime import datetime, timezone
@@ -245,7 +246,7 @@ class QuoteRequestService:
             lambda t: t.name, locale
         ) or color.code
 
-        price_per_meter = float(variant.price)
+        price_per_meter = Decimal(str(variant.price))
 
         end_a = await self._resolve_rope_end_splice(
             rope_product=rope_product,
@@ -263,17 +264,19 @@ class QuoteRequestService:
         )
 
         splices_count = (1 if r_item.end_a_type_id else 0) + (1 if r_item.end_b_type_id else 0)
-        allowance_m = 0.0
+        allowance_m = Decimal("0.0")
         if setting and splices_count > 0:
             allowance_per_splice = (
-                float(setting.splice_allowance_until_m)
-                if r_item.diameter_mm <= float(setting.splice_allowance_until_mm)
-                else float(setting.splice_allowance_over_m)
+                Decimal(str(setting.splice_allowance_until_m))
+                if Decimal(str(r_item.diameter_mm)) <= Decimal(str(setting.splice_allowance_until_mm))
+                else Decimal(str(setting.splice_allowance_over_m))
             )
-            allowance_m = splices_count * allowance_per_splice
+            allowance_m = Decimal(splices_count) * allowance_per_splice
 
-        effective_length = float(r_item.length_m) + allowance_m
-        total_rope_cost = round(price_per_meter * effective_length * r_item.quantity, 2)
+        effective_length = Decimal(str(r_item.length_m)) + allowance_m
+        total_rope_cost = (price_per_meter * effective_length * Decimal(r_item.quantity)).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
+        )
 
         return ResolvedRopeItemDTO(
             product_id=r_item.product_id,
@@ -283,8 +286,8 @@ class QuoteRequestService:
             diameter_mm=r_item.diameter_mm,
             length_m=r_item.length_m,
             quantity=r_item.quantity,
-            price_per_meter_snapshot=price_per_meter,
-            total_rope_cost=total_rope_cost,
+            price_per_meter_snapshot=float(price_per_meter),
+            total_rope_cost=float(total_rope_cost),
             end_a_type_id=r_item.end_a_type_id,
             end_a_name_snapshot=end_a.name_snapshot,
             end_a_eye_size_cm=r_item.end_a_eye_size_cm,
@@ -366,9 +369,12 @@ class QuoteRequestService:
         # quantity — количество готовых изделий, а не отдельных концов.
         # Стоимость выбранного типа сращивания для этого конца рассчитывается
         # с учётом количества изделий.
-        cost = round(float(unit_price) * quantity, 2)
+        unit_price_dec = Decimal(str(unit_price))
+        cost = (unit_price_dec * Decimal(quantity)).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
+        )
 
-        return ResolvedEndSpliceDTO(name_snapshot=name_snapshot, cost=cost)
+        return ResolvedEndSpliceDTO(name_snapshot=name_snapshot, cost=float(cost))
 
     async def _resolve_service_items(
         self,
@@ -415,8 +421,10 @@ class QuoteRequestService:
             lambda t: t.name, locale
         ) or splice_type.code
         material_name_snapshot = splice_material.name
-        unit_price_snapshot = float(unit_price)
-        total_cost = round(unit_price_snapshot * s_item.quantity, 2)
+        unit_price_dec = Decimal(str(unit_price))
+        total_cost = (unit_price_dec * Decimal(s_item.quantity)).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
+        )
 
         return ResolvedServiceItemDTO(
             splice_type_id=s_item.splice_type_id,
@@ -426,8 +434,8 @@ class QuoteRequestService:
             diameter_mm=s_item.diameter_mm,
             eye_size_cm=s_item.eye_size_cm,
             quantity=s_item.quantity,
-            unit_price_snapshot=unit_price_snapshot,
-            total_cost=total_cost,
+            unit_price_snapshot=float(unit_price_dec),
+            total_cost=float(total_cost),
         )
 
     async def _resolve_extra_items(
@@ -460,12 +468,12 @@ class QuoteRequestService:
             name_snapshot = extra._get_field_with_translation(
                 lambda t: t.name, locale
             ) or extra.code
-            unit_price = float(extra.price)
+            unit_price_dec = Decimal(str(extra.price))
             billing_type = extra.billing_type
 
             if billing_type == BillingType.FIXED:
                 quantity = 1
-                total_cost = round(unit_price, 2)
+                total_cost = unit_price_dec.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
             elif billing_type == BillingType.PER_ITEM:
                 if data.configurator_type == ConfiguratorType.ROPE_WITH_SPLICE:
@@ -474,24 +482,28 @@ class QuoteRequestService:
                     order_items_qty = sum(s.quantity for s in service_items)
 
                 quantity = max(1, order_items_qty)
-                total_cost = round(unit_price * quantity, 2)
+                total_cost = (unit_price_dec * Decimal(quantity)).quantize(
+                    Decimal("0.01"), rounding=ROUND_HALF_UP
+                )
 
             elif billing_type == BillingType.PER_METER:
                 if data.configurator_type != ConfiguratorType.ROPE_WITH_SPLICE:
                     raise QuoteRequestValidationError(
                         f"Extra '{extra.code}' with per-meter billing cannot be applied to {data.configurator_type.value} orders."
                     )
-                total_length = sum(float(r.length_m) * r.quantity for r in rope_items)
-                if total_length <= 0:
+                total_length_dec = sum(Decimal(str(r.length_m)) * Decimal(r.quantity) for r in rope_items)
+                if total_length_dec <= 0:
                     raise QuoteRequestValidationError(
                         f"Extra '{extra.code}' with per-meter billing requires rope items with length."
                     )
-                quantity = max(1, int(round(total_length)))
-                total_cost = round(unit_price * total_length, 2)
+                quantity = max(1, int(round(float(total_length_dec))))
+                total_cost = (unit_price_dec * total_length_dec).quantize(
+                    Decimal("0.01"), rounding=ROUND_HALF_UP
+                )
 
             else:
                 quantity = 1
-                total_cost = round(unit_price, 2)
+                total_cost = unit_price_dec.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
             resolved_extras.append(
                 ResolvedExtraItemDTO(
@@ -499,8 +511,8 @@ class QuoteRequestService:
                     name_snapshot=name_snapshot,
                     billing_type_snapshot=billing_type.value,
                     quantity=quantity,
-                    unit_price_snapshot=unit_price,
-                    total_cost=total_cost,
+                    unit_price_snapshot=float(unit_price_dec),
+                    total_cost=float(total_cost),
                 )
             )
 
@@ -515,13 +527,13 @@ class QuoteRequestService:
         setting: Optional[ConfiguratorSetting],
     ) -> QuoteRequestTotalsDTO:
         """Расчет общей стоимости заявки, включая надбавку за срочность и доп. опции."""
-        subtotal = (
-            sum(r.total_cost for r in rope_items)
-            + sum(s.total_cost for s in service_items)
-            + sum(e.total_cost for e in extra_items)
-        )
+        subtotal_dec = (
+            sum(Decimal(str(r.total_cost)) for r in rope_items)
+            + sum(Decimal(str(s.total_cost)) for s in service_items)
+            + sum(Decimal(str(e.total_cost)) for e in extra_items)
+        ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
-        urgent_surcharge = 0.0
+        urgent_surcharge_dec = Decimal("0.00")
         if is_urgent:
             # Считаем общее количество сращиваний с учётом quantity:
             # для канатных изделий учитываются обработанные концы каждого изделия,
@@ -533,14 +545,22 @@ class QuoteRequestService:
                 raise QuoteRequestValidationError(
                     f"Urgent processing exceeds maximum allowed splices ({setting.urgent_max_splices}), requested {total_splices}."
                 )
-            surcharge_rate = float(setting.urgent_surcharge_per_splice) if setting else 10.0
-            urgent_surcharge = total_splices * surcharge_rate
+            surcharge_rate_dec = (
+                Decimal(str(setting.urgent_surcharge_per_splice))
+                if setting
+                else Decimal("10.00")
+            )
+            urgent_surcharge_dec = (Decimal(total_splices) * surcharge_rate_dec).quantize(
+                Decimal("0.01"), rounding=ROUND_HALF_UP
+            )
 
-        total_price = round(subtotal + urgent_surcharge, 2)
+        total_price_dec = (subtotal_dec + urgent_surcharge_dec).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
+        )
         return QuoteRequestTotalsDTO(
-            subtotal=round(subtotal, 2),
-            urgent_surcharge=round(urgent_surcharge, 2),
-            total_price=total_price,
+            subtotal=float(subtotal_dec),
+            urgent_surcharge=float(urgent_surcharge_dec),
+            total_price=float(total_price_dec),
         )
 
     async def _save_quote_request(

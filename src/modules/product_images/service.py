@@ -134,7 +134,7 @@ class ProductImageService:
         if not update_dict:
             raise NoDataForUpdate("No data provided for update.")
 
-        if update_dict.get("is_main") is True:
+        if data.is_main:
             await self.repo.reset_main_images(
                 product_id=image.product_id,
                 exclude_image_id=image_id,

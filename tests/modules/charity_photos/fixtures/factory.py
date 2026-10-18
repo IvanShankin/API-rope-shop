@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.config import Config
 from src.modules.charity_photos.models import CharityPhoto
 from src.modules.charity_photos.models_dto import CharityPhotoResponseDTO
 from tests.helpers.functions import random_string
@@ -10,12 +11,13 @@ from tests.modules.charity_photos.fixtures.models_dto import (
 
 async def create_charity_photo_factory(
     session_db: AsyncSession,
+    config_fix: Config,
     new_photo: CreateCharityPhotoFixtureDTO = CreateCharityPhotoFixtureDTO(),
 ) -> CharityPhotoResponseDTO:
     image_url = (
         new_photo.image_url
         if new_photo.image_url is not None
-        else f"/media/charity_photos/{random_string()}.webp"
+        else f"/{config_fix.paths.media.name}/{config_fix.paths.charity_photos.name}/{random_string()}.webp"
     )
     title = new_photo.title if new_photo.title is not None else f"Charity {random_string()}"
     description = (

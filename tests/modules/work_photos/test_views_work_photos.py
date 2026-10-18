@@ -124,6 +124,7 @@ class TestsForSuccess:
     @pytest.mark.asyncio
     async def test_upload_work_photo_file(
         self,
+        config_fix,
         client_for_tests,
         create_user_fixture,
         create_image_bytes_fixture,
@@ -146,7 +147,7 @@ class TestsForSuccess:
         resp_dto = WorkPhotoResponseDTO.model_validate(response.json())
         assert resp_dto.title == "Uploaded Work"
         assert resp_dto.description == "Desc"
-        assert resp_dto.image_url.startswith("/media/work_photos/")
+        assert resp_dto.image_url.startswith(f"/{config_fix.paths.media.name}/{config_fix.paths.work_photos.name}")
         assert resp_dto.image_url.endswith(".webp")
 
         db_obj = await session_db.scalar(
@@ -158,6 +159,7 @@ class TestsForSuccess:
     @pytest.mark.asyncio
     async def test_upload_image_for_existing_work_photo(
         self,
+        config_fix,
         client_for_tests,
         create_user_fixture,
         create_work_photo_fixture,
@@ -180,7 +182,7 @@ class TestsForSuccess:
 
         resp_dto = WorkPhotoResponseDTO.model_validate(response.json())
         assert resp_dto.id == photo.id
-        assert resp_dto.image_url.startswith("/media/work_photos/")
+        assert resp_dto.image_url.startswith(f"/{config_fix.paths.media.name}/{config_fix.paths.work_photos.name}")
         assert resp_dto.image_url.endswith(".webp")
 
     @pytest.mark.asyncio

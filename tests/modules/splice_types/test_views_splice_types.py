@@ -269,10 +269,10 @@ class TestsForSuccess:
 
         uploaded_dto = SpliceTypeResponseDTO.model_validate(response_upload.json())
         assert uploaded_dto.image_url is not None
-        assert uploaded_dto.image_url.startswith("/media/")
+        assert uploaded_dto.image_url.startswith(f"/{config_fix.paths.media.name}/")
 
         # Проверяем наличие файла на диске
-        rel_path = uploaded_dto.image_url.removeprefix("/media/")
+        rel_path = uploaded_dto.image_url.removeprefix(f"/{config_fix.paths.media.name}/")
         saved_file = config_fix.paths.media / rel_path
         assert saved_file.exists()
 

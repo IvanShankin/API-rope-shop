@@ -70,7 +70,7 @@ class ImageManager:
         media_root = self.config.paths.media.resolve()
         try:
             rel_path = path.relative_to(media_root)
-            return f"/media/{rel_path.as_posix()}"
+            return f"/{self.config.paths.media.name}/{rel_path.as_posix()}"
         except ValueError:
             return path.as_posix()
 
@@ -83,8 +83,8 @@ class ImageManager:
 
         # Если передан URL вида /media/..., переводим в путь на диске
         path_str = str(file_path)
-        if path_str.startswith("/media/"):
-            rel_part = path_str.removeprefix("/media/")
+        if path_str.startswith(f"/{self.config.paths.media.name}/"):
+            rel_part = path_str.removeprefix(f"/{self.config.paths.media.name}/")
             target_path = (self.config.paths.media / rel_part).resolve()
         else:
             target_path = Path(file_path).resolve()

@@ -10,12 +10,12 @@ from src.core.config.base import init_env
 
 
 class Config:
-    def __init__(self) -> None:
+    def __init__(self, postscript_for_paths: Optional[str] = '') -> None:
         init_env()
 
         self.env: EnvConfig = EnvConfig.build()
         self.db_connection: DbConnectionConfig = DbConnectionConfig.build(self.env)
-        self.paths: PathsConfig = PathsConfig.build()
+        self.paths: PathsConfig = PathsConfig.build(postscript_for_paths)
         self.tokens: TokensConfig = TokensConfig.build()
         self.allowed_extensions: AllowedExtensions = AllowedExtensions.build()
         self.cors: CorsConfig = CorsConfig.build()
@@ -90,7 +90,7 @@ class PathsConfig(BaseModel):
     @classmethod
     def build(cls, postscript: Optional[str] = '') -> "PathsConfig":
         base = Path(__file__).resolve().parents[3]
-        media = base / Path("media")
+        media = base / Path(f"media{postscript}")
         products = media / Path(f"products{postscript}")
         categories = media / Path(f"categories{postscript}")
         splice_types = media / Path(f"splice_types{postscript}")

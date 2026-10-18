@@ -1,6 +1,7 @@
 import pytest
 from sqlalchemy import select
 
+from src.core.config import Config
 from src.modules.product_images.models import ProductImage
 from src.modules.product_images.models_dto import (
     ProductImageCreate,
@@ -13,7 +14,6 @@ from tests.helpers.functions import comparison_models
 from tests.modules.product_images.fixtures.models_dto import (
     CreateProductImageFixtureDTO,
 )
-from tests.modules.products.fixtures.models_dto import CreateProductFixtureDTO
 from tests.modules.users.fixtures.models_dto import CreateUserFixtureDTO
 
 
@@ -25,13 +25,14 @@ class TestsForSuccess:
         client_for_tests,
         create_product_fixture,
         create_product_image_fixture,
+        config_fix: Config,
     ):
         """Получение списка изображений товара с фильтрацией по умолчанию."""
         product = await create_product_fixture()
         img_1 = await create_product_image_fixture(
             CreateProductImageFixtureDTO(
                 product_id=product.id,
-                image_url="/media/products/1/img1.webp",
+                image_url=f"/{config_fix.paths.media.name}/{config_fix.paths.products.name}/1/img1.webp",
                 is_main=True,
                 index=0,
                 is_active=True,
@@ -40,7 +41,7 @@ class TestsForSuccess:
         img_2 = await create_product_image_fixture(
             CreateProductImageFixtureDTO(
                 product_id=product.id,
-                image_url="/media/products/1/img2.webp",
+                image_url=f"/{config_fix.paths.media.name}/{config_fix.paths.products.name}/1/img2.webp",
                 is_main=False,
                 index=1,
                 is_active=True,
@@ -115,6 +116,7 @@ class TestsForSuccess:
         client_for_tests,
         create_user_fixture,
         create_product_fixture,
+        config_fix: Config,
     ):
         """Создание первого изображения товара через JSON (автоматически становится is_main=True)."""
         admin_user, access_token = await create_user_fixture(
@@ -124,7 +126,7 @@ class TestsForSuccess:
 
         create_data = ProductImageCreate(
             product_id=product.id,
-            image_url="/media/products/1/test_img.webp",
+            image_url=f"/{config_fix.paths.media.name}/{config_fix.paths.products.name}/1/test_img.webp",
             is_main=False,  # Первое изображение должно автоматически стать main
             index=None,
             is_active=True,
@@ -139,7 +141,7 @@ class TestsForSuccess:
 
         resp_dto = ProductImageResponseDTO.model_validate(response.json())
         assert resp_dto.product_id == product.id
-        assert resp_dto.image_url == "/media/products/1/test_img.webp"
+        assert resp_dto.image_url == f"/{config_fix.paths.media.name}/{config_fix.paths.products.name}/1/test_img.webp"
         assert resp_dto.is_main is True
         assert resp_dto.index == 1
         assert resp_dto.is_active is True
@@ -157,6 +159,7 @@ class TestsForSuccess:
         create_user_fixture,
         create_product_fixture,
         create_product_image_fixture,
+        config_fix: Config,
     ):
         """Создание второго изображения товара получает index = max_index + 1 и is_main=False."""
         admin_user, access_token = await create_user_fixture(
@@ -173,7 +176,7 @@ class TestsForSuccess:
 
         create_data = ProductImageCreate(
             product_id=product.id,
-            image_url="/media/products/1/second_img.webp",
+            image_url=f"/{config_fix.paths.media.name}/{config_fix.paths.products.name}/1/second_img.webp",
             is_main=False,
             index=None,
             is_active=True,
@@ -218,9 +221,9 @@ class TestsForSuccess:
         resp_dto = ProductImageResponseDTO.model_validate(response.json())
         assert resp_dto.product_id == product.id
         assert resp_dto.is_main is True
-        assert resp_dto.image_url.startswith("/media/")
+        assert resp_dto.image_url.startswith(f"/{config_fix.paths.media.name}/")
 
-        rel_path = resp_dto.image_url.removeprefix("/media/")
+        rel_path = resp_dto.image_url.removeprefix(f"/{config_fix.paths.media.name}/")
         saved_file = config_fix.paths.media / rel_path
         assert saved_file.exists()
 
@@ -236,6 +239,7 @@ class TestsForSuccess:
         client_for_tests,
         create_user_fixture,
         create_product_image_fixture,
+        config_fix: Config,
     ):
         """Обновление атрибутов изображения."""
         admin_user, access_token = await create_user_fixture(
@@ -247,7 +251,7 @@ class TestsForSuccess:
 
         update_data = ProductImageUpdate(
             is_active=False,
-            image_url="/media/products/1/updated.webp",
+            image_url=f"/{config_fix.paths.media.name}/{config_fix.paths.products.name}/1/updated.webp",
         )
 
         response = await client_for_tests.patch(
@@ -259,13 +263,13 @@ class TestsForSuccess:
 
         resp_dto = ProductImageResponseDTO.model_validate(response.json())
         assert resp_dto.is_active is False
-        assert resp_dto.image_url == "/media/products/1/updated.webp"
+        assert resp_dto.image_url == f"/{config_fix.paths.media.name}/{config_fix.paths.products.name}/1/updated.webp"
 
         session_db.expire_all()
         res = await session_db.execute(select(ProductImage).where(ProductImage.id == image.id))
         db_img = res.scalar_one_or_none()
         assert db_img.is_active is False
-        assert db_img.image_url == "/media/products/1/updated.webp"
+        assert db_img.image_url == f"/{config_fix.paths.media.name}/{config_fix.paths.products.name}/1/updated.webp"
 
     @pytest.mark.asyncio
     async def test_set_main_product_image(
@@ -413,7 +417,7 @@ class TestsForSuccess:
         assert upload_res.status_code == 201
         dto = ProductImageResponseDTO.model_validate(upload_res.json())
 
-        rel_path = dto.image_url.removeprefix("/media/")
+        rel_path = dto.image_url.removeprefix(f"/{config_fix.paths.media.name}/")
         saved_file = config_fix.paths.media / rel_path
         assert saved_file.exists()
 

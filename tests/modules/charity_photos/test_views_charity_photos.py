@@ -1,6 +1,7 @@
 import pytest
 from sqlalchemy import select
 
+from src.core.config import Config
 from src.modules.charity_photos.models import CharityPhoto
 from src.modules.charity_photos.models_dto import (
     CharityPhotoResponseDTO,
@@ -83,6 +84,7 @@ class TestsForSuccess:
         client_for_tests,
         create_user_fixture,
         session_db,
+        config_fix: Config,
     ):
         """Создание благотворительного фото через JSON (админ)."""
         _, access_token = await create_user_fixture(
@@ -90,7 +92,7 @@ class TestsForSuccess:
         )
 
         create_dto = CreateCharityPhotoRequestDTO(
-            image_url="/media/charity_photos/test.webp",
+            image_url=f"/{config_fix.paths.media.name}/{config_fix.paths.charity_photos.name}/test.webp",
             title="Charity Event",
             description="Helping shelter",
             index=0,
@@ -124,6 +126,7 @@ class TestsForSuccess:
     @pytest.mark.asyncio
     async def test_upload_charity_photo_file(
         self,
+        config_fix,
         client_for_tests,
         create_user_fixture,
         create_image_bytes_fixture,
@@ -146,7 +149,7 @@ class TestsForSuccess:
         resp_dto = CharityPhotoResponseDTO.model_validate(response.json())
         assert resp_dto.title == "Uploaded Charity"
         assert resp_dto.description == "Good deed"
-        assert resp_dto.image_url.startswith("/media/charity_photos/")
+        assert resp_dto.image_url.startswith(f"/{config_fix.paths.media.name}/{config_fix.paths.charity_photos.name}")
         assert resp_dto.image_url.endswith(".webp")
 
         db_obj = await session_db.scalar(
@@ -158,6 +161,7 @@ class TestsForSuccess:
     @pytest.mark.asyncio
     async def test_upload_image_for_existing_charity_photo(
         self,
+        config_fix,
         client_for_tests,
         create_user_fixture,
         create_charity_photo_fixture,
@@ -180,7 +184,7 @@ class TestsForSuccess:
 
         resp_dto = CharityPhotoResponseDTO.model_validate(response.json())
         assert resp_dto.id == photo.id
-        assert resp_dto.image_url.startswith("/media/charity_photos/")
+        assert resp_dto.image_url.startswith(f"/{config_fix.paths.media.name}/{config_fix.paths.charity_photos.name}")
         assert resp_dto.image_url.endswith(".webp")
 
     @pytest.mark.asyncio

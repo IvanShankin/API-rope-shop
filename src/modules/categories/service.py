@@ -111,10 +111,15 @@ class CategoryService:
         )
         total = await self.category_repo.count_all(is_active=is_active)
 
-        items: List[CategoryLocalizedResponseDTO] = []
-        for cat in categories:
-            count = await self.category_repo.get_products_count(cat.id)
-            items.append(self._to_localized_dto(cat, locale, count))
+        cat_ids = [cat.id for cat in categories]
+        counts_map = await self.category_repo.get_products_counts_for_categories(
+            cat_ids, is_active=True
+        )
+
+        items: List[CategoryLocalizedResponseDTO] = [
+            self._to_localized_dto(cat, locale, counts_map.get(cat.id, 0))
+            for cat in categories
+        ]
 
         return CategoryListResponseDTO(
             items=items,
@@ -129,7 +134,7 @@ class CategoryService:
         if not category:
             raise CategoryNotFound(f"Category with id {category_id} not found.")
         dto = CategoryResponseDTO.model_validate(category)
-        dto.products_count = await self.category_repo.get_products_count(category_id)
+        dto.products_count = await self.category_repo.get_products_count(category_id, is_active=True)
         return dto
 
     async def get_category_by_slug(self, slug: str) -> CategoryResponseDTO:
@@ -138,7 +143,7 @@ class CategoryService:
         if not category:
             raise CategoryNotFound(f"Category with slug '{slug}' not found.")
         dto = CategoryResponseDTO.model_validate(category)
-        dto.products_count = await self.category_repo.get_products_count(category.id)
+        dto.products_count = await self.category_repo.get_products_count(category.id, is_active=True)
         return dto
 
     async def update_category(

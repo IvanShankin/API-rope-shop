@@ -82,12 +82,31 @@ class CategoryRepository(BaseIndexedRepository):
         result = await self.session.scalar(stmt)
         return bool(result)
 
-    async def get_products_count(self, category_id: int) -> int:
-        """Подсчет количества активных товаров в категории."""
+    async def get_products_count(self, category_id: int, is_active: bool = True) -> int:
+        """Подсчет количества товаров в категории (по умолчанию только активных)."""
         from src.modules.products.models import Product
         stmt = select(func.count(Product.id)).where(Product.category_id == category_id)
+        if is_active:
+            stmt = stmt.where(Product.is_active.is_(True))
         result = await self.session.scalar(stmt)
         return int(result or 0)
+
+    async def get_products_counts_for_categories(
+        self, category_ids: Sequence[int], is_active: bool = True
+    ) -> dict[int, int]:
+        """Пакетный подсчет количества товаров для нескольких категорий за один SQL-запрос."""
+        if not category_ids:
+            return {}
+        from src.modules.products.models import Product
+        stmt = (
+            select(Product.category_id, func.count(Product.id))
+            .where(Product.category_id.in_(category_ids))
+        )
+        if is_active:
+            stmt = stmt.where(Product.is_active.is_(True))
+        stmt = stmt.group_by(Product.category_id)
+        result = await self.session.execute(stmt)
+        return {cat_id: count for cat_id, count in result.all()}
 
     async def update_category(self, category_id: int, update_data: dict) -> None:
         """Обновление характеристик категории."""

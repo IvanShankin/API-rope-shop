@@ -87,22 +87,31 @@ class SplicePriceRuleRepository(BaseRepository):
         Возвращает цену (float) или None, если правило не найдено.
         Полностью соответствует логике calculate_splice_price из configurators_logic.md.
         """
-        stmt = select(SplicePriceRule.price).where(
-            SplicePriceRule.splice_material_id == material_id,
-            SplicePriceRule.splice_type_id == type_id,
-            SplicePriceRule.is_active == True,
-            or_(
-                SplicePriceRule.diameter_from_mm.is_(None),
-                SplicePriceRule.diameter_from_mm <= diameter
-            ),
-            or_(
-                SplicePriceRule.diameter_to_mm.is_(None),
-                SplicePriceRule.diameter_to_mm >= diameter
+        stmt = (
+            select(SplicePriceRule.price)
+            .where(
+                SplicePriceRule.splice_material_id == material_id,
+                SplicePriceRule.splice_type_id == type_id,
+                SplicePriceRule.is_active == True,
+                or_(
+                    SplicePriceRule.diameter_from_mm.is_(None),
+                    SplicePriceRule.diameter_from_mm <= diameter
+                ),
+                or_(
+                    SplicePriceRule.diameter_to_mm.is_(None),
+                    SplicePriceRule.diameter_to_mm >= diameter
+                )
             )
+            .order_by(
+                SplicePriceRule.diameter_from_mm.desc().nullslast(),
+                SplicePriceRule.id.desc()
+            )
+            .limit(1)
         )
         
         result = await self.session.execute(stmt)
-        return result.scalar_one_or_none()
+        price = result.scalars().first()
+        return float(price) if price is not None else None
 
     async def update_rule(self, rule_id: int, update_data: dict) -> None:
         """Обновление ценового правила."""

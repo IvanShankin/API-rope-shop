@@ -48,8 +48,10 @@ from src.modules.work_photos.views import router as work_photos_router
 from src.modules.charity_photos.views import router as charity_photos_router
 from src.modules.reviews.views import router as reviews_router
 from src.modules.content_blocks.views import router as content_blocks_router
+from src.modules.contact_requests.views import router as contact_requests_router
 from src.tools.init_admin import init_admin
 from src.tools.init_configurator_setting import init_configurator_setting
+from src.tools.init_contact_request import init_contact_request
 
 
 def _include_middlewares(app: FastAPI, config: Config) -> FastAPI:
@@ -91,6 +93,7 @@ def _include_routers(app: FastAPI) -> FastAPI:
     app.include_router(charity_photos_router)
     app.include_router(reviews_router)
     app.include_router(content_blocks_router)
+    app.include_router(contact_requests_router)
     return app
 
 def init_fastapi_app() -> FastAPI:
@@ -131,5 +134,6 @@ async def lifespan(app: FastAPI):
         config=config,
         cr_context=app.state.cr_context,
     )
+    await init_contact_request(config=config)
 
     yield

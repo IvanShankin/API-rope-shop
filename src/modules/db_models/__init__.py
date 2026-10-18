@@ -41,6 +41,7 @@ from src.modules.content_blocks.models import (
     ContentBlock,
     ContentBlockTranslation,
 )
+from src.modules.contact_requests.models import ContactRequest
 
 __all__ = [
     "User",
@@ -85,4 +86,5 @@ __all__ = [
     "ReviewTranslation",
     "ContentBlock",
     "ContentBlockTranslation",
+    "ContactRequest",
 ]

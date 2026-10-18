@@ -46,6 +46,7 @@ from src.modules.splice_types.views import router as splice_types_router
 from src.modules.users.views import router as user_router
 from src.modules.work_photos.views import router as work_photos_router
 from src.modules.charity_photos.views import router as charity_photos_router
+from src.modules.reviews.views import router as reviews_router
 from src.tools.init_admin import init_admin
 from src.tools.init_configurator_setting import init_configurator_setting
 
@@ -87,6 +88,7 @@ def _include_routers(app: FastAPI) -> FastAPI:
     app.include_router(product_applications_router)
     app.include_router(work_photos_router)
     app.include_router(charity_photos_router)
+    app.include_router(reviews_router)
     return app
 
 def init_fastapi_app() -> FastAPI:

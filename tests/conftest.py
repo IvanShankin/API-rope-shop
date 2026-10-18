@@ -37,6 +37,8 @@ from src.modules.db_models import (
     ConfiguratorSetting,
     WorkPhoto,
     CharityPhoto,
+    Review,
+    ReviewTranslation,
 )
 from src.tools.creating_db import create_database
 
@@ -58,6 +60,8 @@ async def clearing_db(session_db: AsyncSession):
     # Удаляем обязательно в таком порядке
     await session_db.execute(delete(WorkPhoto))
     await session_db.execute(delete(CharityPhoto))
+    await session_db.execute(delete(ReviewTranslation))
+    await session_db.execute(delete(Review))
     await session_db.execute(delete(QuoteRopeItem))
     await session_db.execute(delete(QuoteServiceItem))
     await session_db.execute(delete(QuoteExtraItem))

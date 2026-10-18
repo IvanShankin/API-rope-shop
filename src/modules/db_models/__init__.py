@@ -36,6 +36,7 @@ from src.modules.quote_requests.models import (
 )
 from src.modules.work_photos.models import WorkPhoto
 from src.modules.charity_photos.models import CharityPhoto
+from src.modules.reviews.models import Review, ReviewTranslation
 
 __all__ = [
     "User",
@@ -76,4 +77,6 @@ __all__ = [
     "quote_request_number_seq",
     "WorkPhoto",
     "CharityPhoto",
+    "Review",
+    "ReviewTranslation",
 ]

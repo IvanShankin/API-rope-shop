@@ -1,7 +1,10 @@
+import logging
 from typing import List, Optional
 from datetime import datetime, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
+
+logger = logging.getLogger(__name__)
 
 from src.modules.base.database_model import Language
 from src.modules.base.exception import NoDataForUpdate, ServiceException
@@ -143,9 +146,10 @@ class QuoteRequestService:
                 extra_items=resolved_extra_items,
             )
             await self.session.commit()
-        except:
+        except Exception as err:
             await self.session.rollback()
-            raise ServiceException()
+            logger.exception("Failed to save quote request: %s", err)
+            raise ServiceException(f"Failed to create quote request: {err}") from err
 
         loaded = await self.quote_repo.get_by_id(quote_id, include_relations=True)
         return QuoteRequestResponseDTO.model_validate(loaded)

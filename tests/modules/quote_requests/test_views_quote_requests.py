@@ -299,8 +299,11 @@ class TestsForSuccess:
             )
         )
 
-        # 1. Публичное получение по уникальному номеру
-        res_by_num = await client_for_tests.get("/quote_requests/number/RPL-2026-9999")
+        # 1. Получение по уникальному номеру
+        res_by_num = await client_for_tests.get(
+            "/quote_requests/number/RPL-2026-9999",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
         assert res_by_num.status_code == 200
         dto_num = QuoteRequestResponseDTO.model_validate(res_by_num.json())
         assert dto_num.id == quote.id
@@ -722,7 +725,12 @@ class TestsForFailures:
     async def test_get_quote_request_by_number_not_found(
         self,
         client_for_tests,
+        create_user_fixture,
     ):
         """Запрос несуществующего номера заявки -> 404."""
-        response = await client_for_tests.get("/quote_requests/number/NON-EXISTENT-NUM")
+        admin_user, access_token = await create_user_fixture(CreateUserFixtureDTO(role=UserRole.ADMIN))
+        response = await client_for_tests.get(
+            "/quote_requests/number/NON-EXISTENT-NUM",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
         assert response.status_code == 404

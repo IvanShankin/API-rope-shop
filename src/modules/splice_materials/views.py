@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List
 from fastapi import APIRouter, Depends, Query
 from starlette import status
 
@@ -6,7 +6,6 @@ from src.modules.check_permission.depends import get_current_admin
 from src.modules.users.models_dto import UserDTO
 from src.modules.splice_materials.models_dto import (
     SpliceMaterialResponseDTO,
-    SpliceMaterialWithRulesResponseDTO,
     SpliceMaterialCreate,
     SpliceMaterialUpdate
 )
@@ -18,27 +17,27 @@ router = APIRouter(prefix="/splice_materials", tags=["Splice Materials"])
 
 @router.get(
     "", 
-    response_model=List[Union[SpliceMaterialWithRulesResponseDTO, SpliceMaterialResponseDTO]], 
+    response_model=List[SpliceMaterialResponseDTO], 
     status_code=status.HTTP_200_OK
 )
 async def get_all_splice_materials(
     include_rules: bool = Query(False, description="Include nested price rules in the response"),
     service: SpliceMaterialService = Depends(get_splice_material_service)
-):
+) -> List[SpliceMaterialResponseDTO]:
     """Get all splice materials (public)."""
     return await service.get_all_materials(include_rules=include_rules)
 
 
 @router.get(
     "/{material_id}", 
-    response_model=Union[SpliceMaterialWithRulesResponseDTO, SpliceMaterialResponseDTO], 
+    response_model=SpliceMaterialResponseDTO, 
     status_code=status.HTTP_200_OK
 )
 async def get_splice_material(
     material_id: int,
     include_rules: bool = Query(False, description="Include nested price rules in the response"),
     service: SpliceMaterialService = Depends(get_splice_material_service)
-):
+) -> SpliceMaterialResponseDTO:
     """Get splice material by ID (public)."""
     return await service.get_material_by_id(material_id, include_rules=include_rules)
 

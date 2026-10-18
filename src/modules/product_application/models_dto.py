@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional
 from pydantic import BaseModel, Field
 
 from src.modules.base.database_model import Language
@@ -64,6 +64,7 @@ class ProductApplicationUpdateIndexDTO(BaseModel):
 
 class ProductApplicationResponseDTO(ProductApplicationBase, ORMDTO):
     id: int
+    name: Optional[str] = Field(None, description="Localized name when locale requested")
     translations: List[ProductApplicationTranslationResponseDTO] = []
 
 
@@ -85,4 +86,4 @@ class AssignApplicationToProductDTO(BaseModel):
 class ProductAssignedApplicationResponseDTO(ORMDTO):
     product_id: int
     application_id: int
-    application: Optional[Union[ProductApplicationResponseDTO, ProductApplicationLocalizedResponseDTO]] = None
+    application: Optional[ProductApplicationResponseDTO] = None

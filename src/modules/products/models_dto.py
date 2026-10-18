@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -198,10 +198,10 @@ class ProductDetailResponseDTO(ORMDTO):
 
     translations: List[ProductTranslationResponseDTO] = []
     images: List[ProductImageResponseDTO] = []
-    specifications: List[Any] = []
+    specifications: List[Union[ProductSpecificationLocalizedResponseDTO, ProductSpecificationResponseDTO]] = []
     assigned_applications: List[ProductAssignedApplicationResponseDTO] = []
-    applications: List[Any] = []
+    applications: List[Union[ProductApplicationLocalizedResponseDTO, ProductApplicationResponseDTO]] = []
     variants: List[ProductVariantResponseDTO] = []
-    colors: List[Any] = []
+    colors: List[Union[ProductColorLocalizedResponseDTO, ProductColorResponseDTO]] = []
     created_at: datetime
     updated_at: datetime

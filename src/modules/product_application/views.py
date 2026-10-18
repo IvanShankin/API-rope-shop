@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional
 from fastapi import APIRouter, Depends, Query, status
 
 from src.modules.base.database_model import Language
@@ -27,10 +27,10 @@ router = APIRouter(prefix="/product_applications", tags=["Product Applications"]
 
 @router.get(
     "",
-    response_model=Union[List[ProductApplicationLocalizedResponseDTO], List[ProductApplicationResponseDTO]],
+    response_model=List[ProductApplicationResponseDTO],
     status_code=status.HTTP_200_OK,
     summary="Get all applications",
-    description="Get all product applications directory (public). If locale is passed, returns localized flat items, otherwise returns full models with all translations.",
+    description="Get all product applications directory (public). If locale is passed, returns localized items with name filled, otherwise returns full models with all translations.",
 )
 async def get_all_applications(
     locale: Optional[Language] = Query(None, description="Language for translation localization"),
@@ -38,7 +38,7 @@ async def get_all_applications(
     skip: int = Query(0, ge=0, description="Offset"),
     limit: Optional[int] = Query(None, ge=1, description="Limit"),
     service: ProductApplicationService = Depends(get_product_application_service),
-):
+) -> List[ProductApplicationResponseDTO]:
     return await service.get_all_applications(
         locale=locale,
         is_active=is_active,

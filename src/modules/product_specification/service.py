@@ -230,23 +230,24 @@ class ProductSpecificationService:
 
     async def get_by_product_id(
         self, product_id: int, locale: Optional[Language] = None
-    ) -> Union[List[ProductSpecificationLocalizedResponseDTO], List[ProductSpecificationResponseDTO]]:
+    ) -> List[ProductSpecificationResponseDTO]:
         """Получение всех характеристик товара (с локализацией или с полным списком переводов)."""
         await self._validate_product_exists(product_id)
         specs = await self.spec_repo.get_by_product_id(product_id)
 
         if locale is not None:
-            result_localized: List[ProductSpecificationLocalizedResponseDTO] = []
+            result_localized: List[ProductSpecificationResponseDTO] = []
             for s in specs:
                 name = s._get_field_with_translation(lambda t: t.name, locale) or ""
                 value = s._get_field_with_translation(lambda t: t.value, locale) or ""
                 result_localized.append(
-                    ProductSpecificationLocalizedResponseDTO(
+                    ProductSpecificationResponseDTO(
                         id=s.id,
                         product_id=s.product_id,
                         index=s.index,
                         name=name,
                         value=value,
+                        translations=[],
                     )
                 )
             return result_localized

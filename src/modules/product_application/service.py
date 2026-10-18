@@ -61,21 +61,22 @@ class ProductApplicationService:
         is_active: Optional[bool] = None,
         skip: int = 0,
         limit: Optional[int] = None,
-    ) -> Union[List[ProductApplicationLocalizedResponseDTO], List[ProductApplicationResponseDTO]]:
+    ) -> List[ProductApplicationResponseDTO]:
         """Получение списка всех назначений (локализованных или со всеми переводами)."""
         apps = await self.app_repo.get_all(is_active=is_active, skip=skip, limit=limit)
 
         if locale is not None:
-            result_localized: List[ProductApplicationLocalizedResponseDTO] = []
+            result_localized: List[ProductApplicationResponseDTO] = []
             for app in apps:
                 name = app._get_field_with_translation(lambda t: t.name, locale) or ""
                 result_localized.append(
-                    ProductApplicationLocalizedResponseDTO(
+                    ProductApplicationResponseDTO(
                         id=app.id,
                         code=app.code,
                         index=app.index,
                         is_active=app.is_active,
                         name=name,
+                        translations=[],
                     )
                 )
             return result_localized

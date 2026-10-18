@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional
 from fastapi import APIRouter, Depends, Query, status
 
 from src.modules.base.database_model import Language
@@ -30,7 +30,7 @@ router = APIRouter(prefix="/product_specifications", tags=["Product Specificatio
 
 @router.get(
     "/by-product/{product_id}",
-    response_model=Union[List[ProductSpecificationLocalizedResponseDTO], List[ProductSpecificationResponseDTO]],
+    response_model=List[ProductSpecificationResponseDTO],
     status_code=status.HTTP_200_OK,
     summary="Get product specifications",
     description="Get all specifications for a product ordered by index (public).",
@@ -39,7 +39,7 @@ async def get_specifications_by_product(
     product_id: int,
     locale: Optional[Language] = Query(None, description="Language for translation localization"),
     service: ProductSpecificationService = Depends(get_product_specification_service),
-):
+) -> List[ProductSpecificationResponseDTO]:
     return await service.get_by_product_id(product_id=product_id, locale=locale)
 
 

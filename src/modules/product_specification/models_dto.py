@@ -117,6 +117,8 @@ class ProductSpecificationResponseDTO(ORMDTO):
     id: int
     product_id: int
     index: int
+    name: Optional[str] = Field(None, description="Localized name when locale requested")
+    value: Optional[str] = Field(None, description="Localized value when locale requested")
     translations: List[ProductSpecificationTranslationResponseDTO] = []
 
 

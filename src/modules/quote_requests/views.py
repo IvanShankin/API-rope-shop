@@ -93,6 +93,7 @@ async def list_quote_requests(
 async def get_quote_request_by_number(
     request_number: str,
     service: QuoteRequestService = Depends(get_quote_request_service),
+    admin: UserDTO = Depends(get_current_admin),
 ):
     """Get quote request details by business request number (public)."""
     return await service.get_by_request_number(request_number=request_number)

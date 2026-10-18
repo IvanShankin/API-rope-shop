@@ -1,8 +1,8 @@
 """initial_schema
 
-Revision ID: 1d25b140846e
+Revision ID: 0dce8c11fec5
 Revises: 
-Create Date: 2026-10-18 22:41:34.592637
+Create Date: 2026-10-19 00:45:19.145521
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '1d25b140846e'
+revision: str = '0dce8c11fec5'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -35,10 +35,8 @@ def upgrade() -> None:
     op.create_table('charity_photos',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('image_url', sa.String(length=500), nullable=False),
-    sa.Column('title', sa.String(length=255), nullable=True),
-    sa.Column('description', sa.Text(), nullable=True),
-    sa.Column('index', sa.Integer(), nullable=False),
-    sa.Column('is_active', sa.Boolean(), nullable=False),
+    sa.Column('index', sa.Integer(), server_default='0', nullable=False),
+    sa.Column('is_active', sa.Boolean(), server_default='true', nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.PrimaryKeyConstraint('id')
@@ -127,6 +125,8 @@ def upgrade() -> None:
     sa.Column('phone', sa.String(length=100), nullable=True),
     sa.Column('comment', sa.Text(), nullable=True),
     sa.Column('currency', sa.Enum('EUR', name='currency', native_enum=False, length=50), nullable=False),
+    sa.Column('subtotal', sa.Numeric(precision=10, scale=2), server_default='0', nullable=False),
+    sa.Column('urgent_surcharge', sa.Numeric(precision=10, scale=2), server_default='0', nullable=False),
     sa.Column('total_price', sa.Numeric(precision=10, scale=2), nullable=False),
     sa.Column('vat_rate', sa.Numeric(precision=5, scale=2), server_default='0', nullable=False),
     sa.Column('is_urgent', sa.Boolean(), server_default='false', nullable=False),
@@ -183,10 +183,8 @@ def upgrade() -> None:
     op.create_table('work_photos',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('image_url', sa.String(length=500), nullable=False),
-    sa.Column('title', sa.String(length=255), nullable=True),
-    sa.Column('description', sa.Text(), nullable=True),
-    sa.Column('index', sa.Integer(), nullable=False),
-    sa.Column('is_active', sa.Boolean(), nullable=False),
+    sa.Column('index', sa.Integer(), server_default='0', nullable=False),
+    sa.Column('is_active', sa.Boolean(), server_default='true', nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.PrimaryKeyConstraint('id')
@@ -200,6 +198,16 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['category_id'], ['categories.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('category_id', 'locale', name='uq_category_id_locale')
+    )
+    op.create_table('charity_photo_translations',
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('charity_photo_id', sa.Integer(), nullable=False),
+    sa.Column('title', sa.String(length=255), nullable=True),
+    sa.Column('description', sa.Text(), nullable=True),
+    sa.Column('locale', sa.Enum('rus', 'eng', 'ger', name='locale', native_enum=False, length=10), nullable=False),
+    sa.ForeignKeyConstraint(['charity_photo_id'], ['charity_photos.id'], ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('charity_photo_id', 'locale', name='uq_charity_photo_id_locale')
     )
     op.create_table('color_translations',
     sa.Column('color_id', sa.Integer(), nullable=False),
@@ -348,6 +356,16 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('splice_type_id', 'locale', name='uq_splice_type_id_locale')
     )
+    op.create_table('work_photo_translations',
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('work_photo_id', sa.Integer(), nullable=False),
+    sa.Column('title', sa.String(length=255), nullable=True),
+    sa.Column('description', sa.Text(), nullable=True),
+    sa.Column('locale', sa.Enum('rus', 'eng', 'ger', name='locale', native_enum=False, length=10), nullable=False),
+    sa.ForeignKeyConstraint(['work_photo_id'], ['work_photos.id'], ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('work_photo_id', 'locale', name='uq_work_photo_id_locale')
+    )
     op.create_table('material_translations',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('material_id', sa.Integer(), nullable=False),
@@ -485,7 +503,6 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('specification_id', 'locale', name='uq_product_spec_trans_spec_locale')
     )
-    op.execute("CREATE SEQUENCE IF NOT EXISTS quote_request_number_seq START 1;")
     # ### end Alembic commands ###
 
 
@@ -494,6 +511,7 @@ def downgrade() -> None:
     # ### commands auto generated by Alembic - please adjust! ###
     op.drop_table('product_specification_translations')
     op.drop_table('rope_configurator_settings')
+    op.drop_constraint('uq_rope_allowed_splice', 'rope_allowed_splices', type_='unique')
     op.drop_table('rope_allowed_splices')
     op.drop_table('quote_rope_items')
     op.drop_table('product_variants')
@@ -502,8 +520,10 @@ def downgrade() -> None:
     op.drop_table('product_images')
     op.drop_table('product_colors')
     op.drop_index('idx_product_assigned_apps', table_name='product_assigned_applications')
+    op.drop_constraint('uq_product_assigned_app', 'product_assigned_applications', type_='unique')
     op.drop_table('product_assigned_applications')
     op.drop_table('material_translations')
+    op.drop_table('work_photo_translations')
     op.drop_table('splice_type_translations')
     op.drop_table('splice_price_rules')
     op.drop_table('review_translations')
@@ -517,6 +537,7 @@ def downgrade() -> None:
     op.drop_table('content_block_translations')
     op.drop_table('configurator_extra_translations')
     op.drop_table('color_translations')
+    op.drop_table('charity_photo_translations')
     op.drop_table('category_translations')
     op.drop_table('work_photos')
     op.drop_table('users')
@@ -535,5 +556,5 @@ def downgrade() -> None:
     op.drop_table('colors')
     op.drop_table('charity_photos')
     op.drop_table('categories')
-    op.execute("DROP SEQUENCE IF EXISTS quote_request_number_seq;")
+    sa.Enum(name='role').drop(op.get_bind(), checkfirst=True)
     # ### end Alembic commands ###

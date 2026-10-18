@@ -62,7 +62,14 @@ class DbConnectionConfig(BaseModel):
     @classmethod
     def build(cls, conf_env: EnvConfig) -> "DbConnectionConfig":
         sql_db_url = f'postgresql+asyncpg://{conf_env.db_user}:{conf_env.db_password}@{conf_env.db_host}:{conf_env.db_port}/{conf_env.db_name}'
-        engine = create_async_engine(sql_db_url)
+        engine = create_async_engine(
+            sql_db_url,
+            pool_pre_ping=True,
+            pool_recycle=1800,
+            pool_size=10,
+            max_overflow=20,
+            pool_timeout=30,
+        )
 
         return cls(
             postgres_server_url=f'postgresql+asyncpg://{conf_env.db_user}:{conf_env.db_password}@{conf_env.db_host}:{conf_env.db_port}/postgres',

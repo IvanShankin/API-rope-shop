@@ -7,7 +7,7 @@ from src.core.config import Config
 
 @pytest_asyncio.fixture(scope="function")
 async def session_db(config_fix: Config):
-    engine = create_async_engine(config_fix.db_connection.sql_db_url)
+    engine = create_async_engine(config_fix.db_connection.sql_db_url, pool_pre_ping=True)
 
     async_session = sessionmaker(
         engine,
@@ -24,7 +24,7 @@ async def session_db(config_fix: Config):
 
 @pytest_asyncio.fixture(scope="function")
 async def not_open_session_db(config_fix: Config):
-    engine = create_async_engine(config_fix.db_connection.sql_db_url)
+    engine = create_async_engine(config_fix.db_connection.sql_db_url, pool_pre_ping=True)
 
     async_session = sessionmaker(
         engine,

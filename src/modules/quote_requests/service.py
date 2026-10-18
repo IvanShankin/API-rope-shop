@@ -217,7 +217,7 @@ class QuoteRequestService:
         setting: Optional[ConfiguratorSetting] = None,
     ) -> ResolvedRopeItemDTO:
         """Валидация и построение DTO-снимка для отдельной позиции каната."""
-        rope_product = await self.rope_product_repo.get_by_id(
+        rope_product = await self.rope_product_repo.get_by_product_id(
             r_item.product_id,
             include_relations=True,
         )

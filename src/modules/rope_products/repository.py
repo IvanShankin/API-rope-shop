@@ -1,4 +1,4 @@
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Union, overload, Type
 
 from sqlalchemy import select, update, delete, exists
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -38,12 +38,28 @@ class RopeProductRepository(BaseRepository):
         await self.session.flush()
         return product
 
+    @overload
+    async def get_by_id(self, arg1: int, arg2: None = None, include_relations: bool = False) -> RopeConfiguratorSetting | None: ...
+
+    @overload
+    async def get_by_id(self, arg1: Type[RopeConfiguratorSetting], arg2: int, include_relations: bool = False) -> RopeConfiguratorSetting | None: ...
+
     async def get_by_id(
         self,
-        product_id: int,
-        include_relations: bool = False
+        arg1: Union[Type[RopeConfiguratorSetting], int],
+        arg2: Optional[int] = None,
+        include_relations: bool = False,
     ) -> RopeConfiguratorSetting | None:
-        """Получение настроек каната по ID."""
+        """Получение настроек каната по первичному ключу (product_id). Полностью соответствует контракту BaseRepository (LSP)."""
+        obj_id = arg2 if arg2 is not None else arg1
+        return await self.get_by_product_id(product_id=obj_id, include_relations=include_relations)
+
+    async def get_by_product_id(
+        self,
+        product_id: int,
+        include_relations: bool = False,
+    ) -> RopeConfiguratorSetting | None:
+        """Получение настроек каната по product_id (внешнему ключу на Product / ПК RopeConfiguratorSetting)."""
         stmt = select(RopeConfiguratorSetting).where(RopeConfiguratorSetting.product_id == product_id)
         if include_relations:
             stmt = stmt.options(

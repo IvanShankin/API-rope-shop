@@ -40,7 +40,16 @@ class BaseRepository(Generic[ModelType]):
             model = self.model
             obj_id = arg1
 
-        stmt = select(model).where(model.id == obj_id)
+        pk_col = getattr(model, "id", None)
+        if pk_col is None:
+            from sqlalchemy.inspection import inspect
+            mapper = inspect(model, raiseerr=False)
+            if mapper and mapper.primary_key:
+                pk_col = mapper.primary_key[0]
+            else:
+                pk_col = model.id
+
+        stmt = select(model).where(pk_col == obj_id)
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 

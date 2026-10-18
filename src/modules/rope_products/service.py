@@ -103,7 +103,7 @@ class RopeProductsService:
         new_setting = await self.product_repo.add_setting(setting_dto)
         await self.session.commit()
 
-        loaded = await self.product_repo.get_by_id(new_setting.product_id)
+        loaded = await self.product_repo.get_by_product_id(new_setting.product_id)
         return RopeConfiguratorSettingResponseDTO.model_validate(loaded)
 
     async def get_rope_product(
@@ -111,7 +111,7 @@ class RopeProductsService:
         product_id: int
     ) -> RopeConfiguratorSettingDetailResponseDTO:
         """Получение детальной информации о настройках каната."""
-        item = await self.product_repo.get_by_id(product_id, include_relations=True)
+        item = await self.product_repo.get_by_product_id(product_id, include_relations=True)
         if not item:
             raise RopeProductNotFound(
                 f"RopeConfiguratorSetting with product_id {product_id} not found."
@@ -194,7 +194,7 @@ class RopeProductsService:
         await self.product_repo.update_setting(product_id, data)
         await self.session.commit()
 
-        updated = await self.product_repo.get_by_id(product_id)
+        updated = await self.product_repo.get_by_product_id(product_id)
         return RopeConfiguratorSettingResponseDTO.model_validate(updated)
 
     async def delete_rope_product(self, product_id: int) -> None:

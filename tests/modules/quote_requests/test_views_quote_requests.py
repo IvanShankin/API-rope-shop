@@ -200,6 +200,8 @@ class TestsForSuccess:
         assert dto.configurator_type == ConfiguratorType.ROPE_WITH_SPLICE
         assert dto.is_urgent is True
         assert float(dto.vat_rate) == 19.0
+        assert float(dto.subtotal) == 115.40
+        assert float(dto.urgent_surcharge) == 20.00
         assert float(dto.total_price) == 135.40
 
         # Проверка снимков позиций

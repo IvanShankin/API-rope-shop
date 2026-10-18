@@ -66,6 +66,8 @@ class QuoteRequest(Base):
         nullable=False,
         default=Currency.EUR.value,
     )
+    subtotal: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False, default=0, server_default="0")
+    urgent_surcharge: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False, default=0, server_default="0")
     total_price: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
     vat_rate: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False, default=0, server_default="0")
 

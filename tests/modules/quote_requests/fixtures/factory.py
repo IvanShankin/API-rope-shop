@@ -183,6 +183,8 @@ async def create_quote_request_factory(
         phone=new_request.phone if new_request.phone is not None else "+49 123 456789",
         comment=new_request.comment if new_request.comment is not None else "Test comment",
         currency=new_request.currency if new_request.currency is not None else Currency.EUR,
+        subtotal=new_request.subtotal if new_request.subtotal is not None else 100.0,
+        urgent_surcharge=new_request.urgent_surcharge if new_request.urgent_surcharge is not None else 0.0,
         total_price=new_request.total_price if new_request.total_price is not None else 100.0,
         vat_rate=new_request.vat_rate if new_request.vat_rate is not None else 0.0,
         is_urgent=new_request.is_urgent if new_request.is_urgent is not None else False,

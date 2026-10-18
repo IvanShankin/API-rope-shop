@@ -86,6 +86,8 @@ class QuoteRequestUpdateDTO(BaseModel):
     comment: Optional[str] = None
     status: Optional[QuoteRequestStatus] = None
     is_urgent: Optional[bool] = None
+    subtotal: Optional[float] = Field(None, ge=0)
+    urgent_surcharge: Optional[float] = Field(None, ge=0)
     total_price: Optional[float] = Field(None, ge=0)
 
 
@@ -212,6 +214,8 @@ class QuoteRequestInsertDTO(BaseModel):
     phone: Optional[str] = None
     comment: Optional[str] = None
     currency: Currency
+    subtotal: float = 0.0
+    urgent_surcharge: float = 0.0
     total_price: float
     vat_rate: float
     is_urgent: bool
@@ -277,6 +281,8 @@ class QuoteRequestResponseDTO(ORMDTO):
     phone: Optional[str] = None
     comment: Optional[str] = None
     currency: Currency
+    subtotal: float
+    urgent_surcharge: float
     total_price: float
     vat_rate: float
     is_urgent: bool

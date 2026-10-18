@@ -23,7 +23,7 @@ class ColorRepository(BaseIndexedRepository):
         """Получение списка всех цветов с предзагрузкой переводов."""
         stmt = select(Color).options(
             selectinload(Color.translations)
-        ).order_by(Color.index)
+        ).order_by(Color.index.asc(), Color.id.asc())
         if is_active is not None:
             stmt = stmt.where(Color.is_active == is_active)
         result = await self.session.execute(stmt)

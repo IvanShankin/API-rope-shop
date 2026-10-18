@@ -42,7 +42,7 @@ class ProductColorRepository(BaseIndexedRepository):
                 .selectinload(Color.translations)
             )
             .where(ProductColor.product_id == product_id)
-            .order_by(ProductColor.index)
+            .order_by(ProductColor.index.asc(), ProductColor.color_id.asc())
         )
         result = await self.session.execute(stmt)
         return result.scalars().all()

@@ -42,7 +42,7 @@ class ConfiguratorRepository(BaseRepository):
             stmt = stmt.where(ConfiguratorExtra.is_active == is_active)
         if billing_type is not None:
             stmt = stmt.where(ConfiguratorExtra.billing_type == billing_type)
-        stmt = stmt.order_by(ConfiguratorExtra.index)
+        stmt = stmt.order_by(ConfiguratorExtra.index.asc(), ConfiguratorExtra.id.asc())
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
@@ -65,7 +65,7 @@ class ConfiguratorRepository(BaseRepository):
             stmt = stmt.where(SpliceType.is_active == is_active)
         if category is not None:
             stmt = stmt.where(SpliceType.category == category)
-        stmt = stmt.order_by(SpliceType.index)
+        stmt = stmt.order_by(SpliceType.index.asc(), SpliceType.id.asc())
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
@@ -83,7 +83,7 @@ class ConfiguratorRepository(BaseRepository):
             stmt = stmt.join(SplicePriceRule.splice_type).where(SpliceType.category == category)
         if is_active is not None:
             stmt = stmt.where(SplicePriceRule.is_active == is_active)
-        stmt = stmt.order_by(SplicePriceRule.diameter_from_mm.asc().nulls_first())
+        stmt = stmt.order_by(SplicePriceRule.diameter_from_mm.asc().nulls_first(), SplicePriceRule.id.asc())
         result = await self.session.execute(stmt)
         return result.scalars().all()
 

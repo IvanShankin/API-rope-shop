@@ -35,7 +35,7 @@ class ProductImageRepository(BaseIndexedRepository):
         stmt = (
             select(ProductImage)
             .where(ProductImage.product_id == product_id)
-            .order_by(ProductImage.index)
+            .order_by(ProductImage.index.asc(), ProductImage.id.asc())
         )
         if is_active is not None:
             stmt = stmt.where(ProductImage.is_active == is_active)

@@ -33,7 +33,7 @@ class WorkPhotoRepository(BaseIndexedRepository):
         limit: Optional[int] = None,
     ) -> Sequence[WorkPhoto]:
         """Получение списка всех фотографий работ, отсортированных по index."""
-        stmt = select(WorkPhoto).order_by(WorkPhoto.index)
+        stmt = select(WorkPhoto).order_by(WorkPhoto.index.asc(), WorkPhoto.id.asc())
         if is_active is not None:
             stmt = stmt.where(WorkPhoto.is_active == is_active)
         if skip > 0:

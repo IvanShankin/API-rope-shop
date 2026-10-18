@@ -46,7 +46,7 @@ class ReviewRepository(BaseIndexedRepository):
         stmt = (
             select(Review)
             .options(selectinload(Review.translations))
-            .order_by(Review.index)
+            .order_by(Review.index.asc(), Review.id.asc())
         )
 
         if status is not None:

@@ -155,7 +155,7 @@ class ProductRepository(BaseIndexedRepository):
         stmt = (
             select(Product)
             .options(*self._default_product_options())
-            .order_by(Product.index)
+            .order_by(Product.index.asc(), Product.id.asc())
         )
         stmt = self._apply_filters(
             stmt,

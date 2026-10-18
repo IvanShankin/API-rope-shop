@@ -29,7 +29,7 @@ class CategoryRepository(BaseIndexedRepository):
         stmt = select(Category).options(selectinload(Category.translations))
         if is_active is not None:
             stmt = stmt.where(Category.is_active == is_active)
-        stmt = stmt.order_by(Category.index)
+        stmt = stmt.order_by(Category.index.asc(), Category.id.asc())
         if skip:
             stmt = stmt.offset(skip)
         if limit:

@@ -33,7 +33,7 @@ class CharityPhotoRepository(BaseIndexedRepository):
         limit: Optional[int] = None,
     ) -> Sequence[CharityPhoto]:
         """Получение списка всех фотографий благотворительности, отсортированных по index."""
-        stmt = select(CharityPhoto).order_by(CharityPhoto.index)
+        stmt = select(CharityPhoto).order_by(CharityPhoto.index.asc(), CharityPhoto.id.asc())
         if is_active is not None:
             stmt = stmt.where(CharityPhoto.is_active == is_active)
         if skip > 0:

@@ -55,7 +55,7 @@ class ProductApplicationRepository(BaseIndexedRepository):
         stmt = (
             select(ProductApplication)
             .options(selectinload(ProductApplication.translations))
-            .order_by(ProductApplication.index)
+            .order_by(ProductApplication.index.asc(), ProductApplication.id.asc())
         )
         if is_active is not None:
             stmt = stmt.where(ProductApplication.is_active == is_active)
@@ -205,7 +205,7 @@ class ProductAssignedApplicationRepository(BaseRepository):
                     ProductApplication.translations
                 )
             )
-            .order_by(ProductApplication.index)
+            .order_by(ProductApplication.index.asc(), ProductApplication.id.asc())
         )
         result = await self.session.execute(stmt)
         return result.scalars().all()

@@ -56,7 +56,7 @@ class ProductSpecificationRepository(BaseIndexedRepository):
             select(ProductSpecification)
             .where(ProductSpecification.product_id == product_id)
             .options(selectinload(ProductSpecification.translations))
-            .order_by(ProductSpecification.index)
+            .order_by(ProductSpecification.index.asc(), ProductSpecification.id.asc())
         )
         result = await self.session.execute(stmt)
         return result.scalars().all()
@@ -72,7 +72,7 @@ class ProductSpecificationRepository(BaseIndexedRepository):
                 ProductSpecification.product_id == product_id,
             )
             .options(selectinload(ProductSpecification.translations))
-            .order_by(ProductSpecification.index)
+            .order_by(ProductSpecification.index.asc(), ProductSpecification.id.asc())
         )
         result = await self.session.execute(stmt)
         return result.scalars().all()

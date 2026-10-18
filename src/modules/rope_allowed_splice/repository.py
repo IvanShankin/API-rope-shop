@@ -53,7 +53,7 @@ class RopeAllowedSpliceRepository(BaseRepository):
                 .selectinload(SpliceType.translations)
             )
             .where(RopeAllowedSplice.product_id == product_id)
-            .order_by(SpliceType.index)
+            .order_by(SpliceType.index.asc(), SpliceType.id.asc())
         )
         result = await self.session.execute(stmt)
         return result.scalars().all()

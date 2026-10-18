@@ -25,7 +25,7 @@ class MaterialGroupRepository(BaseIndexedRepository):
         stmt = (
             select(MaterialGroup)
             .options(selectinload(MaterialGroup.translations))
-            .order_by(MaterialGroup.index)
+            .order_by(MaterialGroup.index.asc(), MaterialGroup.id.asc())
         )
         if is_active is not None:
             stmt = stmt.where(MaterialGroup.is_active == is_active)

@@ -162,7 +162,7 @@ class ProductVariantRepository(BaseIndexedRepository):
         stmt = select(ProductVariant).where(ProductVariant.product_id == product_id)
         if is_active is not None:
             stmt = stmt.where(ProductVariant.is_active == is_active)
-        stmt = stmt.order_by(ProductVariant.index)
+        stmt = stmt.order_by(ProductVariant.index.asc(), ProductVariant.id.asc())
         result = await self.session.execute(stmt)
         return result.scalars().all()
 

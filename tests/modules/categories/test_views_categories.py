@@ -137,6 +137,31 @@ class TestsForSuccess:
         assert found.name == "Schleppseile"
 
     @pytest.mark.asyncio
+    async def test_get_categories_with_iso_639_1_locales(
+        self,
+        client_for_tests,
+        create_category_fixture,
+        create_category_translation_fixture,
+    ):
+        cat = await create_category_fixture(
+            CreateCategoryFixtureDTO(slug="iso-test-cat", name="Tow Ropes", locale=Language.ENG)
+        )
+        await create_category_translation_fixture(
+            CreateCategoryTranslationFixtureDTO(
+                category_id=cat.id,
+                locale=Language.GER,
+                name="Schleppseile",
+            )
+        )
+
+        for iso_code, expected_name in [("de", "Schleppseile"), ("en", "Tow Ropes")]:
+            resp = await client_for_tests.get("/categories", params={"locale": iso_code})
+            assert resp.status_code == 200
+            dto = CategoryListResponseDTO.model_validate(resp.json())
+            found = next(item for item in dto.items if item.id == cat.id)
+            assert found.name == expected_name
+
+    @pytest.mark.asyncio
     async def test_get_category_by_id(
         self,
         client_for_tests,

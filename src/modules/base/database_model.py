@@ -22,8 +22,11 @@ class Language(str, enum.Enum):
     def _missing_(cls, value: object):
         if isinstance(value, str):
             mapping = {
+                "ru": cls.RUS,
                 "rus": cls.RUS,
+                "en": cls.ENG,
                 "eng": cls.ENG,
+                "de": cls.GER,
                 "ger": cls.GER,
             }
             norm = value.lower()

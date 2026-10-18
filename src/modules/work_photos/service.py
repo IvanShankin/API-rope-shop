@@ -149,23 +149,34 @@ class WorkPhotoService:
     async def update_photo(
         self,
         photo_id: int,
-        data: UpdateWorkPhotoRequestDTO,
+        data: Optional[UpdateWorkPhotoRequestDTO] = None,
+        file: Optional[UploadFile] = None,
     ) -> WorkPhotoResponseDTO:
-        """Обновление атрибутов фотографии работы."""
+        """Обновление атрибутов фотографии работы и/или замена файла."""
         photo = await self.repo.get_by_id(photo_id)
         if not photo:
             raise WorkPhotoNotFound(f"WorkPhoto with id {photo_id} not found.")
 
-        update_dict = data.model_dump(exclude_unset=True)
-        if not update_dict:
+        update_dict = data.model_dump(exclude_unset=True) if data else {}
+        update_dict = {k: v for k, v in update_dict.items() if v is not None}
+
+        if not update_dict and file is None:
             raise NoDataForUpdate("No data provided for update.")
 
-        if "image_url" in update_dict and update_dict["image_url"] != photo.image_url:
+        if file is not None:
             if photo.image_url and self.image_manager:
                 self.image_manager.delete_image(photo.image_url)
 
-        await self.repo.update_photo(photo_id, update_dict)
-        await self.session.commit()
+            file_name = f"img_{uuid.uuid4().hex[:10]}"
+            dest = self.path_builder.get_work_photo(
+                work_photo_id=photo_id, file_name=file_name
+            )
+            saved_path = await self.image_manager.save_image(file=file, destination=dest)
+            update_dict["image_url"] = self.image_manager.to_media_url(saved_path)
+
+        if update_dict:
+            await self.repo.update_photo(photo_id, update_dict)
+            await self.session.commit()
 
         updated = await self.repo.get_by_id(photo_id)
         return WorkPhotoResponseDTO.model_validate(updated)

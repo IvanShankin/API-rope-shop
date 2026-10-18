@@ -27,7 +27,6 @@ class ProductImageCreate(BaseModel):
 
 
 class ProductImageUpdate(BaseModel):
-    image_url: Optional[str] = Field(None, max_length=500)
     is_main: Optional[bool] = None
     is_active: Optional[bool] = None
 

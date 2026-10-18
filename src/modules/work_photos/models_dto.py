@@ -23,7 +23,6 @@ class CreateWorkPhotoRequestDTO(BaseModel):
 
 
 class UpdateWorkPhotoRequestDTO(BaseModel):
-    image_url: Optional[str] = Field(None, max_length=500, description="URL of the photo")
     title: Optional[str] = Field(None, max_length=255, description="Title of the photo")
     description: Optional[str] = Field(None, description="Description of the photo")
     is_active: Optional[bool] = Field(None, description="Active status")

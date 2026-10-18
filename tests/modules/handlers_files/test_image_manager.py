@@ -204,6 +204,7 @@ def test_delete_image_with_path_and_str(
 def test_delete_image_safe_handling(
     image_manager_fixture: ImageManager,
     tmp_path: Path,
+    config_fix: Config,
 ):
     """Проверка безопасного вызова delete_image при None, пустой строке, несуществующем файле или папке."""
     # None и пустая строка не должны вызывать исключений
@@ -211,7 +212,7 @@ def test_delete_image_safe_handling(
     image_manager_fixture.delete_image("")
 
     # Несуществующий URL и файл не должны вызывать исключений
-    image_manager_fixture.delete_image("/media/non_existent_folder/missing.webp")
+    image_manager_fixture.delete_image(f"/{config_fix.paths.media.name}/non_existent_folder/missing.webp")
     image_manager_fixture.delete_image(tmp_path / "non_existent_file.webp")
 
     # Папка не должна удаляться

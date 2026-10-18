@@ -1152,7 +1152,7 @@ class TestsForErrors:
 
         img = ProductImage(
             product_id=prod.id,
-            image_url=f"/media/products/{prod.id}/photo.webp",
+            image_url=f"/{config_fix.paths.media.name}/{config_fix.paths.products.name}/{prod.id}/photo.webp",
             index=1,
             is_main=True,
         )

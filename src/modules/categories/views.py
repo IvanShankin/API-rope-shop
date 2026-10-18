@@ -92,7 +92,7 @@ async def create_category(
     response_model=CategoryResponseDTO,
     status_code=status.HTTP_200_OK,
     summary="Update category",
-    description="Update category attributes (slug, image_url, is_active) (admin only).",
+    description="Update category attributes (slug, is_active) (admin only).",
 )
 async def update_category(
     category_id: int,

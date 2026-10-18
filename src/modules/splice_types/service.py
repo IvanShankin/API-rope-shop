@@ -56,7 +56,7 @@ class SpliceTypeService:
             code=data.code,
             category=data.category,
             visual_type=data.visual_type,
-            image_url=data.image_url,
+            image_url=None,
             index=data.index,
             is_active=data.is_active
         )

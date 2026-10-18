@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, File, Form, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, Query, Request, UploadFile, status
 
 from src.modules.check_permission.depends import get_current_admin
 from src.modules.users.models_dto import UserDTO
@@ -54,15 +54,25 @@ async def get_charity_photo_by_id(
     "",
     response_model=CharityPhotoResponseDTO,
     status_code=status.HTTP_201_CREATED,
-    summary="Create charity photo via JSON",
-    description="Create a charity photo record with an existing image URL (admin only).",
+    summary="Upload charity photo file",
+    description="Upload an image file, convert to WebP and create a CharityPhoto record (admin only).",
 )
 async def create_charity_photo(
-    data: CreateCharityPhotoRequestDTO,
+    file: UploadFile = File(..., description="Image file (jpg, png, webp, etc.)"),
+    title: Optional[str] = Form(None, description="Title of the photo"),
+    description: Optional[str] = Form(None, description="Description of the photo"),
+    index: Optional[int] = Form(None, ge=0, description="Optional sort index"),
+    is_active: bool = Form(True, description="Active status"),
     service: CharityPhotoService = Depends(get_charity_photo_service),
     admin: UserDTO = Depends(get_current_admin),
 ) -> CharityPhotoResponseDTO:
-    return await service.create_photo(data=data)
+    return await service.upload_photo(
+        file=file,
+        title=title,
+        description=description,
+        index=index,
+        is_active=is_active,
+    )
 
 
 @router.post(
@@ -114,15 +124,42 @@ async def upload_image_for_charity_photo(
     response_model=CharityPhotoResponseDTO,
     status_code=status.HTTP_200_OK,
     summary="Update charity photo",
-    description="Update charity photo attributes (title, description, image_url, is_active) (admin only).",
+    description="Update charity photo attributes (title, description, is_active) or replace image file (admin only).",
 )
 async def update_charity_photo(
     photo_id: int,
-    data: UpdateCharityPhotoRequestDTO,
+    request: Request,
+    file: Optional[UploadFile] = File(None, description="Image file to replace current image"),
+    title: Optional[str] = Form(None, description="Title of the photo"),
+    description: Optional[str] = Form(None, description="Description of the photo"),
+    is_active: Optional[bool] = Form(None, description="Active status"),
     service: CharityPhotoService = Depends(get_charity_photo_service),
     admin: UserDTO = Depends(get_current_admin),
 ) -> CharityPhotoResponseDTO:
-    return await service.update_photo(photo_id=photo_id, data=data)
+    content_type = request.headers.get("content-type", "")
+    if "application/json" in content_type:
+        try:
+            body = await request.json()
+            if isinstance(body, dict):
+                if title is None and "title" in body:
+                    title = body["title"]
+                if description is None and "description" in body:
+                    description = body["description"]
+                if is_active is None and "is_active" in body:
+                    is_active = body["is_active"]
+        except Exception:
+            pass
+
+    data_dict = {}
+    if title is not None:
+        data_dict["title"] = title
+    if description is not None:
+        data_dict["description"] = description
+    if is_active is not None:
+        data_dict["is_active"] = is_active
+    data = UpdateCharityPhotoRequestDTO(**data_dict) if data_dict else None
+
+    return await service.update_photo(photo_id=photo_id, data=data, file=file)
 
 
 @router.patch(

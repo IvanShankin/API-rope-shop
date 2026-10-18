@@ -110,38 +110,35 @@ class TestsForSuccess:
         assert data.image_url == image.image_url
 
     @pytest.mark.asyncio
-    async def test_create_product_image_json(
+    async def test_create_product_image_file(
         self,
         session_db,
         client_for_tests,
         create_user_fixture,
         create_product_fixture,
+        create_image_bytes_fixture,
         config_fix: Config,
     ):
-        """Создание первого изображения товара через JSON (автоматически становится is_main=True)."""
+        """Создание первого изображения товара через multipart (автоматически становится is_main=True)."""
         admin_user, access_token = await create_user_fixture(
             CreateUserFixtureDTO(role=UserRole.ADMIN)
         )
         product = await create_product_fixture()
-
-        create_data = ProductImageCreate(
-            product_id=product.id,
-            image_url=f"/{config_fix.paths.media.name}/{config_fix.paths.products.name}/1/test_img.webp",
-            is_main=False,  # Первое изображение должно автоматически стать main
-            index=None,
-            is_active=True,
-        )
+        img_bytes = create_image_bytes_fixture(format_="PNG", size=(200, 200), color="blue")
 
         response = await client_for_tests.post(
             "/product_images",
             headers={"Authorization": f"Bearer {access_token}"},
-            json=create_data.model_dump(),
+            data={"product_id": str(product.id), "is_main": "false", "is_active": "true"},
+            files={"file": ("img1.png", img_bytes, "image/png")},
         )
         assert response.status_code == 201
 
         resp_dto = ProductImageResponseDTO.model_validate(response.json())
         assert resp_dto.product_id == product.id
-        assert resp_dto.image_url == f"/{config_fix.paths.media.name}/{config_fix.paths.products.name}/1/test_img.webp"
+        assert resp_dto.image_url.startswith(
+            f"/{config_fix.paths.media.name}/{config_fix.paths.products.name}/{product.id}/"
+        )
         assert resp_dto.is_main is True
         assert resp_dto.index == 1
         assert resp_dto.is_active is True
@@ -159,6 +156,7 @@ class TestsForSuccess:
         create_user_fixture,
         create_product_fixture,
         create_product_image_fixture,
+        create_image_bytes_fixture,
         config_fix: Config,
     ):
         """Создание второго изображения товара получает index = max_index + 1 и is_main=False."""
@@ -173,19 +171,13 @@ class TestsForSuccess:
                 is_main=True,
             )
         )
-
-        create_data = ProductImageCreate(
-            product_id=product.id,
-            image_url=f"/{config_fix.paths.media.name}/{config_fix.paths.products.name}/1/second_img.webp",
-            is_main=False,
-            index=None,
-            is_active=True,
-        )
+        img_bytes = create_image_bytes_fixture(format_="PNG", size=(200, 200), color="green")
 
         response = await client_for_tests.post(
             "/product_images",
             headers={"Authorization": f"Bearer {access_token}"},
-            json=create_data.model_dump(),
+            data={"product_id": str(product.id), "is_main": "false", "is_active": "true"},
+            files={"file": ("second_img.png", img_bytes, "image/png")},
         )
         assert response.status_code == 201
 
@@ -239,9 +231,10 @@ class TestsForSuccess:
         client_for_tests,
         create_user_fixture,
         create_product_image_fixture,
+        create_image_bytes_fixture,
         config_fix: Config,
     ):
-        """Обновление атрибутов изображения."""
+        """Обновление атрибутов изображения и замена файла изображения."""
         admin_user, access_token = await create_user_fixture(
             CreateUserFixtureDTO(role=UserRole.ADMIN)
         )
@@ -251,7 +244,6 @@ class TestsForSuccess:
 
         update_data = ProductImageUpdate(
             is_active=False,
-            image_url=f"/{config_fix.paths.media.name}/{config_fix.paths.products.name}/1/updated.webp",
         )
 
         response = await client_for_tests.patch(
@@ -263,13 +255,28 @@ class TestsForSuccess:
 
         resp_dto = ProductImageResponseDTO.model_validate(response.json())
         assert resp_dto.is_active is False
-        assert resp_dto.image_url == f"/{config_fix.paths.media.name}/{config_fix.paths.products.name}/1/updated.webp"
+        assert resp_dto.image_url == image.image_url
 
         session_db.expire_all()
         res = await session_db.execute(select(ProductImage).where(ProductImage.id == image.id))
         db_img = res.scalar_one_or_none()
         assert db_img.is_active is False
-        assert db_img.image_url == f"/{config_fix.paths.media.name}/{config_fix.paths.products.name}/1/updated.webp"
+
+        # Замена файла изображения
+        new_img_bytes = create_image_bytes_fixture(format_="PNG", size=(150, 150), color="yellow")
+        replace_res = await client_for_tests.patch(
+            f"/product_images/{image.id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+            files={"file": ("replaced.png", new_img_bytes, "image/png")},
+            data={"is_active": "true"},
+        )
+        assert replace_res.status_code == 200
+        replace_dto = ProductImageResponseDTO.model_validate(replace_res.json())
+        assert replace_dto.is_active is True
+        assert replace_dto.image_url != image.image_url
+        assert replace_dto.image_url.startswith(
+            f"/{config_fix.paths.media.name}/{config_fix.paths.products.name}/{image.product_id}/"
+        )
 
     @pytest.mark.asyncio
     async def test_set_main_product_image(
@@ -454,7 +461,8 @@ class TestsForFail:
     ):
         response = await client_for_tests.post(
             "/product_images",
-            json={"product_id": 1, "image_url": "/test.webp"},
+            data={"product_id": "1"},
+            files={"file": ("photo.png", b"test", "image/png")},
         )
         assert response.status_code == 401
 
@@ -470,7 +478,8 @@ class TestsForFail:
         response = await client_for_tests.post(
             "/product_images",
             headers={"Authorization": f"Bearer {access_token}"},
-            json={"product_id": 1, "image_url": "/test.webp"},
+            data={"product_id": "1"},
+            files={"file": ("photo.png", b"test", "image/png")},
         )
         assert response.status_code == 403
 
@@ -486,7 +495,8 @@ class TestsForFail:
         response = await client_for_tests.post(
             "/product_images",
             headers={"Authorization": f"Bearer {access_token}"},
-            json={"product_id": 99999, "image_url": "/test.webp"},
+            data={"product_id": "99999"},
+            files={"file": ("photo.png", b"test", "image/png")},
         )
         assert response.status_code == 404
 

@@ -1,6 +1,7 @@
 import pytest
 from sqlalchemy import select
 
+from src.core.config import Config
 from src.modules.users.models import UserRole
 from src.modules.work_photos.models import WorkPhoto
 from src.modules.work_photos.models_dto import (
@@ -78,48 +79,49 @@ class TestsForSuccess:
         assert data.image_url == photo.image_url
 
     @pytest.mark.asyncio
-    async def test_create_work_photo_via_json(
+    async def test_create_work_photo_file(
         self,
         client_for_tests,
         create_user_fixture,
+        create_image_bytes_fixture,
         session_db,
+        config_fix: Config,
     ):
-        """Создание фотографии работы через JSON (админ)."""
+        """Создание фотографии работы через multipart upload (админ)."""
         _, access_token = await create_user_fixture(
             CreateUserFixtureDTO(role=UserRole.ADMIN)
         )
-
-        create_dto = CreateWorkPhotoRequestDTO(
-            image_url="/media/work_photos/test.webp",
-            title="Custom Title",
-            description="Custom Description",
-            index=0,
-            is_active=True,
-        )
+        img_bytes = create_image_bytes_fixture(format_="PNG", size=(200, 200), color="blue")
 
         response = await client_for_tests.post(
             "/work_photos",
             headers={"Authorization": f"Bearer {access_token}"},
-            json=create_dto.model_dump(),
+            files={"file": ("work_photo.png", img_bytes, "image/png")},
+            data={
+                "title": "Custom Title",
+                "description": "Custom Description",
+                "index": "0",
+                "is_active": "true",
+            },
         )
         assert response.status_code == 201
 
         resp_dto = WorkPhotoResponseDTO.model_validate(response.json())
-        comparison_models(
-            Expected=create_dto,
-            Actual=resp_dto,
-            keys_not_checked=["created_at", "updated_at"],
+        assert resp_dto.title == "Custom Title"
+        assert resp_dto.description == "Custom Description"
+        assert resp_dto.index == 0
+        assert resp_dto.is_active is True
+        assert resp_dto.image_url.startswith(
+            f"/{config_fix.paths.media.name}/{config_fix.paths.work_photos.name}"
         )
+        assert resp_dto.image_url.endswith(".webp")
 
         db_obj = await session_db.scalar(
             select(WorkPhoto).where(WorkPhoto.id == resp_dto.id)
         )
         assert db_obj is not None
-        comparison_models(
-            Expected=create_dto,
-            Actual=db_obj,
-            keys_not_checked=["created_at", "updated_at"],
-        )
+        assert db_obj.image_url == resp_dto.image_url
+        assert db_obj.title == resp_dto.title
 
     @pytest.mark.asyncio
     async def test_upload_work_photo_file(
@@ -191,9 +193,11 @@ class TestsForSuccess:
         client_for_tests,
         create_user_fixture,
         create_work_photo_fixture,
+        create_image_bytes_fixture,
         session_db,
+        config_fix: Config,
     ):
-        """Обновление атрибутов фотографии работы (админ)."""
+        """Обновление атрибутов фотографии работы и замена файла изображения (админ)."""
         _, access_token = await create_user_fixture(
             CreateUserFixtureDTO(role=UserRole.ADMIN)
         )
@@ -216,6 +220,23 @@ class TestsForSuccess:
         assert resp_dto.title == "Updated Title"
         assert resp_dto.description == "Updated Description"
         assert resp_dto.is_active is False
+        assert resp_dto.image_url == photo.image_url
+
+        # Замена файла изображения через PATCH
+        new_img_bytes = create_image_bytes_fixture(format_="PNG", size=(150, 150), color="purple")
+        replace_res = await client_for_tests.patch(
+            f"/work_photos/{photo.id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+            files={"file": ("replaced_work.png", new_img_bytes, "image/png")},
+            data={"title": "Replaced Work Title"},
+        )
+        assert replace_res.status_code == 200
+        replace_dto = WorkPhotoResponseDTO.model_validate(replace_res.json())
+        assert replace_dto.title == "Replaced Work Title"
+        assert replace_dto.image_url != photo.image_url
+        assert replace_dto.image_url.startswith(
+            f"/{config_fix.paths.media.name}/{config_fix.paths.work_photos.name}"
+        )
 
     @pytest.mark.asyncio
     async def test_reorder_work_photo(
@@ -302,7 +323,8 @@ class TestsForFailed:
         """Создание фотографии работы без токена возвращает 401."""
         response = await client_for_tests.post(
             "/work_photos",
-            json={"image_url": "/media/test.webp"},
+            files={"file": ("photo.png", b"test", "image/png")},
+            data={"title": "Test"},
         )
         assert response.status_code == 401
 
@@ -319,7 +341,8 @@ class TestsForFailed:
         response = await client_for_tests.post(
             "/work_photos",
             headers={"Authorization": f"Bearer {access_token}"},
-            json={"image_url": "/media/test.webp"},
+            files={"file": ("photo.png", b"test", "image/png")},
+            data={"title": "Test"},
         )
         assert response.status_code == 403
 

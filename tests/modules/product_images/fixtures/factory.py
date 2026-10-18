@@ -9,6 +9,9 @@ from tests.modules.product_images.fixtures.models_dto import (
 from tests.modules.products.fixtures.factory import create_product_factory
 
 
+from src.core.config import create_config
+
+
 async def create_product_image_factory(
     session_db: AsyncSession,
     new_image: CreateProductImageFixtureDTO = CreateProductImageFixtureDTO(),
@@ -19,10 +22,11 @@ async def create_product_image_factory(
     else:
         product_id = new_image.product_id
 
+    cfg = create_config()
     image_url = (
         new_image.image_url
         if new_image.image_url is not None
-        else f"/media/products/{product_id}/{random_string()}.webp"
+        else f"/{cfg.paths.media.name}/{cfg.paths.products.name}/{product_id}/{random_string()}.webp"
     )
     is_main = new_image.is_main if new_image.is_main is not None else False
     index = new_image.index if new_image.index is not None else 0

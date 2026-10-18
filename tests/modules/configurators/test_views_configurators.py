@@ -1,5 +1,6 @@
 import pytest
 
+from src.core.config import Config
 from src.modules.base.database_model import Language
 from src.modules.quote_requests.models import ConfiguratorType
 from src.modules.configurator_extra.models import BillingType
@@ -414,6 +415,7 @@ class TestsForSuccess:
         create_material_group_fixture,
         create_splice_material_fixture,
         create_rope_product_fixture,
+        config_fix: Config,
     ):
         """Проверка наличия name, slug, main_image_url, subtitle и их корректной локализации в ConfiguratorRopeProductResponseDTO."""
         mg = await create_material_group_fixture(CreateMaterialGroupFixtureDTO(name="Dyneema Group"))
@@ -449,11 +451,13 @@ class TestsForSuccess:
             )
         )
 
+        test_image_url = f"/{config_fix.paths.media.name}/{config_fix.paths.products.name}/{prod.id}/magic_race.webp"
+
         # Добавляем главное изображение к продукту
         await create_product_image_fixture(
             CreateProductImageFixtureDTO(
                 product_id=prod.id,
-                image_url="/media/products/magic_race.webp",
+                image_url=test_image_url,
                 is_main=True,
                 is_active=True,
             )
@@ -480,7 +484,7 @@ class TestsForSuccess:
         assert rope_rus.name == "Мэджик Рейс РУ"
         assert rope_rus.subtitle == "Высокая прочность РУ"
         assert rope_rus.slug == "magic-race-rope"
-        assert rope_rus.main_image_url == "/media/products/magic_race.webp"
+        assert rope_rus.main_image_url == test_image_url
 
         # 2. Запрос с немецкой локалью
         resp_ger = await client_for_tests.get("/configurators?locale=ger")
@@ -491,7 +495,7 @@ class TestsForSuccess:
         assert rope_ger.name == "Magic Race DE"
         assert rope_ger.subtitle == "Hochleistung DE"
         assert rope_ger.slug == "magic-race-rope"
-        assert rope_ger.main_image_url == "/media/products/magic_race.webp"
+        assert rope_ger.main_image_url == test_image_url
 
         # 3. Запрос с английской локалью (по умолчанию)
         resp_eng = await client_for_tests.get("/configurators")
@@ -502,7 +506,7 @@ class TestsForSuccess:
         assert rope_eng.name == "Magic Race EN"
         assert rope_eng.subtitle == "High performance EN"
         assert rope_eng.slug == "magic-race-rope"
-        assert rope_eng.main_image_url == "/media/products/magic_race.webp"
+        assert rope_eng.main_image_url == test_image_url
 
     @pytest.mark.asyncio
     async def test_calculate_splice_price_success(

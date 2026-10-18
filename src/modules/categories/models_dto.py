@@ -44,7 +44,6 @@ class CategoryBase(BaseModel):
 
 class CategoryCreate(BaseModel):
     slug: str = Field(..., min_length=1, max_length=100)
-    image_url: Optional[str] = Field(None, max_length=500)
     index: Optional[int] = Field(
         None,
         ge=0,
@@ -60,7 +59,6 @@ class CategoryCreate(BaseModel):
 
 class CategoryUpdate(BaseModel):
     slug: Optional[str] = Field(None, min_length=1, max_length=100)
-    image_url: Optional[str] = Field(None, max_length=500)
     is_active: Optional[bool] = None
 
 

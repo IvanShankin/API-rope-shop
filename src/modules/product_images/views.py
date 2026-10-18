@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, File, Form, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, Query, Request, UploadFile, status
 
 from src.modules.check_permission.depends import get_current_admin
 from src.modules.product_images.depends import get_product_image_service
@@ -52,15 +52,25 @@ async def get_image_by_id(
     "",
     response_model=ProductImageResponseDTO,
     status_code=status.HTTP_201_CREATED,
-    summary="Create product image via JSON",
-    description="Create an image record with an existing URL (admin only).",
+    summary="Upload product image file",
+    description="Upload an image file, convert to WebP and create a ProductImage record (admin only).",
 )
 async def create_product_image(
-    data: ProductImageCreate,
+    product_id: int = Form(..., description="ID of the product"),
+    file: UploadFile = File(..., description="Image file (jpg, png, webp, etc.)"),
+    is_main: bool = Form(False, description="Set as main product image"),
+    index: Optional[int] = Form(None, ge=0, description="Optional sort index"),
+    is_active: bool = Form(True, description="Active status"),
     service: ProductImageService = Depends(get_product_image_service),
     admin: UserDTO = Depends(get_current_admin),
 ) -> ProductImageResponseDTO:
-    return await service.create_image(data=data)
+    return await service.upload_image(
+        product_id=product_id,
+        file=file,
+        is_main=is_main,
+        index=index,
+        is_active=is_active,
+    )
 
 
 @router.post(
@@ -93,15 +103,37 @@ async def upload_product_image(
     response_model=ProductImageResponseDTO,
     status_code=status.HTTP_200_OK,
     summary="Update product image",
-    description="Update image attributes (image_url, is_main, is_active) (admin only).",
+    description="Update image attributes (is_main, is_active) or replace image file (admin only).",
 )
 async def update_product_image(
     image_id: int,
-    data: ProductImageUpdate,
+    request: Request,
+    file: Optional[UploadFile] = File(None, description="New image file to replace current"),
+    is_main: Optional[bool] = Form(None, description="Set as main product image"),
+    is_active: Optional[bool] = Form(None, description="Active status"),
     service: ProductImageService = Depends(get_product_image_service),
     admin: UserDTO = Depends(get_current_admin),
 ) -> ProductImageResponseDTO:
-    return await service.update_image(image_id=image_id, data=data)
+    content_type = request.headers.get("content-type", "")
+    if "application/json" in content_type:
+        try:
+            body = await request.json()
+            if isinstance(body, dict):
+                if is_main is None and "is_main" in body:
+                    is_main = body["is_main"]
+                if is_active is None and "is_active" in body:
+                    is_active = body["is_active"]
+        except Exception:
+            pass
+
+    data_dict = {}
+    if is_main is not None:
+        data_dict["is_main"] = is_main
+    if is_active is not None:
+        data_dict["is_active"] = is_active
+    data = ProductImageUpdate(**data_dict) if data_dict else None
+
+    return await service.update_image(image_id=image_id, data=data, file=file)
 
 
 @router.patch(

@@ -75,7 +75,7 @@ class CategoryService:
 
         base_dto = CategoryBase(
             slug=data.slug,
-            image_url=data.image_url,
+            image_url=None,
             index=target_index,
             is_active=data.is_active,
         )

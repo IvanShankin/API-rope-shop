@@ -186,7 +186,6 @@ class TestsForSuccess:
 
         create_data = CategoryCreate(
             slug="safety-harnesses",
-            image_url="https://example.com/safety.jpg",
             index=3,
             is_active=True,
             translations=[
@@ -210,7 +209,7 @@ class TestsForSuccess:
 
         resp_dto = CategoryResponseDTO.model_validate(response.json())
         assert resp_dto.slug == "safety-harnesses"
-        assert resp_dto.image_url == "https://example.com/safety.jpg"
+        assert resp_dto.image_url is None
         assert resp_dto.index == 3
         assert resp_dto.is_active is True
         assert len(resp_dto.translations) == 2

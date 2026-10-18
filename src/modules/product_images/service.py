@@ -123,25 +123,39 @@ class ProductImageService:
     async def update_image(
         self,
         image_id: int,
-        data: ProductImageUpdate,
+        data: Optional[ProductImageUpdate] = None,
+        file: Optional[UploadFile] = None,
     ) -> ProductImageResponseDTO:
-        """Обновление атрибутов изображения."""
+        """Обновление атрибутов изображения и/или замена файла изображения."""
         image = await self.repo.get_by_id(image_id)
         if not image:
             raise ProductImageNotFound(f"ProductImage with id {image_id} not found.")
 
-        update_dict = data.model_dump(exclude_unset=True)
-        if not update_dict:
+        update_dict = data.model_dump(exclude_unset=True) if data else {}
+        update_dict = {k: v for k, v in update_dict.items() if v is not None}
+
+        if not update_dict and file is None:
             raise NoDataForUpdate("No data provided for update.")
 
-        if data.is_main:
+        if file is not None:
+            if image.image_url and self.image_manager:
+                self.image_manager.delete_image(image.image_url)
+            file_name = f"img_{uuid.uuid4().hex[:10]}"
+            dest = self.path_builder.get_product(
+                product_id=image.product_id, file_name=file_name
+            )
+            saved_path = await self.image_manager.save_image(file=file, destination=dest)
+            update_dict["image_url"] = self.image_manager.to_media_url(saved_path)
+
+        if update_dict.get("is_main"):
             await self.repo.reset_main_images(
                 product_id=image.product_id,
                 exclude_image_id=image_id,
             )
 
-        await self.repo.update_image(image_id=image_id, update_data=update_dict)
-        await self.session.commit()
+        if update_dict:
+            await self.repo.update_image(image_id=image_id, update_data=update_dict)
+            await self.session.commit()
 
         updated = await self.repo.get_by_id(image_id)
         return ProductImageResponseDTO.model_validate(updated)

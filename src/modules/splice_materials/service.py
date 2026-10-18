@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.splice_materials.repository import SpliceMaterialRepository
@@ -34,13 +34,13 @@ class SpliceMaterialService:
         await self.session.refresh(new_material)
         return SpliceMaterialResponseDTO.model_validate(new_material)
 
-    async def get_all_materials(self, include_rules: bool = False) -> List[Union[SpliceMaterialWithRulesResponseDTO, SpliceMaterialResponseDTO]]:
+    async def get_all_materials(self, include_rules: bool = False) -> List[SpliceMaterialResponseDTO]:
         materials = await self.material_repo.get_all(include_rules=include_rules)
         if include_rules:
             return [SpliceMaterialWithRulesResponseDTO.model_validate(m) for m in materials]
         return [SpliceMaterialResponseDTO.model_validate(m) for m in materials]
 
-    async def get_material_by_id(self, material_id: int, include_rules: bool = False) -> Union[SpliceMaterialWithRulesResponseDTO, SpliceMaterialResponseDTO]:
+    async def get_material_by_id(self, material_id: int, include_rules: bool = False) -> SpliceMaterialResponseDTO:
         material = await self.material_repo.get_by_id(material_id, include_rules=include_rules)
         if not material:
             raise SpliceMaterialNotFound(f"SpliceMaterial with id {material_id} not found.")

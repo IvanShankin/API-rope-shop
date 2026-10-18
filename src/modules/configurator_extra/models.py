@@ -1,3 +1,4 @@
+from decimal import Decimal
 import enum
 from typing import List, Optional
 from datetime import datetime
@@ -25,7 +26,7 @@ class ConfiguratorExtra(BaseModelWithRelationshipTranslation):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     code: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
-    price: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
+    price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     currency: Mapped[Currency] = mapped_column(
         Enum(
             Currency,

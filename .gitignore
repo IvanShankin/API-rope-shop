@@ -4,5 +4,9 @@ __pycache__/
 .venv/
 
 *.log
+.env
+.test.env
 *.env
 *.test.env
+!.example.env
+!.example.test.env

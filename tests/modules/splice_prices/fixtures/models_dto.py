@@ -1,4 +1,4 @@
-﻿from typing import Optional
+from typing import Optional
 from pydantic import BaseModel
 
 class CreateSplicePriceRuleFixtureDTO(BaseModel):
@@ -7,3 +7,4 @@ class CreateSplicePriceRuleFixtureDTO(BaseModel):
     diameter_from_mm: Optional[float] = None
     diameter_to_mm: Optional[float] = None
     price: Optional[float] = None
+    is_active: Optional[bool] = None

@@ -1,39 +1,35 @@
+import logging
 from fastapi import FastAPI
+from sqlalchemy.exc import IntegrityError
 from starlette.responses import JSONResponse
 
-from src.modules.base.exception import ServiceException, NoDataForUpdate, NotFoundData
+logger = logging.getLogger(__name__)
+
+from src.modules.base.exception import (
+    DataAlreadyExists,
+    DeleteError,
+    HasDependencies,
+    NoDataForUpdate,
+    NotFoundData,
+    ServiceException,
+    ValidationError,
+)
+from src.modules.categories.exception import CategoryValidationError
+from src.modules.colors.exception import ColorValidationError
+from src.modules.configurator_extra.exception import ConfiguratorExtraValidationError
+from src.modules.materials.exception import MaterialValidationError
+from src.modules.material_groups.exception import MaterialGroupValidationError
+from src.modules.products.exception import ProductValidationError
+from src.modules.splice_types.exception import SpliceTypeValidationError
 from src.modules.check_permission.exception import PermissionErrorService
-from src.modules.colors.exception import (
-    ColorAlreadyExists,
-    ColorTranslationAlreadyExists,
-    ColorTranslationDeleteError,
-    ColorHasDependencies,
+from src.modules.configurator_setting.exception import ConfiguratorSettingValidationError
+from src.modules.product_specification.exception import (
+    ProductSpecificationInvalidBatch,
 )
-from src.modules.splice_materials.exception import SpliceMaterialHasDependencies
-from src.modules.splice_types.exception import (
-    SpliceTypeAlreadyExists,
-    SpliceTypeTranslationAlreadyExists,
-    SpliceTypeTranslationDeleteError,
-    SpliceTypeHasDependencies,
-)
-from src.modules.rope_product_color.exception import RopeProductColorAlreadyExists
-from src.modules.rope_allowed_splice.exception import RopeAllowedSpliceAlreadyExists
-from src.modules.rope_products.exception import (
-    RopeProductAlreadyExists,
-    RopeVariantAlreadyExists,
-    RopeProductHasDependencies,
-)
-from src.modules.material_groups.exception import (
-    MaterialGroupAlreadyExists,
-    MaterialGroupTranslationAlreadyExists,
-    MaterialGroupTranslationDeleteError,
-    MaterialGroupHasDependencies,
-)
-from src.modules.materials.exception import (
-    MaterialAlreadyExists,
-    MaterialTranslationAlreadyExists,
-    MaterialTranslationDeleteError,
-    MaterialHasDependencies,
+from src.modules.auth.exception import (
+    InvalidCredentials,
+    InvalidJWTToken,
+    UserInactive,
 )
 from src.modules.quote_requests.exception import (
     QuoteRequestValidationError,
@@ -42,118 +38,53 @@ from src.modules.quote_requests.exception import (
     SpliceNotAllowedForProductError,
     SplicePriceRuleNotFound,
 )
-from src.modules.configurator_extra.exception import (
-    ConfiguratorExtraAlreadyExists,
-    ConfiguratorExtraTranslationAlreadyExists,
-    ConfiguratorExtraTranslationDeleteError,
-    ConfiguratorExtraHasDependencies,
-)
-from src.modules.configurator_setting.exception import ConfiguratorSettingValidationError
+
 
 def register_exception_handlers(app: FastAPI):
 
-    @app.exception_handler(PermissionErrorService)
-    async def permission_error_handler(request, exc):
-        return JSONResponse(status_code=403, content={"detail": "Forbidden"})
+    # ==================== 400 Bad Request ====================
+    @app.exception_handler(ValidationError)
+    async def validation_error_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
 
-    @app.exception_handler(ServiceException)
-    async def service_handler(request, exc):
-        return JSONResponse(status_code=500, content={"detail": "Server Error"})
+    @app.exception_handler(CategoryValidationError)
+    async def category_validation_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(ColorValidationError)
+    async def color_validation_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(ConfiguratorExtraValidationError)
+    async def configurator_extra_validation_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(MaterialValidationError)
+    async def material_validation_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(MaterialGroupValidationError)
+    async def material_group_validation_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(ProductValidationError)
+    async def product_validation_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(SpliceTypeValidationError)
+    async def splice_type_validation_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
 
     @app.exception_handler(NoDataForUpdate)
     async def nodata_handler(request, exc):
         return JSONResponse(status_code=400, content={"detail": "Did not transmit data"})
 
-    @app.exception_handler(NotFoundData)
-    async def notfound_handler(request, exc):
-        return JSONResponse(status_code=404, content={"detail": "Not found data"})
-
-    @app.exception_handler(SpliceTypeAlreadyExists)
-    async def splice_type_already_exists_handler(request, exc):
-        return JSONResponse(status_code=409, content={"detail": str(exc)})
-
-    @app.exception_handler(SpliceTypeTranslationAlreadyExists)
-    async def splice_type_translation_already_exists_handler(request, exc):
-        return JSONResponse(status_code=409, content={"detail": str(exc)})
-
-    @app.exception_handler(SpliceTypeTranslationDeleteError)
-    async def splice_type_translation_delete_error_handler(request, exc):
+    @app.exception_handler(DeleteError)
+    async def delete_error_handler(request, exc):
         return JSONResponse(status_code=400, content={"detail": str(exc)})
 
-    @app.exception_handler(SpliceTypeHasDependencies)
-    async def splice_type_has_dependencies_handler(request, exc):
-        return JSONResponse(status_code=400, content={"detail": str(exc)})
-
-    @app.exception_handler(SpliceMaterialHasDependencies)
-    async def splice_material_has_dependencies_handler(request, exc):
-        return JSONResponse(status_code=400, content={"detail": str(exc)})
-
-    @app.exception_handler(ColorAlreadyExists)
-    async def color_already_exists_handler(request, exc):
-        return JSONResponse(status_code=409, content={"detail": str(exc)})
-
-    @app.exception_handler(ColorTranslationAlreadyExists)
-    async def color_translation_already_exists_handler(request, exc):
-        return JSONResponse(status_code=409, content={"detail": str(exc)})
-
-    @app.exception_handler(ColorTranslationDeleteError)
-    async def color_translation_delete_error_handler(request, exc):
-        return JSONResponse(status_code=400, content={"detail": str(exc)})
-
-    @app.exception_handler(ColorHasDependencies)
-    async def color_has_dependencies_handler(request, exc):
-        return JSONResponse(status_code=400, content={"detail": str(exc)})
-
-    @app.exception_handler(RopeProductColorAlreadyExists)
-    async def rope_product_color_already_exists_handler(request, exc):
-        return JSONResponse(status_code=409, content={"detail": str(exc)})
-
-    @app.exception_handler(RopeAllowedSpliceAlreadyExists)
-    async def rope_allowed_splice_already_exists_handler(request, exc):
-        return JSONResponse(status_code=409, content={"detail": str(exc)})
-
-    @app.exception_handler(RopeProductAlreadyExists)
-    async def rope_product_already_exists_handler(request, exc):
-        return JSONResponse(status_code=409, content={"detail": str(exc)})
-
-    @app.exception_handler(RopeVariantAlreadyExists)
-    async def rope_variant_already_exists_handler(request, exc):
-        return JSONResponse(status_code=409, content={"detail": str(exc)})
-
-    @app.exception_handler(RopeProductHasDependencies)
-    async def rope_product_has_dependencies_handler(request, exc):
-        return JSONResponse(status_code=400, content={"detail": str(exc)})
-
-    @app.exception_handler(MaterialGroupAlreadyExists)
-    async def material_group_already_exists_handler(request, exc):
-        return JSONResponse(status_code=409, content={"detail": str(exc)})
-
-    @app.exception_handler(MaterialGroupTranslationAlreadyExists)
-    async def material_group_translation_already_exists_handler(request, exc):
-        return JSONResponse(status_code=409, content={"detail": str(exc)})
-
-    @app.exception_handler(MaterialGroupTranslationDeleteError)
-    async def material_group_translation_delete_error_handler(request, exc):
-        return JSONResponse(status_code=400, content={"detail": str(exc)})
-
-    @app.exception_handler(MaterialGroupHasDependencies)
-    async def material_group_has_dependencies_handler(request, exc):
-        return JSONResponse(status_code=400, content={"detail": str(exc)})
-
-    @app.exception_handler(MaterialAlreadyExists)
-    async def material_already_exists_handler(request, exc):
-        return JSONResponse(status_code=409, content={"detail": str(exc)})
-
-    @app.exception_handler(MaterialTranslationAlreadyExists)
-    async def material_translation_already_exists_handler(request, exc):
-        return JSONResponse(status_code=409, content={"detail": str(exc)})
-
-    @app.exception_handler(MaterialTranslationDeleteError)
-    async def material_translation_delete_error_handler(request, exc):
-        return JSONResponse(status_code=400, content={"detail": str(exc)})
-
-    @app.exception_handler(MaterialHasDependencies)
-    async def material_has_dependencies_handler(request, exc):
+    @app.exception_handler(HasDependencies)
+    async def has_dependencies_handler(request, exc):
         return JSONResponse(status_code=400, content={"detail": str(exc)})
 
     @app.exception_handler(QuoteRequestValidationError)
@@ -176,22 +107,55 @@ def register_exception_handlers(app: FastAPI):
     async def splice_price_not_found_handler(request, exc):
         return JSONResponse(status_code=400, content={"detail": str(exc)})
 
-    @app.exception_handler(ConfiguratorExtraAlreadyExists)
-    async def configurator_extra_already_exists_handler(request, exc):
-        return JSONResponse(status_code=409, content={"detail": str(exc)})
-
-    @app.exception_handler(ConfiguratorExtraTranslationAlreadyExists)
-    async def configurator_extra_translation_already_exists_handler(request, exc):
-        return JSONResponse(status_code=409, content={"detail": str(exc)})
-
-    @app.exception_handler(ConfiguratorExtraTranslationDeleteError)
-    async def configurator_extra_translation_delete_error_handler(request, exc):
-        return JSONResponse(status_code=400, content={"detail": str(exc)})
-
-    @app.exception_handler(ConfiguratorExtraHasDependencies)
-    async def configurator_extra_has_dependencies_handler(request, exc):
-        return JSONResponse(status_code=400, content={"detail": str(exc)})
-
     @app.exception_handler(ConfiguratorSettingValidationError)
     async def configurator_setting_validation_handler(request, exc):
         return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    @app.exception_handler(ProductSpecificationInvalidBatch)
+    async def product_specification_invalid_batch_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    # ==================== 401 Unauthorized ====================
+    @app.exception_handler(InvalidCredentials)
+    async def invalid_credentials_handler(request, exc):
+        return JSONResponse(status_code=401, content={"detail": "Invalid credentials"})
+
+    @app.exception_handler(InvalidJWTToken)
+    async def invalid_jwt_token_handler(request, exc):
+        return JSONResponse(status_code=401, content={"detail": "Invalid or expired token"})
+
+    # ==================== 403 Forbidden ====================
+    @app.exception_handler(PermissionErrorService)
+    async def permission_error_handler(request, exc):
+        return JSONResponse(status_code=403, content={"detail": "Forbidden"})
+
+    @app.exception_handler(UserInactive)
+    async def user_inactive_handler(request, exc):
+        return JSONResponse(status_code=403, content={"detail": "User account is inactive"})
+
+    # ==================== 404 Not Found ====================
+    @app.exception_handler(NotFoundData)
+    async def notfound_handler(request, exc):
+        return JSONResponse(status_code=404, content={"detail": str(exc)})
+
+    # ==================== 409 Conflict ====================
+    @app.exception_handler(IntegrityError)
+    async def integrity_error_handler(request, exc):
+        return JSONResponse(status_code=409, content={"detail": "conflict with the current state of the resource"})
+
+    @app.exception_handler(DataAlreadyExists)
+    async def data_already_exists_handler(request, exc):
+        return JSONResponse(status_code=409, content={"detail": str(exc)})
+
+    # ==================== 500 Internal Server Error ====================
+    @app.exception_handler(ServiceException)
+    async def service_handler(request, exc):
+        return JSONResponse(status_code=500, content={"detail": "Server Error"})
+
+    @app.exception_handler(Exception)
+    async def unhandled_exception_handler(request, exc):
+        logger.error("Unhandled server exception: %s", exc, exc_info=True)
+        return JSONResponse(status_code=500, content={"detail": "Internal server error"})
+
+
+

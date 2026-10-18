@@ -1,4 +1,4 @@
-﻿from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from tests.helpers.functions import random_string
 from tests.modules.splice_materials.fixtures.models_dto import CreateSpliceMaterialFixtureDTO

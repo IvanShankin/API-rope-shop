@@ -1,11 +1,11 @@
-from src.modules.base.exception import ServiceException, NotFoundData
+from src.modules.base.exception import NotFoundData, DataAlreadyExists
 
 
 class RopeAllowedSpliceNotFound(NotFoundData):
     pass
 
 
-class RopeAllowedSpliceAlreadyExists(ServiceException):
+class RopeAllowedSpliceAlreadyExists(DataAlreadyExists):
     pass
 
 

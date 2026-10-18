@@ -10,15 +10,16 @@ from src.core.config.base import init_env
 
 
 class Config:
-    def __init__(self) -> None:
+    def __init__(self, postscript_for_paths: Optional[str] = '') -> None:
         init_env()
 
         self.env: EnvConfig = EnvConfig.build()
         self.db_connection: DbConnectionConfig = DbConnectionConfig.build(self.env)
-        self.paths: PathsConfig = PathsConfig.build()
+        self.paths: PathsConfig = PathsConfig.build(postscript_for_paths)
         self.tokens: TokensConfig = TokensConfig.build()
         self.allowed_extensions: AllowedExtensions = AllowedExtensions.build()
         self.cors: CorsConfig = CorsConfig.build()
+        self.admin: AdminConfig = AdminConfig.build(self.env)
 
 
 class EnvConfig(BaseModel):
@@ -30,16 +31,10 @@ class EnvConfig(BaseModel):
     db_password: str
     db_name: str
 
-    redis_host: str
-    redis_port: int
-    redis_url: str
-
     mode: str
 
     @classmethod
     def build(cls) -> "EnvConfig":
-        redis_host = os.environ['REDIS_HOST']
-        redis_port = int(os.environ['REDIS_PORT'])
 
         return cls(
             secret_key=os.environ['SECRET_KEY'],
@@ -48,10 +43,6 @@ class EnvConfig(BaseModel):
             db_user=os.environ['DB_USER'],
             db_password=os.environ['DB_PASSWORD'],
             db_name=os.environ['DB_NAME'],
-
-            redis_host=redis_host,
-            redis_port=redis_port,
-            redis_url=f"redis://{redis_host}:{redis_port}",
 
             mode=os.environ['MODE']
         )
@@ -71,7 +62,14 @@ class DbConnectionConfig(BaseModel):
     @classmethod
     def build(cls, conf_env: EnvConfig) -> "DbConnectionConfig":
         sql_db_url = f'postgresql+asyncpg://{conf_env.db_user}:{conf_env.db_password}@{conf_env.db_host}:{conf_env.db_port}/{conf_env.db_name}'
-        engine = create_async_engine(sql_db_url)
+        engine = create_async_engine(
+            sql_db_url,
+            pool_pre_ping=True,
+            pool_recycle=1800,
+            pool_size=10,
+            max_overflow=20,
+            pool_timeout=30,
+        )
 
         return cls(
             postgres_server_url=f'postgresql+asyncpg://{conf_env.db_user}:{conf_env.db_password}@{conf_env.db_host}:{conf_env.db_port}/postgres',
@@ -90,6 +88,7 @@ class PathsConfig(BaseModel):
     base: Path
     media: Path
     products: Path
+    categories: Path
     splice_types: Path
     work_photos: Path
     charity_photos: Path
@@ -98,8 +97,9 @@ class PathsConfig(BaseModel):
     @classmethod
     def build(cls, postscript: Optional[str] = '') -> "PathsConfig":
         base = Path(__file__).resolve().parents[3]
-        media = base / Path("media")
+        media = base / Path(f"media{postscript}")
         products = media / Path(f"products{postscript}")
+        categories = media / Path(f"categories{postscript}")
         splice_types = media / Path(f"splice_types{postscript}")
         work_photos = media / Path(f"work_photos{postscript}")
         charity_photos = media / Path(f"charity_photos{postscript}")
@@ -107,6 +107,7 @@ class PathsConfig(BaseModel):
 
         media.mkdir(exist_ok=True)
         products.mkdir(exist_ok=True)
+        categories.mkdir(exist_ok=True)
         splice_types.mkdir(exist_ok=True)
         work_photos.mkdir(exist_ok=True)
         charity_photos.mkdir(exist_ok=True)
@@ -116,6 +117,7 @@ class PathsConfig(BaseModel):
             base=base,
             media=media,
             products=products,
+            categories=categories,
             splice_types=splice_types,
             work_photos=work_photos,
             charity_photos=charity_photos,
@@ -191,4 +193,45 @@ class CorsConfig(BaseModel):
             allow_methods=["*"],
             allow_headers=["*"],
             expose_headers=["*"],
+        )
+
+
+class AdminConfig(BaseModel):
+    email: str
+    username: str
+    password: Optional[str] = None
+
+    @classmethod
+    def build(cls, conf_env: Optional[EnvConfig] = None) -> "AdminConfig":
+        env_mode = (conf_env.mode if conf_env else os.getenv("MODE", "")).upper()
+        email = os.environ.get("ADMIN_EMAIL", "admin@example.com")
+        username = os.environ.get("ADMIN_USERNAME", "admin")
+        password = os.environ.get("ADMIN_PASSWORD")
+
+        if not password:
+            if env_mode == "TEST":
+                password = "admin12345"
+            elif env_mode in ("PROD", "PRODUCTION"):
+                raise ValueError(
+                    "ADMIN_PASSWORD environment variable must be set in production mode and cannot be empty."
+                )
+            else:
+                import secrets
+                password = secrets.token_urlsafe(16)
+        else:
+            if env_mode in ("PROD", "PRODUCTION") and password.lower() in (
+                "admin12345",
+                "admin",
+                "password",
+                "12345678",
+                "root",
+            ):
+                raise ValueError(
+                    f"Default or insecure password '{password}' is not allowed for ADMIN_PASSWORD in production."
+                )
+
+        return cls(
+            email=email,
+            username=username,
+            password=password,
         )

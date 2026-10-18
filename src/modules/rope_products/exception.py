@@ -1,11 +1,11 @@
-from src.modules.base.exception import ServiceException, NotFoundData
+from src.modules.base.exception import NotFoundData, DataAlreadyExists, HasDependencies
 
 
 class RopeProductNotFound(NotFoundData):
     pass
 
 
-class RopeProductAlreadyExists(ServiceException):
+class RopeProductAlreadyExists(DataAlreadyExists):
     pass
 
 
@@ -13,7 +13,11 @@ class RopeVariantNotFound(NotFoundData):
     pass
 
 
-class RopeVariantAlreadyExists(ServiceException):
+class RopeVariantAlreadyExists(DataAlreadyExists):
+    pass
+
+
+class RopeProductHasDependencies(HasDependencies):
     pass
 
 
@@ -21,9 +25,9 @@ class MaterialGroupNotFound(NotFoundData):
     pass
 
 
-class SpliceMaterialNotFound(NotFoundData):
+class MaterialNotFound(NotFoundData):
     pass
 
 
-class RopeProductHasDependencies(ServiceException):
+class SpliceMaterialNotFound(NotFoundData):
     pass

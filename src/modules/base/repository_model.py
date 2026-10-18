@@ -1,12 +1,12 @@
-from typing import Type, Union, Any, Optional
+from typing import Any, Generic, Optional, Type, Union, overload
 
-from sqlalchemy import select, update, func
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.modules.base.database_model import ModelType, DTOType
+from src.modules.base.database_model import DTOType, ModelType
 
 
-class BaseRepository:
+class BaseRepository(Generic[ModelType]):
 
     def __init__(self, session: AsyncSession, model: Type[ModelType]):
         self.session = session
@@ -22,12 +22,37 @@ class BaseRepository:
         self.session.add(instance)
         return instance
 
-    async def get_by_id(self, model: ModelType, obj_id: int) -> ModelType | None:
-        stmt = select(model).where(model.id == obj_id)
+    @overload
+    async def get_by_id(self, arg1: int, arg2: None = None) -> ModelType | None: ...
 
+    @overload
+    async def get_by_id(self, arg1: Type[ModelType], arg2: int) -> ModelType | None: ...
+
+    async def get_by_id(
+        self,
+        arg1: Union[Type[ModelType], int],
+        arg2: Optional[int] = None,
+    ) -> ModelType | None:
+        if arg2 is not None:
+            model = arg1
+            obj_id = arg2
+        else:
+            model = self.model
+            obj_id = arg1
+
+        pk_col = getattr(model, "id", None)
+        if pk_col is None:
+            from sqlalchemy.inspection import inspect
+            mapper = inspect(model, raiseerr=False)
+            if mapper and mapper.primary_key:
+                pk_col = mapper.primary_key[0]
+            else:
+                pk_col = model.id
+
+        stmt = select(model).where(pk_col == obj_id)
         result = await self.session.execute(stmt)
-
         return result.scalar_one_or_none()
+
 
 
 class BaseIndexedRepository(BaseRepository):

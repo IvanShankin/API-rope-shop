@@ -1,6 +1,7 @@
 # Правила разработки и структура проекта 
 
-Это проект онлайн-школы (только backend). Стек: **Python 3.12+ / 3.14, FastAPI, SQLAlchemy 2.0 (asyncpg), Pydantic v2, Alembic, Pytest (pytest-asyncio)**.
+Это проект магазина по продаже верёвок и их сращиваний (только backend). 
+Стек: **Python 3.12+ / 3.14, FastAPI, SQLAlchemy 2.0 (asyncpg), Pydantic v2, Alembic, Pytest (pytest-asyncio)**.
 
 ---
 

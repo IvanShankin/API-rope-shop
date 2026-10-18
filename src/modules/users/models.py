@@ -1,4 +1,4 @@
-﻿import enum
+import enum
 from datetime import datetime
 from typing import TYPE_CHECKING, List
 

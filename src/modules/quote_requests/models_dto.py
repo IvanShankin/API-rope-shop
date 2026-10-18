@@ -1,3 +1,5 @@
+from decimal import Decimal, ROUND_HALF_UP
+from enum import Enum
 from typing import List, Optional
 from datetime import datetime
 from pydantic import BaseModel, EmailStr, Field
@@ -11,10 +13,22 @@ from src.modules.quote_requests.models import (
 )
 
 
-# ==================== Items Input DTOs ====================
+class QuoteRequestSortBy(str, Enum):
+    CREATED_AT = "created_at"
+    UPDATED_AT = "updated_at"
+    TOTAL_PRICE = "total_price"
+    REQUEST_NUMBER = "request_number"
+    STATUS = "status"
 
+
+class SortOrder(str, Enum):
+    ASC = "asc"
+    DESC = "desc"
+
+
+# ==================== Items Input DTOs ====================\n
 class QuoteRopeItemCreate(BaseModel):
-    rope_product_id: int = Field(..., description="ID of the configured rope product")
+    product_id: int = Field(..., description="ID of the configured product")
     color_id: int = Field(..., description="ID of the selected color")
     diameter_mm: float = Field(..., gt=0, description="Diameter in mm")
     length_m: float = Field(..., gt=0, description="Rope length in meters")
@@ -46,7 +60,7 @@ class QuoteRequestCreate(BaseModel):
     phone: Optional[str] = Field(None, max_length=100, description="Client phone number")
     comment: Optional[str] = Field(None, description="Client notes / wishes")
     is_urgent: bool = Field(default=False, description="Urgent order flag")
-    locale: Optional[Language] = Field(Language.ENG, description="Language to use for item snapshots")
+    locale: Optional[Language] = Field(Language.GER, description="Language to use for item snapshots")
 
     rope_items: List[QuoteRopeItemCreate] = Field(
         default_factory=list,
@@ -59,14 +73,6 @@ class QuoteRequestCreate(BaseModel):
     extra_items: List[QuoteExtraItemCreate] = Field(
         default_factory=list,
         description="List of configurator extras"
-    )
-    extra_ids: List[int] = Field(
-        default_factory=list,
-        description="Convenience shortcut: list of extra IDs"
-    )
-    extras: Optional[List[int]] = Field(
-        None,
-        description="Alias for extra_ids from configurator payloads"
     )
 
 
@@ -81,6 +87,8 @@ class QuoteRequestUpdateDTO(BaseModel):
     comment: Optional[str] = None
     status: Optional[QuoteRequestStatus] = None
     is_urgent: Optional[bool] = None
+    subtotal: Optional[float] = Field(None, ge=0)
+    urgent_surcharge: Optional[float] = Field(None, ge=0)
     total_price: Optional[float] = Field(None, ge=0)
 
 
@@ -92,7 +100,7 @@ class ResolvedEndSpliceDTO(BaseModel):
 
 
 class ResolvedRopeItemDTO(BaseModel):
-    rope_product_id: int
+    product_id: int
     color_id: int
     product_name_snapshot: str
     color_name_snapshot: str
@@ -112,7 +120,8 @@ class ResolvedRopeItemDTO(BaseModel):
 
     @property
     def total_cost(self) -> float:
-        return round(self.total_rope_cost + self.end_a_cost + self.end_b_cost, 2)
+        total = Decimal(str(self.total_rope_cost)) + Decimal(str(self.end_a_cost)) + Decimal(str(self.end_b_cost))
+        return float(total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
 
     @property
     def splices_count(self) -> int:
@@ -157,7 +166,7 @@ class QuoteRequestTotalsDTO(BaseModel):
 
 class QuoteRopeItemInsertDTO(BaseModel):
     quote_request_id: int
-    rope_product_id: int
+    product_id: int
     color_id: int
     product_name_snapshot: str
     color_name_snapshot: str
@@ -207,6 +216,8 @@ class QuoteRequestInsertDTO(BaseModel):
     phone: Optional[str] = None
     comment: Optional[str] = None
     currency: Currency
+    subtotal: float = 0.0
+    urgent_surcharge: float = 0.0
     total_price: float
     vat_rate: float
     is_urgent: bool
@@ -218,8 +229,8 @@ class QuoteRequestInsertDTO(BaseModel):
 class QuoteRopeItemResponseDTO(ORMDTO):
     id: int
     quote_request_id: int
-    rope_product_id: Optional[int]
-    color_id: Optional[int]
+    product_id: Optional[int] = None
+    color_id: Optional[int] = None
     product_name_snapshot: str
     color_name_snapshot: str
     diameter_mm: float
@@ -227,25 +238,26 @@ class QuoteRopeItemResponseDTO(ORMDTO):
     quantity: int
     price_per_meter_snapshot: float
     total_rope_cost: float
-    end_a_type_id: Optional[int]
-    end_a_name_snapshot: Optional[str]
-    end_a_eye_size_cm: Optional[float]
+    end_a_type_id: Optional[int] = None
+    end_a_name_snapshot: Optional[str] = None
+    end_a_eye_size_cm: Optional[float] = None
     end_a_cost: float
-    end_b_type_id: Optional[int]
-    end_b_name_snapshot: Optional[str]
-    end_b_eye_size_cm: Optional[float]
+    end_b_type_id: Optional[int] = None
+    end_b_name_snapshot: Optional[str] = None
+    end_b_eye_size_cm: Optional[float] = None
     end_b_cost: float
+    total_cost: float
 
 
 class QuoteServiceItemResponseDTO(ORMDTO):
     id: int
     quote_request_id: int
-    splice_type_id: Optional[int]
-    splice_material_id: Optional[int]
+    splice_type_id: Optional[int] = None
+    splice_material_id: Optional[int] = None
     service_name_snapshot: str
     material_name_snapshot: str
     diameter_mm: float
-    eye_size_cm: Optional[float]
+    eye_size_cm: Optional[float] = None
     quantity: int
     unit_price_snapshot: float
     total_cost: float
@@ -254,7 +266,7 @@ class QuoteServiceItemResponseDTO(ORMDTO):
 class QuoteExtraItemResponseDTO(ORMDTO):
     id: int
     quote_request_id: int
-    extra_id: Optional[int]
+    extra_id: Optional[int] = None
     name_snapshot: str
     billing_type_snapshot: str
     quantity: int
@@ -268,9 +280,11 @@ class QuoteRequestResponseDTO(ORMDTO):
     configurator_type: ConfiguratorType
     name: str
     email: str
-    phone: Optional[str]
-    comment: Optional[str]
+    phone: Optional[str] = None
+    comment: Optional[str] = None
     currency: Currency
+    subtotal: float
+    urgent_surcharge: float
     total_price: float
     vat_rate: float
     is_urgent: bool
@@ -282,18 +296,8 @@ class QuoteRequestResponseDTO(ORMDTO):
     extra_items: List[QuoteExtraItemResponseDTO] = []
 
 
-class QuoteRequestShortResponseDTO(ORMDTO):
-    id: int
-    request_number: str
-    configurator_type: ConfiguratorType
-    name: str
-    email: str
-    phone: Optional[str]
-    currency: Currency
-    total_price: float
-    vat_rate: float
-    is_urgent: bool
-    status: QuoteRequestStatus
-    created_at: datetime
-    updated_at: datetime
-    items_count: int = 0
+class QuoteRequestListResponseDTO(BaseModel):
+    items: List[QuoteRequestResponseDTO]
+    total: int
+    skip: int = 0
+    limit: int = 50

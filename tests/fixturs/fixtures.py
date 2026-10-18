@@ -1,3 +1,5 @@
+import os
+import shutil
 from typing import AsyncGenerator
 
 import pytest_asyncio
@@ -26,7 +28,12 @@ async def app_fastapi() -> AsyncGenerator[FastAPI, None]:
 
 @pytest_asyncio.fixture(scope="session")
 async def config_fix() -> AsyncGenerator[Config, None]:
-    yield create_config()
+    conf = create_config(postscript_for_paths="_tests")
+    yield conf
+    try:
+        shutil.rmtree(conf.paths.media)
+    except:
+        pass
 
 
 @pytest_asyncio.fixture

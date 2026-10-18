@@ -1,4 +1,4 @@
-﻿from fastapi import Depends
+from fastapi import Depends
 
 from src.modules.auth.depends import get_current_user
 from src.modules.check_permission.exception import PermissionErrorService

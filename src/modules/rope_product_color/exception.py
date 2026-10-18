@@ -1,11 +1,11 @@
-from src.modules.base.exception import ServiceException, NotFoundData
+from src.modules.base.exception import NotFoundData, DataAlreadyExists
 
 
 class RopeProductColorNotFound(NotFoundData):
     pass
 
 
-class RopeProductColorAlreadyExists(ServiceException):
+class RopeProductColorAlreadyExists(DataAlreadyExists):
     pass
 
 

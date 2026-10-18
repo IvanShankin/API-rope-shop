@@ -5,6 +5,10 @@ class UserNotFound(NotFoundData):
     pass
 
 
-class UserAlreadyExit(ServiceException):
+class UserAlreadyExists(ServiceException):
     pass
+
+
+# Backward compatibility alias
+UserAlreadyExit = UserAlreadyExists
 

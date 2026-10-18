@@ -1,4 +1,3 @@
-import io
 from pathlib import Path
 from typing import Callable
 from PIL import Image
@@ -138,13 +137,13 @@ def test_to_media_url_inside_media(
 ):
     """Проверка генерации media url для пути внутри папки media."""
     media_root = config_fix.paths.media.resolve()
-    test_file_path = media_root / "splice_types" / "1" / "preview.webp"
+    test_file_path = media_root / f"{config_fix.paths.splice_types.name}" / "1" / "preview.webp"
 
     url_from_path = image_manager_fixture.to_media_url(test_file_path)
-    assert url_from_path == "/media/splice_types/1/preview.webp"
+    assert url_from_path == f"/{config_fix.paths.media.name}/{config_fix.paths.splice_types.name}/1/preview.webp"
 
     url_from_str = image_manager_fixture.to_media_url(str(test_file_path))
-    assert url_from_str == "/media/splice_types/1/preview.webp"
+    assert url_from_str == f"/{config_fix.paths.media.name}/{config_fix.paths.splice_types.name}/1/preview.webp"
 
 
 def test_to_media_url_outside_media(
@@ -170,7 +169,7 @@ def test_delete_image_with_media_url(
 
     assert full_path.exists()
 
-    media_url = f"/media/{rel_subpath.as_posix()}"
+    media_url = f"/{config_fix.paths.media.name}/{rel_subpath.as_posix()}"
     image_manager_fixture.delete_image(media_url)
 
     assert not full_path.exists()
@@ -205,6 +204,7 @@ def test_delete_image_with_path_and_str(
 def test_delete_image_safe_handling(
     image_manager_fixture: ImageManager,
     tmp_path: Path,
+    config_fix: Config,
 ):
     """Проверка безопасного вызова delete_image при None, пустой строке, несуществующем файле или папке."""
     # None и пустая строка не должны вызывать исключений
@@ -212,7 +212,7 @@ def test_delete_image_safe_handling(
     image_manager_fixture.delete_image("")
 
     # Несуществующий URL и файл не должны вызывать исключений
-    image_manager_fixture.delete_image("/media/non_existent_folder/missing.webp")
+    image_manager_fixture.delete_image(f"/{config_fix.paths.media.name}/non_existent_folder/missing.webp")
     image_manager_fixture.delete_image(tmp_path / "non_existent_file.webp")
 
     # Папка не должна удаляться

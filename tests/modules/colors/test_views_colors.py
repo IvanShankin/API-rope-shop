@@ -689,7 +689,7 @@ class TestsForErrors:
         product = await create_rope_product_fixture()
         await create_rope_product_color_fixture(
             CreateRopeProductColorFixtureDTO(
-                rope_product_id=product.product_id,
+                product_id=product.product_id,
                 color_id=color.id,
                 index=1,
             )

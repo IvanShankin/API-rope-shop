@@ -1,4 +1,4 @@
-﻿from typing import Optional
+from typing import Optional
 from pydantic import BaseModel
 from src.modules.users.models import UserRole
 
@@ -7,3 +7,4 @@ class CreateUserFixtureDTO(BaseModel):
     username: Optional[str] = None
     password: Optional[str] = None
     role: Optional[UserRole] = None
+    is_active: Optional[bool] = None

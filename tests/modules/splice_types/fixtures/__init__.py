@@ -1,4 +1,4 @@
-﻿from .fixtures import (
+from .fixtures import (
     create_splice_type_fixture,
     create_splice_type_translation_fixture,
 )

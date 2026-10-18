@@ -1,55 +1,76 @@
-from typing import List, Optional
+from typing import Optional, List, Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.modules.base.exception import NoDataForUpdate
 from src.modules.products.models import Product
-from src.modules.rope_products.repository import RopeProductRepository, RopeVariantRepository
+from src.modules.rope_products.models import RopeConfiguratorSetting, ProductVariant
+from src.modules.rope_products.repository import RopeProductRepository, ProductVariantRepository
+from src.modules.material_groups.repository import MaterialGroupRepository
+from src.modules.materials.repository import MaterialRepository
+from src.modules.splice_materials.repository import SpliceMaterialRepository
 from src.modules.rope_products.models_dto import (
-    RopeProductCreate,
-    RopeProductUpdate,
-    RopeProductResponseDTO,
-    RopeProductDetailResponseDTO,
-    RopeVariantBase,
-    RopeVariantCreate,
-    RopeVariantUpdate,
-    RopeVariantUpdateIndexDTO,
-    RopeVariantResponseDTO,
+    RopeConfiguratorSettingCreate,
+    RopeConfiguratorSettingUpdate,
+    RopeConfiguratorSettingResponseDTO,
+    RopeConfiguratorSettingDetailResponseDTO,
+    RopeConfiguratorSettingBase,
+    ProductVariantCreate,
+    ProductVariantCreateForProduct,
+    ProductVariantUpdate,
+    ProductVariantUpdateIndexDTO,
+    ProductVariantResponseDTO,
+    ProductVariantBase,
 )
 from src.modules.rope_products.exception import (
     RopeProductNotFound,
     RopeProductAlreadyExists,
+    RopeProductHasDependencies,
     RopeVariantNotFound,
     RopeVariantAlreadyExists,
     MaterialGroupNotFound,
+    MaterialNotFound,
     SpliceMaterialNotFound,
-    RopeProductHasDependencies,
 )
+from src.modules.rope_product_color.models_dto import ProductColorResponseDTO
+from src.modules.rope_allowed_splice.models_dto import RopeAllowedSpliceResponseDTO
+from src.modules.splice_materials.models_dto import SpliceMaterialResponseDTO
 
 
 class RopeProductsService:
     def __init__(
         self,
         product_repo: RopeProductRepository,
-        variant_repo: RopeVariantRepository,
+        variant_repo: ProductVariantRepository,
+        material_group_repo: MaterialGroupRepository,
+        material_repo: MaterialRepository,
+        splice_material_repo: SpliceMaterialRepository,
         session: AsyncSession,
     ):
         self.product_repo = product_repo
         self.variant_repo = variant_repo
+        self.material_group_repo = material_group_repo
+        self.material_repo = material_repo
+        self.splice_material_repo = splice_material_repo
         self.session = session
 
-    # ==================== RopeProduct Operations ====================
+    # ==================== RopeConfiguratorSetting Operations ====================
 
     async def create_rope_product(
         self,
-        data: RopeProductCreate
-    ) -> RopeProductResponseDTO:
-        """Создание товара-веревки."""
-        if not await self.product_repo.exists_material_group(data.material_group_id):
+        data: RopeConfiguratorSettingCreate
+    ) -> RopeConfiguratorSettingResponseDTO:
+        """Создание конфигурационных настроек для товара-каната."""
+        if not await self.material_group_repo.get_by_group_id(data.material_group_id):
             raise MaterialGroupNotFound(
                 f"MaterialGroup with id {data.material_group_id} not found."
             )
 
-        if not await self.product_repo.exists_splice_material(data.splice_material_id):
+        if data.material_id is not None:
+            if not await self.material_repo.exists_material(data.material_id):
+                raise MaterialNotFound(
+                    f"Material with id {data.material_id} not found."
+                )
+
+        if not await self.splice_material_repo.get_by_id(data.splice_material_id):
             raise SpliceMaterialNotFound(
                 f"SpliceMaterial with id {data.splice_material_id} not found."
             )
@@ -57,10 +78,10 @@ class RopeProductsService:
         if data.product_id is not None:
             if await self.product_repo.exists(data.product_id):
                 raise RopeProductAlreadyExists(
-                    f"RopeProduct with product_id {data.product_id} already exists."
+                    f"RopeConfiguratorSetting with product_id {data.product_id} already exists."
                 )
             if not await self.product_repo.exists_base_product(data.product_id):
-                base_product = Product(id=data.product_id)
+                base_product = Product(id=data.product_id, product_type="rope")
                 self.session.add(base_product)
                 await self.session.flush()
             target_product_id = data.product_id
@@ -68,120 +89,166 @@ class RopeProductsService:
             base_product = await self.product_repo.create_base_product()
             target_product_id = base_product.id
 
-        product_dict = data.model_dump(exclude={"product_id"})
-        product_dict["product_id"] = target_product_id
+        setting_dto = RopeConfiguratorSettingBase(
+            product_id=target_product_id,
+            material_group_id=data.material_group_id,
+            material_id=data.material_id,
+            splice_material_id=data.splice_material_id,
+            construction=data.construction,
+            core_description=data.core_description,
+            cover_description=data.cover_description,
+            can_be_spliced=data.can_be_spliced,
+        )
 
-        new_rope_product = await self.product_repo.add_product(product_dict)
+        new_setting = await self.product_repo.add_setting(setting_dto)
         await self.session.commit()
 
-        loaded = await self.product_repo.get_by_id(new_rope_product.product_id)
-        return RopeProductResponseDTO.model_validate(loaded)
+        loaded = await self.product_repo.get_by_product_id(new_setting.product_id)
+        return RopeConfiguratorSettingResponseDTO.model_validate(loaded)
 
     async def get_rope_product(
         self,
         product_id: int
-    ) -> RopeProductDetailResponseDTO:
-        """Получение детальной информации о товаре-веревке (с вариантами, цветами, сплайсами)."""
-        item = await self.product_repo.get_by_id(product_id, include_relations=True)
+    ) -> RopeConfiguratorSettingDetailResponseDTO:
+        """Получение детальной информации о настройках каната."""
+        item = await self.product_repo.get_by_product_id(product_id, include_relations=True)
         if not item:
             raise RopeProductNotFound(
-                f"RopeProduct with product_id {product_id} not found."
+                f"RopeConfiguratorSetting with product_id {product_id} not found."
             )
-        return RopeProductDetailResponseDTO.model_validate(item)
 
-    async def list_rope_products(
+        variants = []
+        colors = []
+        allowed_splices = []
+
+        if item.product:
+            if item.product.variants:
+                variants = [ProductVariantResponseDTO.model_validate(v) for v in item.product.variants]
+            if item.product.colors:
+                colors = [ProductColorResponseDTO.model_validate(c) for c in item.product.colors]
+            if item.product.allowed_splices:
+                allowed_splices = [RopeAllowedSpliceResponseDTO.model_validate(s) for s in item.product.allowed_splices]
+
+        splice_material = None
+        if item.splice_material:
+            splice_material = SpliceMaterialResponseDTO.model_validate(item.splice_material)
+
+        return RopeConfiguratorSettingDetailResponseDTO(
+            product_id=item.product_id,
+            material_group_id=item.material_group_id,
+            material_id=item.material_id,
+            splice_material_id=item.splice_material_id,
+            construction=item.construction,
+            core_description=item.core_description,
+            cover_description=item.cover_description,
+            can_be_spliced=item.can_be_spliced,
+            created_at=item.created_at,
+            updated_at=item.updated_at,
+            variants=variants,
+            colors=colors,
+            allowed_splices=allowed_splices,
+            splice_material=splice_material,
+        )
+
+    async def get_all_rope_products(
         self,
         material_group_id: Optional[int] = None,
         can_be_spliced: Optional[bool] = None,
-    ) -> List[RopeProductResponseDTO]:
+    ) -> Sequence[RopeConfiguratorSettingResponseDTO]:
         """Получение списка товаров-веревок с фильтрацией."""
         items = await self.product_repo.get_all(
             material_group_id=material_group_id,
             can_be_spliced=can_be_spliced,
         )
-        return [RopeProductResponseDTO.model_validate(i) for i in items]
+        return [RopeConfiguratorSettingResponseDTO.model_validate(item) for item in items]
 
     async def update_rope_product(
         self,
         product_id: int,
-        data: RopeProductUpdate
-    ) -> RopeProductResponseDTO:
+        data: RopeConfiguratorSettingUpdate
+    ) -> RopeConfiguratorSettingResponseDTO:
         """Обновление характеристик товара-веревки."""
         if not await self.product_repo.exists(product_id):
             raise RopeProductNotFound(
-                f"RopeProduct with product_id {product_id} not found."
+                f"RopeConfiguratorSetting with product_id {product_id} not found."
             )
 
         if data.material_group_id is not None:
-            if not await self.product_repo.exists_material_group(data.material_group_id):
+            if not await self.material_group_repo.get_by_group_id(data.material_group_id):
                 raise MaterialGroupNotFound(
                     f"MaterialGroup with id {data.material_group_id} not found."
                 )
 
+        if data.material_id is not None:
+            if not await self.material_repo.exists_material(data.material_id):
+                raise MaterialNotFound(
+                    f"Material with id {data.material_id} not found."
+                )
+
         if data.splice_material_id is not None:
-            if not await self.product_repo.exists_splice_material(data.splice_material_id):
+            if not await self.splice_material_repo.get_by_id(data.splice_material_id):
                 raise SpliceMaterialNotFound(
                     f"SpliceMaterial with id {data.splice_material_id} not found."
                 )
 
-        update_dict = data.model_dump(exclude_unset=True)
-        if not update_dict:
-            raise NoDataForUpdate("Did not transmit data")
-
-        await self.product_repo.update_product(product_id, update_dict)
+        await self.product_repo.update_setting(product_id, data)
         await self.session.commit()
 
-        updated = await self.product_repo.get_by_id(product_id)
-        return RopeProductResponseDTO.model_validate(updated)
+        updated = await self.product_repo.get_by_product_id(product_id)
+        return RopeConfiguratorSettingResponseDTO.model_validate(updated)
 
     async def delete_rope_product(self, product_id: int) -> None:
-        """Удаление товара-веревки."""
+        """Удаление товара-веревки с проверкой зависимостей."""
         if not await self.product_repo.exists(product_id):
             raise RopeProductNotFound(
-                f"RopeProduct with product_id {product_id} not found."
+                f"RopeConfiguratorSetting with product_id {product_id} not found."
             )
 
-        has_deps = await self.product_repo.has_dependencies(product_id)
-        if has_deps:
+        if await self.product_repo.has_dependencies(product_id):
             raise RopeProductHasDependencies(
-                f"Cannot delete RopeProduct with product_id {product_id} because it has associated variants, colors, or splices."
+                f"Cannot delete RopeConfiguratorSetting {product_id}: it has associated variants, colors, or splices."
             )
 
-        await self.product_repo.delete_product(product_id)
+        await self.product_repo.delete_setting(product_id)
         await self.session.commit()
 
-    # ==================== RopeVariant Operations ====================
+    # ==================== ProductVariant Operations ====================
 
     async def create_variant(
         self,
-        data: RopeVariantCreate
-    ) -> RopeVariantResponseDTO:
-        """Добавление варианта/диаметра товара в конец списка (max_index + 1)."""
-        if not await self.product_repo.exists(data.rope_product_id):
+        data: ProductVariantCreate
+    ) -> ProductVariantResponseDTO:
+        """Добавление варианта товара."""
+        if not await self.product_repo.exists_base_product(data.product_id):
             raise RopeProductNotFound(
-                f"RopeProduct with product_id {data.rope_product_id} not found."
+                f"Product with id {data.product_id} not found."
             )
 
-        existing = await self.variant_repo.get_by_product_and_diameter(
-            rope_product_id=data.rope_product_id,
-            diameter_mm=data.diameter_mm,
-        )
-        if existing:
-            raise RopeVariantAlreadyExists(
-                f"Variant with diameter {data.diameter_mm} mm already exists for RopeProduct {data.rope_product_id}."
+        if data.size_value is not None:
+            existing = await self.variant_repo.get_by_product_and_size(
+                product_id=data.product_id,
+                size_value=data.size_value,
             )
+            if existing:
+                raise RopeVariantAlreadyExists(
+                    f"Variant with size {data.size_value} already exists for Product {data.product_id}."
+                )
 
         max_index = await self.variant_repo.get_max_index(
-            rope_product_id=data.rope_product_id
+            product_id=data.product_id
         )
         target_index = max_index + 1
 
-        variant_dto = RopeVariantBase(
-            rope_product_id=data.rope_product_id,
-            diameter_mm=data.diameter_mm,
+        variant_dto = ProductVariantBase(
+            product_id=data.product_id,
+            variant_name=data.variant_name,
+            size_value=data.size_value,
             breaking_load_dan=data.breaking_load_dan,
-            weight_g_per_m=data.weight_g_per_m,
-            price_per_meter=data.price_per_meter,
+            working_load_dan=data.working_load_dan,
+            working_stretch_percent=data.working_stretch_percent,
+            weight_g=data.weight_g,
+            price=data.price,
+            sku=data.sku,
             index=target_index,
             is_active=data.is_active,
         )
@@ -190,76 +257,106 @@ class RopeProductsService:
         await self.session.commit()
 
         loaded = await self.variant_repo.get_by_id(new_variant.id)
-        return RopeVariantResponseDTO.model_validate(loaded)
+        return ProductVariantResponseDTO.model_validate(loaded)
 
-    async def get_variants_by_product_id(
+    async def create_variant_for_product(
         self,
-        rope_product_id: int,
-        is_active: Optional[bool] = None
-    ) -> List[RopeVariantResponseDTO]:
-        """Получение всех вариантов товара в порядке index."""
-        if not await self.product_repo.exists(rope_product_id):
-            raise RopeProductNotFound(
-                f"RopeProduct with product_id {rope_product_id} not found."
-            )
-
-        items = await self.variant_repo.get_by_product_id(
-            rope_product_id=rope_product_id,
-            is_active=is_active,
+        product_id: int,
+        data: ProductVariantCreateForProduct
+    ) -> ProductVariantResponseDTO:
+        """Добавление варианта для указанного товара."""
+        full_create = ProductVariantCreate(
+            product_id=product_id,
+            variant_name=data.variant_name,
+            size_value=data.size_value,
+            breaking_load_dan=data.breaking_load_dan,
+            working_load_dan=data.working_load_dan,
+            working_stretch_percent=data.working_stretch_percent,
+            weight_g=data.weight_g,
+            price=data.price,
+            sku=data.sku,
+            is_active=data.is_active,
         )
-        return [RopeVariantResponseDTO.model_validate(i) for i in items]
+        return await self.create_variant(full_create)
 
-    async def get_variant_by_id(self, variant_id: int) -> RopeVariantResponseDTO:
+    async def get_variants_for_product(
+        self,
+        product_id: int,
+        is_active: Optional[bool] = None
+    ) -> Sequence[ProductVariantResponseDTO]:
+        """Получение списка вариантов товара."""
+        if not await self.product_repo.exists_base_product(product_id):
+            raise RopeProductNotFound(
+                f"Product with id {product_id} not found."
+            )
+        items = await self.variant_repo.get_by_product_id(product_id, is_active=is_active)
+        return [ProductVariantResponseDTO.model_validate(item) for item in items]
+
+    async def get_variant_by_id(self, variant_id: int) -> ProductVariantResponseDTO:
         """Получение варианта по ID."""
         item = await self.variant_repo.get_by_id(variant_id)
         if not item:
             raise RopeVariantNotFound(
-                f"RopeVariant with id {variant_id} not found."
+                f"ProductVariant with id {variant_id} not found."
             )
-        return RopeVariantResponseDTO.model_validate(item)
+        return ProductVariantResponseDTO.model_validate(item)
 
     async def update_variant(
         self,
         variant_id: int,
-        data: RopeVariantUpdate
-    ) -> RopeVariantResponseDTO:
+        data: ProductVariantUpdate
+    ) -> ProductVariantResponseDTO:
         """Обновление характеристик варианта."""
         item = await self.variant_repo.get_by_id(variant_id)
         if not item:
             raise RopeVariantNotFound(
-                f"RopeVariant with id {variant_id} not found."
+                f"ProductVariant with id {variant_id} not found."
             )
 
-        if data.diameter_mm is not None and data.diameter_mm != float(item.diameter_mm):
-            existing = await self.variant_repo.get_by_product_and_diameter(
-                rope_product_id=item.rope_product_id,
-                diameter_mm=data.diameter_mm,
+        if data.size_value is not None and data.size_value != item.size_value:
+            existing = await self.variant_repo.get_by_product_and_size(
+                product_id=item.product_id,
+                size_value=data.size_value,
             )
             if existing and existing.id != variant_id:
                 raise RopeVariantAlreadyExists(
-                    f"Variant with diameter {data.diameter_mm} mm already exists for RopeProduct {item.rope_product_id}."
+                    f"Variant with size {data.size_value} already exists for product {item.product_id}."
                 )
 
-        update_dict = data.model_dump(exclude_unset=True)
-        if not update_dict:
-            raise NoDataForUpdate("Did not transmit data")
-
-        await self.variant_repo.update_variant(variant_id, update_dict)
+        await self.variant_repo.update_variant(variant_id, data)
         await self.session.commit()
 
         updated = await self.variant_repo.get_by_id(variant_id)
-        return RopeVariantResponseDTO.model_validate(updated)
+        return ProductVariantResponseDTO.model_validate(updated)
 
-    async def reorder_variant(
-        self,
-        variant_id: int,
-        data: RopeVariantUpdateIndexDTO
-    ) -> RopeVariantResponseDTO:
-        """Изменение позиции варианта внутри товара со сдвигом остальных."""
+    async def delete_variant(self, variant_id: int) -> None:
+        """Удаление варианта."""
         item = await self.variant_repo.get_by_id(variant_id)
         if not item:
             raise RopeVariantNotFound(
-                f"RopeVariant with id {variant_id} not found."
+                f"ProductVariant with id {variant_id} not found."
+            )
+
+        deleted_index = item.index
+        product_id = item.product_id
+
+        await self.variant_repo.delete_variant(variant_id)
+        await self.variant_repo.shift_indexes_after_delete(
+            deleted_index=deleted_index,
+            product_id=product_id,
+        )
+        await self.session.commit()
+
+    async def update_variant_index(
+        self,
+        variant_id: int,
+        data: ProductVariantUpdateIndexDTO
+    ) -> List[ProductVariantResponseDTO]:
+        """Изменение позиции варианта в списке."""
+        item = await self.variant_repo.get_by_id(variant_id)
+        if not item:
+            raise RopeVariantNotFound(
+                f"ProductVariant with id {variant_id} not found."
             )
 
         if item.index != data.new_index:
@@ -267,27 +364,9 @@ class RopeProductsService:
                 obj_id=variant_id,
                 old_index=item.index,
                 new_index=data.new_index,
-                rope_product_id=item.rope_product_id,
+                product_id=item.product_id,
             )
             await self.session.commit()
 
-        updated = await self.variant_repo.get_by_id(variant_id)
-        return RopeVariantResponseDTO.model_validate(updated)
-
-    async def delete_variant(self, variant_id: int) -> None:
-        """Удаление варианта и сдвиг оставшихся индексов для устранения пробелов."""
-        item = await self.variant_repo.get_by_id(variant_id)
-        if not item:
-            raise RopeVariantNotFound(
-                f"RopeVariant with id {variant_id} not found."
-            )
-
-        deleted_index = item.index
-        product_id = item.rope_product_id
-
-        await self.variant_repo.delete_variant(variant_id)
-        await self.variant_repo.shift_indexes_after_delete(
-            deleted_index=deleted_index,
-            rope_product_id=product_id,
-        )
-        await self.session.commit()
+        all_variants = await self.variant_repo.get_by_product_id(item.product_id)
+        return [ProductVariantResponseDTO.model_validate(v) for v in all_variants]

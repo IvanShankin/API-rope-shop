@@ -22,6 +22,7 @@ class UserResponse(ORMDTO):
     email: EmailStr
     username: str
     created_at: datetime
+    role: UserRole
 
 
 class RegisterUserRequestDTO(BaseModel):

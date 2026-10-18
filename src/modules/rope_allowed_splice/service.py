@@ -32,10 +32,10 @@ class RopeAllowedSpliceService:
         self,
         data: RopeAllowedSpliceCreate
     ) -> RopeAllowedSpliceResponseDTO:
-        """Привязка типа сращивания к товару-веревке."""
-        if not await self.repo.exists_product(data.rope_product_id):
+        """Привязка типа сращивания к товару."""
+        if not await self.repo.exists_product(data.product_id):
             raise RopeProductNotFound(
-                f"RopeProduct with id {data.rope_product_id} not found."
+                f"Product with id {data.product_id} not found."
             )
 
         if not await self.repo.exists_splice_type(data.splice_type_id):
@@ -44,32 +44,32 @@ class RopeAllowedSpliceService:
             )
 
         existing = await self.repo.get_by_composite_key(
-            rope_product_id=data.rope_product_id,
+            product_id=data.product_id,
             splice_type_id=data.splice_type_id,
         )
         if existing:
             raise RopeAllowedSpliceAlreadyExists(
-                f"SpliceType with id {data.splice_type_id} is already linked to RopeProduct with id {data.rope_product_id}."
+                f"SpliceType with id {data.splice_type_id} is already linked to Product with id {data.product_id}."
             )
 
         await self.repo.add_item(data)
         await self.session.commit()
 
         loaded_item = await self.repo.get_by_composite_key(
-            rope_product_id=data.rope_product_id,
+            product_id=data.product_id,
             splice_type_id=data.splice_type_id,
         )
         return RopeAllowedSpliceResponseDTO.model_validate(loaded_item)
 
     async def set_allowed_splices_for_product(
         self,
-        rope_product_id: int,
+        product_id: int,
         data: RopeAllowedSpliceBulkSetDTO
     ) -> List[RopeAllowedSpliceResponseDTO]:
-        """Пакетная установка (перезапись) разрешенных типов сращиваний для товара-веревки."""
-        if not await self.repo.exists_product(rope_product_id):
+        """Пакетная установка (перезапись) разрешенных типов сращиваний для товара."""
+        if not await self.repo.exists_product(product_id):
             raise RopeProductNotFound(
-                f"RopeProduct with id {rope_product_id} not found."
+                f"Product with id {product_id} not found."
             )
 
         unique_splice_ids = list(dict.fromkeys(data.splice_type_ids))
@@ -80,32 +80,32 @@ class RopeAllowedSpliceService:
                     f"SpliceType with id {splice_id} not found."
                 )
 
-        await self.repo.delete_by_product_id(rope_product_id)
+        await self.repo.delete_by_product_id(product_id)
 
         for splice_id in unique_splice_ids:
             item_dto = RopeAllowedSpliceBase(
-                rope_product_id=rope_product_id,
+                product_id=product_id,
                 splice_type_id=splice_id
             )
             await self.repo.add_item(item_dto)
 
         await self.session.commit()
 
-        items = await self.repo.get_by_product_id(rope_product_id)
+        items = await self.repo.get_by_product_id(product_id)
         return [RopeAllowedSpliceResponseDTO.model_validate(item) for item in items]
 
     async def get_allowed_splices_by_product_id(
         self,
-        rope_product_id: int,
+        product_id: int,
         locale: Optional[Language] = None
     ) -> List[RopeAllowedSpliceLocalizedResponseDTO]:
         """Получение списка разрешенных типов сращиваний для товара с локализацией."""
-        if not await self.repo.exists_product(rope_product_id):
+        if not await self.repo.exists_product(product_id):
             raise RopeProductNotFound(
-                f"RopeProduct with id {rope_product_id} not found."
+                f"Product with id {product_id} not found."
             )
 
-        items = await self.repo.get_by_product_id(rope_product_id)
+        items = await self.repo.get_by_product_id(product_id)
         target_locale = locale or Language.ENG
 
         result: List[RopeAllowedSpliceLocalizedResponseDTO] = []
@@ -136,7 +136,7 @@ class RopeAllowedSpliceService:
 
             result.append(
                 RopeAllowedSpliceLocalizedResponseDTO(
-                    rope_product_id=item.rope_product_id,
+                    product_id=item.product_id,
                     splice_type_id=item.splice_type_id,
                     splice_type=localized_splice
                 )
@@ -146,37 +146,37 @@ class RopeAllowedSpliceService:
 
     async def get_by_composite_key(
         self,
-        rope_product_id: int,
+        product_id: int,
         splice_type_id: int
     ) -> RopeAllowedSpliceResponseDTO:
         """Получение привязки по составному ключу."""
         item = await self.repo.get_by_composite_key(
-            rope_product_id=rope_product_id,
+            product_id=product_id,
             splice_type_id=splice_type_id
         )
         if not item:
             raise RopeAllowedSpliceNotFound(
-                f"RopeAllowedSplice with rope_product_id {rope_product_id} and splice_type_id {splice_type_id} not found."
+                f"RopeAllowedSplice with product_id {product_id} and splice_type_id {splice_type_id} not found."
             )
         return RopeAllowedSpliceResponseDTO.model_validate(item)
 
     async def delete_rope_allowed_splice(
         self,
-        rope_product_id: int,
+        product_id: int,
         splice_type_id: int
     ) -> None:
         """Удаление привязки типа сращивания к товару."""
         item = await self.repo.get_by_composite_key(
-            rope_product_id=rope_product_id,
+            product_id=product_id,
             splice_type_id=splice_type_id
         )
         if not item:
             raise RopeAllowedSpliceNotFound(
-                f"RopeAllowedSplice with rope_product_id {rope_product_id} and splice_type_id {splice_type_id} not found."
+                f"RopeAllowedSplice with product_id {product_id} and splice_type_id {splice_type_id} not found."
             )
 
         await self.repo.delete_item(
-            rope_product_id=rope_product_id,
+            product_id=product_id,
             splice_type_id=splice_type_id
         )
         await self.session.commit()

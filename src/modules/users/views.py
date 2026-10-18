@@ -2,13 +2,13 @@ from fastapi import APIRouter, Depends
 from starlette import status
 
 from src.modules.auth.depends import get_current_user
-from src.modules.users.models_dto import UserResponse
+from src.modules.users.models_dto import UserResponse, UserDTO
 
-router = APIRouter(prefix="/users")
+router = APIRouter(prefix="/users", tags=["Users"])
 
 
 @router.get("/me", response_model=UserResponse, status_code=status.HTTP_200_OK)
-async def get_me(user = Depends(get_current_user)):
+async def get_me(user: UserDTO = Depends(get_current_user)):
     return user
 
 

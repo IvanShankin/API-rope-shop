@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 from sqlalchemy import select
 
 from src.modules.users.models import UserRole
@@ -12,6 +12,7 @@ from src.modules.splice_prices.models_dto import (
 )
 from tests.modules.splice_types.fixtures.models_dto import CreateSpliceTypeFixtureDTO
 from tests.modules.splice_materials.fixtures.models_dto import CreateSpliceMaterialFixtureDTO
+from src.modules.splice_prices.repository import SplicePriceRuleRepository
 from tests.helpers.functions import comparison_models
 
 class TestsForSuccess:
@@ -167,3 +168,46 @@ class TestsForErrors:
     ):
         response = await client_for_tests.get("/splice_prices/99999")
         assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_get_price_deterministic_with_multiple_rules(
+        self,
+        session_db,
+        create_splice_type_fixture,
+        create_splice_material_fixture,
+        create_splice_price_rule_fixture,
+    ):
+        """Проверка отсутствия MultipleResultsFound при нескольких подходящих правилах."""
+        st = await create_splice_type_fixture(CreateSpliceTypeFixtureDTO())
+        sm = await create_splice_material_fixture(CreateSpliceMaterialFixtureDTO())
+
+        # Широкое правило (5-20 мм)
+        await create_splice_price_rule_fixture(
+            CreateSplicePriceRuleFixtureDTO(
+                splice_type_id=st.id,
+                splice_material_id=sm.id,
+                diameter_from_mm=5.0,
+                diameter_to_mm=20.0,
+                price=50.0,
+            )
+        )
+        # Узкое специальное правило (10-18 мм)
+        await create_splice_price_rule_fixture(
+            CreateSplicePriceRuleFixtureDTO(
+                splice_type_id=st.id,
+                splice_material_id=sm.id,
+                diameter_from_mm=10.0,
+                diameter_to_mm=18.0,
+                price=120.0,
+            )
+        )
+
+        repo = SplicePriceRuleRepository(session_db)
+        # Для диаметра 15мм подходят оба правила: выбирается специальное (120.0) без сбоя MultipleResultsFound
+        price_15 = await repo.get_price(material_id=sm.id, type_id=st.id, diameter=15.0)
+        assert price_15 == 120.0
+
+        # Для диаметра 8мм подходит только широкое правило (50.0)
+        price_8 = await repo.get_price(material_id=sm.id, type_id=st.id, diameter=8.0)
+        assert price_8 == 50.0
+

@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 from sqlalchemy import select
 
 from src.modules.users.models import UserRole
@@ -86,7 +86,7 @@ class TestsForSuccess:
         material_from_db = result_db.scalar_one_or_none()
         
         assert material_from_db
-        assert comparison_models(new_material, material_from_db)
+        assert comparison_models(new_material, material_from_db, keys_not_checked=["rules"])
 
 
     @pytest.mark.asyncio
@@ -124,7 +124,7 @@ class TestsForSuccess:
         material_from_db = result_db.scalar_one_or_none()
         
         assert material_from_db
-        assert comparison_models(updated_material, material_from_db)
+        assert comparison_models(updated_material, material_from_db, keys_not_checked=["rules"])
 
 
     @pytest.mark.asyncio

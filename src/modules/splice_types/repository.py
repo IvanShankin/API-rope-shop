@@ -28,7 +28,7 @@ class SpliceTypeRepository(BaseRepository):
         if is_active is not None:
             stmt = stmt.where(SpliceType.is_active == is_active)
         
-        stmt = stmt.order_by(SpliceType.index)
+        stmt = stmt.order_by(SpliceType.index.asc(), SpliceType.id.asc())
         
         result = await self.session.execute(stmt)
         return result.scalars().all()
@@ -42,7 +42,7 @@ class SpliceTypeRepository(BaseRepository):
         if is_active is not None:
             stmt = stmt.where(SpliceType.is_active == is_active)
             
-        stmt = stmt.order_by(SpliceType.index)
+        stmt = stmt.order_by(SpliceType.index.asc(), SpliceType.id.asc())
         
         result = await self.session.execute(stmt)
         return result.scalars().all()

@@ -39,6 +39,39 @@ class PathBuilder:
 
         return root_dir / f"{file_name}.webp"
 
+    def get_product_dir(
+        self,
+        product_id: int,
+    ) -> Path:
+        return self.config.paths.products / str(product_id)
+
+    # --- category ---
+
+    def get_category_original(
+        self,
+        category_id: int,
+        file_name: str,
+        file_type: str,
+    ) -> Path:
+        root_dir = self._prepare_directory(
+            self.config.paths.categories
+            / str(category_id)
+            / "original"
+        )
+
+        return root_dir / f"{file_name}.{file_type}"
+
+    def get_category(
+        self,
+        category_id: int,
+        file_name: str,
+    ) -> Path:
+        root_dir = self._prepare_directory(
+            self.config.paths.categories / str(category_id)
+        )
+
+        return root_dir / f"{file_name}.webp"
+
     # --- splice_type ---
 
     def get_splice_type_original(
@@ -93,6 +126,12 @@ class PathBuilder:
 
         return root_dir / f"{file_name}.webp"
 
+    def get_work_photo_dir(
+        self,
+        work_photo_id: int,
+    ) -> Path:
+        return self.config.paths.work_photos / str(work_photo_id)
+
     # --- charity_photo ---
 
     def get_charity_photo_original(
@@ -119,6 +158,12 @@ class PathBuilder:
         )
 
         return root_dir / f"{file_name}.webp"
+
+    def get_charity_photo_dir(
+        self,
+        charity_photo_id: int,
+    ) -> Path:
+        return self.config.paths.charity_photos / str(charity_photo_id)
 
     # --- temp ---
 

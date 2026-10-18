@@ -1,11 +1,21 @@
-from src.modules.base.exception import ServiceException, NotFoundData
+from src.modules.base.exception import (
+    DataAlreadyExists,
+    DeleteError,
+    HasDependencies,
+    NotFoundData,
+    ValidationError,
+)
 
 
 class SpliceTypeNotFound(NotFoundData):
     pass
 
 
-class SpliceTypeAlreadyExists(ServiceException):
+class SpliceTypeAlreadyExists(DataAlreadyExists):
+    pass
+
+
+class SpliceTypeValidationError(ValidationError):
     pass
 
 
@@ -13,13 +23,13 @@ class SpliceTypeTranslationNotFound(NotFoundData):
     pass
 
 
-class SpliceTypeTranslationAlreadyExists(ServiceException):
+class SpliceTypeTranslationAlreadyExists(DataAlreadyExists):
     pass
 
 
-class SpliceTypeTranslationDeleteError(ServiceException):
+class SpliceTypeTranslationDeleteError(DeleteError):
     pass
 
 
-class SpliceTypeHasDependencies(ServiceException):
+class SpliceTypeHasDependencies(HasDependencies):
     pass

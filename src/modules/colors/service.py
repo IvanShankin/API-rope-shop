@@ -1,7 +1,5 @@
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import HTTPException
-from starlette import status
 
 from src.modules.base.database_model import Language
 from src.modules.colors.repository import ColorRepository, ColorTranslationRepository
@@ -20,6 +18,7 @@ from src.modules.colors.models_dto import (
 from src.modules.colors.exception import (
     ColorNotFound,
     ColorAlreadyExists,
+    ColorValidationError,
     ColorTranslationNotFound,
     ColorTranslationAlreadyExists,
     ColorTranslationDeleteError,
@@ -40,9 +39,8 @@ class ColorService:
 
     async def create_color(self, data: ColorCreate) -> ColorResponseDTO:
         if not data.translations:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="At least one translation is required when creating a Color.",
+            raise ColorValidationError(
+                "At least one translation is required when creating a Color."
             )
 
         existing = await self.color_repo.get_by_code(data.code)

@@ -41,13 +41,13 @@ class TestsForSuccess:
 
         await create_rope_allowed_splice_fixture(
             CreateRopeAllowedSpliceFixtureDTO(
-                rope_product_id=product.product_id,
+                product_id=product.product_id,
                 splice_type_id=splice_1.id,
             )
         )
         await create_rope_allowed_splice_fixture(
             CreateRopeAllowedSpliceFixtureDTO(
-                rope_product_id=product.product_id,
+                product_id=product.product_id,
                 splice_type_id=splice_2.id,
             )
         )
@@ -62,13 +62,13 @@ class TestsForSuccess:
             for item in response.json()
         ]
         assert len(data) == 2
-        assert data[0].rope_product_id == product.product_id
+        assert data[0].product_id == product.product_id
         assert data[0].splice_type_id == splice_1.id
         assert data[0].splice_type is not None
         assert data[0].splice_type.code == "loop_01"
         assert data[0].splice_type.name == "Loop Splice"
 
-        assert data[1].rope_product_id == product.product_id
+        assert data[1].product_id == product.product_id
         assert data[1].splice_type_id == splice_2.id
         assert data[1].splice_type is not None
         assert data[1].splice_type.code == "endless_01"
@@ -99,7 +99,7 @@ class TestsForSuccess:
 
         await create_rope_allowed_splice_fixture(
             CreateRopeAllowedSpliceFixtureDTO(
-                rope_product_id=product.product_id,
+                product_id=product.product_id,
                 splice_type_id=splice.id,
             )
         )
@@ -149,12 +149,12 @@ class TestsForSuccess:
         link = await create_rope_allowed_splice_fixture()
 
         response = await client_for_tests.get(
-            f"/rope_allowed_splices/{link.rope_product_id}/{link.splice_type_id}"
+            f"/rope_allowed_splices/{link.product_id}/{link.splice_type_id}"
         )
         assert response.status_code == 200
 
         resp_dto = RopeAllowedSpliceResponseDTO.model_validate(response.json())
-        assert resp_dto.rope_product_id == link.rope_product_id
+        assert resp_dto.product_id == link.product_id
         assert resp_dto.splice_type_id == link.splice_type_id
         assert resp_dto.splice_type is not None
         assert comparison_models(link, resp_dto, keys_not_checked=["splice_type"])
@@ -176,7 +176,7 @@ class TestsForSuccess:
         splice = await create_splice_type_fixture()
 
         req_data = RopeAllowedSpliceCreate(
-            rope_product_id=product.product_id,
+            product_id=product.product_id,
             splice_type_id=splice.id,
         )
 
@@ -188,7 +188,7 @@ class TestsForSuccess:
         assert response.status_code == 201
 
         resp_dto = RopeAllowedSpliceResponseDTO.model_validate(response.json())
-        assert resp_dto.rope_product_id == product.product_id
+        assert resp_dto.product_id == product.product_id
         assert resp_dto.splice_type_id == splice.id
         assert resp_dto.splice_type is not None
         assert resp_dto.splice_type.id == splice.id
@@ -196,13 +196,13 @@ class TestsForSuccess:
         # Проверка в БД
         res = await session_db.execute(
             select(RopeAllowedSplice).where(
-                RopeAllowedSplice.rope_product_id == product.product_id,
+                RopeAllowedSplice.product_id == product.product_id,
                 RopeAllowedSplice.splice_type_id == splice.id,
             )
         )
         db_item = res.scalar_one_or_none()
         assert db_item is not None
-        assert db_item.rope_product_id == product.product_id
+        assert db_item.product_id == product.product_id
         assert db_item.splice_type_id == splice.id
 
     @pytest.mark.asyncio
@@ -227,7 +227,7 @@ class TestsForSuccess:
         # Старая привязка, которая должна быть удалена
         await create_rope_allowed_splice_fixture(
             CreateRopeAllowedSpliceFixtureDTO(
-                rope_product_id=product.product_id,
+                product_id=product.product_id,
                 splice_type_id=old_splice.id,
             )
         )
@@ -254,7 +254,7 @@ class TestsForSuccess:
         # Проверка в БД: старого нет, новые есть
         res = await session_db.execute(
             select(RopeAllowedSplice).where(
-                RopeAllowedSplice.rope_product_id == product.product_id
+                RopeAllowedSplice.product_id == product.product_id
             )
         )
         db_items = res.scalars().all()
@@ -276,7 +276,7 @@ class TestsForSuccess:
         link = await create_rope_allowed_splice_fixture()
 
         response = await client_for_tests.delete(
-            f"/rope_allowed_splices/{link.rope_product_id}/{link.splice_type_id}",
+            f"/rope_allowed_splices/{link.product_id}/{link.splice_type_id}",
             headers={"Authorization": f"Bearer {access_token}"},
         )
         assert response.status_code == 204
@@ -284,7 +284,7 @@ class TestsForSuccess:
         # Проверка в БД
         res = await session_db.execute(
             select(RopeAllowedSplice).where(
-                RopeAllowedSplice.rope_product_id == link.rope_product_id,
+                RopeAllowedSplice.product_id == link.product_id,
                 RopeAllowedSplice.splice_type_id == link.splice_type_id,
             )
         )
@@ -305,7 +305,7 @@ class TestsForFailures:
         splice = await create_splice_type_fixture()
 
         req_data = RopeAllowedSpliceCreate(
-            rope_product_id=product.product_id,
+            product_id=product.product_id,
             splice_type_id=splice.id,
         )
 
@@ -331,7 +331,7 @@ class TestsForFailures:
         splice = await create_splice_type_fixture()
 
         req_data = RopeAllowedSpliceCreate(
-            rope_product_id=product.product_id,
+            product_id=product.product_id,
             splice_type_id=splice.id,
         )
 
@@ -356,7 +356,7 @@ class TestsForFailures:
         splice = await create_splice_type_fixture()
 
         req_data = RopeAllowedSpliceCreate(
-            rope_product_id=999999,
+            product_id=999999,
             splice_type_id=splice.id,
         )
 
@@ -381,7 +381,7 @@ class TestsForFailures:
         product = await create_rope_product_fixture()
 
         req_data = RopeAllowedSpliceCreate(
-            rope_product_id=product.product_id,
+            product_id=product.product_id,
             splice_type_id=999999,
         )
 
@@ -406,7 +406,7 @@ class TestsForFailures:
         link = await create_rope_allowed_splice_fixture()
 
         req_data = RopeAllowedSpliceCreate(
-            rope_product_id=link.rope_product_id,
+            product_id=link.product_id,
             splice_type_id=link.splice_type_id,
         )
 
@@ -445,7 +445,7 @@ class TestsForFailures:
         link = await create_rope_allowed_splice_fixture()
 
         response = await client_for_tests.delete(
-            f"/rope_allowed_splices/{link.rope_product_id}/{link.splice_type_id}"
+            f"/rope_allowed_splices/{link.product_id}/{link.splice_type_id}"
         )
         assert response.status_code == 401
 
@@ -463,7 +463,7 @@ class TestsForFailures:
         link = await create_rope_allowed_splice_fixture()
 
         response = await client_for_tests.delete(
-            f"/rope_allowed_splices/{link.rope_product_id}/{link.splice_type_id}",
+            f"/rope_allowed_splices/{link.product_id}/{link.splice_type_id}",
             headers={"Authorization": f"Bearer {access_token}"},
         )
         assert response.status_code == 403

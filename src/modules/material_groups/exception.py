@@ -1,11 +1,21 @@
-from src.modules.base.exception import ServiceException, NotFoundData
+from src.modules.base.exception import (
+    DataAlreadyExists,
+    DeleteError,
+    HasDependencies,
+    NotFoundData,
+    ValidationError,
+)
 
 
 class MaterialGroupNotFound(NotFoundData):
     pass
 
 
-class MaterialGroupAlreadyExists(ServiceException):
+class MaterialGroupAlreadyExists(DataAlreadyExists):
+    pass
+
+
+class MaterialGroupValidationError(ValidationError):
     pass
 
 
@@ -13,13 +23,13 @@ class MaterialGroupTranslationNotFound(NotFoundData):
     pass
 
 
-class MaterialGroupTranslationAlreadyExists(ServiceException):
+class MaterialGroupTranslationAlreadyExists(DataAlreadyExists):
     pass
 
 
-class MaterialGroupTranslationDeleteError(ServiceException):
+class MaterialGroupTranslationDeleteError(DeleteError):
     pass
 
 
-class MaterialGroupHasDependencies(ServiceException):
+class MaterialGroupHasDependencies(HasDependencies):
     pass

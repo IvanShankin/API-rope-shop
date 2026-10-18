@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database.database import get_db
 from src.modules.colors.repository import ColorRepository
-from src.modules.rope_products.repository import RopeProductRepository, RopeVariantRepository
+from src.modules.rope_products.repository import RopeProductRepository, ProductVariantRepository
 from src.modules.splice_materials.repository import SpliceMaterialRepository
 from src.modules.splice_prices.repository import SplicePriceRuleRepository
 from src.modules.splice_types.repository import SpliceTypeRepository
@@ -51,7 +51,7 @@ def get_quote_request_service(
         service_item_repo=QuoteServiceItemRepository(session=session),
         extra_item_repo=QuoteExtraItemRepository(session=session),
         rope_product_repo=RopeProductRepository(session=session),
-        variant_repo=RopeVariantRepository(session=session),
+        variant_repo=ProductVariantRepository(session=session),
         color_repo=ColorRepository(session=session),
         splice_type_repo=SpliceTypeRepository(session=session),
         splice_material_repo=SpliceMaterialRepository(session=session),

@@ -1,0 +1,1 @@
+"""Contact requests module tests."""

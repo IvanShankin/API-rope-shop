@@ -33,14 +33,18 @@ class SpliceTypeBase(BaseModel):
     index: int
     is_active: bool = True
 
-class SpliceTypeCreate(SpliceTypeBase):
+class SpliceTypeCreate(BaseModel):
+    code: str
+    category: SpliceCategory
+    visual_type: SpliceVisualType
+    index: int
+    is_active: bool = True
     translations: List[SpliceTypeTranslationCreate]
 
 class SpliceTypeUpdate(BaseModel):
     code: Optional[str] = None
     category: Optional[SpliceCategory] = None
     visual_type: Optional[SpliceVisualType] = None
-    image_url: Optional[str] = None
     index: Optional[int] = None
     is_active: Optional[bool] = None
 

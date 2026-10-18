@@ -1,6 +1,6 @@
 import pytest
 
-from helpers.functions import comparison_models
+from tests.helpers.functions import comparison_models
 
 
 @pytest.mark.asyncio
@@ -13,5 +13,9 @@ async def test_get_me(client_for_tests, create_user_fixture):
     )
 
     assert response.status_code == 200
-    assert comparison_models(user, response.json())
+    assert comparison_models(
+        user,
+        response.json(),
+        keys_not_checked=["hashed_password", "is_active", "updated_at"]
+    )
 

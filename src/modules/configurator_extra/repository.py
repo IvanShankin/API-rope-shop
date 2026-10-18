@@ -31,7 +31,7 @@ class ConfiguratorExtraRepository(BaseIndexedRepository):
         stmt = (
             select(ConfiguratorExtra)
             .options(selectinload(ConfiguratorExtra.translations))
-            .order_by(ConfiguratorExtra.index)
+            .order_by(ConfiguratorExtra.index.asc(), ConfiguratorExtra.id.asc())
         )
         if billing_type is not None:
             stmt = stmt.where(ConfiguratorExtra.billing_type == billing_type)

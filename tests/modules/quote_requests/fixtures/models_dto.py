@@ -9,7 +9,7 @@ from src.modules.quote_requests.models import (
 
 
 class CreateQuoteRopeItemFixtureDTO(BaseModel):
-    rope_product_id: Optional[int] = None
+    product_id: Optional[int] = None
     color_id: Optional[int] = None
     product_name_snapshot: Optional[str] = "Standard Yacht Rope"
     color_name_snapshot: Optional[str] = "Red"
@@ -57,6 +57,8 @@ class CreateQuoteRequestFixtureDTO(BaseModel):
     phone: Optional[str] = "+49 123 456789"
     comment: Optional[str] = "Standard test quote request"
     currency: Currency = Currency.EUR
+    subtotal: float = 100.0
+    urgent_surcharge: float = 0.0
     total_price: float = 100.0
     vat_rate: float = 0.0
     is_urgent: bool = False

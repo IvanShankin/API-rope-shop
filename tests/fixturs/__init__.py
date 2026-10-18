@@ -31,6 +31,24 @@ from tests.modules.colors.fixtures import (
     create_color_fixture,
     create_color_translation_fixture,
 )
+from tests.modules.categories.fixtures import (
+    create_category_fixture,
+    create_category_translation_fixture,
+)
+from tests.modules.products.fixtures import (
+    create_product_fixture,
+    create_product_translation_fixture,
+)
+from tests.modules.product_images.fixtures import create_product_image_fixture
+from tests.modules.product_specification.fixtures import (
+    create_product_specification_fixture,
+    create_product_specification_translation_fixture,
+)
+from tests.modules.product_application.fixtures import (
+    create_product_application_fixture,
+    create_product_application_translation_fixture,
+    create_product_assigned_application_fixture,
+)
 from tests.modules.rope_products.fixtures import (
     create_rope_product_fixture,
     create_rope_variant_fixture,
@@ -58,6 +76,17 @@ from tests.modules.configurator_extra.fixtures import (
 from tests.modules.configurator_setting.fixtures import (
     create_configurator_setting_fixture,
 )
+from tests.modules.work_photos.fixtures import create_work_photo_fixture
+from tests.modules.charity_photos.fixtures import create_charity_photo_fixture
+from tests.modules.reviews.fixtures import (
+    create_review_fixture,
+    create_review_translation_fixture,
+)
+from tests.modules.content_blocks.fixtures import (
+    create_content_block_fixture,
+    create_content_block_translation_fixture,
+)
+from tests.modules.contact_requests.fixtures import create_contact_request_fixture
 
 __all__ = [
     "lifespan_for_tests",
@@ -81,6 +110,16 @@ __all__ = [
     "color_service_fixture",
     "create_color_fixture",
     "create_color_translation_fixture",
+    "create_category_fixture",
+    "create_category_translation_fixture",
+    "create_product_fixture",
+    "create_product_translation_fixture",
+    "create_product_image_fixture",
+    "create_product_specification_fixture",
+    "create_product_specification_translation_fixture",
+    "create_product_application_fixture",
+    "create_product_application_translation_fixture",
+    "create_product_assigned_application_fixture",
     "create_rope_product_fixture",
     "create_rope_variant_fixture",
     "create_rope_product_color_fixture",
@@ -98,4 +137,11 @@ __all__ = [
     "create_configurator_extra_fixture",
     "create_configurator_extra_translation_fixture",
     "create_configurator_setting_fixture",
+    "create_work_photo_fixture",
+    "create_charity_photo_fixture",
+    "create_review_fixture",
+    "create_review_translation_fixture",
+    "create_content_block_fixture",
+    "create_content_block_translation_fixture",
+    "create_contact_request_fixture",
 ]

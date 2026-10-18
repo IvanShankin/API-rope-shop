@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import logging
 
 from sqlalchemy import text
@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from src.core.config import Config
 
 # Не удалять. Используется для подгрузки всех моделей БД
+from src.modules.db_models import *
 from src.core.database.database import Base
 
 async def create_database():
@@ -24,7 +25,7 @@ async def create_database():
             )
             database_exists = result.scalar() == 1
 
-            if not database_exists: # если БД нет
+            if not database_exists:
                 logging.info(f"Creating database {conf.env.db_name}...")
                 await conn.execute(text(f"CREATE DATABASE {conf.env.db_name}"))
                 logging.info(f"Database {conf.env.db_name} created successfully")
@@ -40,7 +41,11 @@ async def create_database():
     engine = create_async_engine(conf.db_connection.sql_db_url)
     try:
         async with engine.begin() as conn:
-            logging.info("Creating database tables...")
+            logging.info("Cleaning obsolete tables and creating database tables...")
+            await conn.execute(text("DROP TABLE IF EXISTS rope_variants CASCADE;"))
+            await conn.execute(text("DROP TABLE IF EXISTS rope_product_colors CASCADE;"))
+            await conn.execute(text("DROP TABLE IF EXISTS rope_products CASCADE;"))
+            await conn.run_sync(Base.metadata.drop_all)
             await conn.run_sync(Base.metadata.create_all)
             logging.info("Database tables created successfully")
     except Exception as e:
@@ -50,7 +55,5 @@ async def create_database():
         await engine.dispose()
 
 
-
 if __name__ == "__main__":
     asyncio.run(create_database())
-

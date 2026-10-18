@@ -1,4 +1,4 @@
-﻿from passlib.context import CryptContext
+from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tests.helpers.functions import random_string
@@ -18,6 +18,7 @@ async def create_user_factory(
         email=random_string() + "@mail.com" if new_user.email is None else new_user.email,
         username=random_string() if new_user.username is None else new_user.username,
         role=new_user.role if new_user.role else UserRole.USER,
+        is_active=True if new_user.is_active is None else new_user.is_active,
         hashed_password=_get_hash_password(
             crypto_context=crypto_context,
             password=random_string() if new_user.password is None else new_user.password

@@ -14,8 +14,25 @@ DTOType = TypeVar("DTOType", bound="BaseModel")
 
 
 class Language(str, enum.Enum):
+    RUS = "rus"
     ENG = "eng"
     GER = "ger"
+
+    @classmethod
+    def _missing_(cls, value: object):
+        if isinstance(value, str):
+            mapping = {
+                "ru": cls.RUS,
+                "rus": cls.RUS,
+                "en": cls.ENG,
+                "eng": cls.ENG,
+                "de": cls.GER,
+                "ger": cls.GER,
+            }
+            norm = value.lower()
+            if norm in mapping:
+                return mapping[norm]
+        return super()._missing_(value)
 
 
 class BaseTranslation(Base):
@@ -38,6 +55,18 @@ class BaseModelWithRelationshipTranslation(Base):
     """Наследовать только тому классу, что имеет связь с переводами (BaseTranslation)"""
     __abstract__ = True
 
+    @staticmethod
+    def _normalize_locale(val: Any) -> str:
+        if val is None:
+            return ""
+        s = val.value if hasattr(val, "value") else str(val)
+        mapping = {
+            "ru": "ru", "rus": "ru",
+            "en": "en", "eng": "en",
+            "de": "de", "ger": "de",
+        }
+        return mapping.get(s.lower(), s.lower())
+
     def _get_field_with_translation(
         self,
         field: Callable[[Any], Any],
@@ -48,13 +77,15 @@ class BaseModelWithRelationshipTranslation(Base):
         if not self.translations:
             return None
 
+        target_norm = self._normalize_locale(locale)
         for t in self.translations:
-            if t.locale == locale:
+            if self._normalize_locale(t.locale) == target_norm:
                 return field(t)
 
         if fallback:
+            fallback_norm = self._normalize_locale(fallback)
             for t in self.translations:
-                if t.locale == fallback:
+                if self._normalize_locale(t.locale) == fallback_norm:
                     return field(t)
 
         # вернём первый попавшийся, если ни запрошенный язык, ни fallback не найдены
@@ -62,18 +93,3 @@ class BaseModelWithRelationshipTranslation(Base):
         if first_translation_value:
             return first_translation_value
         return None
-
-
-class SoftDeleteMixin:
-    __abstract__ = True
-
-    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-
-    def soft_delete(self):
-        self.is_deleted = True
-        self.deleted_at = datetime.now(UTC)
-
-    def restore(self):
-        self.is_deleted = False
-        self.deleted_at = None

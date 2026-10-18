@@ -28,7 +28,7 @@ class MaterialRepository(BaseIndexedRepository):
         stmt = (
             select(Material)
             .options(selectinload(Material.translations))
-            .order_by(Material.index)
+            .order_by(Material.index.asc(), Material.id.asc())
         )
         if material_group_id is not None:
             stmt = stmt.where(Material.material_group_id == material_group_id)

@@ -82,6 +82,10 @@ from tests.modules.reviews.fixtures import (
     create_review_fixture,
     create_review_translation_fixture,
 )
+from tests.modules.content_blocks.fixtures import (
+    create_content_block_fixture,
+    create_content_block_translation_fixture,
+)
 
 __all__ = [
     "lifespan_for_tests",
@@ -136,4 +140,6 @@ __all__ = [
     "create_charity_photo_fixture",
     "create_review_fixture",
     "create_review_translation_fixture",
+    "create_content_block_fixture",
+    "create_content_block_translation_fixture",
 ]

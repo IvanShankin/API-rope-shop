@@ -548,7 +548,7 @@ class TestsForSuccess:
         assert data_ger.items[0].locale == Language.GER
 
         # Запрос с отсутствующей русской локалью -> fallback на eng
-        resp_ru = await client_for_tests.get("/reviews?locale=ru")
+        resp_ru = await client_for_tests.get("/reviews?locale=rus")
         assert resp_ru.status_code == 200
         data_ru = ReviewListResponseDTO.model_validate(resp_ru.json())
         assert data_ru.items[0].text == "English text"

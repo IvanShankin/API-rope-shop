@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from src.modules.product_images.models import ProductImage
     from src.modules.rope_products.models import RopeConfiguratorSetting, ProductVariant
     from src.modules.product_specification.models import ProductSpecification
-    from src.modules.product_application.models import ProductAssignedApplication, ProductApplication
+    from src.modules.product_application.models import ProductAssignedApplication
     from src.modules.rope_product_color.models import ProductColor
     from src.modules.rope_allowed_splice.models import RopeAllowedSplice
 

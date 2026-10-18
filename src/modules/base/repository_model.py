@@ -1,12 +1,12 @@
-from typing import Type, Union, Any, Optional, overload
+from typing import Any, Generic, Optional, Type, Union, overload
 
-from sqlalchemy import select, update, func
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.modules.base.database_model import ModelType, DTOType
+from src.modules.base.database_model import DTOType, ModelType
 
 
-class BaseRepository:
+class BaseRepository(Generic[ModelType]):
 
     def __init__(self, session: AsyncSession, model: Type[ModelType]):
         self.session = session

@@ -37,6 +37,10 @@ from src.modules.quote_requests.models import (
 from src.modules.work_photos.models import WorkPhoto
 from src.modules.charity_photos.models import CharityPhoto
 from src.modules.reviews.models import Review, ReviewTranslation
+from src.modules.content_blocks.models import (
+    ContentBlock,
+    ContentBlockTranslation,
+)
 
 __all__ = [
     "User",
@@ -79,4 +83,6 @@ __all__ = [
     "CharityPhoto",
     "Review",
     "ReviewTranslation",
+    "ContentBlock",
+    "ContentBlockTranslation",
 ]

@@ -22,6 +22,12 @@ from src.modules.products.exception import (
 )
 from src.modules.products.models import Product
 from src.modules.products.models_dto import (
+    CatalogFiltersResponseDTO,
+    CONSTRUCTION_NAMES,
+    FilterApplicationDTO,
+    FilterConstructionDTO,
+    FilterMaterialDTO,
+    FilterSizeRangeDTO,
     ProductBase,
     ProductCreate,
     ProductDetailResponseDTO,
@@ -206,6 +212,63 @@ class ProductService:
         if locale is not None:
             return self._to_localized_dto(product, locale)
         return ProductResponseDTO.model_validate(product)
+
+    async def get_catalog_filters(
+        self,
+        category_slug: Optional[str] = None,
+        locale: Optional[Language] = None,
+    ) -> CatalogFiltersResponseDTO:
+        """Получение опций фильтрации каталога (материалы, конструкции, назначения, диапазон диаметров)."""
+        target_locale = locale or Language.GER
+        data = await self.product_repo.get_catalog_filter_data(category_slug=category_slug)
+
+        # Materials
+        materials_dto: List[FilterMaterialDTO] = []
+        for m in data["materials"]:
+            name = m._get_field_with_translation(
+                lambda t: t.name, target_locale, fallback=Language.GER
+            ) or m.code
+            materials_dto.append(
+                FilterMaterialDTO(id=m.id, code=m.code, name=name)
+            )
+
+        # Constructions
+        constructions_dto: List[FilterConstructionDTO] = []
+        codes = data["construction_codes"]
+        if not codes and not category_slug:
+            codes = ["hollow", "hm_core", "polyester_core", "none"]
+        for c_code in codes:
+            c_name = (
+                CONSTRUCTION_NAMES.get(c_code, {}).get(target_locale)
+                or CONSTRUCTION_NAMES.get(c_code, {}).get(Language.GER)
+                or c_code.replace("_", " ").title()
+            )
+            constructions_dto.append(
+                FilterConstructionDTO(code=c_code, name=c_name)
+            )
+
+        # Applications
+        applications_dto: List[FilterApplicationDTO] = []
+        for a in data["applications"]:
+            name = a._get_field_with_translation(
+                lambda t: t.name, target_locale, fallback=Language.GER
+            ) or a.code
+            applications_dto.append(
+                FilterApplicationDTO(id=a.id, code=a.code, name=name)
+            )
+
+        # Size range
+        size_range = FilterSizeRangeDTO(
+            min=data["min_size"],
+            max=data["max_size"],
+        )
+
+        return CatalogFiltersResponseDTO(
+            materials=materials_dto,
+            constructions=constructions_dto,
+            applications=applications_dto,
+            size_range=size_range,
+        )
 
     async def update_product(
         self,

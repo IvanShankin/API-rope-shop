@@ -314,6 +314,99 @@ class ProductRepository(BaseIndexedRepository):
         stmt = delete(Product).where(Product.id == product_id)
         await self.session.execute(stmt)
 
+    async def get_catalog_filter_data(
+        self, category_slug: Optional[str] = None
+    ) -> dict:
+        """Получение данных для фильтрации каталога (размеры, конструкции, материалы, назначения)."""
+        # 1. Диапазон диаметров/размеров
+        size_stmt = (
+            select(
+                func.min(ProductVariant.size_value),
+                func.max(ProductVariant.size_value),
+            )
+            .join(Product, ProductVariant.product_id == Product.id)
+            .where(Product.is_active.is_(True), ProductVariant.is_active.is_(True))
+        )
+        if category_slug:
+            size_stmt = size_stmt.join(Category, Product.category_id == Category.id).where(
+                Category.slug == category_slug, Category.is_active.is_(True)
+            )
+        size_res = await self.session.execute(size_stmt)
+        min_size, max_size = size_res.one()
+
+        # 2. Типы конструкций
+        const_stmt = (
+            select(Product.construction_type)
+            .where(Product.is_active.is_(True), Product.construction_type.is_not(None))
+            .distinct()
+        )
+        if category_slug:
+            const_stmt = const_stmt.join(Category, Product.category_id == Category.id).where(
+                Category.slug == category_slug, Category.is_active.is_(True)
+            )
+        const_res = await self.session.execute(const_stmt)
+        const_codes = [r[0] for r in const_res.all() if r[0]]
+
+        # 3. Материалы
+        from src.modules.materials.models import Material
+
+        mat_stmt = (
+            select(Material)
+            .join(RopeConfiguratorSetting, RopeConfiguratorSetting.material_id == Material.id)
+            .join(Product, RopeConfiguratorSetting.product_id == Product.id)
+            .where(Product.is_active.is_(True), Material.is_active.is_(True))
+            .options(selectinload(Material.translations))
+            .distinct()
+        )
+        if category_slug:
+            mat_stmt = mat_stmt.join(Category, Product.category_id == Category.id).where(
+                Category.slug == category_slug, Category.is_active.is_(True)
+            )
+        mat_res = await self.session.execute(mat_stmt)
+        materials = list(mat_res.scalars().all())
+
+        if not materials and not category_slug:
+            fallback_mat = await self.session.execute(
+                select(Material)
+                .where(Material.is_active.is_(True))
+                .options(selectinload(Material.translations))
+                .order_by(Material.index.asc(), Material.id.asc())
+            )
+            materials = list(fallback_mat.scalars().all())
+
+        # 4. Назначения (applications)
+        app_stmt = (
+            select(ProductApplication)
+            .join(ProductAssignedApplication, ProductAssignedApplication.application_id == ProductApplication.id)
+            .join(Product, ProductAssignedApplication.product_id == Product.id)
+            .where(Product.is_active.is_(True), ProductApplication.is_active.is_(True))
+            .options(selectinload(ProductApplication.translations))
+            .distinct()
+        )
+        if category_slug:
+            app_stmt = app_stmt.join(Category, Product.category_id == Category.id).where(
+                Category.slug == category_slug, Category.is_active.is_(True)
+            )
+        app_res = await self.session.execute(app_stmt)
+        applications = list(app_res.scalars().all())
+
+        if not applications and not category_slug:
+            fallback_app = await self.session.execute(
+                select(ProductApplication)
+                .where(ProductApplication.is_active.is_(True))
+                .options(selectinload(ProductApplication.translations))
+                .order_by(ProductApplication.index.asc(), ProductApplication.id.asc())
+            )
+            applications = list(fallback_app.scalars().all())
+
+        return {
+            "min_size": float(min_size) if min_size is not None else None,
+            "max_size": float(max_size) if max_size is not None else None,
+            "construction_codes": const_codes,
+            "materials": materials,
+            "applications": applications,
+        }
+
 
 class ProductTranslationRepository(BaseRepository):
     def __init__(self, session):

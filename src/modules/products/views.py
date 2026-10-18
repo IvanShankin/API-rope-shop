@@ -6,6 +6,7 @@ from src.modules.base.database_model import Language
 from src.modules.check_permission.depends import get_current_admin
 from src.modules.products.depends import get_product_service
 from src.modules.products.models_dto import (
+    CatalogFiltersResponseDTO,
     ProductCreate,
     ProductDetailResponseDTO,
     ProductListResponseDTO,
@@ -59,6 +60,21 @@ async def get_all_products(
         skip=skip,
         limit=limit,
     )
+
+
+@router.get(
+    "/filters",
+    response_model=CatalogFiltersResponseDTO,
+    status_code=status.HTTP_200_OK,
+    summary="Get catalog filters",
+    description="Get available catalog filter options (materials, constructions, applications, size range). Supports optional category_slug filtering and localization (public).",
+)
+async def get_catalog_filters(
+    category_slug: Optional[str] = Query(None, description="Optional category slug to narrow filters"),
+    locale: Optional[Language] = Query(Language.GER, description="Language for translation localization"),
+    service: ProductService = Depends(get_product_service),
+) -> CatalogFiltersResponseDTO:
+    return await service.get_catalog_filters(category_slug=category_slug, locale=locale)
 
 
 @router.get(
@@ -201,3 +217,41 @@ async def delete_translation(
     await service.delete_translation(
         translation_id=translation_id,
     )
+
+
+# ==================== Catalog Routes Aliases ====================
+
+catalog_router = APIRouter(prefix="/catalog", tags=["Catalog"])
+
+
+@catalog_router.get(
+    "/filters",
+    response_model=CatalogFiltersResponseDTO,
+    status_code=status.HTTP_200_OK,
+    summary="Get catalog filters",
+    description="Get available catalog filter options according to catalog guide specification.",
+)
+async def get_catalog_filters_alias(
+    category_slug: Optional[str] = Query(None, description="Optional category slug to narrow filters"),
+    locale: Optional[Language] = Query(Language.GER, description="Language for translation localization"),
+    service: ProductService = Depends(get_product_service),
+) -> CatalogFiltersResponseDTO:
+    return await service.get_catalog_filters(category_slug=category_slug, locale=locale)
+
+
+api_catalog_router = APIRouter(prefix="/api/catalog", tags=["Catalog"])
+
+
+@api_catalog_router.get(
+    "/filters",
+    response_model=CatalogFiltersResponseDTO,
+    status_code=status.HTTP_200_OK,
+    summary="Get catalog filters",
+    description="Get available catalog filter options according to catalog guide specification.",
+)
+async def get_api_catalog_filters_alias(
+    category_slug: Optional[str] = Query(None, description="Optional category slug to narrow filters"),
+    locale: Optional[Language] = Query(Language.GER, description="Language for translation localization"),
+    service: ProductService = Depends(get_product_service),
+) -> CatalogFiltersResponseDTO:
+    return await service.get_catalog_filters(category_slug=category_slug, locale=locale)

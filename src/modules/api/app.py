@@ -28,7 +28,11 @@ from src.modules.product_images.views import router as product_images_router
 from src.modules.product_specification.views import (
     router as product_specifications_router,
 )
-from src.modules.products.views import router as products_router
+from src.modules.products.views import (
+    router as products_router,
+    catalog_router,
+    api_catalog_router,
+)
 from src.modules.quote_requests.views import router as quote_requests_router
 from src.modules.rope_allowed_splice.views import (
     router as rope_allowed_splices_router,
@@ -86,6 +90,8 @@ def _include_routers(app: FastAPI) -> FastAPI:
     app.include_router(configurators_router)
     app.include_router(categories_router)
     app.include_router(products_router)
+    app.include_router(catalog_router)
+    app.include_router(api_catalog_router)
     app.include_router(product_images_router)
     app.include_router(product_specifications_router)
     app.include_router(product_applications_router)

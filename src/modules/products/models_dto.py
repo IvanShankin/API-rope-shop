@@ -205,3 +205,59 @@ class ProductDetailResponseDTO(ORMDTO):
     colors: List[Union[ProductColorLocalizedResponseDTO, ProductColorResponseDTO]] = []
     created_at: datetime
     updated_at: datetime
+
+
+# ===================== Catalog Filters DTOs =====================
+
+
+CONSTRUCTION_NAMES = {
+    "hollow": {
+        Language.GER: "Hohlgeflecht",
+        Language.ENG: "Hollow braid",
+        Language.RUS: "Полое плетение (Hohlgeflecht)",
+    },
+    "hm_core": {
+        Language.GER: "Kern Dyneema/Vectran + Mantel",
+        Language.ENG: "Dyneema/Vectran core + cover",
+        Language.RUS: "Сердечник Dyneema/Vectran + оплётка",
+    },
+    "polyester_core": {
+        Language.GER: "Kern Polyester + Mantel",
+        Language.ENG: "Polyester core + cover",
+        Language.RUS: "Сердечник полиэстер + оплётка",
+    },
+    "none": {
+        Language.GER: "Beschläge & Zubehör",
+        Language.ENG: "Hardware & Rigging",
+        Language.RUS: "Фурнитура и такелаж",
+    },
+}
+
+
+class FilterMaterialDTO(BaseModel):
+    id: int
+    code: str
+    name: str
+
+
+class FilterConstructionDTO(BaseModel):
+    code: str
+    name: str
+
+
+class FilterApplicationDTO(BaseModel):
+    id: int
+    code: str
+    name: str
+
+
+class FilterSizeRangeDTO(BaseModel):
+    min: Optional[float] = None
+    max: Optional[float] = None
+
+
+class CatalogFiltersResponseDTO(BaseModel):
+    materials: List[FilterMaterialDTO] = []
+    constructions: List[FilterConstructionDTO] = []
+    applications: List[FilterApplicationDTO] = []
+    size_range: FilterSizeRangeDTO

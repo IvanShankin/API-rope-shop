@@ -7,6 +7,7 @@ from src.modules.product_images.models import ProductImage
 from src.modules.rope_products.models import RopeConfiguratorSetting
 from src.modules.products.models import Product, ProductTranslation, ProductType
 from src.modules.products.models_dto import (
+    CatalogFiltersResponseDTO,
     ProductCreate,
     ProductDetailResponseDTO,
     ProductListResponseDTO,
@@ -488,6 +489,91 @@ class TestsForSuccess:
         assert loc_dto.specifications[0].name == "Core"
         assert len(loc_dto.applications) == 1
         assert loc_dto.applications[0].code == "halyard_app"
+
+    @pytest.mark.asyncio
+    async def test_get_catalog_filters(
+        self,
+        client_for_tests,
+        create_product_fixture,
+        create_material_group_fixture,
+        create_material_fixture,
+        create_product_application_fixture,
+        create_product_assigned_application_fixture,
+        create_rope_variant_fixture,
+        create_rope_product_fixture,
+    ):
+        """Проверка эндпоинта фильтров каталога GET /products/filters и алиасов /catalog/filters, /api/catalog/filters."""
+        mg = await create_material_group_fixture(CreateMaterialGroupFixtureDTO(name="Dyneema Group"))
+        mat = await create_material_fixture(CreateMaterialFixtureDTO(material_group_id=mg.id, code="dyneema", name="Dyneema"))
+        
+        prod = await create_product_fixture(
+            CreateProductFixtureDTO(slug="filter-rope", name="Filter Rope", construction_type="hollow")
+        )
+        await create_rope_product_fixture(
+            CreateRopeProductFixtureDTO(product_id=prod.id, material_id=mat.id)
+        )
+        app = await create_product_application_fixture(
+            CreateProductApplicationFixtureDTO(code="winch_filter", name="Winch Rope")
+        )
+        await create_product_assigned_application_fixture(
+            CreateProductAssignedApplicationFixtureDTO(product_id=prod.id, application_id=app.id)
+        )
+        await create_rope_variant_fixture(
+            CreateRopeVariantFixtureDTO(product_id=prod.id, size_value=6.0, price=10.0)
+        )
+        await create_rope_variant_fixture(
+            CreateRopeVariantFixtureDTO(product_id=prod.id, size_value=14.0, price=20.0)
+        )
+
+        # 1. GET /products/filters
+        resp1 = await client_for_tests.get("/products/filters?locale=eng")
+        assert resp1.status_code == 200
+        dto1 = CatalogFiltersResponseDTO.model_validate(resp1.json())
+        assert any(m.code == "dyneema" for m in dto1.materials)
+        assert any(c.code == "hollow" for c in dto1.constructions)
+        assert any(a.code == "winch_filter" for a in dto1.applications)
+        assert dto1.size_range.min == 6.0
+        assert dto1.size_range.max == 14.0
+
+        # 2. GET /catalog/filters alias
+        resp2 = await client_for_tests.get("/catalog/filters?locale=ger")
+        assert resp2.status_code == 200
+        dto2 = CatalogFiltersResponseDTO.model_validate(resp2.json())
+        assert dto2.size_range.min == 6.0
+        assert dto2.size_range.max == 14.0
+
+        # 3. GET /api/catalog/filters alias
+        resp3 = await client_for_tests.get("/api/catalog/filters?locale=rus")
+        assert resp3.status_code == 200
+        dto3 = CatalogFiltersResponseDTO.model_validate(resp3.json())
+        assert dto3.size_range.min == 6.0
+        assert dto3.size_range.max == 14.0
+
+    @pytest.mark.asyncio
+    async def test_get_catalog_filters_with_category_slug(
+        self,
+        client_for_tests,
+        create_category_fixture,
+        create_product_fixture,
+        create_rope_variant_fixture,
+    ):
+        """Фильтрация доступных фильтров каталога по category_slug."""
+        cat1 = await create_category_fixture(CreateCategoryFixtureDTO(slug="cat-one", name="Category One"))
+        cat2 = await create_category_fixture(CreateCategoryFixtureDTO(slug="cat-two", name="Category Two"))
+
+        prod1 = await create_product_fixture(CreateProductFixtureDTO(category_id=cat1.id, slug="prod-one", construction_type="hm_core"))
+        prod2 = await create_product_fixture(CreateProductFixtureDTO(category_id=cat2.id, slug="prod-two", construction_type="none"))
+
+        await create_rope_variant_fixture(CreateRopeVariantFixtureDTO(product_id=prod1.id, size_value=4.0, price=5.0))
+        await create_rope_variant_fixture(CreateRopeVariantFixtureDTO(product_id=prod2.id, size_value=20.0, price=50.0))
+
+        resp = await client_for_tests.get(f"/products/filters?category_slug={cat1.slug}")
+        assert resp.status_code == 200
+        dto = CatalogFiltersResponseDTO.model_validate(resp.json())
+        assert dto.size_range.min == 4.0
+        assert dto.size_range.max == 4.0
+        assert any(c.code == "hm_core" for c in dto.constructions)
+        assert not any(c.code == "none" for c in dto.constructions)
 
     @pytest.mark.asyncio
     async def test_create_product(

@@ -26,6 +26,11 @@ from src.modules.configurator_setting.exception import ConfiguratorSettingValida
 from src.modules.product_specification.exception import (
     ProductSpecificationInvalidBatch,
 )
+from src.modules.auth.exception import (
+    InvalidCredentials,
+    InvalidJWTToken,
+    UserInactive,
+)
 from src.modules.quote_requests.exception import (
     QuoteRequestValidationError,
     ColorNotAllowedForProduct,
@@ -110,10 +115,23 @@ def register_exception_handlers(app: FastAPI):
     async def product_specification_invalid_batch_handler(request, exc):
         return JSONResponse(status_code=400, content={"detail": str(exc)})
 
+    # ==================== 401 Unauthorized ====================
+    @app.exception_handler(InvalidCredentials)
+    async def invalid_credentials_handler(request, exc):
+        return JSONResponse(status_code=401, content={"detail": "Invalid credentials"})
+
+    @app.exception_handler(InvalidJWTToken)
+    async def invalid_jwt_token_handler(request, exc):
+        return JSONResponse(status_code=401, content={"detail": "Invalid or expired token"})
+
     # ==================== 403 Forbidden ====================
     @app.exception_handler(PermissionErrorService)
     async def permission_error_handler(request, exc):
         return JSONResponse(status_code=403, content={"detail": "Forbidden"})
+
+    @app.exception_handler(UserInactive)
+    async def user_inactive_handler(request, exc):
+        return JSONResponse(status_code=403, content={"detail": "User account is inactive"})
 
     # ==================== 404 Not Found ====================
     @app.exception_handler(NotFoundData)

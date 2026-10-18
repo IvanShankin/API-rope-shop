@@ -128,3 +128,49 @@ class TestsForSuccess:
         result_db = await session_db.execute(select(RefreshToken).where(RefreshToken.token == token.token))
         token_db: RefreshToken = result_db.scalar_one_or_none()
         assert not token_db
+
+
+class TestsForFailure:
+
+    @pytest.mark.asyncio
+    async def test_login_inactive_user_returns_403(
+        self,
+        client_for_tests,
+        create_user_fixture,
+    ):
+        user, _ = await create_user_fixture(
+            new_user=CreateUserFixtureDTO(
+                password="test_password",
+                is_active=False,
+            )
+        )
+        response = await client_for_tests.post(
+            "/auth/login",
+            data={
+                'username': user.username,
+                'password': "test_password"
+            }
+        )
+
+        assert response.status_code == 403
+        assert response.json()["detail"] == "User account is inactive"
+
+    @pytest.mark.asyncio
+    async def test_inactive_user_token_access_returns_403(
+        self,
+        client_for_tests,
+        create_user_fixture,
+    ):
+        user, access_token = await create_user_fixture(
+            new_user=CreateUserFixtureDTO(
+                is_active=False,
+            )
+        )
+        response = await client_for_tests.get(
+            "/users/me",
+            headers={"Authorization": f"Bearer {access_token}"}
+        )
+
+        assert response.status_code == 403
+        assert response.json()["detail"] == "User account is inactive"
+

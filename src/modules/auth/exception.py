@@ -6,3 +6,7 @@ class InvalidJWTToken(ServiceException):
 
 class InvalidCredentials(ServiceException):
     pass
+
+
+class UserInactive(ServiceException):
+    pass

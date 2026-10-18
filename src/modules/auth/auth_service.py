@@ -1,4 +1,4 @@
-from src.modules.auth.exception import InvalidCredentials
+from src.modules.auth.exception import InvalidCredentials, UserInactive
 from src.modules.auth.models_dto import TokenResponse
 from src.modules.auth.token_service import TokenService
 from src.modules.users.exception import UserNotFound
@@ -23,6 +23,7 @@ class AuthService:
         """
         :raises InvalidJWTToken: невалидный токен
         :raises UserNotFound:
+        :raises UserInactive: пользователь деактивирован
         """
 
         user_id = self.token_service.decode_access_token(token)
@@ -30,6 +31,9 @@ class AuthService:
 
         if not result:
             raise UserNotFound()
+
+        if not result.is_active:
+            raise UserInactive("User account is inactive.")
 
         return result
 
@@ -49,5 +53,8 @@ class AuthService:
             user.hashed_password
         ):
             raise InvalidCredentials()
+
+        if not user.is_active:
+            raise UserInactive("User account is inactive.")
 
         return await self.token_service.create_token_response(user_id=user.id)

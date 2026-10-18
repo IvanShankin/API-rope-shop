@@ -14,9 +14,6 @@ DTOType = TypeVar("DTOType", bound="BaseModel")
 
 
 class Language(str, enum.Enum):
-    RU = "ru"
-    EN = "en"
-    DE = "de"
     RUS = "rus"
     ENG = "eng"
     GER = "ger"
@@ -25,11 +22,8 @@ class Language(str, enum.Enum):
     def _missing_(cls, value: object):
         if isinstance(value, str):
             mapping = {
-                "ru": cls.RU,
                 "rus": cls.RUS,
-                "en": cls.EN,
                 "eng": cls.ENG,
-                "de": cls.DE,
                 "ger": cls.GER,
             }
             norm = value.lower()

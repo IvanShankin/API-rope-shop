@@ -1,4 +1,4 @@
-﻿import pytest_asyncio
+import pytest_asyncio
 from tests.modules.splice_types.fixtures.models_dto import (
     CreateSpliceTypeFixtureDTO,
     CreateSpliceTypeTranslationFixtureDTO,

@@ -1,4 +1,4 @@
-﻿from src.modules.base.exception import NotFoundData, DataAlreadyExists, HasDependencies
+from src.modules.base.exception import NotFoundData, DataAlreadyExists, HasDependencies
 
 
 class SpliceMaterialNotFound(NotFoundData):

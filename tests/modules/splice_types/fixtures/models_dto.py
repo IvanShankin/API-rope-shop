@@ -1,4 +1,4 @@
-﻿from typing import Optional
+from typing import Optional
 from pydantic import BaseModel
 from src.modules.base.database_model import Language
 from src.modules.splice_types.models import SpliceCategory, SpliceVisualType

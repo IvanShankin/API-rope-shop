@@ -59,24 +59,6 @@ class ProductRepository(BaseIndexedRepository):
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_all(
-        self,
-        category_id: Optional[int] = None,
-        category_slug: Optional[str] = None,
-        product_type: Optional[str] = None,
-        material_id: Optional[int] = None,
-        construction_type: Optional[str] = None,
-        application_codes: Optional[List[str]] = None,
-        diameter_min: Optional[float] = None,
-        diameter_max: Optional[float] = None,
-        is_active: Optional[bool] = None,
-        skip: int = 0,
-        limit: Optional[int] = None,
-    ) -> Sequence[Product]:
-        from src.modules.product_application.models import (
-            ProductApplication,
-            ProductAssignedApplication,
-        )
     def _apply_filters(
         self,
         stmt,

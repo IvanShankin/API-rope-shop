@@ -1,4 +1,4 @@
-﻿import random
+import random
 from sqlalchemy.ext.asyncio import AsyncSession
 from tests.modules.splice_prices.fixtures.models_dto import CreateSplicePriceRuleFixtureDTO
 from src.modules.splice_prices.models import SplicePriceRule

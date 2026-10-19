@@ -134,6 +134,32 @@ class TestsForSuccess:
         assert len(pub_data) == 1
         assert pub_data[0].block_code == "contact_info"
 
+        # Публичный запрос с фильтром is_active=false: все равно возвращаются только активные
+        resp_pub_filter_false = await client_for_tests.get(
+            "/content_blocks/page/contact",
+            params={"is_active": "false"},
+        )
+        assert resp_pub_filter_false.status_code == 200
+        pub_filter_data = [
+            ContentBlockResponseDTO.model_validate(item)
+            for item in resp_pub_filter_false.json()
+        ]
+        assert len(pub_filter_data) == 1
+        assert pub_filter_data[0].block_code == "contact_info"
+
+        # Публичный запрос через query ?page_code=contact&is_active=false
+        resp_pub_query_filter_false = await client_for_tests.get(
+            "/content_blocks",
+            params={"page_code": "contact", "is_active": "false"},
+        )
+        assert resp_pub_query_filter_false.status_code == 200
+        pub_query_data = [
+            ContentBlockResponseDTO.model_validate(item)
+            for item in resp_pub_query_filter_false.json()
+        ]
+        assert len(pub_query_data) == 1
+        assert pub_query_data[0].block_code == "contact_info"
+
         # Админский запрос без фильтра: видит оба
         _, admin_token = await create_user_fixture(
             CreateUserFixtureDTO(role=UserRole.ADMIN)
@@ -478,3 +504,81 @@ class TestsForFailed:
             json={"is_active": False},
         )
         assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_anonymous_cannot_access_inactive_block_via_filter(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_content_block_fixture,
+    ):
+        """
+        Проверка контракта интеграции:
+        Создаем блок test_content_contract_20261019 на странице integration_checks с is_active=False.
+        Без Authorization:
+        - GET /content_blocks/test_content_contract_20261019 -> 404
+        - GET /content_blocks/page/integration_checks -> 200, пустой список
+        - GET /content_blocks/page/integration_checks?is_active=false -> 200, пустой список (отключенный блок не отдается)
+        - GET /content_blocks?page_code=integration_checks&is_active=false -> 200, пустой список
+        С Authorization (админ):
+        - GET /content_blocks/test_content_contract_20261019 -> 200
+        - GET /content_blocks/page/integration_checks?is_active=false -> 200 с отключенным блоком
+        """
+        block = await create_content_block_fixture(
+            CreateContentBlockFixtureDTO(
+                page_code="integration_checks",
+                block_code="test_content_contract_20261019",
+                is_active=False,
+                title="Secret Inactive Title",
+                content="Secret Inactive Content",
+            )
+        )
+
+        # 1. Без Authorization: GET /content_blocks/test_content_contract_20261019 -> 404
+        resp_direct = await client_for_tests.get(f"/content_blocks/{block.block_code}")
+        assert resp_direct.status_code == 404
+
+        # 2. Без Authorization: GET /content_blocks/page/integration_checks -> 200, пустой список
+        resp_page = await client_for_tests.get("/content_blocks/page/integration_checks")
+        assert resp_page.status_code == 200
+        assert resp_page.json() == []
+
+        # 3. Без Authorization: GET /content_blocks/page/integration_checks?is_active=false -> 200, пустой список
+        resp_page_filter = await client_for_tests.get(
+            "/content_blocks/page/integration_checks",
+            params={"is_active": "false"},
+        )
+        assert resp_page_filter.status_code == 200
+        assert resp_page_filter.json() == []
+
+        # 4. Без Authorization: GET /content_blocks?page_code=integration_checks&is_active=false -> 200, пустой список
+        resp_query_filter = await client_for_tests.get(
+            "/content_blocks",
+            params={"page_code": "integration_checks", "is_active": "false"},
+        )
+        assert resp_query_filter.status_code == 200
+        assert resp_query_filter.json() == []
+
+        # 5. С Authorization (админ):
+        _, admin_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        headers = {"Authorization": f"Bearer {admin_token}"}
+
+        resp_admin_direct = await client_for_tests.get(
+            f"/content_blocks/{block.block_code}",
+            headers=headers,
+        )
+        assert resp_admin_direct.status_code == 200
+        assert resp_admin_direct.json()["block_code"] == "test_content_contract_20261019"
+
+        resp_admin_filter = await client_for_tests.get(
+            "/content_blocks/page/integration_checks",
+            headers=headers,
+            params={"is_active": "false"},
+        )
+        assert resp_admin_filter.status_code == 200
+        admin_data = resp_admin_filter.json()
+        assert len(admin_data) == 1
+        assert admin_data[0]["block_code"] == "test_content_contract_20261019"
+        assert admin_data[0]["is_active"] is False

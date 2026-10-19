@@ -40,9 +40,7 @@ class ContentBlockService:
         Администратор может передавать фильтр is_active или получать все блоки.
         Все блоки возвращаются с подгруженными переводами.
         """
-        effective_active = is_active
-        if not is_admin and effective_active is None:
-            effective_active = True
+        effective_active = is_active if is_admin else True
 
         blocks = await self.block_repo.get_by_page_code(
             page_code=page_code,

@@ -149,13 +149,14 @@ class ContentBlockService:
                     )
                     self.trans_repo.add_translation(new_trans)
 
+        block_id = block.id
         await self.session.commit()
         self.session.expire_all()
 
-        reloaded = await self.block_repo.get_by_block_code(block_code)
+        reloaded = await self.block_repo.get_by_id(block_id)
         if not reloaded:
             raise ContentBlockNotFound(
-                f"ContentBlock with block_code '{block_code}' not found after update."
+                f"ContentBlock with id '{block_id}' not found after update."
             )
 
         return self._to_response_dto(reloaded)

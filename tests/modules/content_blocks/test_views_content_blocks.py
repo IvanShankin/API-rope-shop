@@ -714,3 +714,81 @@ class TestsForFailed:
         ]
         assert [item["index"] for item in items] == [10, 20, 30]
 
+    @pytest.mark.asyncio
+    async def test_put_same_block_code_different_pages_returns_correct_page_dto(
+        self,
+        client_for_tests,
+        create_user_fixture,
+    ):
+        """
+        Проверка: создать через PUT /content_blocks/{block_code} блоки для integration_a и integration_b.
+        Второй PUT обязан возвращать DTO страницы integration_b, а не integration_a.
+        """
+        admin_user, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        headers = {"Authorization": f"Bearer {access_token}"}
+
+        # 1. Первый PUT для integration_a
+        put_payload_a = {
+            "page_code": "integration_a",
+            "index": 1,
+            "is_active": True,
+            "translations": [
+                {"locale": "eng", "title": "Title A", "content": "Content A"}
+            ],
+        }
+        resp_a = await client_for_tests.put(
+            "/content_blocks/same_code",
+            headers=headers,
+            json=put_payload_a,
+        )
+        assert resp_a.status_code == 200
+        data_a = resp_a.json()
+        assert data_a["page_code"] == "integration_a"
+        assert data_a["block_code"] == "same_code"
+        assert data_a["title"] == "Title A"
+
+        # 2. Второй PUT для integration_b с тем же block_code
+        put_payload_b = {
+            "page_code": "integration_b",
+            "index": 2,
+            "is_active": True,
+            "translations": [
+                {"locale": "eng", "title": "Title B", "content": "Content B"}
+            ],
+        }
+        resp_b = await client_for_tests.put(
+            "/content_blocks/same_code",
+            headers=headers,
+            json=put_payload_b,
+        )
+        assert resp_b.status_code == 200
+        data_b = resp_b.json()
+        assert data_b["page_code"] == "integration_b"
+        assert data_b["block_code"] == "same_code"
+        assert data_b["title"] == "Title B"
+        assert data_b["id"] != data_a["id"]
+
+        # 3. Также проверяем через query-параметр page_code при PUT
+        put_payload_c = {
+            "index": 3,
+            "is_active": True,
+            "translations": [
+                {"locale": "eng", "title": "Title C", "content": "Content C"}
+            ],
+        }
+        resp_c = await client_for_tests.put(
+            "/content_blocks/same_code",
+            params={"page_code": "integration_c"},
+            headers=headers,
+            json=put_payload_c,
+        )
+        assert resp_c.status_code == 200
+        data_c = resp_c.json()
+        assert data_c["page_code"] == "integration_c"
+        assert data_c["block_code"] == "same_code"
+        assert data_c["title"] == "Title C"
+        assert data_c["id"] != data_a["id"]
+        assert data_c["id"] != data_b["id"]
+

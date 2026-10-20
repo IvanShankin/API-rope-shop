@@ -148,8 +148,10 @@ class ProductService:
         locale: Optional[Language] = None,
         skip: int = 0,
         limit: Optional[int] = None,
+        is_admin: bool = False,
     ) -> ProductListResponseDTO:
         """Получение списка товаров с фильтрацией, пагинацией и локализацией."""
+        effective_active = is_active if is_admin else True
         parsed_app_codes: Optional[List[str]] = None
         if application_codes:
             if isinstance(application_codes, str):
@@ -172,7 +174,7 @@ class ProductService:
             diameter_max=diameter_max,
             price_min=price_min,
             price_max=price_max,
-            is_active=is_active,
+            is_active=effective_active,
             skip=skip,
             limit=limit,
         )
@@ -187,7 +189,7 @@ class ProductService:
             diameter_max=diameter_max,
             price_min=price_min,
             price_max=price_max,
-            is_active=is_active,
+            is_active=effective_active,
         )
 
         product_ids = [p.id for p in products]
@@ -201,28 +203,52 @@ class ProductService:
         )
 
     async def get_product_by_id(
-        self, product_id: int, locale: Optional[Language] = None
+        self, product_id: int, locale: Optional[Language] = None, is_admin: bool = False
     ) -> Union[ProductLocalizedResponseDTO, ProductResponseDTO]:
         """Получение товара по ID со всеми переводами и связанными данными (или локализованного)."""
         product = await self.product_repo.get_by_id(product_id)
         if not product:
             raise ProductNotFound(f"Product with id {product_id} not found.")
+        if not is_admin and not product.is_active:
+            raise ProductNotFound(f"Product with id {product_id} not found.")
         if locale is not None:
             aggregates = await self.product_repo.get_variants_aggregates([product.id])
             return self._to_localized_dto(product, locale, aggregates)
-        return ProductResponseDTO.model_validate(product)
+        dto = ProductResponseDTO.model_validate(product)
+        if not is_admin:
+            dto.images = [img for img in dto.images if img.is_active]
+            dto.variants = [v for v in dto.variants if v.is_active]
+            dto.colors = [c for c in dto.colors if getattr(c, "is_active", True)]
+            dto.applications = [a for a in dto.applications if a.is_active]
+            dto.assigned_applications = [
+                aa for aa in dto.assigned_applications
+                if getattr(aa.application, "is_active", True)
+            ]
+        return dto
 
     async def get_product_by_slug(
-        self, slug: str, locale: Optional[Language] = None
+        self, slug: str, locale: Optional[Language] = None, is_admin: bool = False
     ) -> Union[ProductLocalizedResponseDTO, ProductResponseDTO]:
         """Получение товара по slug со всеми переводами и связанными данными (или локализованного)."""
         product = await self.product_repo.get_by_slug(slug)
         if not product:
             raise ProductNotFound(f"Product with slug '{slug}' not found.")
+        if not is_admin and not product.is_active:
+            raise ProductNotFound(f"Product with slug '{slug}' not found.")
         if locale is not None:
             aggregates = await self.product_repo.get_variants_aggregates([product.id])
             return self._to_localized_dto(product, locale, aggregates)
-        return ProductResponseDTO.model_validate(product)
+        dto = ProductResponseDTO.model_validate(product)
+        if not is_admin:
+            dto.images = [img for img in dto.images if img.is_active]
+            dto.variants = [v for v in dto.variants if v.is_active]
+            dto.colors = [c for c in dto.colors if getattr(c, "is_active", True)]
+            dto.applications = [a for a in dto.applications if a.is_active]
+            dto.assigned_applications = [
+                aa for aa in dto.assigned_applications
+                if getattr(aa.application, "is_active", True)
+            ]
+        return dto
 
     async def get_catalog_filters(
         self,

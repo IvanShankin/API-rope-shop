@@ -92,8 +92,10 @@ class TestsForSuccess:
     async def test_get_splice_types_filter_is_active(
         self,
         client_for_tests,
+        create_user_fixture,
         create_splice_type_fixture,
     ):
+        _, admin_token = await create_user_fixture(CreateUserFixtureDTO(role=UserRole.ADMIN))
         active_type = await create_splice_type_fixture(
             CreateSpliceTypeFixtureDTO(is_active=True)
         )
@@ -111,7 +113,12 @@ class TestsForSuccess:
         assert active_type.id in active_ids
         assert inactive_type.id not in active_ids
 
-        resp_inactive = await client_for_tests.get("/splice_types", params={"is_active": "false"})
+        # Админ с ?is_active=false получает неактивные
+        resp_inactive = await client_for_tests.get(
+            "/splice_types",
+            params={"is_active": "false"},
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
         assert resp_inactive.status_code == 200
         inactive_items = [
             SpliceTypeLocalizedResponseDTO.model_validate(item)
@@ -120,6 +127,13 @@ class TestsForSuccess:
         inactive_ids = [item.id for item in inactive_items]
         assert inactive_type.id in inactive_ids
         assert active_type.id not in inactive_ids
+
+        # Аноним с ?is_active=false принудительно получает только активные
+        resp_anon = await client_for_tests.get("/splice_types", params={"is_active": "false"})
+        assert resp_anon.status_code == 200
+        anon_ids = [item["id"] for item in resp_anon.json()]
+        assert inactive_type.id not in anon_ids
+        assert active_type.id in anon_ids
 
     @pytest.mark.asyncio
     async def test_get_splice_types_locale(
@@ -148,6 +162,46 @@ class TestsForSuccess:
         ]
         found = next(item for item in data if item.id == st.id)
         assert found.name == "Deutscher Name"
+
+    @pytest.mark.asyncio
+    async def test_get_splice_type_by_id_admin_success(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_splice_type_fixture,
+        create_splice_type_translation_fixture,
+    ):
+        admin_user, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        st = await create_splice_type_fixture(
+            CreateSpliceTypeFixtureDTO(locale=Language.ENG, name="English Name", description="Desc EN")
+        )
+        tr_ger = await create_splice_type_translation_fixture(
+            CreateSpliceTypeTranslationFixtureDTO(
+                splice_type_id=st.id,
+                locale=Language.GER,
+                name="Deutscher Name",
+                description="Desc DE",
+            )
+        )
+
+        response = await client_for_tests.get(
+            f"/splice_types/{st.id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert response.status_code == 200
+        data = SpliceTypeResponseDTO.model_validate(response.json())
+        assert data.id == st.id
+        assert data.code == st.code
+        assert len(data.translations) == 2
+        trans_locales = {t.locale: t for t in data.translations}
+        assert Language.ENG in trans_locales
+        assert Language.GER in trans_locales
+        assert trans_locales[Language.ENG].name == "English Name"
+        assert trans_locales[Language.ENG].id is not None
+        assert trans_locales[Language.GER].name == "Deutscher Name"
+        assert trans_locales[Language.GER].id == tr_ger.id
 
     @pytest.mark.asyncio
     async def test_create_splice_type(
@@ -423,6 +477,48 @@ class TestsForSuccess:
 
 
 class TestsForErrors:
+
+    @pytest.mark.asyncio
+    async def test_get_splice_type_by_id_unauthorized(
+        self,
+        client_for_tests,
+        create_splice_type_fixture,
+    ):
+        st = await create_splice_type_fixture(CreateSpliceTypeFixtureDTO())
+        response = await client_for_tests.get(f"/splice_types/{st.id}")
+        assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_get_splice_type_by_id_forbidden(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_splice_type_fixture,
+    ):
+        regular_user, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.USER)
+        )
+        st = await create_splice_type_fixture(CreateSpliceTypeFixtureDTO())
+        response = await client_for_tests.get(
+            f"/splice_types/{st.id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_get_splice_type_by_id_not_found(
+        self,
+        client_for_tests,
+        create_user_fixture,
+    ):
+        admin_user, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        response = await client_for_tests.get(
+            "/splice_types/99999",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert response.status_code == 404
 
     @pytest.mark.asyncio
     async def test_create_splice_type_forbidden(

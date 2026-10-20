@@ -15,6 +15,7 @@ from tests.modules.product_images.fixtures.models_dto import (
     CreateProductImageFixtureDTO,
 )
 from tests.modules.users.fixtures.models_dto import CreateUserFixtureDTO
+from tests.modules.products.fixtures.models_dto import CreateProductFixtureDTO
 
 
 class TestsForSuccess:
@@ -92,6 +93,40 @@ class TestsForSuccess:
         data = [ProductImageResponseDTO.model_validate(item) for item in response.json()]
         assert len(data) == 1
         assert data[0].id == img_active.id
+
+    @pytest.mark.asyncio
+    async def test_get_images_by_product_filter_inactive_admin(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_product_fixture,
+        create_product_image_fixture,
+    ):
+        """Администратор может запросить неактивные изображения."""
+        _, admin_token = await create_user_fixture(CreateUserFixtureDTO(role=UserRole.ADMIN))
+        product = await create_product_fixture()
+        img_active = await create_product_image_fixture(
+            CreateProductImageFixtureDTO(product_id=product.id, index=0, is_active=True)
+        )
+        img_inactive = await create_product_image_fixture(
+            CreateProductImageFixtureDTO(product_id=product.id, index=1, is_active=False)
+        )
+
+        response = await client_for_tests.get(
+            f"/product_images/by-product/{product.id}?is_active=false",
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        assert response.status_code == 200
+        ids = [item["id"] for item in response.json()]
+        assert img_inactive.id in ids
+        assert img_active.id not in ids
+
+        # Аноним при ?is_active=false получает только активные
+        anon_resp = await client_for_tests.get(f"/product_images/by-product/{product.id}?is_active=false")
+        assert anon_resp.status_code == 200
+        anon_ids = [item["id"] for item in anon_resp.json()]
+        assert img_inactive.id not in anon_ids
+        assert img_active.id in anon_ids
 
     @pytest.mark.asyncio
     async def test_get_image_by_id(
@@ -582,6 +617,36 @@ class TestsForFail:
             headers={"Authorization": f"Bearer {access_token}"},
             json={"new_index": 0},
         )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_get_inactive_image_by_id_anonymous_returns_404(
+        self,
+        client_for_tests,
+        create_product_fixture,
+        create_product_image_fixture,
+    ):
+        """Анонимный запрос неактивного изображения по ID -> 404."""
+        product = await create_product_fixture()
+        img = await create_product_image_fixture(
+            CreateProductImageFixtureDTO(product_id=product.id, is_active=False)
+        )
+        response = await client_for_tests.get(f"/product_images/{img.id}")
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_get_images_for_inactive_product_anonymous_returns_404(
+        self,
+        client_for_tests,
+        create_product_fixture,
+        create_product_image_fixture,
+    ):
+        """Анонимный запрос изображений неактивного товара -> 404."""
+        product = await create_product_fixture(CreateProductFixtureDTO(is_active=False))
+        await create_product_image_fixture(
+            CreateProductImageFixtureDTO(product_id=product.id, is_active=True)
+        )
+        response = await client_for_tests.get(f"/product_images/by-product/{product.id}")
         assert response.status_code == 404
 
     @pytest.mark.asyncio

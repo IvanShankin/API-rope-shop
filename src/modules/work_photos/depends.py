@@ -2,6 +2,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database.database import get_db
+from src.modules.check_permission.depends import get_optional_admin
 from src.modules.handlers_files.depends import get_image_manager
 from src.modules.handlers_files.service import ImageManager
 from src.modules.path_builder.depends import get_path_builder

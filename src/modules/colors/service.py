@@ -75,13 +75,19 @@ class ColorService:
         self,
         locale: Optional[Language] = None,
         is_active: Optional[bool] = None,
+        is_admin: bool = False,
     ) -> List[ColorLocalizedResponseDTO]:
-        colors = await self.color_repo.get_all(is_active=is_active)
+        effective_active = is_active if is_admin else True
+        colors = await self.color_repo.get_all(is_active=effective_active)
         return [self._to_localized_dto(c, locale) for c in colors]
 
-    async def get_color_by_id(self, color_id: int) -> ColorResponseDTO:
+    async def get_color_by_id(
+        self, color_id: int, is_admin: bool = False
+    ) -> ColorResponseDTO:
         color = await self.color_repo.get_by_id(color_id)
         if not color:
+            raise ColorNotFound(f"Color with id {color_id} not found.")
+        if not is_admin and not color.is_active:
             raise ColorNotFound(f"Color with id {color_id} not found.")
         return ColorResponseDTO.model_validate(color)
 

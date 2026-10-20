@@ -219,21 +219,25 @@ class CharityPhotoService:
         locale: Optional[Language] = None,
         skip: int = 0,
         limit: Optional[int] = None,
+        is_admin: bool = False,
     ) -> List[CharityPhotoResponseDTO]:
         """Получение списка фотографий благотворительности, отсортированных по index."""
+        effective_active = is_active if is_admin else True
         photos = await self.repo.get_all(
-            is_active=is_active,
+            is_active=effective_active,
             skip=skip,
             limit=limit,
         )
         return [self._to_response_dto(p, locale=locale) for p in photos]
 
     async def get_photo_by_id(
-        self, photo_id: int, locale: Optional[Language] = None
+        self, photo_id: int, locale: Optional[Language] = None, is_admin: bool = False
     ) -> CharityPhotoResponseDTO:
         """Получение фотографии благотворительности по ID."""
         photo = await self.repo.get_by_id(photo_id)
         if not photo:
+            raise CharityPhotoNotFound(f"CharityPhoto with id {photo_id} not found.")
+        if not is_admin and not photo.is_active:
             raise CharityPhotoNotFound(f"CharityPhoto with id {photo_id} not found.")
         return self._to_response_dto(photo, locale=locale)
 

@@ -2,6 +2,7 @@ from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.base.database_model import Language
+from src.modules.products.models import Product
 from src.modules.colors.models_dto import ColorLocalizedResponseDTO
 from src.modules.rope_product_color.repository import ProductColorRepository
 from src.modules.rope_product_color.models_dto import (
@@ -71,10 +72,12 @@ class RopeProductColorService:
     async def get_colors_by_product_id(
         self,
         product_id: int,
-        locale: Optional[Language] = None
+        locale: Optional[Language] = None,
+        is_admin: bool = False,
     ) -> List[ProductColorLocalizedResponseDTO]:
         """Получение списка цветов для товара с локализацией названий цветов."""
-        if not await self.repo.exists_product(product_id):
+        product = await self.session.get(Product, product_id)
+        if not product or (not is_admin and not product.is_active):
             raise RopeProductNotFound(
                 f"Product with id {product_id} not found."
             )
@@ -84,6 +87,8 @@ class RopeProductColorService:
 
         result: List[ProductColorLocalizedResponseDTO] = []
         for item in items:
+            if not is_admin and item.color and not item.color.is_active:
+                continue
             localized_color: Optional[ColorLocalizedResponseDTO] = None
             if item.color:
                 name = item.color._get_field_with_translation(
@@ -111,10 +116,10 @@ class RopeProductColorService:
 
         return result
 
-    async def get_by_id(self, item_id: int) -> ProductColorResponseDTO:
+    async def get_by_id(self, item_id: int, is_admin: bool = False) -> ProductColorResponseDTO:
         """Получение привязки цвета по ID."""
         item = await self.repo.get_by_id(item_id)
-        if not item:
+        if not item or (not is_admin and ((item.color and not item.color.is_active) or (item.product and not item.product.is_active))):
             raise RopeProductColorNotFound(
                 f"ProductColor with id {item_id} not found."
             )

@@ -35,6 +35,7 @@ async def create_content_block_factory(
     is_active = (
         new_block.is_active if new_block.is_active is not None else True
     )
+    index = new_block.index if new_block.index is not None else 0
     locale = new_block.locale if new_block.locale is not None else Language.ENG
     title = (
         new_block.title
@@ -50,6 +51,7 @@ async def create_content_block_factory(
     block = ContentBlock(
         page_code=page_code,
         block_code=block_code,
+        index=index,
         is_active=is_active,
     )
     session_db.add(block)

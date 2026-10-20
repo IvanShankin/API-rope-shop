@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Query, UploadFile, File
 from starlette import status
 
 from src.modules.base.database_model import Language
-from src.modules.check_permission.depends import get_current_admin
+from src.modules.check_permission.depends import get_current_admin, get_optional_admin
 from src.modules.users.models_dto import UserDTO
 from src.modules.splice_types.models import SpliceCategory
 from src.modules.splice_types.models_dto import (
@@ -26,12 +26,30 @@ async def get_all_splice_types(
     locale: Optional[Language] = Query(None, description="Language for translation"),
     is_active: Optional[bool] = Query(None, description="Filter by active status"),
     category: Optional[SpliceCategory] = Query(None, description="Filter by category (loop, splice)"),
-    service: SpliceTypeService = Depends(get_splice_type_service)
+    service: SpliceTypeService = Depends(get_splice_type_service),
+    is_admin: bool = Depends(get_optional_admin),
 ):
     """Get all splice types (public)."""
+    effective_active = is_active if is_admin else True
     if category:
-        return await service.get_splice_types_by_category(category=category, locale=locale, is_active=is_active)
-    return await service.get_all_splice_types(locale=locale, is_active=is_active)
+        return await service.get_splice_types_by_category(category=category, locale=locale, is_active=effective_active)
+    return await service.get_all_splice_types(locale=locale, is_active=effective_active)
+
+
+@router.get(
+    "/{type_id}",
+    response_model=SpliceTypeResponseDTO,
+    status_code=status.HTTP_200_OK,
+    summary="Get splice type by ID",
+    description="Get splice type details with all translations (admin only).",
+)
+async def get_splice_type_by_id(
+    type_id: int,
+    service: SpliceTypeService = Depends(get_splice_type_service),
+    admin: UserDTO = Depends(get_current_admin),
+) -> SpliceTypeResponseDTO:
+    """Get splice type details with all translations (admin only)."""
+    return await service.get_splice_type_by_id(type_id=type_id)
 
 
 @router.post("", response_model=SpliceTypeResponseDTO, status_code=status.HTTP_201_CREATED)

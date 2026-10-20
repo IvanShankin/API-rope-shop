@@ -142,6 +142,32 @@ class TestsForSuccess:
         assert data == []
 
     @pytest.mark.asyncio
+    async def test_get_colors_by_product_filters_inactive(
+        self,
+        client_for_tests,
+        create_rope_product_fixture,
+        create_color_fixture,
+        create_rope_product_color_fixture,
+    ):
+        """Анонимный запрос цветов товара исключает неактивные цвета."""
+        product = await create_rope_product_fixture()
+        c_act = await create_color_fixture(CreateColorFixtureDTO(is_active=True))
+        c_inact = await create_color_fixture(CreateColorFixtureDTO(is_active=False))
+
+        await create_rope_product_color_fixture(
+            CreateRopeProductColorFixtureDTO(product_id=product.product_id, color_id=c_act.id)
+        )
+        await create_rope_product_color_fixture(
+            CreateRopeProductColorFixtureDTO(product_id=product.product_id, color_id=c_inact.id)
+        )
+
+        response = await client_for_tests.get(f"/rope_product_colors/by-product/{product.product_id}")
+        assert response.status_code == 200
+        ids = [item["color_id"] for item in response.json()]
+        assert c_act.id in ids
+        assert c_inact.id not in ids
+
+    @pytest.mark.asyncio
     async def test_get_rope_product_color_by_id(
         self,
         client_for_tests,
@@ -702,4 +728,22 @@ class TestsForErrors:
             "/rope_product_colors/99999",
             headers={"Authorization": f"Bearer {access_token}"},
         )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_get_inactive_rope_product_color_by_id_anonymous_returns_404(
+        self,
+        client_for_tests,
+        create_rope_product_fixture,
+        create_color_fixture,
+        create_rope_product_color_fixture,
+    ):
+        """Анонимный запрос неактивной привязки цвета по ID -> 404."""
+        product = await create_rope_product_fixture()
+        c_inact = await create_color_fixture(CreateColorFixtureDTO(is_active=False))
+        link = await create_rope_product_color_fixture(
+            CreateRopeProductColorFixtureDTO(product_id=product.product_id, color_id=c_inact.id)
+        )
+
+        response = await client_for_tests.get(f"/rope_product_colors/{link.id}")
         assert response.status_code == 404

@@ -269,6 +269,50 @@ class TestsForSuccess:
         assert data[1].id == v2.id
 
     @pytest.mark.asyncio
+    async def test_list_product_variants_filter_is_active(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_rope_product_fixture,
+        create_rope_variant_fixture,
+    ):
+        """Админ может фильтровать неактивные варианты, а аноним всегда получает только активные."""
+        _, admin_token = await create_user_fixture(CreateUserFixtureDTO(role=UserRole.ADMIN))
+        product = await create_rope_product_fixture()
+        v_active = await create_rope_variant_fixture(
+            CreateRopeVariantFixtureDTO(product_id=product.product_id, is_active=True, size_value=8.0)
+        )
+        v_inactive = await create_rope_variant_fixture(
+            CreateRopeVariantFixtureDTO(product_id=product.product_id, is_active=False, size_value=10.0)
+        )
+
+        # Админ с is_active=false получает неактивный
+        res_admin = await client_for_tests.get(
+            f"/rope_products/{product.product_id}/variants?is_active=false",
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        assert res_admin.status_code == 200
+        admin_ids = [item["id"] for item in res_admin.json()]
+        assert v_inactive.id in admin_ids
+        assert v_active.id not in admin_ids
+
+        # Аноним с is_active=false принудительно получает только активные
+        res_anon = await client_for_tests.get(
+            f"/rope_products/{product.product_id}/variants?is_active=false"
+        )
+        assert res_anon.status_code == 200
+        anon_ids = [item["id"] for item in res_anon.json()]
+        assert v_inactive.id not in anon_ids
+        assert v_active.id in anon_ids
+
+        # Аноним при получении деталей продукта не видит неактивный вариант
+        res_detail = await client_for_tests.get(f"/rope_products/{product.product_id}")
+        assert res_detail.status_code == 200
+        detail_var_ids = [item["id"] for item in res_detail.json()["variants"]]
+        assert v_inactive.id not in detail_var_ids
+        assert v_active.id in detail_var_ids
+
+    @pytest.mark.asyncio
     async def test_get_variant_by_id(
         self,
         client_for_tests,
@@ -506,6 +550,17 @@ class TestsForFailures:
             headers={"Authorization": f"Bearer {access_token}"},
             json=req_data.model_dump(),
         )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_get_inactive_variant_by_id_anonymous_returns_404(
+        self,
+        client_for_tests,
+        create_rope_variant_fixture,
+    ):
+        """Анонимный запрос неактивного варианта по ID -> 404."""
+        v = await create_rope_variant_fixture(CreateRopeVariantFixtureDTO(is_active=False))
+        response = await client_for_tests.get(f"/rope_variants/{v.id}")
         assert response.status_code == 404
 
     @pytest.mark.asyncio

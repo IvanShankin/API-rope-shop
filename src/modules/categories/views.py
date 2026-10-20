@@ -3,7 +3,10 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, File, Query, UploadFile, status
 
 from src.modules.base.database_model import Language
-from src.modules.check_permission.depends import get_current_admin
+from src.modules.check_permission.depends import (
+    get_current_admin,
+    get_optional_admin,
+)
 from src.modules.categories.depends import get_category_service
 from src.modules.categories.models_dto import (
     CategoryCreate,
@@ -27,13 +30,14 @@ router = APIRouter(prefix="/categories", tags=["Categories"])
     response_model=CategoryListResponseDTO,
     status_code=status.HTTP_200_OK,
     summary="Get all categories",
-    description="Get all categories with localized names and product counts (public). Supports pagination and status filtering.",
+    description="Get all categories with localized names and product counts (public). Supports pagination and status filtering (admin only for inactive).",
 )
 async def get_all_categories(
     locale: Optional[Language] = Query(None, description="Language for translation localization"),
-    is_active: Optional[bool] = Query(None, description="Filter by active status"),
+    is_active: Optional[bool] = Query(None, description="Filter by active status (admin only)"),
     skip: int = Query(0, ge=0, description="Pagination offset"),
     limit: Optional[int] = Query(None, ge=1, description="Pagination limit"),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
     service: CategoryService = Depends(get_category_service),
 ) -> CategoryListResponseDTO:
     return await service.get_all_categories(
@@ -41,6 +45,7 @@ async def get_all_categories(
         is_active=is_active,
         skip=skip,
         limit=limit,
+        is_admin=admin is not None,
     )
 
 
@@ -49,13 +54,14 @@ async def get_all_categories(
     response_model=CategoryResponseDTO,
     status_code=status.HTTP_200_OK,
     summary="Get category by slug",
-    description="Get full category details with all translations by slug (public).",
+    description="Get full category details with all translations by slug (public). Inactive categories accessible to admin only.",
 )
 async def get_category_by_slug(
     slug: str,
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
     service: CategoryService = Depends(get_category_service),
 ) -> CategoryResponseDTO:
-    return await service.get_category_by_slug(slug=slug)
+    return await service.get_category_by_slug(slug=slug, is_admin=admin is not None)
 
 
 @router.get(
@@ -63,13 +69,14 @@ async def get_category_by_slug(
     response_model=CategoryResponseDTO,
     status_code=status.HTTP_200_OK,
     summary="Get category by ID",
-    description="Get full category details with all translations by ID (public).",
+    description="Get full category details with all translations by ID (public). Inactive categories accessible to admin only.",
 )
 async def get_category_by_id(
     category_id: int,
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
     service: CategoryService = Depends(get_category_service),
 ) -> CategoryResponseDTO:
-    return await service.get_category_by_id(category_id=category_id)
+    return await service.get_category_by_id(category_id=category_id, is_admin=admin is not None)
 
 
 @router.post(

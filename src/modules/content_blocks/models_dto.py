@@ -26,8 +26,9 @@ class ContentBlockBaseDTO(BaseModel):
         ..., min_length=1, max_length=100, description="Page identifier"
     )
     block_code: str = Field(
-        ..., min_length=1, max_length=100, description="Unique block identifier"
+        ..., min_length=1, max_length=100, description="Block identifier within page"
     )
+    index: int = Field(0, description="Sorting index")
     is_active: bool = Field(True, description="Active status")
 
 
@@ -40,6 +41,9 @@ class ContentBlockCreateDTO(ContentBlockBaseDTO):
 class ContentBlockUpdateDTO(BaseModel):
     page_code: Optional[str] = Field(
         None, min_length=1, max_length=100, description="Page identifier"
+    )
+    index: Optional[int] = Field(
+        None, description="Sorting index"
     )
     is_active: Optional[bool] = Field(
         None, description="Active status of the content block"

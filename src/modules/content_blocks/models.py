@@ -24,8 +24,9 @@ class ContentBlock(BaseModelWithRelationshipTranslation):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     page_code: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
-    block_code: Mapped[str] = mapped_column(
-        String(100), nullable=False, unique=True, index=True
+    block_code: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    index: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
     )
     is_active: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True, server_default="true"
@@ -38,6 +39,10 @@ class ContentBlock(BaseModelWithRelationshipTranslation):
         server_default=func.now(),
         onupdate=func.now(),
         nullable=False,
+    )
+
+    __table_args__ = (
+        UniqueConstraint("page_code", "block_code", name="uq_content_block_page_code"),
     )
 
     translations: Mapped[List["ContentBlockTranslation"]] = relationship(

@@ -82,12 +82,15 @@ async def get_blocks_by_page_query(
     status_code=status.HTTP_200_OK,
     summary="Get single content block by block code",
     description=(
-        "Returns a single content block by its unique block_code with all loaded translations. "
+        "Returns a single content block by its block_code (and optional page_code) with all loaded translations. "
         "Public users can only view active blocks. Inactive blocks return 404 for public users."
     ),
 )
 async def get_block_by_code(
     block_code: str,
+    page_code: Optional[str] = Query(
+        None, description="Page identifier"
+    ),
     locale: Optional[Language] = Query(
         None, description="Preferred language for title and content"
     ),
@@ -97,6 +100,7 @@ async def get_block_by_code(
     is_admin = admin is not None
     return await service.get_block_by_code(
         block_code=block_code,
+        page_code=page_code,
         locale=locale,
         is_admin=is_admin,
     )
@@ -125,10 +129,14 @@ async def get_block_by_code(
 async def update_block_by_code(
     block_code: str,
     data: ContentBlockUpdateDTO,
+    page_code: Optional[str] = Query(
+        None, description="Page identifier"
+    ),
     service: ContentBlockService = Depends(get_content_block_service),
     admin: UserDTO = Depends(get_current_admin),
 ) -> ContentBlockResponseDTO:
     return await service.update_block_by_code(
         block_code=block_code,
         data=data,
+        page_code=page_code,
     )

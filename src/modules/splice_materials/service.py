@@ -34,18 +34,24 @@ class SpliceMaterialService:
         await self.session.refresh(new_material)
         return SpliceMaterialResponseDTO.model_validate(new_material)
 
-    async def get_all_materials(self, include_rules: bool = False) -> List[SpliceMaterialResponseDTO]:
+    async def get_all_materials(self, include_rules: bool = False, is_admin: bool = False) -> List[SpliceMaterialResponseDTO]:
         materials = await self.material_repo.get_all(include_rules=include_rules)
         if include_rules:
+            if not is_admin:
+                for m in materials:
+                    if hasattr(m, "rules") and m.rules:
+                        m.rules = [r for r in m.rules if r.is_active]
             return [SpliceMaterialWithRulesResponseDTO.model_validate(m) for m in materials]
         return [SpliceMaterialResponseDTO.model_validate(m) for m in materials]
 
-    async def get_material_by_id(self, material_id: int, include_rules: bool = False) -> SpliceMaterialResponseDTO:
+    async def get_material_by_id(self, material_id: int, include_rules: bool = False, is_admin: bool = False) -> SpliceMaterialResponseDTO:
         material = await self.material_repo.get_by_id(material_id, include_rules=include_rules)
         if not material:
             raise SpliceMaterialNotFound(f"SpliceMaterial with id {material_id} not found.")
         
         if include_rules:
+            if not is_admin and hasattr(material, "rules") and material.rules:
+                material.rules = [r for r in material.rules if r.is_active]
             return SpliceMaterialWithRulesResponseDTO.model_validate(material)
         return SpliceMaterialResponseDTO.model_validate(material)
 

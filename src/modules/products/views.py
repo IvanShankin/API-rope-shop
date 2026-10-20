@@ -3,7 +3,10 @@ from typing import List, Optional, Union
 from fastapi import APIRouter, Depends, Query, status
 
 from src.modules.base.database_model import Language
-from src.modules.check_permission.depends import get_current_admin
+from src.modules.check_permission.depends import (
+    get_current_admin,
+    get_optional_admin,
+)
 from src.modules.products.depends import get_product_service
 from src.modules.products.models_dto import (
     CatalogFiltersResponseDTO,
@@ -29,7 +32,7 @@ router = APIRouter(prefix="/products", tags=["Products"])
     response_model=ProductListResponseDTO,
     status_code=status.HTTP_200_OK,
     summary="Get all products",
-    description="Get products with localized content. Supports filtering by category, type, material, construction, applications, diameter, active status, and pagination (public).",
+    description="Get products with localized content. Supports filtering by category, type, material, construction, applications, diameter, active status (admin only for inactive), and pagination (public).",
 )
 async def get_all_products(
     locale: Optional[Language] = Query(None, description="Language for translation localization"),
@@ -43,9 +46,10 @@ async def get_all_products(
     diameter_max: Optional[float] = Query(None, ge=0, description="Filter by maximum diameter/size"),
     price_min: Optional[float] = Query(None, ge=0, description="Filter by minimum price"),
     price_max: Optional[float] = Query(None, ge=0, description="Filter by maximum price"),
-    is_active: Optional[bool] = Query(None, description="Filter by active status"),
+    is_active: Optional[bool] = Query(None, description="Filter by active status (admin only)"),
     skip: int = Query(0, ge=0, description="Pagination offset"),
     limit: Optional[int] = Query(None, ge=1, description="Pagination limit"),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
     service: ProductService = Depends(get_product_service),
 ) -> ProductListResponseDTO:
     return await service.get_all_products(
@@ -63,6 +67,7 @@ async def get_all_products(
         locale=locale,
         skip=skip,
         limit=limit,
+        is_admin=admin is not None,
     )
 
 
@@ -86,14 +91,15 @@ async def get_catalog_filters(
     response_model=ProductDetailResponseDTO,
     status_code=status.HTTP_200_OK,
     summary="Get product by slug",
-    description="Get product details by slug. Returns localized content if locale is provided, full DTO with all translations otherwise (public).",
+    description="Get product details by slug. Returns localized content if locale is provided, full DTO with all translations otherwise (public). Inactive products accessible to admin only.",
 )
 async def get_product_by_slug(
     slug: str,
     locale: Optional[Language] = Query(None, description="Language for translation localization"),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
     service: ProductService = Depends(get_product_service),
 ) -> ProductDetailResponseDTO:
-    return await service.get_product_by_slug(slug=slug, locale=locale)
+    return await service.get_product_by_slug(slug=slug, locale=locale, is_admin=admin is not None)
 
 
 @router.get(
@@ -101,14 +107,15 @@ async def get_product_by_slug(
     response_model=ProductDetailResponseDTO,
     status_code=status.HTTP_200_OK,
     summary="Get product by ID",
-    description="Get product details by ID. Returns localized content if locale is provided, full DTO with all translations otherwise (public).",
+    description="Get product details by ID. Returns localized content if locale is provided, full DTO with all translations otherwise (public). Inactive products accessible to admin only.",
 )
 async def get_product_by_id(
     product_id: int,
     locale: Optional[Language] = Query(None, description="Language for translation localization"),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
     service: ProductService = Depends(get_product_service),
 ) -> ProductDetailResponseDTO:
-    return await service.get_product_by_id(product_id=product_id, locale=locale)
+    return await service.get_product_by_id(product_id=product_id, locale=locale, is_admin=admin is not None)
 
 
 @router.post(

@@ -3,7 +3,10 @@ from fastapi import APIRouter, Depends, Query
 from starlette import status
 
 from src.modules.base.database_model import Language
-from src.modules.check_permission.depends import get_current_admin
+from src.modules.check_permission.depends import (
+    get_current_admin,
+    get_optional_admin,
+)
 from src.modules.users.models_dto import UserDTO
 from src.modules.colors.models_dto import (
     ColorResponseDTO,
@@ -24,20 +27,22 @@ router = APIRouter(prefix="/colors", tags=["Colors"])
 @router.get("", response_model=List[ColorLocalizedResponseDTO], status_code=status.HTTP_200_OK)
 async def get_all_colors(
     locale: Optional[Language] = Query(None, description="Language for translation"),
-    is_active: Optional[bool] = Query(None, description="Filter by active status"),
+    is_active: Optional[bool] = Query(None, description="Filter by active status (admin only)"),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
     service: ColorService = Depends(get_color_service),
 ):
-    """Get all colors (public)."""
-    return await service.get_all_colors(locale=locale, is_active=is_active)
+    """Get all colors (public, admin only for inactive)."""
+    return await service.get_all_colors(locale=locale, is_active=is_active, is_admin=admin is not None)
 
 
 @router.get("/{color_id}", response_model=ColorResponseDTO, status_code=status.HTTP_200_OK)
 async def get_color(
     color_id: int,
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
     service: ColorService = Depends(get_color_service),
 ):
-    """Get color by ID with all translations (public)."""
-    return await service.get_color_by_id(color_id)
+    """Get color by ID with all translations (public, admin only for inactive)."""
+    return await service.get_color_by_id(color_id, is_admin=admin is not None)
 
 
 @router.post("", response_model=ColorResponseDTO, status_code=status.HTTP_201_CREATED)

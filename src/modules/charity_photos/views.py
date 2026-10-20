@@ -13,7 +13,10 @@ from src.modules.charity_photos.models_dto import (
     UpdateCharityPhotoRequestDTO,
 )
 from src.modules.charity_photos.service import CharityPhotoService
-from src.modules.check_permission.depends import get_current_admin
+from src.modules.check_permission.depends import (
+    get_current_admin,
+    get_optional_admin,
+)
 from src.modules.users.models_dto import UserDTO
 
 router = APIRouter(prefix="/charity_photos", tags=["Charity Photos"])
@@ -24,13 +27,14 @@ router = APIRouter(prefix="/charity_photos", tags=["Charity Photos"])
     response_model=List[CharityPhotoResponseDTO],
     status_code=status.HTTP_200_OK,
     summary="Get all charity photos",
-    description="Get list of charity photos ordered by index (public). Supports pagination, status filtering, and localization.",
+    description="Get list of charity photos ordered by index (public). Supports pagination, status filtering (admin only for inactive), and localization.",
 )
 async def get_all_charity_photos(
-    is_active: Optional[bool] = Query(None, description="Filter by active status"),
+    is_active: Optional[bool] = Query(None, description="Filter by active status (admin only)"),
     locale: Optional[Language] = Query(None, description="Preferred language for title and description"),
     skip: int = Query(0, ge=0, description="Pagination offset"),
     limit: Optional[int] = Query(None, ge=1, description="Pagination limit"),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
     service: CharityPhotoService = Depends(get_charity_photo_service),
 ) -> List[CharityPhotoResponseDTO]:
     return await service.get_photos(
@@ -38,6 +42,7 @@ async def get_all_charity_photos(
         locale=locale,
         skip=skip,
         limit=limit,
+        is_admin=admin is not None,
     )
 
 
@@ -46,14 +51,19 @@ async def get_all_charity_photos(
     response_model=CharityPhotoResponseDTO,
     status_code=status.HTTP_200_OK,
     summary="Get charity photo by ID",
-    description="Get detailed charity photo data by ID with localized title/description and all translations (public).",
+    description="Get detailed charity photo data by ID with localized title/description and all translations (public). Inactive photos accessible to admin only.",
 )
 async def get_charity_photo_by_id(
     photo_id: int,
     locale: Optional[Language] = Query(None, description="Preferred language for title and description"),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
     service: CharityPhotoService = Depends(get_charity_photo_service),
 ) -> CharityPhotoResponseDTO:
-    return await service.get_photo_by_id(photo_id=photo_id, locale=locale)
+    return await service.get_photo_by_id(
+        photo_id=photo_id,
+        locale=locale,
+        is_admin=admin is not None,
+    )
 
 
 @router.post(

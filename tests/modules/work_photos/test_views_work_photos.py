@@ -64,6 +64,109 @@ class TestsForSuccess:
         assert data[0].id == active_photo.id
 
     @pytest.mark.asyncio
+    async def test_get_all_work_photos_anonymous_excludes_inactive_by_default(
+        self,
+        client_for_tests,
+        create_work_photo_fixture,
+    ):
+        """Анонимный запрос без фильтра не возвращает отключенные фотографии."""
+        active_photo = await create_work_photo_fixture(
+            CreateWorkPhotoFixtureDTO(index=0, is_active=True)
+        )
+        await create_work_photo_fixture(
+            CreateWorkPhotoFixtureDTO(index=1, is_active=False)
+        )
+
+        response = await client_for_tests.get("/work_photos")
+        assert response.status_code == 200
+
+        data = [WorkPhotoResponseDTO.model_validate(item) for item in response.json()]
+        assert len(data) == 1
+        assert data[0].id == active_photo.id
+
+    @pytest.mark.asyncio
+    async def test_get_all_work_photos_anonymous_ignores_is_active_false(
+        self,
+        client_for_tests,
+        create_work_photo_fixture,
+    ):
+        """Анонимный запрос с ?is_active=false принудительно возвращает только активные фото."""
+        active_photo = await create_work_photo_fixture(
+            CreateWorkPhotoFixtureDTO(index=0, is_active=True)
+        )
+        await create_work_photo_fixture(
+            CreateWorkPhotoFixtureDTO(index=1, is_active=False)
+        )
+
+        response = await client_for_tests.get("/work_photos?is_active=false")
+        assert response.status_code == 200
+
+        data = [WorkPhotoResponseDTO.model_validate(item) for item in response.json()]
+        assert len(data) == 1
+        assert data[0].id == active_photo.id
+
+    @pytest.mark.asyncio
+    async def test_get_all_work_photos_admin_sees_inactive(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_work_photo_fixture,
+    ):
+        """Администратор видит отключенные фотографии и может фильтровать по ним."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        active_photo = await create_work_photo_fixture(
+            CreateWorkPhotoFixtureDTO(index=0, is_active=True)
+        )
+        inactive_photo = await create_work_photo_fixture(
+            CreateWorkPhotoFixtureDTO(index=1, is_active=False)
+        )
+
+        # Без фильтра - видит все
+        response_all = await client_for_tests.get(
+            "/work_photos",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert response_all.status_code == 200
+        data_all = [WorkPhotoResponseDTO.model_validate(item) for item in response_all.json()]
+        assert len(data_all) == 2
+
+        # С фильтром is_active=false - видит только неактивные
+        response_inactive = await client_for_tests.get(
+            "/work_photos?is_active=false",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert response_inactive.status_code == 200
+        data_inactive = [WorkPhotoResponseDTO.model_validate(item) for item in response_inactive.json()]
+        assert len(data_inactive) == 1
+        assert data_inactive[0].id == inactive_photo.id
+
+    @pytest.mark.asyncio
+    async def test_get_work_photo_by_id_admin_accesses_inactive(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_work_photo_fixture,
+    ):
+        """Администратор имеет доступ к деталям неактивной фотографии."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        inactive_photo = await create_work_photo_fixture(
+            CreateWorkPhotoFixtureDTO(index=0, is_active=False)
+        )
+
+        response = await client_for_tests.get(
+            f"/work_photos/{inactive_photo.id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert response.status_code == 200
+        data = WorkPhotoResponseDTO.model_validate(response.json())
+        assert data.id == inactive_photo.id
+        assert data.is_active is False
+
+    @pytest.mark.asyncio
     async def test_get_work_photo_by_id(
         self,
         client_for_tests,
@@ -503,6 +606,39 @@ class TestsForFailed:
         )
         response = await client_for_tests.delete(
             "/work_photos/999999",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_get_inactive_work_photo_anonymous_returns_404(
+        self,
+        client_for_tests,
+        create_work_photo_fixture,
+    ):
+        """Анонимный запрос к неактивной фотографии возвращает 404."""
+        photo = await create_work_photo_fixture(
+            CreateWorkPhotoFixtureDTO(index=0, is_active=False)
+        )
+        response = await client_for_tests.get(f"/work_photos/{photo.id}")
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_get_inactive_work_photo_regular_user_returns_404(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_work_photo_fixture,
+    ):
+        """Обычный пользователь (не админ) при запросе неактивной фотографии получает 404."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.USER)
+        )
+        photo = await create_work_photo_fixture(
+            CreateWorkPhotoFixtureDTO(index=0, is_active=False)
+        )
+        response = await client_for_tests.get(
+            f"/work_photos/{photo.id}",
             headers={"Authorization": f"Bearer {access_token}"},
         )
         assert response.status_code == 404

@@ -93,12 +93,14 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('page_code', sa.String(length=100), nullable=False),
     sa.Column('block_code', sa.String(length=100), nullable=False),
+    sa.Column('index', sa.Integer(), server_default='0', nullable=False),
     sa.Column('is_active', sa.Boolean(), server_default='true', nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('page_code', 'block_code', name='uq_content_block_page_code')
     )
-    op.create_index(op.f('ix_content_blocks_block_code'), 'content_blocks', ['block_code'], unique=True)
+    op.create_index(op.f('ix_content_blocks_block_code'), 'content_blocks', ['block_code'], unique=False)
     op.create_index(op.f('ix_content_blocks_page_code'), 'content_blocks', ['page_code'], unique=False)
     op.create_table('material_groups',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
@@ -549,6 +551,7 @@ def downgrade() -> None:
     op.drop_table('material_groups')
     op.drop_index(op.f('ix_content_blocks_page_code'), table_name='content_blocks')
     op.drop_index(op.f('ix_content_blocks_block_code'), table_name='content_blocks')
+    op.drop_constraint('uq_content_block_page_code', 'content_blocks', type_='unique')
     op.drop_table('content_blocks')
     op.drop_table('contact_requests')
     op.drop_table('configurator_settings')

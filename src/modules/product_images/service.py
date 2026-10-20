@@ -104,19 +104,21 @@ class ProductImageService:
         self,
         product_id: int,
         is_active: Optional[bool] = None,
+        is_admin: bool = False,
     ) -> List[ProductImageResponseDTO]:
         """Получение списка всех изображений товара, отсортированных по index."""
         product = await self.product_repo.get_by_id(product_id)
-        if not product:
+        if not product or (not is_admin and not product.is_active):
             raise ProductNotFound(f"Product with id {product_id} not found.")
 
-        images = await self.repo.get_by_product_id(product_id=product_id, is_active=is_active)
+        effective_active = is_active if is_admin else True
+        images = await self.repo.get_by_product_id(product_id=product_id, is_active=effective_active)
         return [ProductImageResponseDTO.model_validate(img) for img in images]
 
-    async def get_image_by_id(self, image_id: int) -> ProductImageResponseDTO:
+    async def get_image_by_id(self, image_id: int, is_admin: bool = False) -> ProductImageResponseDTO:
         """Получение изображения товара по ID."""
         image = await self.repo.get_by_id(image_id)
-        if not image:
+        if not image or (not is_admin and not image.is_active):
             raise ProductImageNotFound(f"ProductImage with id {image_id} not found.")
         return ProductImageResponseDTO.model_validate(image)
 

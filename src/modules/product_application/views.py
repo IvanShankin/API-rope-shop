@@ -2,7 +2,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, Query, status
 
 from src.modules.base.database_model import Language
-from src.modules.check_permission.depends import get_current_admin
+from src.modules.check_permission.depends import get_current_admin, get_optional_admin
 from src.modules.product_application.depends import get_product_application_service
 from src.modules.product_application.models_dto import (
     AssignApplicationToProductDTO,
@@ -38,10 +38,12 @@ async def get_all_applications(
     skip: int = Query(0, ge=0, description="Offset"),
     limit: Optional[int] = Query(None, ge=1, description="Limit"),
     service: ProductApplicationService = Depends(get_product_application_service),
+    is_admin: bool = Depends(get_optional_admin),
 ) -> List[ProductApplicationResponseDTO]:
+    effective_active = is_active if is_admin else True
     return await service.get_all_applications(
         locale=locale,
-        is_active=is_active,
+        is_active=effective_active,
         skip=skip,
         limit=limit,
     )
@@ -57,8 +59,9 @@ async def get_all_applications(
 async def get_application_by_code(
     code: str,
     service: ProductApplicationService = Depends(get_product_application_service),
+    is_admin: bool = Depends(get_optional_admin),
 ) -> ProductApplicationResponseDTO:
-    return await service.get_application_by_code(code=code)
+    return await service.get_application_by_code(code=code, is_admin=is_admin)
 
 
 @router.get(
@@ -71,8 +74,9 @@ async def get_application_by_code(
 async def get_application_by_id(
     id: int,
     service: ProductApplicationService = Depends(get_product_application_service),
+    is_admin: bool = Depends(get_optional_admin),
 ) -> ProductApplicationResponseDTO:
-    return await service.get_application_by_id(app_id=id)
+    return await service.get_application_by_id(app_id=id, is_admin=is_admin)
 
 
 @router.post(
@@ -201,8 +205,9 @@ async def get_product_applications(
     product_id: int,
     locale: Optional[Language] = Query(None, description="Language for application name localization"),
     service: ProductApplicationService = Depends(get_product_application_service),
+    is_admin: bool = Depends(get_optional_admin),
 ) -> List[ProductApplicationLocalizedResponseDTO]:
-    return await service.get_product_applications(product_id=product_id, locale=locale)
+    return await service.get_product_applications(product_id=product_id, locale=locale, is_admin=is_admin)
 
 
 @router.post(

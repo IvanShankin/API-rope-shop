@@ -108,21 +108,28 @@ class MaterialService:
         material_group_id: Optional[int] = None,
         locale: Optional[Language] = None,
         is_active: Optional[bool] = None,
+        is_admin: bool = False,
     ) -> List[MaterialLocalizedResponseDTO]:
         """Получение списка всех материалов с локализацией по указанному языку."""
+        effective_active = is_active if is_admin else True
         materials = await self.material_repo.get_all(
             material_group_id=material_group_id,
-            is_active=is_active,
+            is_active=effective_active,
         )
         return [self._to_localized_dto(m, locale) for m in materials]
 
     async def get_material_by_id(
         self,
-        material_id: int
+        material_id: int,
+        is_admin: bool = False,
     ) -> MaterialResponseDTO:
         """Получение материала по ID со всеми переводами."""
         material = await self.material_repo.get_by_id(material_id)
         if not material:
+            raise MaterialNotFound(
+                f"Material with id {material_id} not found."
+            )
+        if not is_admin and not material.is_active:
             raise MaterialNotFound(
                 f"Material with id {material_id} not found."
             )

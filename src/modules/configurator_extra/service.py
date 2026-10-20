@@ -101,21 +101,24 @@ class ConfiguratorExtraService:
         locale: Optional[Language] = None,
         is_active: Optional[bool] = None,
         billing_type: Optional[BillingType] = None,
+        is_admin: bool = False,
     ) -> List[ConfiguratorExtraLocalizedResponseDTO]:
         """Получение списка всех опций с локализацией по указанному языку."""
+        effective_active = is_active if is_admin else True
         extras = await self.extra_repo.get_all(
             billing_type=billing_type,
-            is_active=is_active,
+            is_active=effective_active,
         )
         return [self._to_localized_dto(e, locale) for e in extras]
 
     async def get_extra_by_id(
         self,
         extra_id: int,
+        is_admin: bool = False,
     ) -> ConfiguratorExtraResponseDTO:
         """Получение опции по ID со всеми переводами."""
         extra = await self.extra_repo.get_by_id(extra_id)
-        if not extra:
+        if not extra or (not is_admin and not extra.is_active):
             raise ConfiguratorExtraNotFound(
                 f"ConfiguratorExtra with id {extra_id} not found."
             )

@@ -125,6 +125,43 @@ class TestsForSuccess:
         assert m_active.id in active_ids
         assert m_inactive.id not in active_ids
 
+        resp_inactive = await client_for_tests.get(
+            "/materials",
+            params={"material_group_id": group.id, "is_active": False},
+        )
+        assert resp_inactive.status_code == 200
+        inactive_ids = [item["id"] for item in resp_inactive.json()]
+        assert m_inactive.id not in inactive_ids
+        assert m_active.id in inactive_ids
+
+    @pytest.mark.asyncio
+    async def test_get_all_materials_admin_sees_inactive(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_material_group_fixture,
+        create_material_fixture,
+    ):
+        """Администратор может получать неактивные материалы через фильтр."""
+        _, access_token = await create_user_fixture(CreateUserFixtureDTO(role=UserRole.ADMIN))
+        group = await create_material_group_fixture()
+        m_active = await create_material_fixture(
+            CreateMaterialFixtureDTO(material_group_id=group.id, is_active=True)
+        )
+        m_inactive = await create_material_fixture(
+            CreateMaterialFixtureDTO(material_group_id=group.id, is_active=False)
+        )
+
+        resp_inactive = await client_for_tests.get(
+            "/materials",
+            params={"material_group_id": group.id, "is_active": False},
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert resp_inactive.status_code == 200
+        inactive_ids = [item["id"] for item in resp_inactive.json()]
+        assert m_inactive.id in inactive_ids
+        assert m_active.id not in inactive_ids
+
     @pytest.mark.asyncio
     async def test_get_material_by_id(
         self,
@@ -501,3 +538,38 @@ class TestsForFailures:
             headers={"Authorization": f"Bearer {access_token}"},
         )
         assert response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_get_inactive_material_anonymous_returns_404(
+        self,
+        client_for_tests,
+        create_material_group_fixture,
+        create_material_fixture,
+    ):
+        """Анонимный запрос к неактивному материалу по ID возвращает 404."""
+        group = await create_material_group_fixture()
+        mat = await create_material_fixture(
+            CreateMaterialFixtureDTO(material_group_id=group.id, is_active=False)
+        )
+        resp = await client_for_tests.get(f"/materials/{mat.id}")
+        assert resp.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_get_inactive_material_admin_returns_200(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_material_group_fixture,
+        create_material_fixture,
+    ):
+        """Администратор имеет доступ к неактивному материалу по ID."""
+        _, access_token = await create_user_fixture(CreateUserFixtureDTO(role=UserRole.ADMIN))
+        group = await create_material_group_fixture()
+        mat = await create_material_fixture(
+            CreateMaterialFixtureDTO(material_group_id=group.id, is_active=False)
+        )
+        resp = await client_for_tests.get(
+            f"/materials/{mat.id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert resp.status_code == 200

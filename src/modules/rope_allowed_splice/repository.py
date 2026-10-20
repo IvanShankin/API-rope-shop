@@ -30,7 +30,8 @@ class RopeAllowedSpliceRepository(BaseRepository):
             select(RopeAllowedSplice)
             .options(
                 selectinload(RopeAllowedSplice.splice_type)
-                .selectinload(SpliceType.translations)
+                .selectinload(SpliceType.translations),
+                selectinload(RopeAllowedSplice.product),
             )
             .where(
                 RopeAllowedSplice.product_id == product_id,

@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Query
 from starlette import status
 
 from src.modules.base.database_model import Language
-from src.modules.check_permission.depends import get_current_admin
+from src.modules.check_permission.depends import get_current_admin, get_optional_admin, get_optional_admin
 from src.modules.users.models_dto import UserDTO
 from src.modules.rope_allowed_splice.models_dto import (
     RopeAllowedSpliceResponseDTO,
@@ -26,11 +26,13 @@ async def get_allowed_splices_by_product(
     product_id: int,
     locale: Optional[Language] = Query(None, description="Language for splice type localization"),
     service: RopeAllowedSpliceService = Depends(get_rope_allowed_splice_service),
+    is_admin: bool = Depends(get_optional_admin),
 ):
     """Get all allowed splice types of a specific product (public)."""
     return await service.get_allowed_splices_by_product_id(
         product_id=product_id,
         locale=locale,
+        is_admin=is_admin,
     )
 
 
@@ -43,11 +45,13 @@ async def get_rope_allowed_splice(
     product_id: int,
     splice_type_id: int,
     service: RopeAllowedSpliceService = Depends(get_rope_allowed_splice_service),
+    is_admin: bool = Depends(get_optional_admin),
 ):
     """Get rope allowed splice link by composite key (public)."""
     return await service.get_by_composite_key(
         product_id=product_id,
         splice_type_id=splice_type_id,
+        is_admin=is_admin,
     )
 
 

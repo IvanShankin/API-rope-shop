@@ -351,6 +351,32 @@ class TestsForSuccess:
         assert resp_inactive.status_code == 200
         list_inactive = ProductListResponseDTO.model_validate(resp_inactive.json())
         inactive_ids = [i.id for i in list_inactive.items]
+        # Анонимный пользователь не должен получать неактивные товары
+        assert p_inactive.id not in inactive_ids
+        assert p_active.id in inactive_ids
+
+    @pytest.mark.asyncio
+    async def test_get_all_products_admin_sees_inactive(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_product_fixture,
+    ):
+        """Администратор может получать неактивные товары через фильтр."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        p_active = await create_product_fixture(CreateProductFixtureDTO(is_active=True))
+        p_inactive = await create_product_fixture(CreateProductFixtureDTO(is_active=False))
+
+        resp_inactive = await client_for_tests.get(
+            "/products",
+            params={"is_active": "false"},
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert resp_inactive.status_code == 200
+        list_inactive = ProductListResponseDTO.model_validate(resp_inactive.json())
+        inactive_ids = [i.id for i in list_inactive.items]
         assert p_inactive.id in inactive_ids
         assert p_active.id not in inactive_ids
 
@@ -1449,3 +1475,36 @@ class TestsForErrors:
             headers={"Authorization": f"Bearer {access_token}"},
         )
         assert response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_get_inactive_product_anonymous_returns_404(
+        self,
+        client_for_tests,
+        create_product_fixture,
+    ):
+        """Анонимный запрос к неактивному товару по ID или slug возвращает 404."""
+        prod = await create_product_fixture(CreateProductFixtureDTO(is_active=False))
+        resp_id = await client_for_tests.get(f"/products/{prod.id}")
+        assert resp_id.status_code == 404
+
+        resp_slug = await client_for_tests.get(f"/products/by-slug/{prod.slug}")
+        assert resp_slug.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_get_inactive_product_admin_returns_200(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_product_fixture,
+    ):
+        """Администратор имеет доступ к неактивному товару по ID и slug."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        prod = await create_product_fixture(CreateProductFixtureDTO(is_active=False))
+        headers = {"Authorization": f"Bearer {access_token}"}
+        resp_id = await client_for_tests.get(f"/products/{prod.id}", headers=headers)
+        assert resp_id.status_code == 200
+
+        resp_slug = await client_for_tests.get(f"/products/by-slug/{prod.slug}", headers=headers)
+        assert resp_slug.status_code == 200

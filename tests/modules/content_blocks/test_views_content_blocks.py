@@ -582,3 +582,135 @@ class TestsForFailed:
         assert len(admin_data) == 1
         assert admin_data[0]["block_code"] == "test_content_contract_20261019"
         assert admin_data[0]["is_active"] is False
+
+    @pytest.mark.asyncio
+    async def test_same_block_code_on_different_pages(
+        self,
+        client_for_tests,
+        create_content_block_fixture,
+    ):
+        """
+        Проверка, что один и тот же block_code может использоваться на разных страницах
+        (например, 'intro' на 'b2b' и 'intro' на 'b2c').
+        """
+        block_b2b = await create_content_block_fixture(
+            CreateContentBlockFixtureDTO(
+                page_code="b2b",
+                block_code="intro",
+                index=10,
+                title="B2B Intro",
+                content="Content for B2B",
+            )
+        )
+        block_b2c = await create_content_block_fixture(
+            CreateContentBlockFixtureDTO(
+                page_code="b2c",
+                block_code="intro",
+                index=20,
+                title="B2C Intro",
+                content="Content for B2C",
+            )
+        )
+
+        assert block_b2b.id != block_b2c.id
+        assert block_b2b.block_code == block_b2c.block_code == "intro"
+        assert block_b2b.page_code == "b2b"
+        assert block_b2c.page_code == "b2c"
+
+        # Запрос по b2b
+        resp_b2b = await client_for_tests.get("/content_blocks/page/b2b")
+        assert resp_b2b.status_code == 200
+        data_b2b = resp_b2b.json()
+        assert len(data_b2b) == 1
+        assert data_b2b[0]["page_code"] == "b2b"
+        assert data_b2b[0]["block_code"] == "intro"
+        assert data_b2b[0]["title"] == "B2B Intro"
+
+        # Запрос по b2c
+        resp_b2c = await client_for_tests.get("/content_blocks/page/b2c")
+        assert resp_b2c.status_code == 200
+        data_b2c = resp_b2c.json()
+        assert len(data_b2c) == 1
+        assert data_b2c[0]["page_code"] == "b2c"
+        assert data_b2c[0]["block_code"] == "intro"
+        assert data_b2c[0]["title"] == "B2C Intro"
+
+        # Запрос одиночного блока с page_code
+        resp_single_b2b = await client_for_tests.get(
+            "/content_blocks/intro", params={"page_code": "b2b"}
+        )
+        assert resp_single_b2b.status_code == 200
+        assert resp_single_b2b.json()["title"] == "B2B Intro"
+
+        resp_single_b2c = await client_for_tests.get(
+            "/content_blocks/intro", params={"page_code": "b2c"}
+        )
+        assert resp_single_b2c.status_code == 200
+        assert resp_single_b2c.json()["title"] == "B2C Intro"
+
+    @pytest.mark.asyncio
+    async def test_duplicate_page_code_and_block_code_violates_constraint(
+        self,
+        create_content_block_fixture,
+    ):
+        """
+        Проверка, что пара (page_code, block_code) уникальна.
+        Повторная вставка того же block_code на той же странице вызывает ошибку целостности.
+        """
+        from sqlalchemy.exc import IntegrityError
+
+        await create_content_block_fixture(
+            CreateContentBlockFixtureDTO(
+                page_code="landing",
+                block_code="hero",
+            )
+        )
+
+        with pytest.raises(IntegrityError):
+            await create_content_block_fixture(
+                CreateContentBlockFixtureDTO(
+                    page_code="landing",
+                    block_code="hero",
+                )
+            )
+
+    @pytest.mark.asyncio
+    async def test_blocks_sorted_by_index_asc(
+        self,
+        client_for_tests,
+        create_content_block_fixture,
+    ):
+        """Проверка, что блоки на странице сортируются по index.asc(), id.asc()."""
+        await create_content_block_fixture(
+            CreateContentBlockFixtureDTO(
+                page_code="ordering_page",
+                block_code="third_block",
+                index=30,
+            )
+        )
+        await create_content_block_fixture(
+            CreateContentBlockFixtureDTO(
+                page_code="ordering_page",
+                block_code="first_block",
+                index=10,
+            )
+        )
+        await create_content_block_fixture(
+            CreateContentBlockFixtureDTO(
+                page_code="ordering_page",
+                block_code="second_block",
+                index=20,
+            )
+        )
+
+        resp = await client_for_tests.get("/content_blocks/page/ordering_page")
+        assert resp.status_code == 200
+        items = resp.json()
+        assert len(items) == 3
+        assert [item["block_code"] for item in items] == [
+            "first_block",
+            "second_block",
+            "third_block",
+        ]
+        assert [item["index"] for item in items] == [10, 20, 30]
+

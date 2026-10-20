@@ -2,7 +2,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, Query
 from starlette import status
 
-from src.modules.check_permission.depends import get_current_admin
+from src.modules.check_permission.depends import get_current_admin, get_optional_admin
 from src.modules.users.models_dto import UserDTO
 from src.modules.splice_prices.models_dto import (
     SplicePriceRuleResponseDTO,
@@ -18,16 +18,17 @@ router = APIRouter(prefix="/splice_prices", tags=["Splice Price Rules"])
 @router.get("", response_model=List[SplicePriceRuleWithRelationsResponseDTO], status_code=status.HTTP_200_OK)
 async def get_all_rules(
     is_active: Optional[bool] = Query(None, description="Filter by active status"),
-    service: SplicePriceRuleService = Depends(get_splice_price_service)
+    service: SplicePriceRuleService = Depends(get_splice_price_service),
+    is_admin: bool = Depends(get_optional_admin),
 ):
-    return await service.get_all_rules(is_active=is_active)
+    return await service.get_all_rules(is_active=is_active, is_admin=is_admin)
 
 @router.get("/applicable", response_model=List[SplicePriceRuleWithRelationsResponseDTO], status_code=status.HTTP_200_OK)
 async def get_applicable_rules(
     material_id: int = Query(..., description="ID of the splice material"),
     diameter: float = Query(..., description="Diameter of the rope in mm"),
     splice_type_ids: Optional[List[int]] = Query(None, description="List of allowed splice type IDs"),
-    service: SplicePriceRuleService = Depends(get_splice_price_service)
+    service: SplicePriceRuleService = Depends(get_splice_price_service),
 ):
     return await service.get_applicable_rules(
         material_id=material_id, 
@@ -38,9 +39,10 @@ async def get_applicable_rules(
 @router.get("/{rule_id}", response_model=SplicePriceRuleWithRelationsResponseDTO, status_code=status.HTTP_200_OK)
 async def get_rule(
     rule_id: int,
-    service: SplicePriceRuleService = Depends(get_splice_price_service)
+    service: SplicePriceRuleService = Depends(get_splice_price_service),
+    is_admin: bool = Depends(get_optional_admin),
 ):
-    return await service.get_rule_by_id(rule_id)
+    return await service.get_rule_by_id(rule_id, is_admin=is_admin)
 
 @router.post("", response_model=SplicePriceRuleResponseDTO, status_code=status.HTTP_201_CREATED)
 async def create_rule(

@@ -130,6 +130,37 @@ class TestsForSuccess:
         assert ger_item.name == "Fixed Extra DE"
 
     @pytest.mark.asyncio
+    async def test_get_all_configurator_extras_filter_is_active(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_configurator_extra_fixture,
+    ):
+        """Администратор может запросить неактивные опции, а аноним всегда получает только активные."""
+        _, admin_token = await create_user_fixture(CreateUserFixtureDTO(role=UserRole.ADMIN))
+        e_active = await create_configurator_extra_fixture(
+            CreateConfiguratorExtraFixtureDTO(code="extra_act", is_active=True)
+        )
+        e_inactive = await create_configurator_extra_fixture(
+            CreateConfiguratorExtraFixtureDTO(code="extra_inact", is_active=False)
+        )
+
+        res_admin = await client_for_tests.get(
+            "/configurator_extras?is_active=false",
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        assert res_admin.status_code == 200
+        admin_ids = [item["id"] for item in res_admin.json()]
+        assert e_inactive.id in admin_ids
+        assert e_active.id not in admin_ids
+
+        res_anon = await client_for_tests.get("/configurator_extras?is_active=false")
+        assert res_anon.status_code == 200
+        anon_ids = [item["id"] for item in res_anon.json()]
+        assert e_inactive.id not in anon_ids
+        assert e_active.id in anon_ids
+
+    @pytest.mark.asyncio
     async def test_get_configurator_extra_by_id_public(
         self,
         client_for_tests,
@@ -467,6 +498,19 @@ class TestsForFailures:
             },
         )
         assert response.status_code == 409
+
+    @pytest.mark.asyncio
+    async def test_get_inactive_extra_by_id_anonymous_returns_404(
+        self,
+        client_for_tests,
+        create_configurator_extra_fixture,
+    ):
+        """Анонимный запрос неактивной опции конфигуратора по ID -> 404."""
+        extra = await create_configurator_extra_fixture(
+            CreateConfiguratorExtraFixtureDTO(code="inact_extra_404", is_active=False)
+        )
+        response = await client_for_tests.get(f"/configurator_extras/{extra.id}")
+        assert response.status_code == 404
 
     @pytest.mark.asyncio
     async def test_get_configurator_extra_not_found(

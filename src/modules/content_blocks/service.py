@@ -51,15 +51,19 @@ class ContentBlockService:
     async def get_block_by_code(
         self,
         block_code: str,
+        page_code: Optional[str] = None,
         locale: Optional[Language] = None,
         is_admin: bool = False,
     ) -> ContentBlockResponseDTO:
         """
-        Получение одного экземпляра блока контента по block_code.
+        Получение одного экземпляра блока контента по block_code (и опционально page_code).
         Обычные пользователи могут получить только активный блок (is_active=True).
         Данные всегда возвращаются с подгруженными переводами.
         """
-        block = await self.block_repo.get_by_block_code(block_code)
+        block = await self.block_repo.get_by_block_code(
+            block_code=block_code,
+            page_code=page_code,
+        )
         if not block:
             raise ContentBlockNotFound(
                 f"ContentBlock with block_code '{block_code}' not found."
@@ -76,25 +80,31 @@ class ContentBlockService:
         self,
         block_code: str,
         data: ContentBlockUpdateDTO,
+        page_code: Optional[str] = None,
     ) -> ContentBlockResponseDTO:
         """
-        Изменение блока контента по block_code (только админ).
+        Изменение блока контента по block_code и page_code (только админ).
         Позволяет в рамках одной транзакции изменить атрибуты блока и сразу пачку
         переводов по каждому языку (upsert).
-        Если блок с block_code еще не существует и передан page_code, он создается.
+        Если блок с (page_code, block_code) еще не существует, он создается.
         """
-        block = await self.block_repo.get_by_block_code(block_code)
+        effective_page_code = page_code or data.page_code
+        block = await self.block_repo.get_by_block_code(
+            block_code=block_code,
+            page_code=effective_page_code,
+        )
 
         if not block:
-            if not data.page_code:
+            if not effective_page_code:
                 raise ContentBlockNotFound(
                     f"ContentBlock with block_code '{block_code}' not found."
                 )
 
-            # Создание нового блока (upsert по block_code)
+            # Создание нового блока (upsert по page_code + block_code)
             block = ContentBlock(
-                page_code=data.page_code,
+                page_code=effective_page_code,
                 block_code=block_code,
+                index=data.index if data.index is not None else 0,
                 is_active=data.is_active if data.is_active is not None else True,
             )
             self.block_repo.add_block(block)
@@ -104,6 +114,8 @@ class ContentBlockService:
             update_dict = {}
             if data.page_code is not None:
                 update_dict["page_code"] = data.page_code
+            if data.index is not None:
+                update_dict["index"] = data.index
             if data.is_active is not None:
                 update_dict["is_active"] = data.is_active
 
@@ -189,6 +201,7 @@ class ContentBlockService:
             id=block.id,
             page_code=block.page_code,
             block_code=block.block_code,
+            index=block.index,
             is_active=block.is_active,
             title=title,
             content=content,

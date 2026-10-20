@@ -140,6 +140,32 @@ class TestsForSuccess:
         assert data == []
 
     @pytest.mark.asyncio
+    async def test_get_allowed_splices_by_product_filters_inactive(
+        self,
+        client_for_tests,
+        create_rope_product_fixture,
+        create_splice_type_fixture,
+        create_rope_allowed_splice_fixture,
+    ):
+        """Анонимный запрос списка разрешенных сращиваний исключает неактивные типы заделок."""
+        product = await create_rope_product_fixture()
+        st_act = await create_splice_type_fixture(CreateSpliceTypeFixtureDTO(is_active=True))
+        st_inact = await create_splice_type_fixture(CreateSpliceTypeFixtureDTO(is_active=False))
+
+        await create_rope_allowed_splice_fixture(
+            CreateRopeAllowedSpliceFixtureDTO(product_id=product.product_id, splice_type_id=st_act.id)
+        )
+        await create_rope_allowed_splice_fixture(
+            CreateRopeAllowedSpliceFixtureDTO(product_id=product.product_id, splice_type_id=st_inact.id)
+        )
+
+        response = await client_for_tests.get(f"/rope_allowed_splices/by-product/{product.product_id}")
+        assert response.status_code == 200
+        ids = [item["splice_type_id"] for item in response.json()]
+        assert st_act.id in ids
+        assert st_inact.id not in ids
+
+    @pytest.mark.asyncio
     async def test_get_rope_allowed_splice_by_composite_key(
         self,
         client_for_tests,
@@ -526,5 +552,25 @@ class TestsForFailures:
             f"/rope_allowed_splices/by-product/{product.product_id}",
             headers={"Authorization": f"Bearer {access_token}"},
             json=bulk_data.model_dump(),
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_get_inactive_rope_allowed_splice_by_composite_key_anonymous_returns_404(
+        self,
+        client_for_tests,
+        create_rope_product_fixture,
+        create_splice_type_fixture,
+        create_rope_allowed_splice_fixture,
+    ):
+        """Анонимный запрос неактивной связки заделки по составному ключу -> 404."""
+        product = await create_rope_product_fixture()
+        st_inact = await create_splice_type_fixture(CreateSpliceTypeFixtureDTO(is_active=False))
+        link = await create_rope_allowed_splice_fixture(
+            CreateRopeAllowedSpliceFixtureDTO(product_id=product.product_id, splice_type_id=st_inact.id)
+        )
+
+        response = await client_for_tests.get(
+            f"/rope_allowed_splices/{product.product_id}/{st_inact.id}"
         )
         assert response.status_code == 404

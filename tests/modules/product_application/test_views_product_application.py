@@ -110,9 +110,13 @@ class TestsForSuccess:
     async def test_get_all_applications_filter_is_active(
         self,
         client_for_tests,
+        create_user_fixture,
         create_product_application_fixture,
     ):
-        """Фильтрация назначений по активности (is_active)."""
+        """Фильтрация назначений по активности (is_active). Неактивные доступны только админу."""
+        _, admin_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
         active_app = await create_product_application_fixture(
             CreateProductApplicationFixtureDTO(code="active_app", is_active=True)
         )
@@ -130,7 +134,12 @@ class TestsForSuccess:
         assert active_app.id in active_ids
         assert inactive_app.id not in active_ids
 
-        resp_inactive = await client_for_tests.get("/product_applications", params={"is_active": "false"})
+        # Админ может запросить неактивные
+        resp_inactive = await client_for_tests.get(
+            "/product_applications",
+            params={"is_active": "false"},
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
         assert resp_inactive.status_code == 200
         inactive_items = [
             ProductApplicationResponseDTO.model_validate(item)
@@ -139,6 +148,13 @@ class TestsForSuccess:
         inactive_ids = [item.id for item in inactive_items]
         assert inactive_app.id in inactive_ids
         assert active_app.id not in inactive_ids
+
+        # Аноним при ?is_active=false всё равно получает только активные
+        resp_anon = await client_for_tests.get("/product_applications", params={"is_active": "false"})
+        assert resp_anon.status_code == 200
+        anon_ids = [item["id"] for item in resp_anon.json()]
+        assert inactive_app.id not in anon_ids
+        assert active_app.id in anon_ids
 
     @pytest.mark.asyncio
     async def test_get_all_applications_pagination(
@@ -1101,3 +1117,58 @@ class TestsForErrors:
             headers={"Authorization": f"Bearer {admin_token}"},
         )
         assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_get_inactive_application_by_id_anonymous_returns_404(
+        self,
+        client_for_tests,
+        create_product_application_fixture,
+    ):
+        """Анонимный запрос неактивного назначения по ID -> 404."""
+        app = await create_product_application_fixture(
+            CreateProductApplicationFixtureDTO(code="inact_app_id", is_active=False)
+        )
+        response = await client_for_tests.get(f"/product_applications/{app.id}")
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_get_inactive_application_by_code_anonymous_returns_404(
+        self,
+        client_for_tests,
+        create_product_application_fixture,
+    ):
+        """Анонимный запрос неактивного назначения по коду -> 404."""
+        await create_product_application_fixture(
+            CreateProductApplicationFixtureDTO(code="inact_app_code", is_active=False)
+        )
+        response = await client_for_tests.get("/product_applications/by-code/inact_app_code")
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_get_product_applications_filters_inactive_for_anonymous(
+        self,
+        client_for_tests,
+        create_product_fixture,
+        create_product_application_fixture,
+        create_product_assigned_application_fixture,
+    ):
+        """Анонимный запрос назначений товара исключает неактивные назначения."""
+        product = await create_product_fixture(CreateProductFixtureDTO(is_active=True))
+        app_active = await create_product_application_fixture(
+            CreateProductApplicationFixtureDTO(code="p_app_act", is_active=True)
+        )
+        app_inactive = await create_product_application_fixture(
+            CreateProductApplicationFixtureDTO(code="p_app_inact", is_active=False)
+        )
+        await create_product_assigned_application_fixture(
+            CreateProductAssignedApplicationFixtureDTO(product_id=product.id, application_id=app_active.id)
+        )
+        await create_product_assigned_application_fixture(
+            CreateProductAssignedApplicationFixtureDTO(product_id=product.id, application_id=app_inactive.id)
+        )
+
+        response = await client_for_tests.get(f"/product_applications/by-product/{product.id}")
+        assert response.status_code == 200
+        ids = [item["id"] for item in response.json()]
+        assert app_active.id in ids
+        assert app_inactive.id not in ids

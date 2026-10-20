@@ -86,6 +86,36 @@ class TestsForSuccess:
         inactive_dto = CategoryListResponseDTO.model_validate(resp_inactive.json())
         inactive_items = inactive_dto.items
         inactive_ids = [item.id for item in inactive_items]
+        # Анонимный пользователь не должен получать неактивные категории
+        assert inactive_cat.id not in inactive_ids
+        assert active_cat.id in inactive_ids
+
+    @pytest.mark.asyncio
+    async def test_get_all_categories_admin_sees_inactive(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_category_fixture,
+    ):
+        """Администратор может получать неактивные категории через фильтр."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        active_cat = await create_category_fixture(
+            CreateCategoryFixtureDTO(is_active=True)
+        )
+        inactive_cat = await create_category_fixture(
+            CreateCategoryFixtureDTO(is_active=False)
+        )
+
+        resp_inactive = await client_for_tests.get(
+            "/categories",
+            params={"is_active": "false"},
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert resp_inactive.status_code == 200
+        inactive_dto = CategoryListResponseDTO.model_validate(resp_inactive.json())
+        inactive_ids = [item.id for item in inactive_dto.items]
         assert inactive_cat.id in inactive_ids
         assert active_cat.id not in inactive_ids
 
@@ -918,3 +948,40 @@ class TestsForErrors:
             headers={"Authorization": f"Bearer {access_token}"},
         )
         assert response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_get_inactive_category_anonymous_returns_404(
+        self,
+        client_for_tests,
+        create_category_fixture,
+    ):
+        """Анонимный запрос к неактивной категории по ID или slug возвращает 404."""
+        cat = await create_category_fixture(
+            CreateCategoryFixtureDTO(is_active=False)
+        )
+        resp_id = await client_for_tests.get(f"/categories/{cat.id}")
+        assert resp_id.status_code == 404
+
+        resp_slug = await client_for_tests.get(f"/categories/by-slug/{cat.slug}")
+        assert resp_slug.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_get_inactive_category_admin_returns_200(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_category_fixture,
+    ):
+        """Администратор имеет доступ к неактивной категории по ID и slug."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        cat = await create_category_fixture(
+            CreateCategoryFixtureDTO(is_active=False)
+        )
+        headers = {"Authorization": f"Bearer {access_token}"}
+        resp_id = await client_for_tests.get(f"/categories/{cat.id}", headers=headers)
+        assert resp_id.status_code == 200
+
+        resp_slug = await client_for_tests.get(f"/categories/by-slug/{cat.slug}", headers=headers)
+        assert resp_slug.status_code == 200

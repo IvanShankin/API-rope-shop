@@ -26,7 +26,8 @@ class ProductColorRepository(BaseIndexedRepository):
             select(ProductColor)
             .options(
                 selectinload(ProductColor.color)
-                .selectinload(Color.translations)
+                .selectinload(Color.translations),
+                selectinload(ProductColor.product),
             )
             .where(ProductColor.id == item_id)
         )

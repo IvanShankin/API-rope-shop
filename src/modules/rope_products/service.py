@@ -108,11 +108,12 @@ class RopeProductsService:
 
     async def get_rope_product(
         self,
-        product_id: int
+        product_id: int,
+        is_admin: bool = False,
     ) -> RopeConfiguratorSettingDetailResponseDTO:
         """Получение детальной информации о настройках каната."""
         item = await self.product_repo.get_by_product_id(product_id, include_relations=True)
-        if not item:
+        if not item or (not is_admin and item.product and not item.product.is_active):
             raise RopeProductNotFound(
                 f"RopeConfiguratorSetting with product_id {product_id} not found."
             )
@@ -123,11 +124,11 @@ class RopeProductsService:
 
         if item.product:
             if item.product.variants:
-                variants = [ProductVariantResponseDTO.model_validate(v) for v in item.product.variants]
+                variants = [ProductVariantResponseDTO.model_validate(v) for v in item.product.variants if is_admin or v.is_active]
             if item.product.colors:
-                colors = [ProductColorResponseDTO.model_validate(c) for c in item.product.colors]
+                colors = [ProductColorResponseDTO.model_validate(c) for c in item.product.colors if is_admin or (c.color and c.color.is_active)]
             if item.product.allowed_splices:
-                allowed_splices = [RopeAllowedSpliceResponseDTO.model_validate(s) for s in item.product.allowed_splices]
+                allowed_splices = [RopeAllowedSpliceResponseDTO.model_validate(s) for s in item.product.allowed_splices if is_admin or (s.splice_type and s.splice_type.is_active)]
 
         splice_material = None
         if item.splice_material:
@@ -154,11 +155,13 @@ class RopeProductsService:
         self,
         material_group_id: Optional[int] = None,
         can_be_spliced: Optional[bool] = None,
+        is_admin: bool = False,
     ) -> Sequence[RopeConfiguratorSettingResponseDTO]:
         """Получение списка товаров-веревок с фильтрацией."""
         items = await self.product_repo.get_all(
             material_group_id=material_group_id,
             can_be_spliced=can_be_spliced,
+            is_admin=is_admin,
         )
         return [RopeConfiguratorSettingResponseDTO.model_validate(item) for item in items]
 
@@ -282,20 +285,23 @@ class RopeProductsService:
     async def get_variants_for_product(
         self,
         product_id: int,
-        is_active: Optional[bool] = None
+        is_active: Optional[bool] = None,
+        is_admin: bool = False,
     ) -> Sequence[ProductVariantResponseDTO]:
         """Получение списка вариантов товара."""
-        if not await self.product_repo.exists_base_product(product_id):
+        base_product = await self.session.get(Product, product_id)
+        if not base_product or (not is_admin and not base_product.is_active):
             raise RopeProductNotFound(
                 f"Product with id {product_id} not found."
             )
-        items = await self.variant_repo.get_by_product_id(product_id, is_active=is_active)
+        effective_active = is_active if is_admin else True
+        items = await self.variant_repo.get_by_product_id(product_id, is_active=effective_active)
         return [ProductVariantResponseDTO.model_validate(item) for item in items]
 
-    async def get_variant_by_id(self, variant_id: int) -> ProductVariantResponseDTO:
+    async def get_variant_by_id(self, variant_id: int, is_admin: bool = False) -> ProductVariantResponseDTO:
         """Получение варианта по ID."""
         item = await self.variant_repo.get_by_id(variant_id)
-        if not item:
+        if not item or (not is_admin and not item.is_active):
             raise RopeVariantNotFound(
                 f"ProductVariant with id {variant_id} not found."
             )

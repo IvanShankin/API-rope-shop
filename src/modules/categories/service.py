@@ -102,14 +102,16 @@ class CategoryService:
         is_active: Optional[bool] = None,
         skip: int = 0,
         limit: Optional[int] = None,
+        is_admin: bool = False,
     ) -> CategoryListResponseDTO:
         """Получение списка всех категорий с локализованными названиями и количеством товаров."""
+        effective_active = is_active if is_admin else True
         categories = await self.category_repo.get_all(
-            is_active=is_active,
+            is_active=effective_active,
             skip=skip,
             limit=limit,
         )
-        total = await self.category_repo.count_all(is_active=is_active)
+        total = await self.category_repo.count_all(is_active=effective_active)
 
         cat_ids = [cat.id for cat in categories]
         counts_map = await self.category_repo.get_products_counts_for_categories(
@@ -128,19 +130,27 @@ class CategoryService:
             limit=limit,
         )
 
-    async def get_category_by_id(self, category_id: int) -> CategoryResponseDTO:
+    async def get_category_by_id(
+        self, category_id: int, is_admin: bool = False
+    ) -> CategoryResponseDTO:
         """Получение категории по ID со всеми переводами."""
         category = await self.category_repo.get_by_id(category_id)
         if not category:
+            raise CategoryNotFound(f"Category with id {category_id} not found.")
+        if not is_admin and not category.is_active:
             raise CategoryNotFound(f"Category with id {category_id} not found.")
         dto = CategoryResponseDTO.model_validate(category)
         dto.products_count = await self.category_repo.get_products_count(category_id, is_active=True)
         return dto
 
-    async def get_category_by_slug(self, slug: str) -> CategoryResponseDTO:
+    async def get_category_by_slug(
+        self, slug: str, is_admin: bool = False
+    ) -> CategoryResponseDTO:
         """Получение категории по slug со всеми переводами."""
         category = await self.category_repo.get_by_slug(slug)
         if not category:
+            raise CategoryNotFound(f"Category with slug '{slug}' not found.")
+        if not is_admin and not category.is_active:
             raise CategoryNotFound(f"Category with slug '{slug}' not found.")
         dto = CategoryResponseDTO.model_validate(category)
         dto.products_count = await self.category_repo.get_products_count(category.id, is_active=True)

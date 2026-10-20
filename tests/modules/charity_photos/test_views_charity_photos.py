@@ -64,6 +64,109 @@ class TestsForSuccess:
         assert data[0].id == active_photo.id
 
     @pytest.mark.asyncio
+    async def test_get_all_charity_photos_anonymous_excludes_inactive_by_default(
+        self,
+        client_for_tests,
+        create_charity_photo_fixture,
+    ):
+        """Анонимный запрос без фильтра не возвращает отключенные фотографии."""
+        active_photo = await create_charity_photo_fixture(
+            CreateCharityPhotoFixtureDTO(index=0, is_active=True)
+        )
+        await create_charity_photo_fixture(
+            CreateCharityPhotoFixtureDTO(index=1, is_active=False)
+        )
+
+        response = await client_for_tests.get("/charity_photos")
+        assert response.status_code == 200
+
+        data = [CharityPhotoResponseDTO.model_validate(item) for item in response.json()]
+        assert len(data) == 1
+        assert data[0].id == active_photo.id
+
+    @pytest.mark.asyncio
+    async def test_get_all_charity_photos_anonymous_ignores_is_active_false(
+        self,
+        client_for_tests,
+        create_charity_photo_fixture,
+    ):
+        """Анонимный запрос с ?is_active=false принудительно возвращает только активные фото."""
+        active_photo = await create_charity_photo_fixture(
+            CreateCharityPhotoFixtureDTO(index=0, is_active=True)
+        )
+        await create_charity_photo_fixture(
+            CreateCharityPhotoFixtureDTO(index=1, is_active=False)
+        )
+
+        response = await client_for_tests.get("/charity_photos?is_active=false")
+        assert response.status_code == 200
+
+        data = [CharityPhotoResponseDTO.model_validate(item) for item in response.json()]
+        assert len(data) == 1
+        assert data[0].id == active_photo.id
+
+    @pytest.mark.asyncio
+    async def test_get_all_charity_photos_admin_sees_inactive(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_charity_photo_fixture,
+    ):
+        """Администратор видит отключенные фотографии и может фильтровать по ним."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        active_photo = await create_charity_photo_fixture(
+            CreateCharityPhotoFixtureDTO(index=0, is_active=True)
+        )
+        inactive_photo = await create_charity_photo_fixture(
+            CreateCharityPhotoFixtureDTO(index=1, is_active=False)
+        )
+
+        # Без фильтра - видит все
+        response_all = await client_for_tests.get(
+            "/charity_photos",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert response_all.status_code == 200
+        data_all = [CharityPhotoResponseDTO.model_validate(item) for item in response_all.json()]
+        assert len(data_all) == 2
+
+        # С фильтром is_active=false - видит только неактивные
+        response_inactive = await client_for_tests.get(
+            "/charity_photos?is_active=false",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert response_inactive.status_code == 200
+        data_inactive = [CharityPhotoResponseDTO.model_validate(item) for item in response_inactive.json()]
+        assert len(data_inactive) == 1
+        assert data_inactive[0].id == inactive_photo.id
+
+    @pytest.mark.asyncio
+    async def test_get_charity_photo_by_id_admin_accesses_inactive(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_charity_photo_fixture,
+    ):
+        """Администратор имеет доступ к деталям неактивной фотографии."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        inactive_photo = await create_charity_photo_fixture(
+            CreateCharityPhotoFixtureDTO(index=0, is_active=False)
+        )
+
+        response = await client_for_tests.get(
+            f"/charity_photos/{inactive_photo.id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert response.status_code == 200
+        data = CharityPhotoResponseDTO.model_validate(response.json())
+        assert data.id == inactive_photo.id
+        assert data.is_active is False
+
+    @pytest.mark.asyncio
     async def test_get_charity_photo_by_id(
         self,
         client_for_tests,
@@ -503,6 +606,39 @@ class TestsForFailed:
         )
         response = await client_for_tests.delete(
             "/charity_photos/999999",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_get_inactive_charity_photo_anonymous_returns_404(
+        self,
+        client_for_tests,
+        create_charity_photo_fixture,
+    ):
+        """Анонимный запрос к неактивной фотографии возвращает 404."""
+        photo = await create_charity_photo_fixture(
+            CreateCharityPhotoFixtureDTO(index=0, is_active=False)
+        )
+        response = await client_for_tests.get(f"/charity_photos/{photo.id}")
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_get_inactive_charity_photo_regular_user_returns_404(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_charity_photo_fixture,
+    ):
+        """Обычный пользователь (не админ) при запросе неактивной фотографии получает 404."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.USER)
+        )
+        photo = await create_charity_photo_fixture(
+            CreateCharityPhotoFixtureDTO(index=0, is_active=False)
+        )
+        response = await client_for_tests.get(
+            f"/charity_photos/{photo.id}",
             headers={"Authorization": f"Bearer {access_token}"},
         )
         assert response.status_code == 404

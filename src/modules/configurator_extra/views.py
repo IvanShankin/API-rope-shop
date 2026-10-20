@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Query
 from starlette import status
 
 from src.modules.base.database_model import Language
-from src.modules.check_permission.depends import get_current_admin
+from src.modules.check_permission.depends import get_current_admin, get_optional_admin
 from src.modules.users.models_dto import UserDTO
 from src.modules.configurator_extra.models import BillingType
 from src.modules.configurator_extra.models_dto import (
@@ -32,12 +32,14 @@ async def get_all_configurator_extras(
     is_active: Optional[bool] = Query(None, description="Filter by active status"),
     billing_type: Optional[BillingType] = Query(None, description="Filter by billing type"),
     service: ConfiguratorExtraService = Depends(get_configurator_extra_service),
+    is_admin: bool = Depends(get_optional_admin),
 ):
     """Get all configurator extra options with localized names (public)."""
     return await service.get_all_extras(
         locale=locale,
         is_active=is_active,
         billing_type=billing_type,
+        is_admin=is_admin,
     )
 
 
@@ -49,9 +51,10 @@ async def get_all_configurator_extras(
 async def get_configurator_extra(
     id: int,
     service: ConfiguratorExtraService = Depends(get_configurator_extra_service),
+    is_admin: bool = Depends(get_optional_admin),
 ):
     """Get configurator extra option by ID with all translations (public)."""
-    return await service.get_extra_by_id(extra_id=id)
+    return await service.get_extra_by_id(extra_id=id, is_admin=is_admin)
 
 
 @router.post(

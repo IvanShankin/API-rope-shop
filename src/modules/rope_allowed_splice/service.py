@@ -2,6 +2,7 @@ from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.base.database_model import Language
+from src.modules.products.models import Product
 from src.modules.splice_types.models_dto import SpliceTypeLocalizedResponseDTO
 from src.modules.rope_allowed_splice.repository import RopeAllowedSpliceRepository
 from src.modules.rope_allowed_splice.models_dto import (
@@ -97,10 +98,12 @@ class RopeAllowedSpliceService:
     async def get_allowed_splices_by_product_id(
         self,
         product_id: int,
-        locale: Optional[Language] = None
+        locale: Optional[Language] = None,
+        is_admin: bool = False,
     ) -> List[RopeAllowedSpliceLocalizedResponseDTO]:
         """Получение списка разрешенных типов сращиваний для товара с локализацией."""
-        if not await self.repo.exists_product(product_id):
+        product = await self.session.get(Product, product_id)
+        if not product or (not is_admin and not product.is_active):
             raise RopeProductNotFound(
                 f"Product with id {product_id} not found."
             )
@@ -110,6 +113,8 @@ class RopeAllowedSpliceService:
 
         result: List[RopeAllowedSpliceLocalizedResponseDTO] = []
         for item in items:
+            if not is_admin and item.splice_type and not item.splice_type.is_active:
+                continue
             localized_splice: Optional[SpliceTypeLocalizedResponseDTO] = None
             if item.splice_type:
                 name = item.splice_type._get_field_with_translation(
@@ -147,14 +152,15 @@ class RopeAllowedSpliceService:
     async def get_by_composite_key(
         self,
         product_id: int,
-        splice_type_id: int
+        splice_type_id: int,
+        is_admin: bool = False,
     ) -> RopeAllowedSpliceResponseDTO:
         """Получение привязки по составному ключу."""
         item = await self.repo.get_by_composite_key(
             product_id=product_id,
             splice_type_id=splice_type_id
         )
-        if not item:
+        if not item or (not is_admin and ((item.splice_type and not item.splice_type.is_active) or (item.product and not item.product.is_active))):
             raise RopeAllowedSpliceNotFound(
                 f"RopeAllowedSplice with product_id {product_id} and splice_type_id {splice_type_id} not found."
             )

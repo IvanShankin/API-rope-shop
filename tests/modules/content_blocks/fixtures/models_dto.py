@@ -8,6 +8,7 @@ from src.modules.base.database_model import Language
 class CreateContentBlockFixtureDTO(BaseModel):
     page_code: Optional[str] = None
     block_code: Optional[str] = None
+    index: Optional[int] = None
     is_active: Optional[bool] = None
     locale: Optional[Language] = None
     title: Optional[str] = None

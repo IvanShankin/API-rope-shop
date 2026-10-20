@@ -91,6 +91,8 @@ class ConfiguratorRepository(BaseRepository):
         """Получение каталога канатов со всеми связанными вариантами, цветами и разрешенными заделками."""
         stmt = (
             select(RopeConfiguratorSetting)
+            .join(RopeConfiguratorSetting.product)
+            .where(Product.is_active.is_(True))
             .options(
                 selectinload(RopeConfiguratorSetting.product)
                 .selectinload(Product.translations),

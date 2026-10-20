@@ -83,10 +83,13 @@ class RopeProductRepository(BaseRepository):
     async def get_all(
         self,
         material_group_id: Optional[int] = None,
-        can_be_spliced: Optional[bool] = None
+        can_be_spliced: Optional[bool] = None,
+        is_admin: bool = False,
     ) -> Sequence[RopeConfiguratorSetting]:
         """Получение списка всех настроек канатов с фильтрацией."""
         stmt = select(RopeConfiguratorSetting)
+        if not is_admin:
+            stmt = stmt.join(RopeConfiguratorSetting.product).where(Product.is_active.is_(True))
         if material_group_id is not None:
             stmt = stmt.where(RopeConfiguratorSetting.material_group_id == material_group_id)
         if can_be_spliced is not None:

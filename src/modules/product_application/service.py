@@ -83,17 +83,21 @@ class ProductApplicationService:
 
         return [ProductApplicationResponseDTO.model_validate(app) for app in apps]
 
-    async def get_application_by_id(self, app_id: int) -> ProductApplicationResponseDTO:
+    async def get_application_by_id(
+        self, app_id: int, is_admin: bool = False
+    ) -> ProductApplicationResponseDTO:
         """Получение назначения по ID."""
         app = await self.app_repo.get_by_id(app_id)
-        if not app:
+        if not app or (not is_admin and not app.is_active):
             raise ProductApplicationNotFound(f"Application with id {app_id} not found.")
         return ProductApplicationResponseDTO.model_validate(app)
 
-    async def get_application_by_code(self, code: str) -> ProductApplicationResponseDTO:
+    async def get_application_by_code(
+        self, code: str, is_admin: bool = False
+    ) -> ProductApplicationResponseDTO:
         """Получение назначения по коду."""
         app = await self.app_repo.get_by_code(code)
-        if not app:
+        if not app or (not is_admin and not app.is_active):
             raise ProductApplicationNotFound(f"Application with code '{code}' not found.")
         return ProductApplicationResponseDTO.model_validate(app)
 
@@ -315,11 +319,11 @@ class ProductApplicationService:
         await self.session_db.commit()
 
     async def get_product_applications(
-        self, product_id: int, locale: Optional[Language] = None
+        self, product_id: int, locale: Optional[Language] = None, is_admin: bool = False
     ) -> List[ProductApplicationLocalizedResponseDTO]:
         """Получение списка назначений конкретного товара."""
         product = await self.product_repo.get_by_id(product_id)
-        if not product:
+        if not product or (not is_admin and not product.is_active):
             raise ProductNotFound(f"Product with id {product_id} not found.")
 
         assignments = await self.assigned_repo.get_by_product_id(product_id)
@@ -328,6 +332,8 @@ class ProductApplicationService:
         result: List[ProductApplicationLocalizedResponseDTO] = []
         for a in assignments:
             if a.application:
+                if not is_admin and not a.application.is_active:
+                    continue
                 name = a.application._get_field_with_translation(lambda t: t.name, target_locale) or ""
                 result.append(
                     ProductApplicationLocalizedResponseDTO(

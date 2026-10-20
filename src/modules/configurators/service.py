@@ -182,7 +182,6 @@ class ConfiguratorService:
 
         colors_dto: List[ProductColorLocalizedResponseDTO] = []
         for rc in colors_list:
-            color_loc = None
             if rc.color and rc.color.is_active:
                 c_name = rc.color._get_field_with_translation(
                     lambda t: t.name, locale
@@ -195,28 +194,27 @@ class ConfiguratorService:
                     is_active=rc.color.is_active,
                     name=c_name,
                 )
-            colors_dto.append(
-                ProductColorLocalizedResponseDTO(
-                    id=rc.id,
-                    product_id=rc.product_id,
-                    color_id=rc.color_id,
-                    index=rc.index,
-                    color=color_loc,
+                colors_dto.append(
+                    ProductColorLocalizedResponseDTO(
+                        id=rc.id,
+                        product_id=rc.product_id,
+                        color_id=rc.color_id,
+                        index=rc.index,
+                        color=color_loc,
+                    )
                 )
-            )
 
         splices_dto: List[RopeAllowedSpliceLocalizedResponseDTO] = []
         for rs in splices_list:
-            st_loc = None
             if rs.splice_type and rs.splice_type.is_active:
                 st_loc = self._localize_splice_type(rs.splice_type, locale)
-            splices_dto.append(
-                RopeAllowedSpliceLocalizedResponseDTO(
-                    product_id=rs.product_id,
-                    splice_type_id=rs.splice_type_id,
-                    splice_type=st_loc,
+                splices_dto.append(
+                    RopeAllowedSpliceLocalizedResponseDTO(
+                        product_id=rs.product_id,
+                        splice_type_id=rs.splice_type_id,
+                        splice_type=st_loc,
+                    )
                 )
-            )
 
         splice_material_dto = (
             SpliceMaterialResponseDTO.model_validate(rope.splice_material)

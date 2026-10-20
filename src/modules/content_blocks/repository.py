@@ -23,11 +23,35 @@ class ContentBlockRepository(BaseRepository[ContentBlock]):
         res = await self.session.execute(stmt)
         return res.scalar_one_or_none()
 
-    async def get_by_block_code(self, block_code: str) -> Optional[ContentBlock]:
-        """Получение блока по уникальному коду block_code с жадной загрузкой переводов."""
+    async def get_by_block_code(
+        self,
+        block_code: str,
+        page_code: Optional[str] = None,
+    ) -> Optional[ContentBlock]:
+        """Получение блока по block_code (и опционально page_code) с жадной загрузкой переводов."""
         stmt = (
             select(ContentBlock)
             .where(ContentBlock.block_code == block_code)
+            .options(selectinload(ContentBlock.translations))
+        )
+        if page_code:
+            stmt = stmt.where(ContentBlock.page_code == page_code)
+        stmt = stmt.order_by(ContentBlock.index.asc(), ContentBlock.id.asc()).limit(1)
+        res = await self.session.execute(stmt)
+        return res.scalars().first()
+
+    async def get_by_page_and_block_code(
+        self,
+        page_code: str,
+        block_code: str,
+    ) -> Optional[ContentBlock]:
+        """Получение блока по составному ключу (page_code, block_code) с жадной загрузкой переводов."""
+        stmt = (
+            select(ContentBlock)
+            .where(
+                ContentBlock.page_code == page_code,
+                ContentBlock.block_code == block_code,
+            )
             .options(selectinload(ContentBlock.translations))
         )
         res = await self.session.execute(stmt)
@@ -40,13 +64,13 @@ class ContentBlockRepository(BaseRepository[ContentBlock]):
     ) -> List[ContentBlock]:
         """
         Получение всех блоков для указанного page_code с загруженными переводами.
-        Опциональная фильтрация по is_active.
+        Опциональная фильтрация по is_active, стабильная сортировка по index, id.
         """
         stmt = (
             select(ContentBlock)
             .where(ContentBlock.page_code == page_code)
             .options(selectinload(ContentBlock.translations))
-            .order_by(ContentBlock.id)
+            .order_by(ContentBlock.index.asc(), ContentBlock.id.asc())
         )
         if is_active is not None:
             stmt = stmt.where(ContentBlock.is_active == is_active)

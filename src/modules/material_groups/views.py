@@ -3,7 +3,10 @@ from fastapi import APIRouter, Depends, Query
 from starlette import status
 
 from src.modules.base.database_model import Language
-from src.modules.check_permission.depends import get_current_admin
+from src.modules.check_permission.depends import (
+    get_current_admin,
+    get_optional_admin,
+)
 from src.modules.users.models_dto import UserDTO
 from src.modules.material_groups.models_dto import (
     MaterialGroupCreate,
@@ -28,11 +31,12 @@ router = APIRouter(prefix="/material_groups", tags=["Material Groups"])
 )
 async def get_all_material_groups(
     locale: Optional[Language] = Query(None, description="Language for translation localization"),
-    is_active: Optional[bool] = Query(None, description="Filter by active status"),
+    is_active: Optional[bool] = Query(None, description="Filter by active status (admin only)"),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
     service: MaterialGroupService = Depends(get_material_group_service),
 ):
-    """Get all material groups with localized names (public)."""
-    return await service.get_all_material_groups(locale=locale, is_active=is_active)
+    """Get all material groups with localized names (public, admin only for inactive)."""
+    return await service.get_all_material_groups(locale=locale, is_active=is_active, is_admin=admin is not None)
 
 
 @router.get(
@@ -42,10 +46,11 @@ async def get_all_material_groups(
 )
 async def get_material_group(
     id: int,
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
     service: MaterialGroupService = Depends(get_material_group_service),
 ):
-    """Get material group by ID with all translations (public)."""
-    return await service.get_material_group_by_id(group_id=id)
+    """Get material group by ID with all translations (public, admin only for inactive)."""
+    return await service.get_material_group_by_id(group_id=id, is_admin=admin is not None)
 
 
 @router.post(

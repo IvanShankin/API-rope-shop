@@ -86,6 +86,39 @@ class TestsForSuccess:
             for item in resp_inactive.json()
         ]
         inactive_ids = [item.id for item in inactive_items]
+        # Анонимный пользователь не должен получать неактивные цвета
+        assert inactive_color.id not in inactive_ids
+        assert active_color.id in inactive_ids
+
+    @pytest.mark.asyncio
+    async def test_get_all_colors_admin_sees_inactive(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_color_fixture,
+    ):
+        """Администратор может получать неактивные цвета через фильтр."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        active_color = await create_color_fixture(
+            CreateColorFixtureDTO(is_active=True)
+        )
+        inactive_color = await create_color_fixture(
+            CreateColorFixtureDTO(is_active=False)
+        )
+
+        resp_inactive = await client_for_tests.get(
+            "/colors",
+            params={"is_active": "false"},
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert resp_inactive.status_code == 200
+        inactive_items = [
+            ColorLocalizedResponseDTO.model_validate(item)
+            for item in resp_inactive.json()
+        ]
+        inactive_ids = [item.id for item in inactive_items]
         assert inactive_color.id in inactive_ids
         assert active_color.id not in inactive_ids
 
@@ -799,3 +832,30 @@ class TestsForErrors:
             headers={"Authorization": f"Bearer {access_token}"},
         )
         assert response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_get_inactive_color_anonymous_returns_404(
+        self,
+        client_for_tests,
+        create_color_fixture,
+    ):
+        """Анонимный запрос к неактивному цвету по ID возвращает 404."""
+        color = await create_color_fixture(CreateColorFixtureDTO(is_active=False))
+        resp_id = await client_for_tests.get(f"/colors/{color.id}")
+        assert resp_id.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_get_inactive_color_admin_returns_200(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_color_fixture,
+    ):
+        """Администратор имеет доступ к неактивному цвету по ID."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        color = await create_color_fixture(CreateColorFixtureDTO(is_active=False))
+        headers = {"Authorization": f"Bearer {access_token}"}
+        resp_id = await client_for_tests.get(f"/colors/{color.id}", headers=headers)
+        assert resp_id.status_code == 200

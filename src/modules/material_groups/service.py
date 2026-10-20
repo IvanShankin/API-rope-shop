@@ -95,18 +95,25 @@ class MaterialGroupService:
         self,
         locale: Optional[Language] = None,
         is_active: Optional[bool] = None,
+        is_admin: bool = False,
     ) -> List[MaterialGroupLocalizedResponseDTO]:
         """Получение списка всех групп с локализацией по указанному языку."""
-        groups = await self.group_repo.get_all(is_active=is_active)
+        effective_active = is_active if is_admin else True
+        groups = await self.group_repo.get_all(is_active=effective_active)
         return [self._to_localized_dto(g, locale) for g in groups]
 
     async def get_material_group_by_id(
         self,
-        group_id: int
+        group_id: int,
+        is_admin: bool = False,
     ) -> MaterialGroupResponseDTO:
         """Получение группы материалов по ID со всеми переводами."""
         group = await self.group_repo.get_by_group_id(group_id)
         if not group:
+            raise MaterialGroupNotFound(
+                f"MaterialGroup with id {group_id} not found."
+            )
+        if not is_admin and not group.is_active:
             raise MaterialGroupNotFound(
                 f"MaterialGroup with id {group_id} not found."
             )

@@ -77,6 +77,31 @@ class TestsForSuccess:
         assert matched[0].name == "Technische Fasern"
 
     @pytest.mark.asyncio
+    async def test_get_all_material_groups_filter_is_active(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_material_group_fixture,
+    ):
+        """Администратор может фильтровать группы материалов по активности."""
+        admin_user, access_token = await create_user_fixture(CreateUserFixtureDTO(role=UserRole.ADMIN))
+        g_active = await create_material_group_fixture(
+            CreateMaterialGroupFixtureDTO(code="mg_active", is_active=True)
+        )
+        g_inactive = await create_material_group_fixture(
+            CreateMaterialGroupFixtureDTO(code="mg_inactive", is_active=False)
+        )
+
+        response = await client_for_tests.get(
+            "/material_groups?is_active=false",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert response.status_code == 200
+        ids = [item["id"] for item in response.json()]
+        assert g_inactive.id in ids
+        assert g_active.id not in ids
+
+    @pytest.mark.asyncio
     async def test_get_material_group_by_id(
         self,
         client_for_tests,
@@ -380,3 +405,36 @@ class TestsForFailures:
             headers={"Authorization": f"Bearer {access_token}"},
         )
         assert response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_get_all_material_groups_filter_is_active_anonymous(
+        self,
+        client_for_tests,
+        create_material_group_fixture,
+    ):
+        """Анонимный запрос ?is_active=false принудительно возвращает только активные группы."""
+        g_active = await create_material_group_fixture(
+            CreateMaterialGroupFixtureDTO(code="anon_mg_act", is_active=True)
+        )
+        g_inactive = await create_material_group_fixture(
+            CreateMaterialGroupFixtureDTO(code="anon_mg_inact", is_active=False)
+        )
+
+        response = await client_for_tests.get("/material_groups?is_active=false")
+        assert response.status_code == 200
+        ids = [item["id"] for item in response.json()]
+        assert g_inactive.id not in ids
+        assert g_active.id in ids
+
+    @pytest.mark.asyncio
+    async def test_get_inactive_material_group_anonymous_returns_404(
+        self,
+        client_for_tests,
+        create_material_group_fixture,
+    ):
+        """Анонимный запрос неактивной группы материалов по ID -> 404."""
+        g_inactive = await create_material_group_fixture(
+            CreateMaterialGroupFixtureDTO(code="mg_inact_404", is_active=False)
+        )
+        response = await client_for_tests.get(f"/material_groups/{g_inactive.id}")
+        assert response.status_code == 404

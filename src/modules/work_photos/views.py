@@ -3,7 +3,10 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, File, Form, Query, Request, UploadFile, status
 
 from src.modules.base.database_model import Language
-from src.modules.check_permission.depends import get_current_admin
+from src.modules.check_permission.depends import (
+    get_current_admin,
+    get_optional_admin,
+)
 from src.modules.users.models_dto import UserDTO
 from src.modules.work_photos.depends import get_work_photo_service
 from src.modules.work_photos.models_dto import (
@@ -24,13 +27,14 @@ router = APIRouter(prefix="/work_photos", tags=["Work Photos"])
     response_model=List[WorkPhotoResponseDTO],
     status_code=status.HTTP_200_OK,
     summary="Get all work photos",
-    description="Get list of work photos ordered by index (public). Supports pagination, status filtering, and localization.",
+    description="Get list of work photos ordered by index (public). Supports pagination, status filtering (admin only for inactive), and localization.",
 )
 async def get_all_work_photos(
-    is_active: Optional[bool] = Query(None, description="Filter by active status"),
+    is_active: Optional[bool] = Query(None, description="Filter by active status (admin only)"),
     locale: Optional[Language] = Query(None, description="Preferred language for title and description"),
     skip: int = Query(0, ge=0, description="Pagination offset"),
     limit: Optional[int] = Query(None, ge=1, description="Pagination limit"),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
     service: WorkPhotoService = Depends(get_work_photo_service),
 ) -> List[WorkPhotoResponseDTO]:
     return await service.get_photos(
@@ -38,6 +42,7 @@ async def get_all_work_photos(
         locale=locale,
         skip=skip,
         limit=limit,
+        is_admin=admin is not None,
     )
 
 
@@ -46,14 +51,19 @@ async def get_all_work_photos(
     response_model=WorkPhotoResponseDTO,
     status_code=status.HTTP_200_OK,
     summary="Get work photo by ID",
-    description="Get detailed work photo data by ID with localized title/description and all translations (public).",
+    description="Get detailed work photo data by ID with localized title/description and all translations (public). Inactive photos accessible to admin only.",
 )
 async def get_work_photo_by_id(
     photo_id: int,
     locale: Optional[Language] = Query(None, description="Preferred language for title and description"),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
     service: WorkPhotoService = Depends(get_work_photo_service),
 ) -> WorkPhotoResponseDTO:
-    return await service.get_photo_by_id(photo_id=photo_id, locale=locale)
+    return await service.get_photo_by_id(
+        photo_id=photo_id,
+        locale=locale,
+        is_admin=admin is not None,
+    )
 
 
 @router.post(

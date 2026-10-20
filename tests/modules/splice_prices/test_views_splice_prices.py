@@ -37,6 +37,37 @@ class TestsForSuccess:
         assert rule_2.id in ids
 
     @pytest.mark.asyncio
+    async def test_get_all_rules_filter_is_active(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_splice_price_rule_fixture,
+    ):
+        """Админ может запросить неактивные правила, а аноним всегда получает только активные."""
+        _, admin_token = await create_user_fixture(CreateUserFixtureDTO(role=UserRole.ADMIN))
+        r_active = await create_splice_price_rule_fixture(
+            CreateSplicePriceRuleFixtureDTO(is_active=True)
+        )
+        r_inactive = await create_splice_price_rule_fixture(
+            CreateSplicePriceRuleFixtureDTO(is_active=False)
+        )
+
+        res_admin = await client_for_tests.get(
+            "/splice_prices?is_active=false",
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        assert res_admin.status_code == 200
+        admin_ids = [item["id"] for item in res_admin.json()]
+        assert r_inactive.id in admin_ids
+        assert r_active.id not in admin_ids
+
+        res_anon = await client_for_tests.get("/splice_prices?is_active=false")
+        assert res_anon.status_code == 200
+        anon_ids = [item["id"] for item in res_anon.json()]
+        assert r_inactive.id not in anon_ids
+        assert r_active.id in anon_ids
+
+    @pytest.mark.asyncio
     async def test_get_rule(
         self,
         client_for_tests,
@@ -160,6 +191,19 @@ class TestsForErrors:
             json=create_data.model_dump()
         )
         assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_get_inactive_rule_anonymous_returns_404(
+        self,
+        client_for_tests,
+        create_splice_price_rule_fixture,
+    ):
+        """Анонимный запрос неактивного правила цен -> 404."""
+        rule = await create_splice_price_rule_fixture(
+            CreateSplicePriceRuleFixtureDTO(is_active=False)
+        )
+        response = await client_for_tests.get(f"/splice_prices/{rule.id}")
+        assert response.status_code == 404
 
     @pytest.mark.asyncio
     async def test_get_not_found(

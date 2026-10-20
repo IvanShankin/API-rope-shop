@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Query
 from starlette import status
 
 from src.modules.base.database_model import Language
-from src.modules.check_permission.depends import get_current_admin
+from src.modules.check_permission.depends import get_current_admin, get_optional_admin
 from src.modules.users.models_dto import UserDTO
 from src.modules.rope_product_color.models_dto import (
     ProductColorResponseDTO,
@@ -26,11 +26,13 @@ async def get_colors_by_product(
     product_id: int,
     locale: Optional[Language] = Query(None, description="Language for color name localization"),
     service: RopeProductColorService = Depends(get_rope_product_color_service),
+    is_admin: bool = Depends(get_optional_admin),
 ):
     """Get all colors of a specific product (public)."""
     return await service.get_colors_by_product_id(
         product_id=product_id,
         locale=locale,
+        is_admin=is_admin,
     )
 
 
@@ -42,9 +44,10 @@ async def get_colors_by_product(
 async def get_rope_product_color(
     id: int,
     service: RopeProductColorService = Depends(get_rope_product_color_service),
+    is_admin: bool = Depends(get_optional_admin),
 ):
     """Get product color link by ID (public)."""
-    return await service.get_by_id(item_id=id)
+    return await service.get_by_id(item_id=id, is_admin=is_admin)
 
 
 @router.post(

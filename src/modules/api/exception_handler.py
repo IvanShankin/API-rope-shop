@@ -33,6 +33,7 @@ from src.modules.auth.exception import (
     UserInactive,
 )
 from src.modules.handlers_files.exception import FileTooLarge, InvalidImageFormat
+from src.modules.users.exception import IncorrectPassword
 from src.modules.quote_requests.exception import (
     QuoteRequestValidationError,
     ColorNotAllowedForProduct,
@@ -45,6 +46,10 @@ from src.modules.quote_requests.exception import (
 def register_exception_handlers(app: FastAPI):
 
     # ==================== 400 Bad Request ====================
+    @app.exception_handler(IncorrectPassword)
+    async def incorrect_password_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
     @app.exception_handler(InvalidImageFormat)
     async def invalid_image_format_handler(request, exc):
         return JSONResponse(status_code=400, content={"detail": str(exc)})

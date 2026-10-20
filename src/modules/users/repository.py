@@ -1,4 +1,4 @@
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.base.repository_model import BaseRepository
@@ -17,7 +17,7 @@ class UsersRepository(BaseRepository):
     ) -> User:
         return self.add(data)
 
-    async def get_user_by_id(self, user_id: int) -> User:
+    async def get_user_by_id(self, user_id: int) -> User | None:
         return await self.get_by_id(User, user_id)
 
     async def get_user_by_username_or_email(self, username_or_email: str) -> User | None:
@@ -40,5 +40,12 @@ class UsersRepository(BaseRepository):
         result_db = await self.session.execute(select(User).where(User.username == username))
         return result_db.scalar_one_or_none()
 
-
-
+    async def update_password(self, user_id: int, hashed_password: str) -> None:
+        """Обновляет хеш пароля пользователя."""
+        stmt = (
+            update(User)
+            .where(User.id == user_id)
+            .values(hashed_password=hashed_password)
+            .execution_options(synchronize_session="fetch")
+        )
+        await self.session.execute(stmt)

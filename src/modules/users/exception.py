@@ -1,4 +1,4 @@
-from src.modules.base.exception import ServiceException, NotFoundData
+from src.modules.base.exception import ServiceException, NotFoundData, ValidationError
 
 
 class UserNotFound(NotFoundData):
@@ -12,3 +12,6 @@ class UserAlreadyExists(ServiceException):
 # Backward compatibility alias
 UserAlreadyExit = UserAlreadyExists
 
+
+class IncorrectPassword(ValidationError):
+    default_message = "Incorrect current password"

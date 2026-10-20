@@ -3,8 +3,18 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.base.exception import ServiceException
-from src.modules.users.exception import UserAlreadyExists, UserAlreadyExit
-from src.modules.users.models_dto import UserDTO, RegisterUserRequestDTO, CreateUserDTO
+from src.modules.users.exception import (
+    UserAlreadyExists,
+    UserAlreadyExit,
+    UserNotFound,
+    IncorrectPassword,
+)
+from src.modules.users.models_dto import (
+    UserDTO,
+    RegisterUserRequestDTO,
+    CreateUserDTO,
+    ChangePasswordDTO,
+)
 from src.modules.users.repository import UsersRepository
 
 
@@ -84,5 +94,27 @@ class UsersService:
 
         return UserDTO.model_validate(result)
 
+    async def change_password(
+        self,
+        user_id: int,
+        data: ChangePasswordDTO,
+    ) -> None:
+        """
+        Смена пароля пользователя.
+        :raises UserNotFound: если пользователь не найден
+        :raises IncorrectPassword: если текущий пароль неверен
+        """
+        user = await self.users_repo.get_user_by_id(user_id)
+        if not user:
+            raise UserNotFound()
 
+        if not self.verify_password(data.current_password, user.hashed_password):
+            raise IncorrectPassword("Incorrect current password")
 
+        new_hashed_password = self._get_hash_password(data.new_password)
+        try:
+            await self.users_repo.update_password(user_id, new_hashed_password)
+            await self.session_db.commit()
+        except Exception as e:
+            await self.session_db.rollback()
+            raise ServiceException(str(e)) from e

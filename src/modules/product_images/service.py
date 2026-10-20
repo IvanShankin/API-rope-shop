@@ -1,3 +1,4 @@
+from pathlib import Path
 import uuid
 from typing import List, Optional
 
@@ -88,7 +89,16 @@ class ProductImageService:
 
         file_name = f"img_{uuid.uuid4().hex[:10]}"
         dest = self.path_builder.get_product(product_id=product_id, file_name=file_name)
-        saved_path = await self.image_manager.save_image(file=file, destination=dest)
+        file_ext = Path(file.filename or "").suffix.lstrip(".").lower() or "jpg"
+        orig_dest = self.path_builder.get_product_original(
+            product_id=product_id, file_name=file_name, file_type=file_ext
+        )
+        saved_path = await self.image_manager.save_image(
+            file=file,
+            destination=dest,
+            compress=True,
+            original_destination=orig_dest,
+        )
         media_url = self.image_manager.to_media_url(saved_path)
 
         create_dto = ProductImageCreate(
@@ -146,7 +156,16 @@ class ProductImageService:
             dest = self.path_builder.get_product(
                 product_id=image.product_id, file_name=file_name
             )
-            saved_path = await self.image_manager.save_image(file=file, destination=dest)
+            file_ext = Path(file.filename or "").suffix.lstrip(".").lower() or "jpg"
+            orig_dest = self.path_builder.get_product_original(
+                product_id=image.product_id, file_name=file_name, file_type=file_ext
+            )
+            saved_path = await self.image_manager.save_image(
+                file=file,
+                destination=dest,
+                compress=True,
+                original_destination=orig_dest,
+            )
             update_dict["image_url"] = self.image_manager.to_media_url(saved_path)
 
         if update_dict.get("is_main"):

@@ -29,18 +29,21 @@ class ImageManager:
         file: UploadFile,
         destination: Path,
         compress: bool = True,
-        max_size: Tuple[int, int] = (512, 512),
+        max_size: Tuple[int, int] = (1920, 1920),
         quality: int = 100,
+        original_destination: Optional[Path] = None,
     ) -> Path:
         """
         Конвертирует входящее изображение в .webp, при необходимости сжимает
         и сохраняет по указанному пути destination.
+        При передаче original_destination сохраняет точную копию оригинального файла.
         
         :param file: Входящий файл UploadFile.
         :param destination: Полный путь к целевому файлу или целевая директория.
         :param compress: Сжимать/ресайзить ли изображение.
-        :param max_size: Максимальные размеры (ширина, высота) при сжатии.
+        :param max_size: Максимальные размеры (ширина, высота) при сжатии (по умолчанию 1920x1920 Full HD).
         :param quality: Качество WebP (1-100).
+        :param original_destination: Путь для сохранения исходного файла без модификаций.
         :return: Итоговый путь к сохраненному файлу .webp.
         """
         # Сначала конвертируем файл в .webp по указанному пути назначения
@@ -48,6 +51,7 @@ class ImageManager:
             photo=file,
             dest=destination,
             quality=quality,
+            original_dest=original_destination,
         )
 
         # Если требуется сжатие/ресайз — сжимаем прямо на месте
@@ -76,7 +80,7 @@ class ImageManager:
 
     def delete_image(self, file_path: Path | str | None) -> None:
         """
-        Безопасно удаляет файл изображения с диска.
+        Безопасно удаляет файл изображения с диска и сопутствующий оригинал (если есть).
         """
         if not file_path:
             return
@@ -91,3 +95,9 @@ class ImageManager:
 
         if target_path.exists() and target_path.is_file():
             target_path.unlink(missing_ok=True)
+
+        # Проверяем и удаляем сопутствующий исходный файл в подпапке original/
+        orig_dir = target_path.parent / "original"
+        if orig_dir.exists() and orig_dir.is_dir():
+            for orig_file in orig_dir.glob(f"{target_path.stem}.*"):
+                orig_file.unlink(missing_ok=True)

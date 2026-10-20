@@ -18,12 +18,12 @@ def get_real_client_ip(request: Request) -> str:
     return get_remote_address(request)
 
 
-# Если в тестах — лимитер полностью выключен
+# Если в тестах — лимитер по умолчанию выключен, и используется in-memory хранилище
 is_test_mode = config.env.mode == "TEST"
 
 limiter = Limiter(
     key_func=get_real_client_ip,
     default_limits=["200/minute"],
-    storage_uri=config.env.redis_url,
+    storage_uri="memory://" if is_test_mode else config.env.redis_url,
     enabled=not is_test_mode,
 )

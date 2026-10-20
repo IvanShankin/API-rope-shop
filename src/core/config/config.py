@@ -40,6 +40,9 @@ class EnvConfig(BaseModel):
     @classmethod
     def build(cls) -> "EnvConfig":
 
+        redis_host = os.environ.get('REDIS_HOST', 'localhost')
+        redis_port = int(os.environ.get('REDIS_PORT', 6379))
+
         return cls(
             secret_key=os.environ['SECRET_KEY'],
             db_host=os.environ['DB_HOST'],
@@ -149,11 +152,14 @@ class TokensConfig(BaseModel):
 
 class AllowedExtensions(BaseModel):
     for_image: List[str] = ["webp", "jpg", ".jpeg", "gif", ".png", "heic", "heif"]
+    max_image_size_mb: int = 15
 
     @classmethod
     def build(cls) -> "AllowedExtensions":
+        max_size_mb = int(os.environ.get("MAX_IMAGE_SIZE_MB", 15))
         return cls(
             for_image=["jpg", ".jpeg", "gif", ".png", "webp", "heic", "heif"],
+            max_image_size_mb=max_size_mb,
         )
 
 

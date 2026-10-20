@@ -1,3 +1,4 @@
+import asyncio
 import shutil
 import uuid
 from pathlib import Path
@@ -9,17 +10,91 @@ from PIL import Image, ImageSequence, UnidentifiedImageError
 from src.core.config import Config
 from src.modules.handlers_files.exception import (
     InvalidImageFormat,
+    FileTooLarge,
     ImageCompressionError,
 )
 
 
+def _compress_image_sync(
+    source_image_path: Path,
+    output_temp: Path,
+    target_path: Path,
+    max_size: Tuple[int, int],
+    quality: int,
+    keep_aspect_ratio: bool,
+    lossless: bool,
+) -> None:
+    """
+    Синхронная CPU-bound компрессия и ресайз WebP-изображения.
+    Выполняется в отдельном потоке пула worker-ов (asyncio.to_thread).
+    """
+    try:
+        with Image.open(source_image_path) as img:
+            if img.format != "WEBP":
+                raise InvalidImageFormat(f"Файл имеет формат {img.format}, ожидается WEBP.")
+
+            is_animated = getattr(img, "is_animated", False) and getattr(img, "n_frames", 1) > 1
+
+            if is_animated:
+                frames = []
+                durations = []
+                for frame in ImageSequence.Iterator(img):
+                    f = frame.copy()
+                    if keep_aspect_ratio:
+                        f.thumbnail(max_size, Image.Resampling.LANCZOS)
+                    else:
+                        f = f.resize(max_size, Image.Resampling.LANCZOS)
+                    frames.append(f)
+                    durations.append(frame.info.get("duration", img.info.get("duration", 100)))
+
+                duration = durations if any(d != durations[0] for d in durations) else durations[0]
+
+                frames[0].save(
+                    output_temp,
+                    format="WEBP",
+                    save_all=True,
+                    append_images=frames[1:],
+                    quality=quality,
+                    lossless=lossless,
+                    loop=img.info.get("loop", 0),
+                    duration=duration,
+                )
+            else:
+                img_copy = img.copy()
+                if keep_aspect_ratio:
+                    img_copy.thumbnail(max_size, Image.Resampling.LANCZOS)
+                else:
+                    img_copy = img_copy.resize(max_size, Image.Resampling.LANCZOS)
+
+                img_copy.save(
+                    output_temp,
+                    format="WEBP",
+                    quality=quality,
+                    lossless=lossless,
+                )
+
+        shutil.move(output_temp, target_path)
+
+    except (UnidentifiedImageError, OSError) as e:
+        raise InvalidImageFormat(f"Не удалось открыть WebP-изображение или файл поврежден: {e}") from e
+    except InvalidImageFormat:
+        raise
+    except Exception as e:
+        raise ImageCompressionError(f"Ошибка при сжатии WebP-изображения: {e}") from e
+
+
 class CompressionImages:
+    CHUNK_SIZE: int = 64 * 1024  # 64 KB
 
     def __init__(
         self,
         config: Config | None = None,
     ):
         self.config = config
+        max_mb = getattr(
+            getattr(config, "allowed_extensions", None), "max_image_size_mb", 15
+        )
+        self.max_file_size_bytes = max_mb * 1024 * 1024
 
     def _validate_webp_file(self, filename: str | None) -> None:
         """
@@ -45,16 +120,18 @@ class CompressionImages:
         lossless: bool = False,
     ) -> Path:
         """
-        Сжимает переданное WebP-изображение до разрешения 512x512 (или указанного max_size).
+        Сжимает переданное WebP-изображение до max_size (по умолчанию Full HD 1920x1920).
+        Выполняет обработку в отдельном потоке worker-ов (asyncio.to_thread).
 
         :param file: Путь к файлу Path или объект UploadFile с расширением .webp.
-        :param dest: Путь для сохранения результата (директория или файл). Если None, перезаписывает исходный файл Path.
-        :param max_size: Максимальное разрешение (ширина, высота), по умолчанию (512, 512).
+        :param dest: Путь для сохранения результата. Если None, перезаписывает исходный файл Path.
+        :param max_size: Максимальное разрешение (ширина, высота), по умолчанию (1920, 1920).
         :param quality: Качество сжатия WebP (1-100), по умолчанию 80.
         :param keep_aspect_ratio: Сохранять ли пропорции (по умолчанию True).
         :param lossless: Использовать ли сжатие без потерь.
         :return: Path к сохраненному сжатому файлу .webp.
         :raises InvalidImageFormat: Если формат файла не .webp или файл поврежден.
+        :raises FileTooLarge: Если размер файла превышает лимит.
         :raises ImageCompressionError: При ошибке во время сжатия/сохранения.
         """
         # Валидация входных данных и имени файла
@@ -88,75 +165,43 @@ class CompressionImages:
 
         target_path.parent.mkdir(parents=True, exist_ok=True)
 
-        temp_dir = self.config.paths.temp if (self.config and hasattr(self.config, "paths") and hasattr(self.config.paths, "temp")) else target_path.parent
+        temp_dir = (
+            self.config.paths.temp
+            if (self.config and hasattr(self.config, "paths") and hasattr(self.config.paths, "temp"))
+            else target_path.parent
+        )
         temp_file_path = (temp_dir / f"temp_compress_{uuid.uuid4().hex}.webp").resolve()
         output_temp = (temp_dir / f"out_compress_{uuid.uuid4().hex}.webp").resolve()
 
         try:
             # Получаем путь к исходному файлу
             if isinstance(file, UploadFile):
-                content = await file.read()
-                if not content:
-                    raise InvalidImageFormat("Файл пуст.")
+                total_size = 0
                 with open(temp_file_path, "wb") as temp_file:
-                    temp_file.write(content)
+                    while chunk := await file.read(self.CHUNK_SIZE):
+                        total_size += len(chunk)
+                        if total_size > self.max_file_size_bytes:
+                            limit_mb = self.max_file_size_bytes // (1024 * 1024)
+                            raise FileTooLarge(
+                                f"Размер файла превышает максимально допустимый ({limit_mb} МБ)."
+                            )
+                        temp_file.write(chunk)
+                if total_size == 0:
+                    raise InvalidImageFormat("Файл пуст.")
                 source_image_path = temp_file_path
             else:
                 source_image_path = Path(file)
 
-            try:
-                with Image.open(source_image_path) as img:
-                    if img.format != "WEBP":
-                        raise InvalidImageFormat(f"Файл имеет формат {img.format}, ожидается WEBP.")
-
-                    is_animated = getattr(img, "is_animated", False) and getattr(img, "n_frames", 1) > 1
-
-                    if is_animated:
-                        frames = []
-                        durations = []
-                        for frame in ImageSequence.Iterator(img):
-                            f = frame.copy()
-                            if keep_aspect_ratio:
-                                f.thumbnail(max_size, Image.Resampling.LANCZOS)
-                            else:
-                                f = f.resize(max_size, Image.Resampling.LANCZOS)
-                            frames.append(f)
-                            durations.append(frame.info.get("duration", img.info.get("duration", 100)))
-
-                        duration = durations if any(d != durations[0] for d in durations) else durations[0]
-
-                        frames[0].save(
-                            output_temp,
-                            format="WEBP",
-                            save_all=True,
-                            append_images=frames[1:],
-                            quality=quality,
-                            lossless=lossless,
-                            loop=img.info.get("loop", 0),
-                            duration=duration,
-                        )
-                    else:
-                        img_copy = img.copy()
-                        if keep_aspect_ratio:
-                            img_copy.thumbnail(max_size, Image.Resampling.LANCZOS)
-                        else:
-                            img_copy = img_copy.resize(max_size, Image.Resampling.LANCZOS)
-
-                        img_copy.save(
-                            output_temp,
-                            format="WEBP",
-                            quality=quality,
-                            lossless=lossless,
-                        )
-
-                shutil.move(output_temp, target_path)
-
-            except (UnidentifiedImageError, OSError) as e:
-                raise InvalidImageFormat(f"Не удалось открыть WebP-изображение или файл поврежден: {e}") from e
-            except InvalidImageFormat:
-                raise
-            except Exception as e:
-                raise ImageCompressionError(f"Ошибка при сжатии WebP-изображения: {e}") from e
+            await asyncio.to_thread(
+                _compress_image_sync,
+                source_image_path,
+                output_temp,
+                target_path,
+                max_size,
+                quality,
+                keep_aspect_ratio,
+                lossless,
+            )
 
         finally:
             if temp_file_path.exists():

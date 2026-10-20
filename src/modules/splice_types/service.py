@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import UploadFile
@@ -144,9 +145,17 @@ class SpliceTypeService:
 
         # Вычисляем целевой путь
         dest = self.path_builder.get_splice_type(splice_type_id=type_id, file_name="image")
+        file_ext = Path(file.filename or "").suffix.lstrip(".").lower() or "jpg"
+        orig_dest = self.path_builder.get_splice_type_original(
+            product_id=type_id, file_name="image", file_type=file_ext
+        )
 
         # Конвертируем и сохраняем
-        saved_path = await self.image_manager.save_image(file=file, destination=dest)
+        saved_path = await self.image_manager.save_image(
+            file=file,
+            destination=dest,
+            original_destination=orig_dest,
+        )
         media_url = self.image_manager.to_media_url(saved_path)
 
         # Обновляем запись в БД

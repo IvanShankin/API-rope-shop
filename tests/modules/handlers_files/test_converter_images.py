@@ -5,7 +5,7 @@ from PIL import Image
 
 from src.core.config.config import Config
 from src.modules.handlers_files.converter_images import HandlerImages
-from src.modules.handlers_files.exception import InvalidImageFormat
+from src.modules.handlers_files.exception import InvalidImageFormat, FileTooLarge
 
 
 @pytest.mark.asyncio
@@ -238,3 +238,51 @@ async def test_empty_file_raises_exception(
         await handler_images_fixture.convert_to_webp(upload_file, tmp_path)
 
     assert not any(p.name.startswith("temp_") for p in config_fix.paths.temp.iterdir())
+
+
+@pytest.mark.asyncio
+async def test_file_too_large_raises_exception(
+    handler_images_fixture: HandlerImages,
+    create_upload_file_fixture,
+    tmp_path: Path,
+    config_fix: Config,
+):
+    # Устанавливаем лимит 50 КБ
+    handler_images_fixture.max_file_size_bytes = 50 * 1024
+    large_content = b"x" * (60 * 1024)
+    upload_file = create_upload_file_fixture(large_content, "large.jpg")
+
+    with pytest.raises(FileTooLarge) as exc_info:
+        await handler_images_fixture.convert_to_webp(upload_file, tmp_path)
+
+    assert "превышает максимально допустимый" in str(exc_info.value)
+    # Проверка очистки временных файлов
+    assert not any(p.name.startswith("temp_") for p in config_fix.paths.temp.iterdir())
+
+
+@pytest.mark.asyncio
+async def test_convert_saves_original_dest(
+    handler_images_fixture: HandlerImages,
+    create_upload_file_fixture,
+    tmp_path: Path,
+):
+    img = Image.new("RGB", (100, 100), color="blue")
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG")
+    orig_bytes = buf.getvalue()
+    upload_file = create_upload_file_fixture(orig_bytes, "photo.jpg")
+
+    dest_dir = tmp_path / "out"
+    orig_file = tmp_path / "out" / "original" / "photo.jpg"
+
+    result_path = await handler_images_fixture.convert_to_webp(
+        upload_file,
+        dest_dir,
+        original_dest=orig_file,
+    )
+
+    assert result_path.exists()
+    assert result_path.suffix == ".webp"
+    # Проверяем, что оригинал сохранен и идентичен исходным байтам
+    assert orig_file.exists()
+    assert orig_file.read_bytes() == orig_bytes

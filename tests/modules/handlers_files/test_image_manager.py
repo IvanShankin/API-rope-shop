@@ -220,3 +220,36 @@ def test_delete_image_safe_handling(
     sub_dir.mkdir(parents=True, exist_ok=True)
     image_manager_fixture.delete_image(sub_dir)
     assert sub_dir.exists()
+
+
+@pytest.mark.asyncio
+async def test_save_image_with_original_destination_and_cleanup(
+    image_manager_fixture: ImageManager,
+    create_upload_file_fixture: Callable[[bytes, str], UploadFile],
+    create_image_bytes_fixture: Callable[..., bytes],
+    tmp_path: Path,
+):
+    """Проверка одновременного сохранения WebP и оригинала, а также их каскадного удаления."""
+    img_bytes = create_image_bytes_fixture(format_="PNG", size=(600, 400), color="purple")
+    upload_file = create_upload_file_fixture(img_bytes, "test_orig.png")
+
+    dest_file = tmp_path / "img_test.webp"
+    orig_file = tmp_path / "original" / "img_test.png"
+
+    saved_path = await image_manager_fixture.save_image(
+        file=upload_file,
+        destination=dest_file,
+        compress=True,
+        max_size=(1920, 1920),
+        original_destination=orig_file,
+    )
+
+    assert saved_path.exists()
+    assert saved_path.suffix == ".webp"
+    assert orig_file.exists()
+    assert orig_file.read_bytes() == img_bytes
+
+    # Удаление через delete_image должно удалить и webp, и файл из папки original/
+    image_manager_fixture.delete_image(saved_path)
+    assert not saved_path.exists()
+    assert not orig_file.exists()

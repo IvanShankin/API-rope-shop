@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List, Optional
 
 from fastapi import UploadFile
@@ -240,7 +241,15 @@ class CategoryService:
             self.image_manager.delete_image(category.image_url)
 
         dest = self.path_builder.get_category(category_id=category_id, file_name="image")
-        saved_path = await self.image_manager.save_image(file=file, destination=dest)
+        file_ext = Path(file.filename or "").suffix.lstrip(".").lower() or "jpg"
+        orig_dest = self.path_builder.get_category_original(
+            category_id=category_id, file_name="image", file_type=file_ext
+        )
+        saved_path = await self.image_manager.save_image(
+            file=file,
+            destination=dest,
+            original_destination=orig_dest,
+        )
         media_url = self.image_manager.to_media_url(saved_path)
 
         await self.category_repo.update_category(category_id, {"image_url": media_url})

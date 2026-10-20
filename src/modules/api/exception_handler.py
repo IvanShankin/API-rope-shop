@@ -32,6 +32,7 @@ from src.modules.auth.exception import (
     InvalidJWTToken,
     UserInactive,
 )
+from src.modules.handlers_files.exception import FileTooLarge, InvalidImageFormat
 from src.modules.quote_requests.exception import (
     QuoteRequestValidationError,
     ColorNotAllowedForProduct,
@@ -44,6 +45,10 @@ from src.modules.quote_requests.exception import (
 def register_exception_handlers(app: FastAPI):
 
     # ==================== 400 Bad Request ====================
+    @app.exception_handler(InvalidImageFormat)
+    async def invalid_image_format_handler(request, exc):
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
     @app.exception_handler(ValidationError)
     async def validation_error_handler(request, exc):
         return JSONResponse(status_code=400, content={"detail": str(exc)})
@@ -158,6 +163,11 @@ def register_exception_handlers(app: FastAPI):
             },
             headers={"Retry-After": str(exc.detail)}
         )
+
+    # ==================== 413 Payload Too Large ====================
+    @app.exception_handler(FileTooLarge)
+    async def file_too_large_handler(request, exc):
+        return JSONResponse(status_code=413, content={"detail": str(exc)})
 
     # ==================== 500 Internal Server Error ====================
     @app.exception_handler(ServiceException)

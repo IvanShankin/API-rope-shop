@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Request, status
 
 from src.core.rate_limit import limiter
 from src.modules.base.database_model import Language
@@ -36,6 +36,7 @@ router = APIRouter(prefix="/products", tags=["Products"])
 )
 @limiter.limit("100/minute")
 async def get_all_products(
+    request: Request,
     locale: Optional[Language] = Query(None, description="Language for translation localization"),
     category_id: Optional[int] = Query(None, description="Filter by category ID"),
     category_slug: Optional[str] = Query(None, description="Filter by category slug"),

@@ -1,3 +1,4 @@
+from pathlib import Path
 import uuid
 from typing import List, Optional
 
@@ -167,7 +168,15 @@ class WorkPhotoService:
         dest = self.path_builder.get_work_photo(
             work_photo_id=new_photo.id, file_name=file_name
         )
-        saved_path = await self.image_manager.save_image(file=file, destination=dest)
+        file_ext = Path(file.filename or "").suffix.lstrip(".").lower() or "jpg"
+        orig_dest = self.path_builder.get_work_photo_original(
+            work_photo_id=new_photo.id, file_name=file_name, file_type=file_ext
+        )
+        saved_path = await self.image_manager.save_image(
+            file=file,
+            destination=dest,
+            original_destination=orig_dest,
+        )
         media_url = self.image_manager.to_media_url(saved_path)
 
         new_photo.image_url = media_url
@@ -204,7 +213,15 @@ class WorkPhotoService:
         dest = self.path_builder.get_work_photo(
             work_photo_id=photo_id, file_name=file_name
         )
-        saved_path = await self.image_manager.save_image(file=file, destination=dest)
+        file_ext = Path(file.filename or "").suffix.lstrip(".").lower() or "jpg"
+        orig_dest = self.path_builder.get_work_photo_original(
+            work_photo_id=photo_id, file_name=file_name, file_type=file_ext
+        )
+        saved_path = await self.image_manager.save_image(
+            file=file,
+            destination=dest,
+            original_destination=orig_dest,
+        )
         media_url = self.image_manager.to_media_url(saved_path)
 
         await self.repo.update_photo(photo_id, {"image_url": media_url})

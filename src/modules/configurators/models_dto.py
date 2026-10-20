@@ -1,5 +1,5 @@
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from src.modules.base.orm_dto import ORMDTO
 from src.modules.base.database_model import Language
@@ -28,9 +28,18 @@ class ConfiguratorRopeProductResponseDTO(ORMDTO):
     core_description: Optional[str] = None
     cover_description: Optional[str] = None
     can_be_spliced: bool = True
-    variants: List[ProductVariantResponseDTO] = []
-    colors: List[ProductColorLocalizedResponseDTO] = []
-    allowed_splices: List[RopeAllowedSpliceLocalizedResponseDTO] = []
+    variants: List[ProductVariantResponseDTO] = Field(
+        default=[],
+        description="Активные варианты каната. Неактивные варианты исключаются на сервере.",
+    )
+    colors: List[ProductColorLocalizedResponseDTO] = Field(
+        default=[],
+        description="Активные цвета каната. Связи с неактивными цветами исключаются на сервере (color всегда заполнен).",
+    )
+    allowed_splices: List[RopeAllowedSpliceLocalizedResponseDTO] = Field(
+        default=[],
+        description="Активные разрешенные заделки каната. Связи с неактивными заделками исключаются на сервере (splice_type всегда заполнен).",
+    )
     splice_material: Optional[SpliceMaterialResponseDTO] = None
 
 
@@ -41,8 +50,14 @@ class ConfiguratorDataResponseDTO(BaseModel):
     settings: Optional[ConfiguratorSettingResponseDTO] = None
     extras: List[ConfiguratorExtraLocalizedResponseDTO] = []
     splice_materials: List[SpliceMaterialResponseDTO] = []
-    splice_types: List[SpliceTypeLocalizedResponseDTO] = []
-    splice_price_rules: List[SplicePriceRuleResponseDTO] = []
+    splice_types: List[SpliceTypeLocalizedResponseDTO] = Field(
+        default=[],
+        description="Список активных услуг заделок.",
+    )
+    splice_price_rules: List[SplicePriceRuleResponseDTO] = Field(
+        default=[],
+        description="Матрица активных ценовых правил заделок (правила для отключённых заделок исключаются).",
+    )
     rope_products: Optional[List[ConfiguratorRopeProductResponseDTO]] = None
 
 

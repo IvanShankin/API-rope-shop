@@ -566,3 +566,196 @@ class TestsForSuccess:
         )
         assert resp.status_code in (400, 404)
 
+
+    @pytest.mark.asyncio
+    async def test_get_configurator_excludes_inactive_color_and_splice_and_variant(
+        self,
+        client_for_tests,
+        create_material_group_fixture,
+        create_splice_material_fixture,
+        create_color_fixture,
+        create_splice_type_fixture,
+        create_rope_product_fixture,
+        create_rope_variant_fixture,
+        create_rope_product_color_fixture,
+        create_rope_allowed_splice_fixture,
+    ):
+        """Неактивные цвета, заделки и варианты исключаются из каната, color и splice_type не могут быть null."""
+        mg = await create_material_group_fixture(CreateMaterialGroupFixtureDTO(code="mg_contract"))
+        sm = await create_splice_material_fixture(CreateSpliceMaterialFixtureDTO(code="sm_contract"))
+
+        active_color = await create_color_fixture(
+            CreateColorFixtureDTO(code="c_active", name="Active Color", hex="#111111", is_active=True)
+        )
+        inactive_color = await create_color_fixture(
+            CreateColorFixtureDTO(code="c_inactive", name="Inactive Color", hex="#222222", is_active=False)
+        )
+
+        active_st = await create_splice_type_fixture(
+            CreateSpliceTypeFixtureDTO(code="st_active", name="Active Splice", is_active=True)
+        )
+        inactive_st = await create_splice_type_fixture(
+            CreateSpliceTypeFixtureDTO(code="st_inactive", name="Inactive Splice", is_active=False)
+        )
+
+        rope = await create_rope_product_fixture(
+            CreateRopeProductFixtureDTO(material_group_id=mg.id, splice_material_id=sm.id)
+        )
+
+        await create_rope_variant_fixture(
+            CreateRopeVariantFixtureDTO(product_id=rope.product_id, variant_name="Active Var", is_active=True)
+        )
+        await create_rope_variant_fixture(
+            CreateRopeVariantFixtureDTO(product_id=rope.product_id, variant_name="Inactive Var", is_active=False)
+        )
+
+        await create_rope_product_color_fixture(
+            CreateRopeProductColorFixtureDTO(product_id=rope.product_id, color_id=active_color.id)
+        )
+        await create_rope_product_color_fixture(
+            CreateRopeProductColorFixtureDTO(product_id=rope.product_id, color_id=inactive_color.id)
+        )
+
+        await create_rope_allowed_splice_fixture(
+            CreateRopeAllowedSpliceFixtureDTO(product_id=rope.product_id, splice_type_id=active_st.id)
+        )
+        await create_rope_allowed_splice_fixture(
+            CreateRopeAllowedSpliceFixtureDTO(product_id=rope.product_id, splice_type_id=inactive_st.id)
+        )
+
+        response = await client_for_tests.get("/configurators")
+        assert response.status_code == 200
+        dto = ConfiguratorDataResponseDTO.model_validate(response.json())
+
+        target_rope = next(r for r in dto.rope_products if r.product_id == rope.product_id)
+
+        # Проверка вариантов
+        assert len(target_rope.variants) == 1
+        assert target_rope.variants[0].variant_name == "Active Var"
+
+        # Проверка цветов: только активный, color не null
+        assert len(target_rope.colors) == 1
+        assert target_rope.colors[0].color_id == active_color.id
+        assert target_rope.colors[0].color is not None
+        assert target_rope.colors[0].color.code == "c_active"
+        color_ids = [c.color_id for c in target_rope.colors]
+        assert inactive_color.id not in color_ids
+
+        # Проверка заделок: только активная, splice_type не null
+        assert len(target_rope.allowed_splices) == 1
+        assert target_rope.allowed_splices[0].splice_type_id == active_st.id
+        assert target_rope.allowed_splices[0].splice_type is not None
+        assert target_rope.allowed_splices[0].splice_type.code == "st_active"
+        splice_ids = [s.splice_type_id for s in target_rope.allowed_splices]
+        assert inactive_st.id not in splice_ids
+
+    @pytest.mark.asyncio
+    async def test_get_configurator_excludes_price_rules_for_inactive_splice_type(
+        self,
+        client_for_tests,
+        create_splice_material_fixture,
+        create_splice_type_fixture,
+        create_splice_price_rule_fixture,
+    ):
+        """Матрица ценовых правил не должна включать правила для отключённых типов заделок."""
+        sm = await create_splice_material_fixture(CreateSpliceMaterialFixtureDTO(code="sm_rules_test"))
+
+        st_active = await create_splice_type_fixture(
+            CreateSpliceTypeFixtureDTO(code="st_rule_act", is_active=True)
+        )
+        st_inactive = await create_splice_type_fixture(
+            CreateSpliceTypeFixtureDTO(code="st_rule_inact", is_active=False)
+        )
+
+        rule_active = await create_splice_price_rule_fixture(
+            CreateSplicePriceRuleFixtureDTO(
+                splice_type_id=st_active.id,
+                splice_material_id=sm.id,
+                price=10.0,
+                is_active=True,
+            )
+        )
+        rule_inactive_st = await create_splice_price_rule_fixture(
+            CreateSplicePriceRuleFixtureDTO(
+                splice_type_id=st_inactive.id,
+                splice_material_id=sm.id,
+                price=20.0,
+                is_active=True,  # Правило активно, но сам тип заделки выключен!
+            )
+        )
+
+        response = await client_for_tests.get("/configurators")
+        assert response.status_code == 200
+        dto = ConfiguratorDataResponseDTO.model_validate(response.json())
+
+        # Заделки: только активная
+        st_ids = [st.id for st in dto.splice_types]
+        assert st_active.id in st_ids
+        assert st_inactive.id not in st_ids
+
+        # Ценовые правила: правило для отключённой заделки должно быть исключено
+        rule_ids = [r.id for r in dto.splice_price_rules]
+        assert rule_active.id in rule_ids
+        assert rule_inactive_st.id not in rule_ids
+
+    @pytest.mark.asyncio
+    async def test_calculate_splice_price_inactive_splice_type_returns_404(
+        self,
+        client_for_tests,
+        create_splice_material_fixture,
+        create_splice_type_fixture,
+        create_splice_price_rule_fixture,
+    ):
+        """Расчёт цены заделки возвращает 404, если связанный тип заделки отключён."""
+        sm = await create_splice_material_fixture(CreateSpliceMaterialFixtureDTO(code="sm_calc_test"))
+
+        st_active = await create_splice_type_fixture(
+            CreateSpliceTypeFixtureDTO(code="st_calc_act", is_active=True)
+        )
+        st_inactive = await create_splice_type_fixture(
+            CreateSpliceTypeFixtureDTO(code="st_calc_inact", is_active=False)
+        )
+
+        await create_splice_price_rule_fixture(
+            CreateSplicePriceRuleFixtureDTO(
+                splice_type_id=st_active.id,
+                splice_material_id=sm.id,
+                diameter_from_mm=8.0,
+                diameter_to_mm=12.0,
+                price=30.0,
+                is_active=True,
+            )
+        )
+        await create_splice_price_rule_fixture(
+            CreateSplicePriceRuleFixtureDTO(
+                splice_type_id=st_inactive.id,
+                splice_material_id=sm.id,
+                diameter_from_mm=8.0,
+                diameter_to_mm=12.0,
+                price=50.0,
+                is_active=True,
+            )
+        )
+
+        # Для активной заделки -> 200 OK
+        resp_act = await client_for_tests.get(
+            "/configurators/price",
+            params={
+                "material_id": sm.id,
+                "splice_type_id": st_active.id,
+                "diameter_mm": 10.0,
+            },
+        )
+        assert resp_act.status_code == 200
+        assert resp_act.json()["price"] == 30.0
+
+        # Для отключённой заделки -> 404 Not Found (нельзя посчитать цену на выключенную услугу)
+        resp_inact = await client_for_tests.get(
+            "/configurators/price",
+            params={
+                "material_id": sm.id,
+                "splice_type_id": st_inactive.id,
+                "diameter_mm": 10.0,
+            },
+        )
+        assert resp_inact.status_code == 404

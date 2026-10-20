@@ -255,3 +255,80 @@ class TestsForErrors:
         price_8 = await repo.get_price(material_id=sm.id, type_id=st.id, diameter=8.0)
         assert price_8 == 50.0
 
+
+    @pytest.mark.asyncio
+    async def test_applicable_rules_excludes_inactive_splice_type(
+        self,
+        client_for_tests,
+        create_splice_material_fixture,
+        create_splice_type_fixture,
+        create_splice_price_rule_fixture,
+    ):
+        """GET /splice_prices/applicable исключает правила для отключённых типов заделок."""
+        sm = await create_splice_material_fixture(CreateSpliceMaterialFixtureDTO(code="sm_app_test"))
+        st_act = await create_splice_type_fixture(CreateSpliceTypeFixtureDTO(code="st_app_act", is_active=True))
+        st_inact = await create_splice_type_fixture(CreateSpliceTypeFixtureDTO(code="st_app_inact", is_active=False))
+
+        r_act = await create_splice_price_rule_fixture(
+            CreateSplicePriceRuleFixtureDTO(
+                splice_type_id=st_act.id,
+                splice_material_id=sm.id,
+                diameter_from_mm=5.0,
+                diameter_to_mm=15.0,
+                price=30.0,
+                is_active=True,
+            )
+        )
+        r_inact = await create_splice_price_rule_fixture(
+            CreateSplicePriceRuleFixtureDTO(
+                splice_type_id=st_inact.id,
+                splice_material_id=sm.id,
+                diameter_from_mm=5.0,
+                diameter_to_mm=15.0,
+                price=50.0,
+                is_active=True,
+            )
+        )
+
+        resp = await client_for_tests.get(
+            "/splice_prices/applicable",
+            params={"material_id": sm.id, "diameter": 10.0},
+        )
+        assert resp.status_code == 200
+        ids = [item["id"] for item in resp.json()]
+        assert r_act.id in ids
+        assert r_inact.id not in ids
+
+    @pytest.mark.asyncio
+    async def test_get_rule_with_inactive_splice_type_anonymous_returns_404(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_splice_material_fixture,
+        create_splice_type_fixture,
+        create_splice_price_rule_fixture,
+    ):
+        """Аноним получает 404 при запросе правила с отключённым типом заделки, админ получает 200."""
+        _, admin_token = await create_user_fixture(CreateUserFixtureDTO(role=UserRole.ADMIN))
+        sm = await create_splice_material_fixture(CreateSpliceMaterialFixtureDTO())
+        st_inact = await create_splice_type_fixture(CreateSpliceTypeFixtureDTO(is_active=False))
+
+        rule = await create_splice_price_rule_fixture(
+            CreateSplicePriceRuleFixtureDTO(
+                splice_type_id=st_inact.id,
+                splice_material_id=sm.id,
+                is_active=True,
+            )
+        )
+
+        # Аноним
+        resp_anon = await client_for_tests.get(f"/splice_prices/{rule.id}")
+        assert resp_anon.status_code == 404
+
+        # Админ
+        resp_admin = await client_for_tests.get(
+            f"/splice_prices/{rule.id}",
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        assert resp_admin.status_code == 200
+        assert resp_admin.json()["id"] == rule.id

@@ -28,12 +28,12 @@ class SplicePriceRuleService:
 
     async def get_all_rules(self, is_active: Optional[bool] = None, is_admin: bool = False) -> List[SplicePriceRuleWithRelationsResponseDTO]:
         effective_active = is_active if is_admin else True
-        rules = await self.rule_repo.get_all(is_active=effective_active)
+        rules = await self.rule_repo.get_all(is_active=effective_active, is_admin=is_admin)
         return [SplicePriceRuleWithRelationsResponseDTO.model_validate(r) for r in rules]
 
     async def get_rule_by_id(self, rule_id: int, is_admin: bool = False) -> SplicePriceRuleWithRelationsResponseDTO:
         rule = await self.rule_repo.get_by_id(rule_id)
-        if not rule or (not is_admin and not rule.is_active):
+        if not rule or (not is_admin and (not rule.is_active or not rule.splice_type.is_active)):
             raise SplicePriceRuleNotFound(f"SplicePriceRule with id {rule_id} not found.")
         return SplicePriceRuleWithRelationsResponseDTO.model_validate(rule)
 

@@ -19,13 +19,26 @@ class SplicePriceRuleRepository(BaseRepository):
         """Добавление нового ценового правила."""
         return self.add(data)
 
-    async def get_all(self, is_active: Optional[bool] = None) -> Sequence[SplicePriceRule]:
+    async def get_all(
+        self,
+        is_active: Optional[bool] = None,
+        is_admin: bool = False,
+    ) -> Sequence[SplicePriceRule]:
         """Получение всех правил с предзагрузкой связей."""
-        stmt = select(SplicePriceRule).options(
-            selectinload(SplicePriceRule.splice_type).selectinload(SpliceType.translations),
-            selectinload(SplicePriceRule.splice_material)
+        stmt = (
+            select(SplicePriceRule)
+            .join(SplicePriceRule.splice_type)
+            .options(
+                selectinload(SplicePriceRule.splice_type).selectinload(SpliceType.translations),
+                selectinload(SplicePriceRule.splice_material)
+            )
         )
-        if is_active is not None:
+        if not is_admin:
+            stmt = stmt.where(
+                SplicePriceRule.is_active == True,
+                SpliceType.is_active == True,
+            )
+        elif is_active is not None:
             stmt = stmt.where(SplicePriceRule.is_active == is_active)
             
         stmt = stmt.order_by(SplicePriceRule.diameter_from_mm.asc().nulls_first())
@@ -54,18 +67,24 @@ class SplicePriceRuleRepository(BaseRepository):
         Если передан список splice_type_ids, фильтрует только по ним (например, разрешенным для данной веревки).
         Используется в конфигураторе для отображения списка доступных услуг и их цен.
         """
-        stmt = select(SplicePriceRule).options(
-            selectinload(SplicePriceRule.splice_type).selectinload(SpliceType.translations)
-        ).where(
-            SplicePriceRule.splice_material_id == material_id,
-            SplicePriceRule.is_active == True,
-            or_(
-                SplicePriceRule.diameter_from_mm.is_(None),
-                SplicePriceRule.diameter_from_mm <= diameter
-            ),
-            or_(
-                SplicePriceRule.diameter_to_mm.is_(None),
-                SplicePriceRule.diameter_to_mm >= diameter
+        stmt = (
+            select(SplicePriceRule)
+            .join(SplicePriceRule.splice_type)
+            .options(
+                selectinload(SplicePriceRule.splice_type).selectinload(SpliceType.translations)
+            )
+            .where(
+                SplicePriceRule.splice_material_id == material_id,
+                SplicePriceRule.is_active == True,
+                SpliceType.is_active == True,
+                or_(
+                    SplicePriceRule.diameter_from_mm.is_(None),
+                    SplicePriceRule.diameter_from_mm <= diameter
+                ),
+                or_(
+                    SplicePriceRule.diameter_to_mm.is_(None),
+                    SplicePriceRule.diameter_to_mm >= diameter
+                )
             )
         )
         
@@ -90,10 +109,12 @@ class SplicePriceRuleRepository(BaseRepository):
         """
         stmt = (
             select(SplicePriceRule.price)
+            .join(SplicePriceRule.splice_type)
             .where(
                 SplicePriceRule.splice_material_id == material_id,
                 SplicePriceRule.splice_type_id == type_id,
                 SplicePriceRule.is_active == True,
+                SpliceType.is_active == True,
                 or_(
                     SplicePriceRule.diameter_from_mm.is_(None),
                     SplicePriceRule.diameter_from_mm <= diameter

@@ -145,7 +145,7 @@ class ConfiguratorService:
     ) -> ConfiguratorRopeProductResponseDTO:
         """Локализация характеристик каната, связанных цветов и разрешенных заделок."""
         mat_group_name = None
-        if rope.material_group:
+        if rope.material_group and rope.material_group.is_active:
             mat_group_name = rope.material_group._get_field_with_translation(
                 lambda t: t.name, locale
             )

@@ -75,14 +75,21 @@ class ConfiguratorRepository(BaseRepository):
         is_active: Optional[bool] = True,
     ) -> Sequence[SplicePriceRule]:
         """Получение матрицы цен на заделки с опциональной фильтрацией по категории услуги."""
-        stmt = select(SplicePriceRule).options(
-            selectinload(SplicePriceRule.splice_type).selectinload(SpliceType.translations),
-            selectinload(SplicePriceRule.splice_material),
+        stmt = (
+            select(SplicePriceRule)
+            .join(SplicePriceRule.splice_type)
+            .options(
+                selectinload(SplicePriceRule.splice_type).selectinload(SpliceType.translations),
+                selectinload(SplicePriceRule.splice_material),
+            )
         )
         if category is not None:
-            stmt = stmt.join(SplicePriceRule.splice_type).where(SpliceType.category == category)
+            stmt = stmt.where(SpliceType.category == category)
         if is_active is not None:
-            stmt = stmt.where(SplicePriceRule.is_active == is_active)
+            stmt = stmt.where(
+                SplicePriceRule.is_active == is_active,
+                SpliceType.is_active == is_active,
+            )
         stmt = stmt.order_by(SplicePriceRule.diameter_from_mm.asc().nulls_first(), SplicePriceRule.id.asc())
         result = await self.session.execute(stmt)
         return result.scalars().all()

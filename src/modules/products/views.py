@@ -1,7 +1,8 @@
-from typing import List, Optional, Union
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query, status
 
+from src.core.rate_limit import limiter
 from src.modules.base.database_model import Language
 from src.modules.check_permission.depends import (
     get_current_admin,
@@ -13,7 +14,6 @@ from src.modules.products.models_dto import (
     ProductCreate,
     ProductDetailResponseDTO,
     ProductListResponseDTO,
-    ProductLocalizedResponseDTO,
     ProductResponseDTO,
     ProductTranslationCreate,
     ProductTranslationResponseDTO,
@@ -34,6 +34,7 @@ router = APIRouter(prefix="/products", tags=["Products"])
     summary="Get all products",
     description="Get products with localized content. Supports filtering by category, type, material, construction, applications, diameter, active status (admin only for inactive), and pagination (public).",
 )
+@limiter.limit("100/minute")
 async def get_all_products(
     locale: Optional[Language] = Query(None, description="Language for translation localization"),
     category_id: Optional[int] = Query(None, description="Filter by category ID"),

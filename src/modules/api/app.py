@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from passlib.context import CryptContext
 
 from src.core.config import Config, create_config
+from src.core.rate_limit import limiter
 from src.modules.api.exception_handler import register_exception_handlers
 from src.modules.auth.views import router as auth_router
 from src.modules.categories.views import router as categories_router
@@ -112,6 +113,7 @@ def init_fastapi_app() -> FastAPI:
 
     # Сохраняем единственный экземпляр конфигурации
     app.state.config = config
+    app.state.limiter = limiter
 
     app.mount(
         "/media",

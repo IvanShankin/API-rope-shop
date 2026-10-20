@@ -13,31 +13,31 @@ from tests.helpers.functions import comparison_models
 
 class TestsForSuccess:
 
-    @pytest.mark.skip(reason="Endpoint /register disabled pending project extension")
-    @pytest.mark.asyncio
-    async def test_register_user(
-        self, 
-        session_db,
-        client_for_tests,
-    ):
-        response = await client_for_tests.post(
-            "/auth/register",
-            json=RegisterUserRequestDTO(
-                email="test_@mail.com",
-                username="test_user",
-                password="test_password",
-            ).model_dump(),
-        )
-
-        assert response.status_code == 200
-
-        new_user = UserDTO.model_validate(response.json())
-
-        result_db = await session_db.execute(select(User).where(User.id == new_user.id))
-        user_from_db = result_db.scalar_one_or_none()
-        assert user_from_db
-
-        assert comparison_models(new_user, user_from_db)
+    # @pytest.mark.skip(reason="Endpoint /register disabled pending project extension")
+    # @pytest.mark.asyncio
+    # async def test_register_user(
+    #     self,
+    #     session_db,
+    #     client_for_tests,
+    # ):
+    #     response = await client_for_tests.post(
+    #         "/auth/register",
+    #         json=RegisterUserRequestDTO(
+    #             email="test_@mail.com",
+    #             username="test_user",
+    #             password="test_password",
+    #         ).model_dump(),
+    #     )
+    #
+    #     assert response.status_code == 200
+    #
+    #     new_user = UserDTO.model_validate(response.json())
+    #
+    #     result_db = await session_db.execute(select(User).where(User.id == new_user.id))
+    #     user_from_db = result_db.scalar_one_or_none()
+    #     assert user_from_db
+    #
+    #     assert comparison_models(new_user, user_from_db)
 
 
     @pytest.mark.asyncio

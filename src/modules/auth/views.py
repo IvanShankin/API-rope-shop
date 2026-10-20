@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import Request
 from starlette import status
 
+from src.core.rate_limit import limiter
 from src.modules.auth.auth_service import AuthService
 from src.modules.auth.depends import get_auth_service, get_token_service, get_current_user
 from src.modules.auth.models_dto import TokenResponse, RefreshTokenRequest, LogoutRequest, LogoutResponse
@@ -26,7 +28,9 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
 @router.post('/login', response_model=TokenResponse)
+@limiter.limit("5/minute")
 async def login(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     auth_service: AuthService = Depends(get_auth_service)
 ):

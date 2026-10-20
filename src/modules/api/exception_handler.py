@@ -1,5 +1,6 @@
 import logging
 from fastapi import FastAPI
+from slowapi.errors import RateLimitExceeded
 from sqlalchemy.exc import IntegrityError
 from starlette.responses import JSONResponse
 
@@ -146,6 +147,17 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(DataAlreadyExists)
     async def data_already_exists_handler(request, exc):
         return JSONResponse(status_code=409, content={"detail": str(exc)})
+
+    # ==================== 409 RateLimit ====================
+    @app.exception_handler(RateLimitExceeded)
+    async def rate_limit_handler(request, exc: RateLimitExceeded):
+        return JSONResponse(
+            status_code=429,
+            content={
+                "detail": f"Rate limit exceeded: {exc.detail}. Please try again later."
+            },
+            headers={"Retry-After": str(exc.detail)}
+        )
 
     # ==================== 500 Internal Server Error ====================
     @app.exception_handler(ServiceException)

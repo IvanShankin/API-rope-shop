@@ -1,8 +1,11 @@
-from typing import List, Optional
+from typing import Optional
 from datetime import datetime
+
 from fastapi import APIRouter, Depends, Query
+from fastapi import Request
 from starlette import status
 
+from src.core.rate_limit import limiter
 from src.modules.check_permission.depends import get_current_admin
 from src.modules.users.models_dto import UserDTO
 from src.modules.quote_requests.models import (
@@ -29,7 +32,9 @@ router = APIRouter(prefix="/quote_requests", tags=["Quote Requests"])
     response_model=QuoteRequestResponseDTO,
     status_code=status.HTTP_201_CREATED,
 )
+@limiter.limit("10/hour")
 async def create_quote_request(
+    request: Request,
     data: QuoteRequestCreate,
     service: QuoteRequestService = Depends(get_quote_request_service),
 ):

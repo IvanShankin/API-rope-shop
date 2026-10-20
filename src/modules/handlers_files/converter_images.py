@@ -56,8 +56,8 @@ class HandlerImages:
         self,
         photo: UploadFile,
         dest: Path,
-        quality: int = 80,
-        lossless: bool = False,
+        quality: int = 100,
+        lossless: bool = True,
     ) -> Path:
         """
         Конвертирует переданное изображение в формат .webp и сохраняет по указанному пути dest.

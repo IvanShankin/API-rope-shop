@@ -30,7 +30,7 @@ class ImageManager:
         destination: Path,
         compress: bool = True,
         max_size: Tuple[int, int] = (512, 512),
-        quality: int = 80,
+        quality: int = 100,
     ) -> Path:
         """
         Конвертирует входящее изображение в .webp, при необходимости сжимает

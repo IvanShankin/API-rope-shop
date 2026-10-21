@@ -20,6 +20,7 @@ from src.modules.rope_products.models_dto import (
     ProductVariantResponseDTO,
     ProductVariantBase,
 )
+from src.modules.products.exception import ProductNotFound
 from src.modules.rope_products.exception import (
     RopeProductNotFound,
     RopeProductAlreadyExists,
@@ -75,19 +76,15 @@ class RopeProductsService:
                 f"SpliceMaterial with id {data.splice_material_id} not found."
             )
 
-        if data.product_id is not None:
-            if await self.product_repo.exists(data.product_id):
-                raise RopeProductAlreadyExists(
-                    f"RopeConfiguratorSetting with product_id {data.product_id} already exists."
-                )
-            if not await self.product_repo.exists_base_product(data.product_id):
-                base_product = Product(id=data.product_id, product_type="rope")
-                self.session.add(base_product)
-                await self.session.flush()
-            target_product_id = data.product_id
-        else:
-            base_product = await self.product_repo.create_base_product()
-            target_product_id = base_product.id
+        if await self.product_repo.exists(data.product_id):
+            raise RopeProductAlreadyExists(
+                f"RopeConfiguratorSetting with product_id {data.product_id} already exists."
+            )
+        if not await self.product_repo.exists_base_product(data.product_id):
+            raise ProductNotFound(
+                f"Base Product with id {data.product_id} not found."
+            )
+        target_product_id = data.product_id
 
         setting_dto = RopeConfiguratorSettingBase(
             product_id=target_product_id,

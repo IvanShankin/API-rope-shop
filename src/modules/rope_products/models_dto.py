@@ -85,8 +85,8 @@ class RopeConfiguratorSettingBase(BaseModel):
 
 
 class RopeConfiguratorSettingCreate(RopeConfiguratorSettingBase):
-    product_id: Optional[int] = Field(
-        None,
+    product_id: int = Field(
+        ...,
         description="Optional base product ID. If not provided, a base Product will be created automatically."
     )
 

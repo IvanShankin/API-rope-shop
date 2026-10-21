@@ -96,19 +96,22 @@ class TestsForSuccess:
         assert data.splice_material.id == product.splice_material_id
 
     @pytest.mark.asyncio
-    async def test_create_rope_product_auto_id(
+    async def test_create_rope_product_success(
         self,
         session_db,
         client_for_tests,
         create_user_fixture,
         create_splice_material_fixture,
         create_rope_product_fixture,
+        create_product_fixture,
     ):
-        """Создание товара-веревки без указания product_id (создается автоматически)."""
+        """Создание товара-веревки с указанием product_id существующего продукта."""
         admin_user, access_token = await create_user_fixture(CreateUserFixtureDTO(role=UserRole.ADMIN))
         dummy = await create_rope_product_fixture()
+        product = await create_product_fixture()
 
         req_data = RopeConfiguratorSettingCreate(
+            product_id=product.id,
             material_group_id=dummy.material_group_id,
             splice_material_id=dummy.splice_material_id,
             construction="12-Strand Braid",
@@ -123,7 +126,7 @@ class TestsForSuccess:
         assert response.status_code == 201
 
         resp_dto = RopeConfiguratorSettingResponseDTO.model_validate(response.json())
-        assert resp_dto.product_id is not None
+        assert resp_dto.product_id == product.id
         assert resp_dto.construction == "12-Strand Braid"
         assert resp_dto.can_be_spliced is True
 
@@ -480,6 +483,7 @@ class TestsForFailures:
         """Создание без токена -> 401."""
         dummy = await create_rope_product_fixture()
         req_data = RopeConfiguratorSettingCreate(
+            product_id=dummy.product_id,
             material_group_id=dummy.material_group_id,
             splice_material_id=dummy.splice_material_id,
         )
@@ -497,6 +501,7 @@ class TestsForFailures:
         user, access_token = await create_user_fixture(CreateUserFixtureDTO(role=UserRole.USER))
         dummy = await create_rope_product_fixture()
         req_data = RopeConfiguratorSettingCreate(
+            product_id=dummy.product_id,
             material_group_id=dummy.material_group_id,
             splice_material_id=dummy.splice_material_id,
         )
@@ -536,12 +541,15 @@ class TestsForFailures:
         client_for_tests,
         create_user_fixture,
         create_rope_product_fixture,
+        create_product_fixture,
     ):
         """Создание с несуществующей material_group_id -> 404."""
         admin_user, access_token = await create_user_fixture(CreateUserFixtureDTO(role=UserRole.ADMIN))
         dummy = await create_rope_product_fixture()
+        product = await create_product_fixture()
 
         req_data = RopeConfiguratorSettingCreate(
+            product_id=product.id,
             material_group_id=999999,
             splice_material_id=dummy.splice_material_id,
         )
@@ -551,6 +559,51 @@ class TestsForFailures:
             json=req_data.model_dump(),
         )
         assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_create_rope_product_not_found(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_rope_product_fixture,
+    ):
+        """Создание с несуществующим product_id -> 404 ProductNotFound."""
+        admin_user, access_token = await create_user_fixture(CreateUserFixtureDTO(role=UserRole.ADMIN))
+        dummy = await create_rope_product_fixture()
+
+        req_data = RopeConfiguratorSettingCreate(
+            product_id=999999,
+            material_group_id=dummy.material_group_id,
+            splice_material_id=dummy.splice_material_id,
+        )
+        response = await client_for_tests.post(
+            "/rope_products",
+            headers={"Authorization": f"Bearer {access_token}"},
+            json=req_data.model_dump(),
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_create_rope_product_missing_product_id(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_rope_product_fixture,
+    ):
+        """Создание без обязательного product_id -> 422."""
+        admin_user, access_token = await create_user_fixture(CreateUserFixtureDTO(role=UserRole.ADMIN))
+        dummy = await create_rope_product_fixture()
+
+        payload = {
+            "material_group_id": dummy.material_group_id,
+            "splice_material_id": dummy.splice_material_id,
+        }
+        response = await client_for_tests.post(
+            "/rope_products",
+            headers={"Authorization": f"Bearer {access_token}"},
+            json=payload,
+        )
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_get_inactive_variant_by_id_anonymous_returns_404(

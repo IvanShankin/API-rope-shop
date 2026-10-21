@@ -15,6 +15,7 @@ from src.modules.users.models_dto import (
     CreateUserDTO,
     ChangePasswordDTO,
 )
+from src.modules.refresh_tokens.repository import RefreshTokenRepository
 from src.modules.users.repository import UsersRepository
 
 
@@ -25,10 +26,12 @@ class UsersService:
         users_repo: UsersRepository,
         cr_context: CryptContext,
         session_db: AsyncSession,
+        refresh_token_repo: RefreshTokenRepository | None = None,
     ):
         self.users_repo = users_repo
         self.cr_context = cr_context
         self.session_db = session_db
+        self.refresh_token_repo = refresh_token_repo or RefreshTokenRepository(session=session_db)
 
     def _get_hash_password(self, password: str) -> str:
         """Преобразует пароль в хеш
@@ -114,6 +117,7 @@ class UsersService:
         new_hashed_password = self._get_hash_password(data.new_password)
         try:
             await self.users_repo.update_password(user_id, new_hashed_password)
+            await self.refresh_token_repo.delete_by_user_id(user_id)
             await self.session_db.commit()
         except Exception as e:
             await self.session_db.rollback()

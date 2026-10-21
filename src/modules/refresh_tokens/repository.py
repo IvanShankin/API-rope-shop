@@ -85,3 +85,11 @@ class RefreshTokenRepository(BaseRepository):
             .returning(RefreshToken)
         )
         return result_db.scalar_one_or_none()
+
+    async def delete_by_user_id(self, user_id: int) -> List[RefreshToken]:
+        result_db = await self.session.execute(
+            delete(RefreshToken)
+            .where(RefreshToken.user_id == user_id)
+            .returning(RefreshToken)
+        )
+        return list(result_db.scalars().all())

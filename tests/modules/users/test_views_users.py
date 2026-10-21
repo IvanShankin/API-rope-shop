@@ -162,3 +162,65 @@ async def test_change_password_inactive_user(client_for_tests, create_user_fixtu
 
     assert response.status_code == 403
     assert response.json()["detail"] == "User account is inactive"
+
+
+@pytest.mark.asyncio
+async def test_change_password_short_password_fails(client_for_tests, create_user_fixture):
+    user, access_token = await create_user_fixture(
+        new_user=CreateUserFixtureDTO(password="original_secret_123")
+    )
+
+    response = await client_for_tests.post(
+        "/users/change-password",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={
+            "current_password": "original_secret_123",
+            "new_password": "short",
+        },
+    )
+
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_change_password_revokes_refresh_tokens(client_for_tests, create_user_fixture):
+    password = "initial_password_123"
+    user, access_token = await create_user_fixture(
+        new_user=CreateUserFixtureDTO(password=password)
+    )
+
+    # Login to obtain a refresh token
+    login_res = await client_for_tests.post(
+        "/auth/login",
+        data={"username": user.username, "password": password},
+    )
+    assert login_res.status_code == 200
+    refresh_token = login_res.json()["refresh_token"]
+
+    # Verify refresh works initially
+    refresh_res = await client_for_tests.post(
+        "/auth/refresh_tokens",
+        json={"refresh_token": refresh_token},
+    )
+    assert refresh_res.status_code == 200
+
+    new_refresh_token = refresh_res.json()["refresh_token"]
+
+    # Now change password
+    change_res = await client_for_tests.post(
+        "/users/change-password",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={
+            "current_password": password,
+            "new_password": "brand_new_password_890",
+        },
+    )
+    assert change_res.status_code == 200
+
+    # The previous refresh token should now be invalid/revoked
+    revoked_refresh_res = await client_for_tests.post(
+        "/auth/refresh_tokens",
+        json={"refresh_token": new_refresh_token},
+    )
+    assert revoked_refresh_res.status_code in (401, 404)
+

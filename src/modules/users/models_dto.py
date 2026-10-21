@@ -42,7 +42,7 @@ class CreateUserDTO(BaseModel):
 
 class ChangePasswordDTO(BaseModel):
     current_password: str = Field(min_length=1)
-    new_password: str = Field(min_length=1)
+    new_password: str = Field(min_length=8)
     confirm_password: str | None = None
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)

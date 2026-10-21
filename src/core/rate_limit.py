@@ -9,12 +9,22 @@ config = create_config()
 
 def get_real_client_ip(request: Request) -> str:
     """
-    Получение реального IP клиента с учётом Nginx/Cloudflare прокси.
-    Берёт левый (первый) IP из X-Forwarded-For, если он есть.
+    Получение реального IP клиента с защитой от подмены заголовков.
+    Приоритет:
+    1. Заголовок X-Real-IP, устанавливаемый доверенным Nginx прокси из $remote_addr.
+    2. Правый (последний) IP из X-Forwarded-For, добавленный доверенным прокси.
+    3. Прямой IP соединения из ASGI scope (get_remote_address).
     """
+    real_ip = request.headers.get("X-Real-IP")
+    if real_ip and real_ip.strip():
+        return real_ip.strip()
+
     forwarded = request.headers.get("X-Forwarded-For")
     if forwarded:
-        return forwarded.split(",")[0].strip()
+        ips = [ip.strip() for ip in forwarded.split(",") if ip.strip()]
+        if ips:
+            return ips[-1]
+
     return get_remote_address(request)
 
 

@@ -279,3 +279,40 @@ async def test_notifications_disabled_in_settings_skips_sending():
 
         assert mock_send.call_count == 0
         assert mock_post.call_count == 0
+
+
+@pytest.mark.asyncio
+async def test_notify_new_quote_request_with_session_factory():
+    config = Config()
+    quote = _create_sample_quote_dto()
+
+    settings = SettingsResponseDTO(
+        id=1,
+        telegram_chat_id="-100987654321",
+        telegram_notifications_enabled=False,
+        email_notifications_enabled=False,
+        company_name="Alpine Rope Shop",
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
+
+    mock_session = AsyncMock()
+    mock_factory = MagicMock()
+    mock_factory.return_value.__aenter__.return_value = mock_session
+    mock_factory.return_value.__aexit__.return_value = None
+
+    service = NotificationService(config=config, session_factory=mock_factory)
+
+    with patch("src.modules.notifications.service.SettingsService.get_settings", new_callable=AsyncMock) as mock_get_settings, \
+         patch("aiosmtplib.send", new_callable=AsyncMock) as mock_send, \
+         patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
+
+        mock_get_settings.return_value = settings
+
+        await service.notify_new_quote_request(quote=quote)
+
+        assert mock_factory.call_count == 1
+        assert mock_get_settings.call_count == 1
+        assert mock_send.call_count == 0
+        assert mock_post.call_count == 0
+

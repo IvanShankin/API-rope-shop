@@ -1,15 +1,21 @@
+from __future__ import annotations
+
 import html
 import logging
 from email.message import EmailMessage
-from typing import Optional, Tuple
+from typing import TYPE_CHECKING, Optional, Tuple
 
 import aiosmtplib
 import httpx
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from src.core.config.config import Config
-from src.modules.quote_requests.models_dto import QuoteRequestResponseDTO
 from src.modules.settings.models_dto import SettingsResponseDTO
+from src.modules.settings.repository import SettingsRepository
 from src.modules.settings.service import SettingsService
+
+if TYPE_CHECKING:
+    from src.modules.quote_requests.models_dto import QuoteRequestResponseDTO
 
 logger = logging.getLogger(__name__)
 
@@ -70,9 +76,15 @@ EMAIL_TRANSLATIONS = {
 
 
 class NotificationService:
-    def __init__(self, config: Config, settings_service: SettingsService):
+    def __init__(
+        self,
+        config: Config,
+        settings_service: Optional[SettingsService] = None,
+        session_factory: Optional[async_sessionmaker[AsyncSession]] = None,
+    ):
         self.config = config
         self.settings_service = settings_service
+        self.session_factory = session_factory
 
     @staticmethod
     def _normalize_locale(locale_val: Optional[str]) -> str:
@@ -95,7 +107,15 @@ class NotificationService:
         Любые ошибки внутри каналов логируются и не прерывают выполнение других каналов.
         """
         try:
-            settings = await self.settings_service.get_settings()
+            if self.session_factory is not None:
+                async with self.session_factory() as session:
+                    repo = SettingsRepository(session)
+                    service = SettingsService(repo=repo, session=session, config=self.config)
+                    settings = await service.get_settings()
+            elif self.settings_service is not None:
+                settings = await self.settings_service.get_settings()
+            else:
+                raise RuntimeError("No session_factory or settings_service configured in NotificationService")
         except Exception as e:
             logger.error(
                 "Failed to load settings for notification %s: %s",

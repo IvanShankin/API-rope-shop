@@ -1,6 +1,7 @@
 import pytest
 from sqlalchemy import select
 
+from src.modules.base.database_model import Language
 from src.modules.users.models import UserRole
 from tests.modules.users.fixtures.models_dto import CreateUserFixtureDTO
 from src.modules.configurator_setting.models import Currency
@@ -221,6 +222,54 @@ class TestsForSuccess:
         extra_map = {e.name_snapshot: e for e in dto.extra_items}
         assert float(extra_map["Safety Certificate"].total_cost) == 25.00
         assert float(extra_map["UV Coating"].total_cost) == 5.00
+
+    @pytest.mark.asyncio
+    async def test_create_quote_request_persists_custom_locale(
+        self,
+        client_for_tests,
+        create_configurator_setting_fixture,
+        create_material_group_fixture,
+        create_color_fixture,
+        create_rope_product_fixture,
+        create_rope_variant_fixture,
+        create_rope_product_color_fixture,
+    ):
+        """Проверка сохранения кастомной локали (rus) в БД и возврата в DTO."""
+        await create_configurator_setting_fixture(CreateConfiguratorSettingFixtureDTO())
+        group = await create_material_group_fixture()
+        color = await create_color_fixture()
+        product = await create_rope_product_fixture(CreateRopeProductFixtureDTO(material_group_id=group.id))
+        await create_rope_variant_fixture(CreateRopeVariantFixtureDTO(product_id=product.product_id, size_value=8.0, price=2.0))
+        await create_rope_product_color_fixture(CreateRopeProductColorFixtureDTO(product_id=product.product_id, color_id=color.id))
+
+        req_body = QuoteRequestCreate(
+            configurator_type=ConfiguratorType.ROPE_WITH_SPLICE,
+            name="Иван Петров",
+            email="ivan@example.com",
+            phone="+79991234567",
+            locale=Language.RUS,
+            rope_items=[
+                QuoteRopeItemCreate(
+                    product_id=product.product_id,
+                    color_id=color.id,
+                    diameter_mm=8.0,
+                    length_m=5.0,
+                    quantity=1,
+                )
+            ],
+        )
+
+        response = await client_for_tests.post("/quote_requests", json=req_body.model_dump())
+        assert response.status_code == 201
+        data = response.json()
+        assert data["locale"] == "rus"
+
+        # Check public fetch by number with token
+        token = data["tracking_token"]
+        req_num = data["request_number"]
+        get_res = await client_for_tests.get(f"/quote_requests/number/{req_num}?token={token}")
+        assert get_res.status_code == 200
+        assert get_res.json()["locale"] == "rus"
 
     @pytest.mark.asyncio
     async def test_create_quote_request_loop_only(

@@ -17,6 +17,28 @@ from tests.modules.users.fixtures.models_dto import CreateUserFixtureDTO
 class TestsForSuccess:
 
     @pytest.mark.asyncio
+    async def test_create_contact_request_public(
+        self,
+        client_for_tests,
+    ):
+        """Создание новой входящей заявки через публичную форму 'Свяжитесь с нами'."""
+        payload = {
+            "name": "Customer John",
+            "email": "john.customer@example.com",
+            "phone": "+49 151 12345678",
+            "message": "Hello, I have a question about yacht rigging ropes.",
+        }
+        response = await client_for_tests.post("/contact_requests", json=payload)
+        assert response.status_code == 201
+
+        data = ContactRequestResponseDTO.model_validate(response.json())
+        assert data.name == payload["name"]
+        assert data.email == payload["email"]
+        assert data.phone == payload["phone"]
+        assert data.message == payload["message"]
+        assert data.id is not None
+
+    @pytest.mark.asyncio
     async def test_get_contact_request_public_auto_init(
         self,
         client_for_tests,

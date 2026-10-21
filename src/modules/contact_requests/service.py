@@ -2,14 +2,17 @@ from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.config import Config
 from src.modules.base.exception import NoDataForUpdate
 from src.modules.contact_requests.exception import ContactRequestNotFound
 from src.modules.contact_requests.models import ContactRequest
 from src.modules.contact_requests.models_dto import (
+    ContactRequestCreateDTO,
     ContactRequestResponseDTO,
     ContactRequestUpdateDTO,
 )
 from src.modules.contact_requests.repository import ContactRequestRepository
+
 
 DEFAULT_CONTACT_REQUEST = {
     "name": "General Contact",
@@ -27,6 +30,19 @@ class ContactRequestService:
     ):
         self.repo = repo
         self.session = session
+
+    async def create_contact(
+        self,
+        data: ContactRequestCreateDTO,
+    ) -> ContactRequestResponseDTO:
+        """
+        Создание новой входящей заявки/сообщения от клиента (Contact Us).
+        """
+        contact = ContactRequest(**data.model_dump())
+        self.repo.add_contact(contact)
+        await self.session.commit()
+        await self.session.refresh(contact)
+        return ContactRequestResponseDTO.model_validate(contact)
 
     async def get_contact(self) -> ContactRequestResponseDTO:
         """

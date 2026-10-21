@@ -43,6 +43,7 @@ from src.modules.content_blocks.models import (
     ContentBlockTranslation,
 )
 from src.modules.contact_requests.models import ContactRequest
+from src.modules.settings.models import Settings
 
 __all__ = [
     "User",
@@ -90,4 +91,5 @@ __all__ = [
     "ContentBlock",
     "ContentBlockTranslation",
     "ContactRequest",
+    "Settings",
 ]

@@ -20,6 +20,9 @@ class Config:
         self.allowed_extensions: AllowedExtensions = AllowedExtensions.build()
         self.cors: CorsConfig = CorsConfig.build()
         self.admin: AdminConfig = AdminConfig.build(self.env)
+        self.email: EmailConfig = EmailConfig.build()
+        self.telegram: TelegramConfig = TelegramConfig.build()
+        self.default_site_settings: SiteSettingsDefaultConfig = SiteSettingsDefaultConfig.build()
 
 
 class EnvConfig(BaseModel):
@@ -248,4 +251,75 @@ class AdminConfig(BaseModel):
             email=email,
             username=username,
             password=password,
+        )
+
+
+
+class EmailConfig(BaseModel):
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    from_email: str = "noreply@example.com"
+    use_tls: bool = True
+
+    @property
+    def is_configured(self) -> bool:
+        return bool(self.smtp_host and self.smtp_user and self.smtp_password)
+
+    @classmethod
+    def build(cls) -> "EmailConfig":
+        return cls(
+            smtp_host=os.getenv("SMTP_HOST", ""),
+            smtp_port=int(os.getenv("SMTP_PORT", 587)),
+            smtp_user=os.getenv("SMTP_USER", ""),
+            smtp_password=os.getenv("SMTP_PASSWORD", ""),
+            from_email=os.getenv("SMTP_FROM_EMAIL", "noreply@example.com"),
+            use_tls=os.getenv("SMTP_USE_TLS", "True").lower() in ("true", "1", "t"),
+        )
+
+
+class TelegramConfig(BaseModel):
+    bot_token: str = ""
+    default_chat_id: Optional[str] = None
+
+    @property
+    def is_configured(self) -> bool:
+        return bool(self.bot_token)
+
+    @classmethod
+    def build(cls) -> "TelegramConfig":
+        return cls(
+            bot_token=os.getenv("TELEGRAM_BOT_TOKEN", ""),
+            default_chat_id=os.getenv("TELEGRAM_CHAT_ID", None),
+        )
+
+
+
+class SiteSettingsDefaultConfig(BaseModel):
+    telegram_chat_id: Optional[str] = None
+    telegram_notifications_enabled: bool = True
+    email_notifications_enabled: bool = True
+    manager_notification_email: Optional[str] = None
+    manager_email_notifications_enabled: bool = False
+    company_name: str = "Rope Shop"
+    contact_email: Optional[str] = "info@ropeshop.com"
+    contact_phone: Optional[str] = "+1 (555) 019-2834"
+    site_url: Optional[str] = "https://ropeshop.com"
+
+    def to_dict(self) -> dict:
+        return self.model_dump()
+
+    @classmethod
+    def build(cls) -> "SiteSettingsDefaultConfig":
+        return cls(
+            telegram_chat_id=os.getenv("TELEGRAM_CHAT_ID"),
+            telegram_notifications_enabled=os.getenv("TELEGRAM_NOTIFICATIONS_ENABLED", "True").lower() in ("true", "1", "t"),
+            email_notifications_enabled=os.getenv("EMAIL_NOTIFICATIONS_ENABLED", "True").lower() in ("true", "1", "t"),
+            manager_notification_email=os.getenv("MANAGER_NOTIFICATION_EMAIL"),
+            manager_email_notifications_enabled=os.getenv("MANAGER_EMAIL_NOTIFICATIONS_ENABLED", "False").lower() in ("true", "1", "t"),
+            company_name=os.getenv("COMPANY_NAME", "Rope Shop"),
+            contact_email=os.getenv("CONTACT_EMAIL", "info@ropeshop.com"),
+            contact_phone=os.getenv("CONTACT_PHONE", "+1 (555) 019-2834"),
+            site_url=os.getenv("SITE_URL", "https://ropeshop.com"),
         )

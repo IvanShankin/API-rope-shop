@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
-from src.modules.base.database_model import Language
+from src.modules.base.database_model import Language, DEFAULT_LOCALE
 from src.modules.base.exception import NoDataForUpdate, ServiceException
 from src.modules.configurator_setting.models import ConfiguratorSetting, Currency
 from src.modules.configurator_setting.repository import ConfiguratorSettingRepository
@@ -115,7 +115,7 @@ class QuoteRequestService:
         # 2. Валидация входных позиций
         self._validate_request_items(data, setting)
 
-        locale = data.locale or Language.ENG
+        locale = data.locale or DEFAULT_LOCALE
 
         # 3. Разрешение позиций в DTO снимков
         resolved_rope_items = await self._resolve_rope_items(data.rope_items, locale, setting)

@@ -3,7 +3,7 @@ from typing import List, Optional, Union
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.modules.base.database_model import Language
+from src.modules.base.database_model import Language, DEFAULT_LOCALE
 from src.modules.base.exception import NoDataForUpdate
 from src.modules.categories.repository import CategoryRepository
 from src.modules.colors.models_dto import ColorLocalizedResponseDTO
@@ -480,7 +480,7 @@ class ProductService:
         aggregates: Optional[dict] = None,
     ) -> ProductLocalizedResponseDTO:
         """Конвертация в локализованное DTO с fallback-логикой и всеми подгруженными связями."""
-        target_locale = locale or Language.ENG
+        target_locale = locale or DEFAULT_LOCALE
         name = product._get_field_with_translation(
             lambda t: t.name,
             target_locale,

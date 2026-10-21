@@ -5,7 +5,7 @@ from typing import List, Optional
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.modules.base.database_model import Language
+from src.modules.base.database_model import Language, DEFAULT_LOCALE
 from src.modules.base.exception import NoDataForUpdate
 from src.modules.handlers_files.service import ImageManager
 from src.modules.path_builder.service import PathBuilder
@@ -53,7 +53,7 @@ class WorkPhotoService:
         self, photo: WorkPhoto, locale: Optional[Language] = None
     ) -> WorkPhotoResponseDTO:
         """Преобразование модели WorkPhoto в WorkPhotoResponseDTO с локализацией."""
-        target_locale = locale or Language.ENG
+        target_locale = locale or DEFAULT_LOCALE
         title = photo._get_field_with_translation(
             lambda t: t.title, target_locale, fallback=Language.ENG
         )

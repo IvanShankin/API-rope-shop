@@ -35,6 +35,9 @@ class Language(str, enum.Enum):
         return super()._missing_(value)
 
 
+DEFAULT_LOCALE: Language = Language.GER
+
+
 class BaseTranslation(Base):
     __abstract__ = True
 

@@ -7,6 +7,8 @@ services:
       - "8018:8018"
     env_file:
       - .env
+    volumes:
+      - ./media:/app/media
     depends_on:
       postgres:
         condition: service_healthy

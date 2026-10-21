@@ -4,7 +4,9 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: backend_rope_shopo
-    command: uvicorn src.main:app --host 0.0.0.0 --port 8018 --workers 4 --proxy-headers --forwarded-allow-ips='*'
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn src.main:app --host 0.0.0.0 --port 8018 --workers 4 --proxy-headers --forwarded-allow-ips='*'"
     expose:
       - "8018"
     env_file:
@@ -24,16 +26,16 @@ services:
     env_file:
       - .env
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-123456789}
-      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-api_rope_shop}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "127.0.0.1:5432:5432"
     restart: always
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-api_rope_shop}" ]
       interval: 5s
       timeout: 5s
       retries: 5

@@ -4,7 +4,7 @@ from typing import Any, List, Optional, Union
 from pydantic import BaseModel, Field
 
 from src.modules.base.database_model import Language
-from src.modules.base.orm_dto import ORMDTO
+from src.modules.base.orm_dto import ORMDTO, PaginatedResponse
 from src.modules.products.models import PriceUnit, ProductType
 
 
@@ -166,12 +166,9 @@ class ProductLocalizedResponseDTO(ORMDTO):
     updated_at: datetime
 
 
-class ProductListResponseDTO(BaseModel):
+class ProductListResponseDTO(PaginatedResponse[ProductLocalizedResponseDTO]):
     """Ответ со списком товаров и метаданными пагинации."""
-    items: List[ProductLocalizedResponseDTO]
-    total: int
-    skip: int = 0
-    limit: Optional[int] = None
+    pass
 
 
 class ProductDetailResponseDTO(ORMDTO):

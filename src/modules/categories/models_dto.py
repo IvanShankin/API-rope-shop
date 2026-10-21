@@ -4,7 +4,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 from src.modules.base.database_model import Language
-from src.modules.base.orm_dto import ORMDTO
+from src.modules.base.orm_dto import ORMDTO, PaginatedResponse
 
 
 # ===================== Translation DTOs =====================
@@ -82,9 +82,6 @@ class CategoryLocalizedResponseDTO(CategoryBase, ORMDTO):
     updated_at: datetime
 
 
-class CategoryListResponseDTO(BaseModel):
+class CategoryListResponseDTO(PaginatedResponse[CategoryLocalizedResponseDTO]):
     """Ответ со списком категорий и метаданными пагинации."""
-    items: List[CategoryLocalizedResponseDTO]
-    total: int
-    skip: int = 0
-    limit: Optional[int] = None
+    pass

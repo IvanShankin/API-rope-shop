@@ -4,7 +4,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 from src.modules.base.database_model import Language
-from src.modules.base.orm_dto import ORMDTO
+from src.modules.base.orm_dto import ORMDTO, PaginatedResponse
 from src.modules.reviews.models import ReviewsStatus
 
 
@@ -85,8 +85,6 @@ class ReviewLocalizedResponseDTO(ReviewBase, ORMDTO):
     updated_at: datetime
 
 
-class ReviewListResponseDTO(BaseModel):
-    items: List[ReviewLocalizedResponseDTO]
-    total: int
-    skip: int = 0
-    limit: Optional[int] = None
+class ReviewListResponseDTO(PaginatedResponse[ReviewLocalizedResponseDTO]):
+    """Ответ со списком отзывов и метаданными пагинации."""
+    pass

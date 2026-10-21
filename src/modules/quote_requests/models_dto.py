@@ -4,7 +4,7 @@ from typing import List, Optional
 from datetime import datetime
 from pydantic import BaseModel, EmailStr, Field
 
-from src.modules.base.orm_dto import ORMDTO
+from src.modules.base.orm_dto import ORMDTO, PaginatedResponse
 from src.modules.base.database_model import Language
 from src.modules.configurator_setting.models import Currency
 from src.modules.quote_requests.models import (
@@ -301,8 +301,6 @@ class QuoteRequestResponseDTO(ORMDTO):
     tracking_url: Optional[str] = None
 
 
-class QuoteRequestListResponseDTO(BaseModel):
-    items: List[QuoteRequestResponseDTO]
-    total: int
-    skip: int = 0
+class QuoteRequestListResponseDTO(PaginatedResponse[QuoteRequestResponseDTO]):
+    """Ответ со списком заявок и метаданными пагинации."""
     limit: int = 50

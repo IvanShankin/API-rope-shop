@@ -12,7 +12,14 @@ from src.core.database.database import get_db
 from src.modules.api.app import init_fastapi_app
 from src.modules.depends import get_config
 from src.modules.users.depends import get_user_service
+from src.modules.notifications.depends import get_notification_service
 from src.modules.users.service import UsersService
+
+
+class DummyNotificationService:
+    """Mock-сервис уведомлений для тестов, предотвращающий deadlock фоновых задач с clearing_db."""
+    async def notify_new_quote_request(self, quote) -> None:
+        pass
 
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
@@ -47,6 +54,7 @@ async def client_for_tests(
         app_fastapi.dependency_overrides[get_db] = lambda: session_db # переопределяем Depends(get_db)
         app_fastapi.dependency_overrides[get_config] = lambda: config_fix
         app_fastapi.dependency_overrides[get_user_service] = lambda: user_service_fixture
+        app_fastapi.dependency_overrides[get_notification_service] = lambda: DummyNotificationService()
 
         async with AsyncClient(transport=ASGITransport(app_fastapi), base_url="http://test") as ac:
             yield ac

@@ -505,6 +505,22 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('specification_id', 'locale', name='uq_product_spec_trans_spec_locale')
     )
+    op.create_table(
+        'site_settings',
+        sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+        sa.Column('telegram_chat_id', sa.String(length=255), nullable=True),
+        sa.Column('telegram_notifications_enabled', sa.Boolean(), server_default='true', nullable=False),
+        sa.Column('email_notifications_enabled', sa.Boolean(), server_default='true', nullable=False),
+        sa.Column('manager_notification_email', sa.String(length=255), nullable=True),
+        sa.Column('manager_email_notifications_enabled', sa.Boolean(), server_default='false', nullable=False),
+        sa.Column('company_name', sa.String(length=255), server_default='Rope Shop', nullable=False),
+        sa.Column('contact_email', sa.String(length=255), nullable=True),
+        sa.Column('contact_phone', sa.String(length=100), nullable=True),
+        sa.Column('site_url', sa.String(length=255), nullable=True),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.PrimaryKeyConstraint('id'),
+    )
     # ### end Alembic commands ###
 
 
@@ -554,6 +570,7 @@ def downgrade() -> None:
     op.drop_constraint('uq_content_block_page_code', 'content_blocks', type_='unique')
     op.drop_table('content_blocks')
     op.drop_table('contact_requests')
+    op.drop_table('site_settings')
     op.drop_table('configurator_settings')
     op.drop_table('configurator_extras')
     op.drop_table('colors')

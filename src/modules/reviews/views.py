@@ -1,6 +1,7 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Request, status
+from src.core.rate_limit import limiter
 
 from src.modules.base.database_model import Language
 from src.modules.check_permission.depends import get_current_admin
@@ -100,7 +101,9 @@ async def get_review_by_id(
     summary="Create review",
     description="Submit a new review with author name, rating, language and text (public). Created with status 'new'.",
 )
+@limiter.limit("5/minute")
 async def create_review(
+    request: Request,
     data: ReviewCreate,
     service: ReviewService = Depends(get_review_service),
 ) -> ReviewResponseDTO:

@@ -1,3 +1,4 @@
+import secrets
 from decimal import Decimal, ROUND_HALF_UP
 import enum
 from typing import List, Optional, TYPE_CHECKING
@@ -84,6 +85,15 @@ class QuoteRequest(Base):
         nullable=False,
         default=QuoteRequestStatus.NEW.value,
         server_default="new"
+    )
+
+    locale: Mapped[str] = mapped_column(String(10), nullable=False, default="ger", server_default="ger")
+    tracking_token: Mapped[str] = mapped_column(
+        String(64),
+        nullable=False,
+        unique=True,
+        index=True,
+        default=lambda: secrets.token_urlsafe(32),
     )
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

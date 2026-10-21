@@ -135,6 +135,8 @@ def upgrade() -> None:
     sa.Column('status', sa.Enum('new', 'in_progress', 'confirmed', 'completed', 'cancelled', name='quote_request_status', native_enum=False, length=30), server_default='new', nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('locale', sa.String(length=10), server_default='ger', nullable=False),
+    sa.Column('tracking_token', sa.String(length=64), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('request_number')
     )
@@ -505,6 +507,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('specification_id', 'locale', name='uq_product_spec_trans_spec_locale')
     )
+    op.create_index(op.f('ix_quote_requests_tracking_token'), 'quote_requests', ['tracking_token'], unique=True)
     op.create_table(
         'site_settings',
         sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
@@ -562,6 +565,7 @@ def downgrade() -> None:
     op.drop_table('splice_types')
     op.drop_table('splice_materials')
     op.drop_table('reviews')
+    op.drop_index(op.f('ix_quote_requests_tracking_token'), table_name='quote_requests')
     op.drop_table('quote_requests')
     op.drop_table('product_applications')
     op.drop_table('material_groups')

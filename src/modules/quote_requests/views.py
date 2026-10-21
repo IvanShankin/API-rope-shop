@@ -6,7 +6,7 @@ from fastapi import Request
 from starlette import status
 
 from src.core.rate_limit import limiter
-from src.modules.check_permission.depends import get_current_admin
+from src.modules.check_permission.depends import get_current_admin, get_optional_admin
 from src.modules.users.models_dto import UserDTO
 from src.modules.quote_requests.models import (
     ConfiguratorType,
@@ -101,13 +101,20 @@ async def list_quote_requests(
     response_model=QuoteRequestResponseDTO,
     status_code=status.HTTP_200_OK,
 )
+@limiter.limit("30/minute")
 async def get_quote_request_by_number(
+    request: Request,
     request_number: str,
+    token: Optional[str] = Query(None, description="Secret tracking token for public order viewing"),
     service: QuoteRequestService = Depends(get_quote_request_service),
-    admin: UserDTO = Depends(get_current_admin),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
 ):
-    """Get quote request details by business request number (public)."""
-    return await service.get_by_request_number(request_number=request_number)
+    """Get quote request details by business request number (public with tracking token or admin)."""
+    return await service.get_by_request_number(
+        request_number=request_number,
+        token=token,
+        is_admin=bool(admin is not None),
+    )
 
 
 @router.get(

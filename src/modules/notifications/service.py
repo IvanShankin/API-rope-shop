@@ -34,6 +34,7 @@ EMAIL_TRANSLATIONS = {
         "services_header": "\nDienstleistungen & Spleiße:",
         "extras_header": "\nZusatzoptionen:",
         "comment_header": "\nIhr Kommentar zur Anfrage:\n{comment}",
+        "tracking_link": "\nDen aktuellen Status Ihrer Bestellung können Sie hier einsehen:\n{tracking_url}\n",
         "footer": "\nUnser Kundenservice wird sich in Kürze mit Ihnen in Verbindung setzen.",
         "phone": "Telefon: {phone}",
         "email": "E-Mail: {email}",
@@ -51,6 +52,7 @@ EMAIL_TRANSLATIONS = {
         "services_header": "\nServices & Splices:",
         "extras_header": "\nExtra options:",
         "comment_header": "\nYour comment:\n{comment}",
+        "tracking_link": "\nYou can track the status of your order online here:\n{tracking_url}\n",
         "footer": "\nOur specialist will contact you shortly to confirm the details.",
         "phone": "Phone: {phone}",
         "email": "Email: {email}",
@@ -68,6 +70,7 @@ EMAIL_TRANSLATIONS = {
         "services_header": "\nУслуги и заделки:",
         "extras_header": "\nДополнительные опции:",
         "comment_header": "\nВаш комментарий к заявке:\n{comment}",
+        "tracking_link": "\nОтследить актуальный статус вашего заказа онлайн вы можете по ссылке:\n{tracking_url}\n",
         "footer": "\nНаш специалист свяжется с вами в ближайшее время.",
         "phone": "Телефон для справок: {phone}",
         "email": "Email поддержки: {email}",
@@ -224,6 +227,17 @@ class NotificationService:
 
         if quote.comment:
             lines.append(t["comment_header"].format(comment=quote.comment))
+
+        site_url = settings.site_url or "https://ropeshop.com"
+        tracking_token = getattr(quote, "tracking_token", None)
+        if tracking_token and hasattr(self.config, "order_tracking"):
+            tracking_url = self.config.order_tracking.url_template.format(
+                site_url=site_url.rstrip("/"),
+                request_number=quote.request_number,
+                token=tracking_token,
+            )
+            if "tracking_link" in t:
+                lines.append(t["tracking_link"].format(tracking_url=tracking_url))
 
         lines.append(t["footer"])
         if settings.contact_phone:

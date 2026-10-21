@@ -1,3 +1,10 @@
+from src.modules.check_permission.exception import PermissionErrorService
+
+
+class QuoteRequestAccessDenied(PermissionErrorService):
+    default_message = "Access denied: valid tracking token is required."
+
+
 from src.modules.base.exception import ServiceException, NotFoundData
 
 

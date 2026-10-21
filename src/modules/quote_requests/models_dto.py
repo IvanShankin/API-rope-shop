@@ -210,6 +210,8 @@ class QuoteExtraItemInsertDTO(BaseModel):
 
 class QuoteRequestInsertDTO(BaseModel):
     request_number: str
+    tracking_token: str
+    locale: str = "ger"
     configurator_type: ConfiguratorType
     name: str
     email: str
@@ -294,7 +296,9 @@ class QuoteRequestResponseDTO(ORMDTO):
     rope_items: List[QuoteRopeItemResponseDTO] = []
     service_items: List[QuoteServiceItemResponseDTO] = []
     extra_items: List[QuoteExtraItemResponseDTO] = []
-    locale: Optional[str] = "ger"
+    locale: str = "ger"
+    tracking_token: Optional[str] = None
+    tracking_url: Optional[str] = None
 
 
 class QuoteRequestListResponseDTO(BaseModel):

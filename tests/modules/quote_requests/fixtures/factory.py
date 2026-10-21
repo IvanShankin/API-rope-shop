@@ -1,3 +1,4 @@
+import secrets
 from typing import Optional, List
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -189,6 +190,8 @@ async def create_quote_request_factory(
         vat_rate=new_request.vat_rate if new_request.vat_rate is not None else 0.0,
         is_urgent=new_request.is_urgent if new_request.is_urgent is not None else False,
         status=new_request.status if new_request.status is not None else QuoteRequestStatus.NEW,
+        locale=getattr(new_request, "locale", None) or "ger",
+        tracking_token=getattr(new_request, "tracking_token", None) or secrets.token_urlsafe(32),
         rope_items=resolved_rope_items,
         service_items=resolved_service_items,
         extra_items=resolved_extra_items,

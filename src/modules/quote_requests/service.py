@@ -1,3 +1,4 @@
+import secrets
 from decimal import Decimal, ROUND_HALF_UP
 import logging
 from typing import List, Optional
@@ -41,6 +42,7 @@ from src.modules.quote_requests.models_dto import (
     QuoteRequestInsertDTO,
     QuoteRequestListResponseDTO,
 )
+from src.core.config.config import Config
 from src.modules.quote_requests.repository import (
     QuoteRequestRepository,
     QuoteRopeItemRepository,
@@ -48,6 +50,7 @@ from src.modules.quote_requests.repository import (
     QuoteExtraItemRepository,
 )
 from src.modules.quote_requests.exception import (
+    QuoteRequestAccessDenied,
     QuoteRequestNotFound,
     QuoteRequestValidationError,
     ConfiguratorExtraNotFoundForQuote,
@@ -79,7 +82,9 @@ class QuoteRequestService:
         extra_repo: ConfiguratorExtraRepository,
         configurator_setting_repo: ConfiguratorSettingRepository,
         session: AsyncSession,
+        config: Optional[Config] = None,
     ):
+        self.config = config or Config()
         self.quote_repo = quote_repo
         self.rope_item_repo = rope_item_repo
         self.service_item_repo = service_item_repo
@@ -580,8 +585,12 @@ class QuoteRequestService:
         extra_items: List[ResolvedExtraItemDTO],
     ) -> int:
         """Сохранение сущности QuoteRequest и ее дочерних снимков с использованием DTO."""
+        tracking_token = secrets.token_urlsafe(32)
+        locale_str = data.locale.value if (data.locale and hasattr(data.locale, "value")) else (str(data.locale) if data.locale else "ger")
         quote_insert_dto = QuoteRequestInsertDTO(
             request_number=request_number,
+            tracking_token=tracking_token,
+            locale=locale_str,
             configurator_type=data.configurator_type,
             name=data.name,
             email=str(data.email),
@@ -657,21 +666,42 @@ class QuoteRequestService:
 
         return f"RPL-{current_year}-{seq_num:04d}"
 
+    def _to_response_dto(self, item: QuoteRequest) -> QuoteRequestResponseDTO:
+        dto = QuoteRequestResponseDTO.model_validate(item)
+        site_url = "https://ropeshop.com"
+        if hasattr(self.config, "default_site_settings") and self.config.default_site_settings.site_url:
+            site_url = self.config.default_site_settings.site_url
+        if hasattr(self.config, "order_tracking") and getattr(item, "tracking_token", None):
+            dto.tracking_url = self.config.order_tracking.url_template.format(
+                site_url=site_url.rstrip("/"),
+                request_number=item.request_number,
+                token=item.tracking_token,
+            )
+        return dto
+
     async def get_quote_request_by_id(self, request_id: int) -> QuoteRequestResponseDTO:
         item = await self.quote_repo.get_by_id(request_id, include_relations=True)
         if not item:
             raise QuoteRequestNotFound(f"QuoteRequest with id {request_id} not found.")
-        return QuoteRequestResponseDTO.model_validate(item)
+        return self._to_response_dto(item)
 
     async def get_by_id(self, request_id: int) -> QuoteRequestResponseDTO:
         return await self.get_quote_request_by_id(request_id)
 
 
-    async def get_by_request_number(self, request_number: str) -> QuoteRequestResponseDTO:
+    async def get_by_request_number(
+        self,
+        request_number: str,
+        token: Optional[str] = None,
+        is_admin: bool = False,
+    ) -> QuoteRequestResponseDTO:
         item = await self.quote_repo.get_by_request_number(request_number, include_relations=True)
         if not item:
             raise QuoteRequestNotFound(f"QuoteRequest with request_number '{request_number}' not found.")
-        return QuoteRequestResponseDTO.model_validate(item)
+        if not is_admin:
+            if not token or not secrets.compare_digest(str(item.tracking_token), str(token)):
+                raise QuoteRequestAccessDenied("Invalid or missing tracking token for this order.")
+        return self._to_response_dto(item)
 
     async def list_quote_requests(
         self,
@@ -719,7 +749,7 @@ class QuoteRequestService:
             search=search,
         )
         return QuoteRequestListResponseDTO(
-            items=[QuoteRequestResponseDTO.model_validate(i) for i in items],
+            items=[self._to_response_dto(i) for i in items],
             total=total,
             skip=skip,
             limit=limit,
@@ -742,7 +772,7 @@ class QuoteRequestService:
         await self.session.commit()
 
         updated = await self.quote_repo.get_by_id(request_id, include_relations=True)
-        return QuoteRequestResponseDTO.model_validate(updated)
+        return self._to_response_dto(updated)
 
     async def update_quote_request_status(
         self,
@@ -757,7 +787,7 @@ class QuoteRequestService:
         await self.session.commit()
 
         updated = await self.quote_repo.get_by_id(request_id, include_relations=True)
-        return QuoteRequestResponseDTO.model_validate(updated)
+        return self._to_response_dto(updated)
 
     async def delete_quote_request(self, request_id: int) -> None:
         item = await self.quote_repo.get_by_id(request_id)

@@ -23,6 +23,7 @@ class Config:
         self.email: EmailConfig = EmailConfig.build()
         self.telegram: TelegramConfig = TelegramConfig.build()
         self.default_site_settings: SiteSettingsDefaultConfig = SiteSettingsDefaultConfig.build()
+        self.order_tracking: OrderTrackingConfig = OrderTrackingConfig.build()
 
 
 class EnvConfig(BaseModel):
@@ -322,4 +323,17 @@ class SiteSettingsDefaultConfig(BaseModel):
             contact_email=os.getenv("CONTACT_EMAIL", "info@ropeshop.com"),
             contact_phone=os.getenv("CONTACT_PHONE", "+1 (555) 019-2834"),
             site_url=os.getenv("SITE_URL", "https://ropeshop.com"),
+        )
+
+
+class OrderTrackingConfig(BaseModel):
+    url_template: str = "{site_url}/order-tracking/{request_number}?token={token}"
+
+    @classmethod
+    def build(cls) -> "OrderTrackingConfig":
+        return cls(
+            url_template=os.getenv(
+                "ORDER_TRACKING_URL_TEMPLATE",
+                "{site_url}/order-tracking/{request_number}?token={token}",
+            )
         )

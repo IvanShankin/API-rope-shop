@@ -76,11 +76,13 @@ class ReviewResponseDTO(ReviewBase, ORMDTO):
     translations: List[ReviewTranslationResponseDTO] = []
 
 
-class ReviewLocalizedResponseDTO(ReviewBase, ORMDTO):
+class ReviewLocalizedResponseDTO(ORMDTO):
     id: int
+    author_name: str
+    rating: Optional[int] = None
     text: Optional[str] = None
     locale: Optional[Language] = None
-    translations: List[ReviewTranslationResponseDTO] = []
+    index: int = 0
     created_at: datetime
     updated_at: datetime
 

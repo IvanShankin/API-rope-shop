@@ -338,15 +338,9 @@ class ReviewService:
             id=review.id,
             author_name=review.author_name,
             rating=review.rating,
-            is_published=review.is_published,
-            status=review.status,
             index=review.index,
             text=text,
             locale=matched_locale,
-            translations=[
-                ReviewTranslationResponseDTO.model_validate(t)
-                for t in review.translations
-            ],
             created_at=review.created_at,
             updated_at=review.updated_at,
         )

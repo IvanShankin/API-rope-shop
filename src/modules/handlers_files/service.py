@@ -101,3 +101,8 @@ class ImageManager:
         if orig_dir.exists() and orig_dir.is_dir():
             for orig_file in orig_dir.glob(f"{target_path.stem}.*"):
                 orig_file.unlink(missing_ok=True)
+            if orig_dir.exists() and not any(orig_dir.iterdir()):
+                try:
+                    orig_dir.rmdir()
+                except OSError:
+                    pass

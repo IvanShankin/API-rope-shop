@@ -19,11 +19,13 @@ class ProductColor(Base):
         Integer,
         ForeignKey("products.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
     color_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("colors.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
     index: Mapped[int] = mapped_column(Integer, nullable=False)
 

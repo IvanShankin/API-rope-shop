@@ -23,6 +23,7 @@ class ProductSpecification(BaseModelWithRelationshipTranslation):
         Integer,
         ForeignKey("products.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
     index: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
 
@@ -45,6 +46,7 @@ class ProductSpecificationTranslation(BaseTranslation):
         Integer,
         ForeignKey("product_specifications.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     value: Mapped[str] = mapped_column(String(500), nullable=False)

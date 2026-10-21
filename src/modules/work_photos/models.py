@@ -66,6 +66,7 @@ class WorkPhotoTranslation(BaseTranslation):
         Integer,
         ForeignKey("work_photos.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
     title: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

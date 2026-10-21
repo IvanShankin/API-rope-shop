@@ -40,6 +40,7 @@ class Product(BaseModelWithRelationshipTranslation):
         Integer,
         ForeignKey("categories.id", ondelete="RESTRICT"),
         nullable=True,
+        index=True,
     )
     slug: Mapped[Optional[str]] = mapped_column(String(150), unique=True, nullable=True)
     product_type: Mapped[str] = mapped_column(String(50), nullable=False, default=ProductType.ROPE.value)
@@ -185,6 +186,7 @@ class ProductTranslation(BaseTranslation):
         Integer,
         ForeignKey("products.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     subtitle: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
@@ -198,7 +200,7 @@ class ProductVariant(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     product_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False
+        Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False, index=True
     )
 
     variant_name: Mapped[str] = mapped_column(String(100), nullable=False)

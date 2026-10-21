@@ -20,13 +20,13 @@ class RopeConfiguratorSetting(Base):
         Integer, ForeignKey("products.id", ondelete="CASCADE"), primary_key=True
     )
     material_group_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("material_groups.id", ondelete="RESTRICT"), nullable=False
+        Integer, ForeignKey("material_groups.id", ondelete="RESTRICT"), nullable=False, index=True
     )
     material_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("materials.id", ondelete="SET NULL"), nullable=True
+        Integer, ForeignKey("materials.id", ondelete="SET NULL"), nullable=True, index=True
     )
     splice_material_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("splice_materials.id", ondelete="RESTRICT"), nullable=False
+        Integer, ForeignKey("splice_materials.id", ondelete="RESTRICT"), nullable=False, index=True
     )
 
     construction: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)

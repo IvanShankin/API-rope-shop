@@ -57,6 +57,7 @@ class CategoryTranslation(BaseTranslation):
         Integer,
         ForeignKey("categories.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     subtitle: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)

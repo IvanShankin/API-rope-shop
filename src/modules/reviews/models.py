@@ -84,6 +84,7 @@ class ReviewTranslation(BaseTranslation):
         Integer,
         ForeignKey("reviews.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
     text: Mapped[str] = mapped_column(Text, nullable=False)
 

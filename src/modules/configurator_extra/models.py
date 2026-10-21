@@ -68,7 +68,8 @@ class ConfiguratorExtraTranslation(BaseTranslation):
     extra_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("configurator_extras.id", ondelete="CASCADE"),
-        nullable=False
+        nullable=False,
+        index=True,
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

@@ -17,6 +17,7 @@ class ProductImage(Base):
         Integer,
         ForeignKey("products.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
     is_main: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     image_url: Mapped[str] = mapped_column(String(500), nullable=False)

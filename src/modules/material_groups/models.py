@@ -35,7 +35,8 @@ class MaterialGroupTranslation(BaseTranslation):
     material_group_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("material_groups.id", ondelete="CASCADE"),
-        nullable=False
+        nullable=False,
+        index=True,
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
 

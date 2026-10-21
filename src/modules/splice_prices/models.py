@@ -16,8 +16,8 @@ class SplicePriceRule(Base):
     __tablename__ = "splice_price_rules"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    splice_type_id: Mapped[int] = mapped_column(Integer, ForeignKey("splice_types.id", ondelete="CASCADE"), nullable=False)
-    splice_material_id: Mapped[int] = mapped_column(Integer, ForeignKey("splice_materials.id", ondelete="CASCADE"), nullable=False)
+    splice_type_id: Mapped[int] = mapped_column(Integer, ForeignKey("splice_types.id", ondelete="CASCADE"), nullable=False, index=True)
+    splice_material_id: Mapped[int] = mapped_column(Integer, ForeignKey("splice_materials.id", ondelete="CASCADE"), nullable=False, index=True)
 
     diameter_from_mm: Mapped[Optional[float]] = mapped_column(Numeric(6, 2), nullable=True)
     diameter_to_mm: Mapped[Optional[float]] = mapped_column(Numeric(6, 2), nullable=True)

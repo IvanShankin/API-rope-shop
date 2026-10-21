@@ -44,6 +44,7 @@ class ProductApplicationTranslation(BaseTranslation):
         Integer,
         ForeignKey("product_applications.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
 
@@ -68,6 +69,7 @@ class ProductAssignedApplication(Base):
         Integer,
         ForeignKey("product_applications.id", ondelete="RESTRICT"),
         primary_key=True,
+        index=True,
     )
 
     product: Mapped["Product"] = relationship("Product", back_populates="assigned_applications")

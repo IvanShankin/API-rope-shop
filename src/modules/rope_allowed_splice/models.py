@@ -23,6 +23,7 @@ class RopeAllowedSplice(Base):
         Integer,
         ForeignKey("splice_types.id", ondelete="CASCADE"),
         primary_key=True,
+        index=True,
     )
 
     __table_args__ = (

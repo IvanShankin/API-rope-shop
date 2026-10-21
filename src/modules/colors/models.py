@@ -27,7 +27,8 @@ class ColorTranslation(BaseTranslation):
     color_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("colors.id", ondelete="CASCADE"),
-        nullable=False
+        nullable=False,
+        index=True,
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
 

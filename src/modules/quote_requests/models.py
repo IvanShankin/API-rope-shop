@@ -126,6 +126,7 @@ class QuoteRopeItem(Base):
         Integer,
         ForeignKey("quote_requests.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
 
     # Связь с товаром (nullable с защитой on delete set null)
@@ -133,11 +134,13 @@ class QuoteRopeItem(Base):
         Integer,
         ForeignKey("products.id", ondelete="SET NULL"),
         nullable=True,
+        index=True,
     )
     color_id: Mapped[Optional[int]] = mapped_column(
         Integer,
         ForeignKey("colors.id", ondelete="SET NULL"),
         nullable=True,
+        index=True,
     )
 
     # Исторический снимок параметров каната
@@ -155,6 +158,7 @@ class QuoteRopeItem(Base):
         Integer,
         ForeignKey("splice_types.id", ondelete="SET NULL"),
         nullable=True,
+        index=True,
     )
     end_a_name_snapshot: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     end_a_eye_size_cm: Mapped[Optional[float]] = mapped_column(Numeric(6, 2), nullable=True)
@@ -165,6 +169,7 @@ class QuoteRopeItem(Base):
         Integer,
         ForeignKey("splice_types.id", ondelete="SET NULL"),
         nullable=True,
+        index=True,
     )
     end_b_name_snapshot: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     end_b_eye_size_cm: Mapped[Optional[float]] = mapped_column(Numeric(6, 2), nullable=True)
@@ -192,6 +197,7 @@ class QuoteServiceItem(Base):
         Integer,
         ForeignKey("quote_requests.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
 
     # Внешние ключи (nullable с защитой on delete set null)
@@ -199,11 +205,13 @@ class QuoteServiceItem(Base):
         Integer,
         ForeignKey("splice_types.id", ondelete="SET NULL"),
         nullable=True,
+        index=True,
     )
     splice_material_id: Mapped[Optional[int]] = mapped_column(
         Integer,
         ForeignKey("splice_materials.id", ondelete="SET NULL"),
         nullable=True,
+        index=True,
     )
 
     # Исторический снимок услуги
@@ -231,6 +239,7 @@ class QuoteExtraItem(Base):
         Integer,
         ForeignKey("quote_requests.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
 
     # Внешний ключ на каталог доп. опций (SET NULL при удалении из админки)
@@ -238,6 +247,7 @@ class QuoteExtraItem(Base):
         Integer,
         ForeignKey("configurator_extras.id", ondelete="SET NULL"),
         nullable=True,
+        index=True,
     )
 
     # Исторический снимок (Snapshot)

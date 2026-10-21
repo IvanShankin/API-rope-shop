@@ -61,6 +61,7 @@ class ContentBlockTranslation(BaseTranslation):
         Integer,
         ForeignKey("content_blocks.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
     title: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     content: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

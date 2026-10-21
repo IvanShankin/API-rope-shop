@@ -15,7 +15,8 @@ class Material(BaseModelWithRelationshipTranslation):
     material_group_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("material_groups.id", ondelete="CASCADE"),
-        nullable=False
+        nullable=False,
+        index=True,
     )
     code: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     index: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -39,7 +40,8 @@ class MaterialTranslation(BaseTranslation):
     material_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("materials.id", ondelete="CASCADE"),
-        nullable=False
+        nullable=False,
+        index=True,
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
 

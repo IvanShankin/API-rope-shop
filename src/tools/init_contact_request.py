@@ -3,6 +3,7 @@ import logging
 from typing import Optional
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import Config
@@ -57,12 +58,18 @@ async def _create_contact_request_if_not_exists(
     if contact is None:
         logger.info("ContactRequest record not found. Creating default contact record...")
         contact = ContactRequest(**DEFAULT_CONTACT_DATA)
-        session.add(contact)
-        await session.commit()
-        await session.refresh(contact)
-        logger.info(
-            f"ContactRequest created successfully (id={contact.id}, name='{contact.name}', email='{contact.email}')."
-        )
+        try:
+            session.add(contact)
+            await session.commit()
+            await session.refresh(contact)
+            logger.info(
+                f"ContactRequest created successfully (id={contact.id}, name='{contact.name}', email='{contact.email}')."
+            )
+        except IntegrityError:
+            await session.rollback()
+            logger.info("ContactRequest created concurrently by another process.")
+            res = await session.execute(select(ContactRequest).limit(1))
+            contact = res.scalar_one_or_none()
     else:
         logger.info(f"ContactRequest already exists (id={contact.id}). Skipping creation.")
 

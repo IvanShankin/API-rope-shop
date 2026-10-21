@@ -3,6 +3,7 @@ import logging
 from typing import Optional
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import Config
@@ -46,13 +47,19 @@ async def _create_settings_if_not_exists(session: AsyncSession, default_data: di
     if setting is None:
         logger.info("Site settings not found. Creating default settings from config...")
         setting = Settings(**default_data)
-        session.add(setting)
-        await session.commit()
-        await session.refresh(setting)
-        logger.info(
-            f"Site settings created successfully (id={setting.id}, "
-            f"company_name='{setting.company_name}', telegram_chat_id='{setting.telegram_chat_id}')."
-        )
+        try:
+            session.add(setting)
+            await session.commit()
+            await session.refresh(setting)
+            logger.info(
+                f"Site settings created successfully (id={setting.id}, "
+                f"company_name='{setting.company_name}', telegram_chat_id='{setting.telegram_chat_id}')."
+            )
+        except IntegrityError:
+            await session.rollback()
+            logger.info("Site settings created concurrently by another process.")
+            res = await session.execute(select(Settings).limit(1))
+            setting = res.scalar_one_or_none()
     else:
         logger.info(f"Site settings already exist (id={setting.id}). Skipping creation.")
 

@@ -4,6 +4,7 @@ from typing import Optional
 
 from passlib.context import CryptContext
 from sqlalchemy import or_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import Config
@@ -90,9 +91,14 @@ async def _create_admin_if_not_exists(
             "Promoting to ADMIN without deleting account..."
         )
         existing_user.role = UserRole.ADMIN
-        await session.commit()
-        await session.refresh(existing_user)
-        return existing_user
+        try:
+            await session.commit()
+            await session.refresh(existing_user)
+            return existing_user
+        except IntegrityError:
+            await session.rollback()
+            stmt_admin = select(User).where(User.role == UserRole.ADMIN).limit(1)
+            return (await session.execute(stmt_admin)).scalar_one_or_none()
 
     # 3. Создаём нового администратора
     if not admin_config.password:
@@ -107,14 +113,19 @@ async def _create_admin_if_not_exists(
         hashed_password=cr_context.hash(admin_config.password),
         is_active=True,
     )
-    session.add(admin)
-    await session.commit()
-    await session.refresh(admin)
-
-    logger.info(
-        f"Admin initialized successfully: id={admin.id}, email='{admin.email}', username='{admin.username}'."
-    )
-    return admin
+    try:
+        session.add(admin)
+        await session.commit()
+        await session.refresh(admin)
+        logger.info(
+            f"Admin initialized successfully: id={admin.id}, email='{admin.email}', username='{admin.username}'."
+        )
+        return admin
+    except IntegrityError:
+        await session.rollback()
+        logger.info("Admin was created concurrently by another process. Skipping creation.")
+        stmt_admin = select(User).where(User.role == UserRole.ADMIN).limit(1)
+        return (await session.execute(stmt_admin)).scalar_one_or_none()
 
 
 def main() -> None:

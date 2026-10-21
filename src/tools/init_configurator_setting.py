@@ -3,6 +3,7 @@ import logging
 from typing import Optional
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import Config
@@ -48,14 +49,20 @@ async def _create_setting_if_not_exists(session: AsyncSession) -> ConfiguratorSe
     if setting is None:
         logger.info("ConfiguratorSetting record not found. Creating with default model values...")
         setting = ConfiguratorSetting()
-        session.add(setting)
-        await session.commit()
-        await session.refresh(setting)
-        logger.info(
-            f"ConfiguratorSetting created successfully (id={setting.id}, "
-            f"min_length_m={setting.min_length_m}, max_length_m={setting.max_length_m}, "
-            f"currency={setting.currency.value})"
-        )
+        try:
+            session.add(setting)
+            await session.commit()
+            await session.refresh(setting)
+            logger.info(
+                f"ConfiguratorSetting created successfully (id={setting.id}, "
+                f"min_length_m={setting.min_length_m}, max_length_m={setting.max_length_m}, "
+                f"currency={setting.currency.value})"
+            )
+        except IntegrityError:
+            await session.rollback()
+            logger.info("ConfiguratorSetting created concurrently by another process.")
+            res = await session.execute(select(ConfiguratorSetting).limit(1))
+            setting = res.scalar_one_or_none()
     else:
         logger.info(f"ConfiguratorSetting already exists (id={setting.id}). Skipping creation.")
 

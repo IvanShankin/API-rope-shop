@@ -1,7 +1,7 @@
 from typing import Optional
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, BackgroundTasks
 from fastapi import Request
 from starlette import status
 
@@ -23,6 +23,8 @@ from src.modules.quote_requests.models_dto import (
 )
 from src.modules.quote_requests.service import QuoteRequestService
 from src.modules.quote_requests.depends import get_quote_request_service
+from src.modules.notifications.depends import get_notification_service
+from src.modules.notifications.service import NotificationService
 
 router = APIRouter(prefix="/quote_requests", tags=["Quote Requests"])
 
@@ -36,13 +38,17 @@ router = APIRouter(prefix="/quote_requests", tags=["Quote Requests"])
 async def create_quote_request(
     request: Request,
     data: QuoteRequestCreate,
+    background_tasks: BackgroundTasks,
     service: QuoteRequestService = Depends(get_quote_request_service),
+    notifications: NotificationService = Depends(get_notification_service),
 ):
     """
     Submit a new quote request from any configurator_extra (public).
     Snapshots and prices are automatically resolved and calculated by backend.
     """
-    return await service.create_quote_request(data=data)
+    quote = await service.create_quote_request(data=data)
+    background_tasks.add_task(notifications.notify_new_quote_request, quote)
+    return quote
 
 
 @router.get(

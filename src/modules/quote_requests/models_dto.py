@@ -294,6 +294,7 @@ class QuoteRequestResponseDTO(ORMDTO):
     rope_items: List[QuoteRopeItemResponseDTO] = []
     service_items: List[QuoteServiceItemResponseDTO] = []
     extra_items: List[QuoteExtraItemResponseDTO] = []
+    locale: Optional[str] = "ger"
 
 
 class QuoteRequestListResponseDTO(BaseModel):

@@ -1,5 +1,6 @@
 import logging
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from slowapi.errors import RateLimitExceeded
 from sqlalchemy.exc import IntegrityError
 from starlette.responses import JSONResponse
@@ -167,6 +168,26 @@ def register_exception_handlers(app: FastAPI):
                 "detail": f"Rate limit exceeded: {exc.detail}. Please try again later."
             },
             headers={"Retry-After": str(exc.detail)}
+        )
+
+    # ==================== 422 Unprocessable Entity ====================
+    @app.exception_handler(RequestValidationError)
+    async def validation_exception_handler(request, exc: RequestValidationError):
+        errors = exc.errors()
+        if errors:
+            first_err = errors[0]
+            field = first_err.get("loc", ["field"])[-1]
+            readable_msg = f"{field}: {first_err.get('msg', 'Validation error')}"
+        else:
+            readable_msg = "Validation error"
+
+        return JSONResponse(
+            status_code=422,
+            content={
+                "detail": readable_msg,
+                "message": readable_msg,
+                "errors": errors,
+            },
         )
 
     # ==================== 413 Payload Too Large ====================

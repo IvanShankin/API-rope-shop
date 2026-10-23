@@ -1,5 +1,6 @@
 import logging
 from fastapi import FastAPI
+from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from slowapi.errors import RateLimitExceeded
 from sqlalchemy.exc import IntegrityError
@@ -186,7 +187,7 @@ def register_exception_handlers(app: FastAPI):
             content={
                 "detail": readable_msg,
                 "message": readable_msg,
-                "errors": errors,
+                "errors": jsonable_encoder(errors),
             },
         )
 

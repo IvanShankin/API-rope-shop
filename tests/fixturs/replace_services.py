@@ -1,7 +1,7 @@
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from helpers import test_crypto_context
+from tests.helpers import test_crypto_context
 from src.modules.colors.repository import ColorRepository, ColorTranslationRepository
 from src.modules.colors.service import ColorService
 from src.modules.handlers_files.compression_images import CompressionImages

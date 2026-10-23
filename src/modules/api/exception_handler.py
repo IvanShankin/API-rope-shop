@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 from fastapi import FastAPI
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
@@ -43,6 +44,52 @@ from src.modules.quote_requests.exception import (
     SpliceNotAllowedForProductError,
     SplicePriceRuleNotFound,
 )
+
+
+def _mask_sensitive_value(val: Any) -> Any:
+    if isinstance(val, dict):
+        clean = {}
+        for k, v in val.items():
+            k_lower = str(k).lower()
+            if any(s in k_lower for s in ("password", "secret", "token", "cred")):
+                clean[k] = "[FILTERED]"
+            else:
+                clean[k] = _mask_sensitive_value(v)
+        return clean
+    elif isinstance(val, list):
+        return [_mask_sensitive_value(item) for item in val]
+    return val
+
+
+def _sanitize_validation_error(err: dict) -> dict:
+    sanitized = {}
+    for k, v in err.items():
+        if k == "ctx":
+            if isinstance(v, dict):
+                clean_ctx = {}
+                for ck, cv in v.items():
+                    if isinstance(cv, Exception):
+                        clean_ctx[ck] = str(cv)
+                    elif isinstance(cv, (int, float, bool, type(None))):
+                        clean_ctx[ck] = cv
+                    else:
+                        clean_ctx[ck] = str(cv)
+                sanitized[k] = clean_ctx
+            else:
+                sanitized[k] = str(v)
+        elif k == "input":
+            loc_parts = [str(p).lower() for p in err.get("loc", ())]
+            if any(s in p for p in loc_parts for s in ("password", "secret", "token", "cred")):
+                sanitized[k] = "[FILTERED]"
+            elif isinstance(v, (dict, list)):
+                sanitized[k] = _mask_sensitive_value(v)
+            elif isinstance(v, str) and any("password" in p for p in loc_parts):
+                sanitized[k] = "[FILTERED]"
+            else:
+                sanitized[k] = v
+        else:
+            sanitized[k] = v
+    return sanitized
 
 
 def register_exception_handlers(app: FastAPI):
@@ -177,17 +224,19 @@ def register_exception_handlers(app: FastAPI):
         errors = exc.errors()
         if errors:
             first_err = errors[0]
-            field = first_err.get("loc", ["field"])[-1]
+            loc = first_err.get("loc")
+            field = loc[-1] if loc else "body"
             readable_msg = f"{field}: {first_err.get('msg', 'Validation error')}"
         else:
             readable_msg = "Validation error"
 
+        sanitized_errors = [_sanitize_validation_error(e) for e in errors]
         return JSONResponse(
             status_code=422,
             content={
                 "detail": readable_msg,
                 "message": readable_msg,
-                "errors": jsonable_encoder(errors),
+                "errors": jsonable_encoder(sanitized_errors),
             },
         )
 
@@ -205,6 +254,3 @@ def register_exception_handlers(app: FastAPI):
     async def unhandled_exception_handler(request, exc):
         logger.error("Unhandled server exception: %s", exc, exc_info=True)
         return JSONResponse(status_code=500, content={"detail": "Internal server error"})
-
-
-

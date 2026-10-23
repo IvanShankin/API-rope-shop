@@ -108,6 +108,9 @@ async def test_change_password_confirmation_mismatch(client_for_tests, create_us
     )
 
     assert response.status_code == 422
+    assert "different_password_456" not in response.text
+    assert "new_password_123" not in response.text
+    assert old_password not in response.text
 
 
 @pytest.mark.asyncio
@@ -180,7 +183,8 @@ async def test_change_password_short_password_fails(client_for_tests, create_use
     )
 
     assert response.status_code == 422
-
+    assert "original_secret_123" not in response.text
+    assert response.json()["errors"][0]["input"] == "[FILTERED]"
 
 @pytest.mark.asyncio
 async def test_change_password_revokes_refresh_tokens(client_for_tests, create_user_fixture):

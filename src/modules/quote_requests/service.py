@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import secrets
 from decimal import Decimal, ROUND_HALF_UP
 import logging
@@ -22,6 +24,7 @@ from src.modules.splice_prices.repository import SplicePriceRuleRepository
 from src.modules.splice_types.repository import SpliceTypeRepository
 from src.modules.quote_requests.models import (
     ConfiguratorType,
+    QuoteRequest,
     QuoteRequestStatus,
 )
 from src.modules.quote_requests.models_dto import (

@@ -163,7 +163,7 @@ class QuoteRequestService:
             raise ServiceException(f"Failed to create quote request: {err}") from err
 
         loaded = await self.quote_repo.get_by_id(quote_id, include_relations=True)
-        dto = QuoteRequestResponseDTO.model_validate(loaded)
+        dto = self._to_response_dto(loaded)
         dto.locale = data.locale.value if data.locale else "ger"
         return dto
 

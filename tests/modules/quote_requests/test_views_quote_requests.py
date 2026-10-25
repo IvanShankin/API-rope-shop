@@ -204,6 +204,8 @@ class TestsForSuccess:
         assert float(dto.subtotal) == 115.40
         assert float(dto.urgent_surcharge) == 20.00
         assert float(dto.total_price) == 135.40
+        assert dto.tracking_url is not None
+        assert dto.request_number in dto.tracking_url
 
         # Проверка снимков позиций
         assert len(dto.rope_items) == 1

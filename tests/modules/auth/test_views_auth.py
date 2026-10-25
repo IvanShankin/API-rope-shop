@@ -174,3 +174,20 @@ class TestsForFailure:
         assert response.status_code == 403
         assert response.json()["detail"] == "User account is inactive"
 
+
+
+    @pytest.mark.asyncio
+    async def test_revoked_refresh_token_fails(
+        self,
+        client_for_tests,
+        create_refresh_token_fixture,
+    ):
+        """Отозванный refresh токен (is_revoked=True) не должен проходить валидацию -> 401."""
+        token = await create_refresh_token_fixture(
+            new_refresh_token=CreateRefreshTokenFixtureDTO(is_revoked=True)
+        )
+        response = await client_for_tests.post(
+            "/auth/refresh_tokens",
+            json=RefreshTokenRequest(refresh_token=token.token).model_dump(),
+        )
+        assert response.status_code in (401, 404)

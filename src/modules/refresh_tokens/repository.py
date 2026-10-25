@@ -38,6 +38,7 @@ class RefreshTokenRepository(BaseRepository):
             select(RefreshToken)
             .where(RefreshToken.token == refresh_token)
             .where(RefreshToken.expires_at >= datetime.now(UTC))
+            .where(RefreshToken.is_revoked.is_(False))
         )
         db_token = result.scalar_one_or_none()
         return db_token

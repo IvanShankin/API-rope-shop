@@ -769,17 +769,22 @@ class TestsForSuccess:
         session_db,
         client_for_tests,
         create_user_fixture,
+        create_category_fixture,
         create_product_fixture,
     ):
-        """Тест перемещения индекса (reorder) с автоматическим сдвигом соседей."""
+        """Тест перемещения индекса (reorder) с автоматическим сдвигом соседей внутри категории."""
         admin_user, access_token = await create_user_fixture(
             CreateUserFixtureDTO(role=UserRole.ADMIN)
         )
 
-        p0 = await create_product_fixture(CreateProductFixtureDTO(slug="p0", index=0))
-        p1 = await create_product_fixture(CreateProductFixtureDTO(slug="p1", index=1))
-        p2 = await create_product_fixture(CreateProductFixtureDTO(slug="p2", index=2))
-        p3 = await create_product_fixture(CreateProductFixtureDTO(slug="p3", index=3))
+        cat = await create_category_fixture()
+        cat_other = await create_category_fixture()
+
+        p0 = await create_product_fixture(CreateProductFixtureDTO(category_id=cat.id, slug="p0", index=0))
+        p1 = await create_product_fixture(CreateProductFixtureDTO(category_id=cat.id, slug="p1", index=1))
+        p2 = await create_product_fixture(CreateProductFixtureDTO(category_id=cat.id, slug="p2", index=2))
+        p3 = await create_product_fixture(CreateProductFixtureDTO(category_id=cat.id, slug="p3", index=3))
+        p_other = await create_product_fixture(CreateProductFixtureDTO(category_id=cat_other.id, slug="p_other", index=1))
 
         # Перемещаем p3 (был index=3) на index=1
         req_data = ProductUpdateIndexDTO(new_index=1)
@@ -799,11 +804,13 @@ class TestsForSuccess:
         db_p1 = (await session_db.execute(select(Product).where(Product.id == p1.id))).scalar_one()
         db_p2 = (await session_db.execute(select(Product).where(Product.id == p2.id))).scalar_one()
         db_p3 = (await session_db.execute(select(Product).where(Product.id == p3.id))).scalar_one()
+        db_p_other = (await session_db.execute(select(Product).where(Product.id == p_other.id))).scalar_one()
 
         assert db_p0.index == 0
         assert db_p3.index == 1
         assert db_p1.index == 2
         assert db_p2.index == 3
+        assert db_p_other.index == 1
 
     @pytest.mark.asyncio
     async def test_update_product_index_same_value(

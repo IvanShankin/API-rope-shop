@@ -99,11 +99,14 @@ class ProductService:
             )
 
         if data.index is None:
-            max_index = await self.product_repo.get_max_index()
+            max_index = await self.product_repo.get_max_index(category_id=data.category_id)
             target_index = max_index + 1
         else:
             target_index = data.index
-            await self.product_repo.shift_indexes_for_insert(target_index=target_index)
+            await self.product_repo.shift_indexes_for_insert(
+                target_index=target_index,
+                category_id=data.category_id,
+            )
 
         base_dto = ProductBase(
             category_id=data.category_id,
@@ -356,6 +359,7 @@ class ProductService:
                 obj_id=product_id,
                 old_index=product.index,
                 new_index=data.new_index,
+                category_id=product.category_id,
             )
             await self.session.commit()
 
@@ -398,7 +402,10 @@ class ProductService:
 
         # 3. Удаление самого товара и его зависимых данных через product_repo
         await self.product_repo.delete_product(product_id)
-        await self.product_repo.shift_indexes_after_delete(product.index)
+        await self.product_repo.shift_indexes_after_delete(
+            deleted_index=product.index,
+            category_id=product.category_id,
+        )
         await self.session.commit()
 
     async def create_translation(

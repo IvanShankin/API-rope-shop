@@ -1,7 +1,7 @@
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.modules.base.database_model import Language
+from src.modules.base.database_model import DEFAULT_LOCALE, Language
 from src.modules.colors.repository import ColorRepository, ColorTranslationRepository
 from src.modules.colors.models_dto import (
     ColorBase,
@@ -92,7 +92,7 @@ class ColorService:
         return ColorResponseDTO.model_validate(color)
 
     def _to_localized_dto(self, color, locale: Optional[Language]) -> ColorLocalizedResponseDTO:
-        target_locale = locale if locale else Language.ENG
+        target_locale = locale if locale else DEFAULT_LOCALE
         name = color._get_field_with_translation(lambda t: t.name, target_locale)
 
         return ColorLocalizedResponseDTO(

@@ -1,7 +1,7 @@
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.modules.base.database_model import Language
+from src.modules.base.database_model import DEFAULT_LOCALE, Language
 from src.modules.products.models import Product
 from src.modules.colors.models_dto import ColorLocalizedResponseDTO
 from src.modules.rope_product_color.repository import ProductColorRepository
@@ -83,7 +83,7 @@ class RopeProductColorService:
             )
 
         items = await self.repo.get_by_product_id(product_id)
-        target_locale = locale or Language.ENG
+        target_locale = locale or DEFAULT_LOCALE
 
         result: List[ProductColorLocalizedResponseDTO] = []
         for item in items:

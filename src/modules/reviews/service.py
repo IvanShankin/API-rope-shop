@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.modules.base.database_model import Language
+from src.modules.base.database_model import DEFAULT_LOCALE, Language
 from src.modules.base.exception import NoDataForUpdate
 from src.modules.reviews.exception import (
     ReviewHasDependencies,
@@ -311,7 +311,7 @@ class ReviewService:
         locale: Optional[Language],
     ) -> ReviewLocalizedResponseDTO:
         """Преобразование ORM Review в DTO с локализацией текста по запрошенной локали."""
-        target_locale = locale or Language.ENG
+        target_locale = locale or DEFAULT_LOCALE
         text = review._get_field_with_translation(
             lambda t: t.text,
             target_locale,

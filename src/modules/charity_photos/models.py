@@ -17,6 +17,7 @@ from src.core.database.database import Base
 from src.modules.base.database_model import (
     BaseModelWithRelationshipTranslation,
     BaseTranslation,
+    DEFAULT_LOCALE,
     Language,
 )
 
@@ -47,14 +48,14 @@ class CharityPhoto(BaseModelWithRelationshipTranslation):
     def title(self) -> Optional[str]:
         state = inspect(self)
         if "translations" not in state.unloaded and self.translations:
-            return self._get_field_with_translation(lambda t: t.title, Language.ENG, Language.ENG)
+            return self._get_field_with_translation(lambda t: t.title, DEFAULT_LOCALE, Language.ENG)
         return None
 
     @property
     def description(self) -> Optional[str]:
         state = inspect(self)
         if "translations" not in state.unloaded and self.translations:
-            return self._get_field_with_translation(lambda t: t.description, Language.ENG, Language.ENG)
+            return self._get_field_with_translation(lambda t: t.description, DEFAULT_LOCALE, Language.ENG)
         return None
 
 

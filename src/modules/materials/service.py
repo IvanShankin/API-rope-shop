@@ -1,7 +1,7 @@
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.modules.base.database_model import Language
+from src.modules.base.database_model import DEFAULT_LOCALE, Language
 from src.modules.base.exception import NoDataForUpdate
 from src.modules.materials.repository import (
     MaterialRepository,
@@ -140,7 +140,7 @@ class MaterialService:
         material,
         locale: Optional[Language]
     ) -> MaterialLocalizedResponseDTO:
-        target_locale = locale or Language.ENG
+        target_locale = locale or DEFAULT_LOCALE
         name = material._get_field_with_translation(lambda t: t.name, target_locale)
 
         return MaterialLocalizedResponseDTO(

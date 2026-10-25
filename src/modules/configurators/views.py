@@ -1,7 +1,7 @@
 from typing import Optional
 from fastapi import APIRouter, Depends, Query, status
 
-from src.modules.base.database_model import Language
+from src.modules.base.database_model import DEFAULT_LOCALE, Language
 from src.modules.quote_requests.models import ConfiguratorType
 from src.modules.configurators.models_dto import (
     ConfiguratorDataResponseDTO,
@@ -31,7 +31,7 @@ async def get_configurator_data(
         description="Optional filter by configurator type. If omitted, returns combined data for all configurators.",
     ),
     locale: Language = Query(
-        Language.ENG,
+        DEFAULT_LOCALE,
         description="Target language for translated fields (name, description). Defaults to eng.",
     ),
     service: ConfiguratorService = Depends(get_configurators_service),

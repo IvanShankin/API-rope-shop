@@ -1,7 +1,7 @@
 from typing import Optional, List
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.modules.base.database_model import Language
+from src.modules.base.database_model import DEFAULT_LOCALE, Language
 from src.modules.quote_requests.models import ConfiguratorType
 from src.modules.configurator_setting.models_dto import ConfiguratorSettingResponseDTO
 from src.modules.configurator_extra.models import ConfiguratorExtra, BillingType
@@ -37,7 +37,7 @@ class ConfiguratorService:
     async def get_configurator_data(
         self,
         configurator_type: Optional[ConfiguratorType] = None,
-        locale: Language = Language.ENG,
+        locale: Language = DEFAULT_LOCALE,
     ) -> ConfiguratorDataResponseDTO:
         """
         Получение агрегированных данных для конфигураторов.
@@ -162,12 +162,12 @@ class ConfiguratorService:
             product_name = product._get_field_with_translation(
                 lambda t: t.name,
                 locale,
-                fallback=Language.ENG,
+                fallback=DEFAULT_LOCALE,
             )
             product_subtitle = product._get_field_with_translation(
                 lambda t: t.subtitle,
                 locale,
-                fallback=Language.ENG,
+                fallback=DEFAULT_LOCALE,
             )
 
         variants_list = product.variants if product and product.variants else []

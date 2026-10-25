@@ -1,7 +1,7 @@
 from typing import List, Optional, Union, TYPE_CHECKING
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.modules.base.database_model import Language
+from src.modules.base.database_model import DEFAULT_LOCALE, Language
 from src.modules.base.exception import NoDataForUpdate
 from src.modules.product_application.exception import (
     ProductApplicationAlreadyExists,
@@ -285,7 +285,7 @@ class ProductApplicationService:
                 f"Application {data.application_id} is already assigned to product {product_id}."
             )
 
-        target_locale = locale or Language.ENG
+        target_locale = locale or DEFAULT_LOCALE
         name = app._get_field_with_translation(lambda t: t.name, target_locale) or ""
         localized_app = ProductApplicationLocalizedResponseDTO(
             id=app.id,
@@ -327,7 +327,7 @@ class ProductApplicationService:
             raise ProductNotFound(f"Product with id {product_id} not found.")
 
         assignments = await self.assigned_repo.get_by_product_id(product_id)
-        target_locale = locale or Language.ENG
+        target_locale = locale or DEFAULT_LOCALE
 
         result: List[ProductApplicationLocalizedResponseDTO] = []
         for a in assignments:

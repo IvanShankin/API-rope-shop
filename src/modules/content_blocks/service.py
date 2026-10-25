@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.modules.base.database_model import Language
+from src.modules.base.database_model import DEFAULT_LOCALE, Language
 from src.modules.content_blocks.exception import ContentBlockNotFound
 from src.modules.content_blocks.models import ContentBlock, ContentBlockTranslation
 from src.modules.content_blocks.models_dto import (
@@ -170,7 +170,7 @@ class ContentBlockService:
         Преобразование ORM ContentBlock в DTO с подгруженными переводами
         и локализованными полями title/content (с fallback-логикой).
         """
-        target_locale = locale or Language.ENG
+        target_locale = locale or DEFAULT_LOCALE
         title = block._get_field_with_translation(
             lambda t: t.title,
             target_locale,

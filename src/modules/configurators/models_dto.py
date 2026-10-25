@@ -2,7 +2,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 from src.modules.base.orm_dto import ORMDTO
-from src.modules.base.database_model import Language
+from src.modules.base.database_model import DEFAULT_LOCALE, Language
 from src.modules.quote_requests.models import ConfiguratorType
 from src.modules.configurator_setting.models_dto import ConfiguratorSettingResponseDTO
 from src.modules.configurator_extra.models_dto import ConfiguratorExtraLocalizedResponseDTO
@@ -46,7 +46,7 @@ class ConfiguratorRopeProductResponseDTO(ORMDTO):
 class ConfiguratorDataResponseDTO(BaseModel):
     """Агрегированный ответ с данными и настройками для работы конфигуратора."""
     configurator_type: Optional[ConfiguratorType] = None
-    locale: Language = Language.ENG
+    locale: Language = DEFAULT_LOCALE
     settings: Optional[ConfiguratorSettingResponseDTO] = None
     extras: List[ConfiguratorExtraLocalizedResponseDTO] = []
     splice_materials: List[SpliceMaterialResponseDTO] = []

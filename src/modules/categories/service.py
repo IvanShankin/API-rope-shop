@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.modules.base.database_model import Language
+from src.modules.base.database_model import DEFAULT_LOCALE, Language
 from src.modules.base.exception import NoDataForUpdate
 from src.modules.categories.exception import (
     CategoryAlreadyExists,
@@ -354,11 +354,11 @@ class CategoryService:
         products_count: int = 0,
     ) -> CategoryLocalizedResponseDTO:
         """Конвертация в локализованное DTO с fallback-логикой."""
-        target_locale = locale or Language.ENG
+        target_locale = locale or DEFAULT_LOCALE
         name = category._get_field_with_translation(
             lambda t: t.name,
             target_locale,
-            fallback=Language.GER,
+            fallback=DEFAULT_LOCALE,
         )
 
         return CategoryLocalizedResponseDTO(

@@ -49,7 +49,7 @@ class TestsForSuccess:
         data = response.json()
         dto = ConfiguratorDataResponseDTO.model_validate(data)
         assert dto.configurator_type is None
-        assert dto.locale == Language.ENG
+        assert dto.locale == Language.GER
         assert dto.extras == []
         assert dto.splice_materials == []
         assert dto.splice_types == []
@@ -498,7 +498,7 @@ class TestsForSuccess:
         assert rope_ger.main_image_url == test_image_url
 
         # 3. Запрос с английской локалью (по умолчанию)
-        resp_eng = await client_for_tests.get("/configurators")
+        resp_eng = await client_for_tests.get("/configurators?locale=eng")
         assert resp_eng.status_code == 200
         dto_eng = ConfiguratorDataResponseDTO.model_validate(resp_eng.json())
         assert dto_eng.rope_products is not None

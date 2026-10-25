@@ -74,7 +74,7 @@ class BaseModelWithRelationshipTranslation(Base):
         self,
         field: Callable[[Any], Any],
         locale: Language,
-        fallback: Language = Language.ENG
+        fallback: Language = DEFAULT_LOCALE
     ) -> Any | None:
         """Вернёт по указанному языку, если такого не найдёт, то вернёт по языку fallback, иначе первый попавшийся"""
         if not self.translations:

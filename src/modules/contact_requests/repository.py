@@ -23,6 +23,17 @@ class ContactRequestRepository(BaseRepository[ContactRequest]):
         res = await self.session.execute(stmt)
         return res.scalar_one_or_none()
 
+    async def get_all(self, limit: int = 100, offset: int = 0) -> list[ContactRequest]:
+        """Получение списка контактных заявок."""
+        stmt = (
+            select(ContactRequest)
+            .order_by(ContactRequest.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        res = await self.session.execute(stmt)
+        return list(res.scalars().all())
+
     async def count(self) -> int:
         """Подсчет количества записей контактных данных."""
         stmt = select(func.count()).select_from(ContactRequest)

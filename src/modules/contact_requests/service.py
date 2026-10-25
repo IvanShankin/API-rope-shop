@@ -1,8 +1,5 @@
-from typing import Optional
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.config import Config
 from src.modules.base.exception import NoDataForUpdate
 from src.modules.contact_requests.exception import ContactRequestNotFound
 from src.modules.contact_requests.models import ContactRequest
@@ -43,6 +40,17 @@ class ContactRequestService:
         await self.session.commit()
         await self.session.refresh(contact)
         return ContactRequestResponseDTO.model_validate(contact)
+
+    async def get_contact_requests(
+        self,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[ContactRequestResponseDTO]:
+        """
+        Получение списка входящих заявок (только для администратора).
+        """
+        requests = await self.repo.get_all(limit=limit, offset=offset)
+        return [ContactRequestResponseDTO.model_validate(r) for r in requests]
 
     async def get_contact(self) -> ContactRequestResponseDTO:
         """

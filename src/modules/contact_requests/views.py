@@ -32,15 +32,18 @@ async def create_contact_request(
 
 @router.get(
     "",
-    response_model=ContactRequestResponseDTO,
+    response_model=list[ContactRequestResponseDTO],
     status_code=status.HTTP_200_OK,
-    summary="Get contact form info",
-    description="Get general contact form information (public access).",
+    summary="List contact form requests",
+    description="List incoming contact form inquiries (admin only).",
 )
-async def get_contact_info(
+async def list_contact_requests(
+    limit: int = 100,
+    offset: int = 0,
     service: ContactRequestService = Depends(get_contact_request_service),
-) -> ContactRequestResponseDTO:
-    return await service.get_contact()
+    admin: UserDTO = Depends(get_current_admin),
+) -> list[ContactRequestResponseDTO]:
+    return await service.get_contact_requests(limit=limit, offset=offset)
 
 
 @router.patch(
@@ -63,11 +66,12 @@ async def update_contact_info(
     response_model=ContactRequestResponseDTO,
     status_code=status.HTTP_200_OK,
     summary="Get contact form info by ID",
-    description="Get contact form information by ID (public access).",
+    description="Get contact form information by ID (admin only).",
 )
 async def get_contact_info_by_id(
     request_id: int,
     service: ContactRequestService = Depends(get_contact_request_service),
+    admin: UserDTO = Depends(get_current_admin),
 ) -> ContactRequestResponseDTO:
     return await service.get_contact_by_id(contact_id=request_id)
 

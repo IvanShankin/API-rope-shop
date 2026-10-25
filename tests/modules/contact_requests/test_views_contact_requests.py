@@ -39,64 +39,64 @@ class TestsForSuccess:
         assert data.id is not None
 
     @pytest.mark.asyncio
-    async def test_get_contact_request_public_auto_init(
+    async def test_list_contact_requests_admin_success(
         self,
         client_for_tests,
-    ):
-        """
-        Публичное получение контактной формы.
-        Если таблица пуста, сервис автоматически создает запись со значениями по умолчанию.
-        """
-        response = await client_for_tests.get("/contact_requests")
-        assert response.status_code == 200
-
-        data = ContactRequestResponseDTO.model_validate(response.json())
-        assert data.name == "General Contact"
-        assert data.email == "info@ropeshop.com"
-        assert data.phone is not None
-
-    @pytest.mark.asyncio
-    async def test_get_existing_contact_request_public(
-        self,
-        client_for_tests,
+        create_user_fixture,
         create_contact_request_fixture,
     ):
-        """Публичное получение существующей контактной формы."""
-        contact = await create_contact_request_fixture(
+        """Администратор получает список входящих заявок с контактной формы."""
+        _, admin_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        headers = {"Authorization": f"Bearer {admin_token}"}
+
+        contact1 = await create_contact_request_fixture(
             CreateContactRequestFixtureDTO(
-                name="Rope Shop HQ",
-                email="hq@ropeshop.com",
-                phone="+49 30 123456",
-                message="Berlin Office",
+                name="Customer 1",
+                email="c1@example.com",
+            )
+        )
+        contact2 = await create_contact_request_fixture(
+            CreateContactRequestFixtureDTO(
+                name="Customer 2",
+                email="c2@example.com",
             )
         )
 
-        response = await client_for_tests.get("/contact_requests")
+        response = await client_for_tests.get("/contact_requests", headers=headers)
         assert response.status_code == 200
 
-        data = ContactRequestResponseDTO.model_validate(response.json())
-        assert data.id == contact.id
-        assert data.name == "Rope Shop HQ"
-        assert data.email == "hq@ropeshop.com"
-        assert data.phone == "+49 30 123456"
+        items = [ContactRequestResponseDTO.model_validate(item) for item in response.json()]
+        assert len(items) >= 2
+        ids = [item.id for item in items]
+        assert contact1.id in ids
+        assert contact2.id in ids
 
     @pytest.mark.asyncio
-    async def test_get_contact_request_by_id_public(
+    async def test_get_contact_request_by_id_admin_success(
         self,
         client_for_tests,
+        create_user_fixture,
         create_contact_request_fixture,
     ):
-        """Получение контактной формы по ID (публичный доступ)."""
+        """Получение контактной заявки по ID администратором."""
+        _, admin_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        headers = {"Authorization": f"Bearer {admin_token}"}
+
         contact = await create_contact_request_fixture(
-            CreateContactRequestFixtureDTO(name="Contact by ID")
+            CreateContactRequestFixtureDTO(name="Contact by ID", email="test@example.com")
         )
 
-        response = await client_for_tests.get(f"/contact_requests/{contact.id}")
+        response = await client_for_tests.get(f"/contact_requests/{contact.id}", headers=headers)
         assert response.status_code == 200
 
         data = ContactRequestResponseDTO.model_validate(response.json())
         assert data.id == contact.id
         assert data.name == "Contact by ID"
+        assert data.email == "test@example.com"
 
     @pytest.mark.asyncio
     async def test_update_contact_request_admin(
@@ -197,12 +197,71 @@ class TestsForSuccess:
 class TestsForFailed:
 
     @pytest.mark.asyncio
-    async def test_get_nonexistent_contact_request_by_id_returns_404(
+    async def test_get_contact_requests_unauthorized_returns_401(
         self,
         client_for_tests,
     ):
-        """Запрос несуществующего ID контактной формы возвращает 404."""
-        response = await client_for_tests.get("/contact_requests/99999")
+        """Запрос списка заявок без авторизации возвращает 401."""
+        response = await client_for_tests.get("/contact_requests")
+        assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_get_contact_requests_user_returns_403(
+        self,
+        client_for_tests,
+        create_user_fixture,
+    ):
+        """Запрос списка заявок обычным пользователем (не админом) возвращает 403."""
+        _, user_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.USER)
+        )
+        response = await client_for_tests.get(
+            "/contact_requests",
+            headers={"Authorization": f"Bearer {user_token}"},
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_get_contact_request_by_id_unauthorized_returns_401(
+        self,
+        client_for_tests,
+    ):
+        """Запрос заявки по ID без авторизации возвращает 401 (защита от PII утечки)."""
+        response = await client_for_tests.get("/contact_requests/1")
+        assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_get_contact_request_by_id_user_returns_403(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_contact_request_fixture,
+    ):
+        """Запрос заявки по ID обычным пользователем возвращает 403."""
+        contact = await create_contact_request_fixture()
+        _, user_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.USER)
+        )
+        response = await client_for_tests.get(
+            f"/contact_requests/{contact.id}",
+            headers={"Authorization": f"Bearer {user_token}"},
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_get_nonexistent_contact_request_by_id_returns_404(
+        self,
+        client_for_tests,
+        create_user_fixture,
+    ):
+        """Запрос несуществующего ID контактной формы администратором возвращает 404."""
+        _, admin_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        response = await client_for_tests.get(
+            "/contact_requests/99999",
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
         assert response.status_code == 404
 
     @pytest.mark.asyncio

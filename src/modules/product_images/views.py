@@ -27,12 +27,12 @@ async def get_images_by_product(
     product_id: int,
     is_active: Optional[bool] = Query(None, description="Filter by active status"),
     service: ProductImageService = Depends(get_product_image_service),
-    is_admin: bool = Depends(get_optional_admin),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
 ) -> List[ProductImageResponseDTO]:
     return await service.get_images_by_product(
         product_id=product_id,
         is_active=is_active,
-        is_admin=is_admin,
+        is_admin=admin is not None,
     )
 
 
@@ -46,9 +46,9 @@ async def get_images_by_product(
 async def get_image_by_id(
     image_id: int,
     service: ProductImageService = Depends(get_product_image_service),
-    is_admin: bool = Depends(get_optional_admin),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
 ) -> ProductImageResponseDTO:
-    return await service.get_image_by_id(image_id=image_id, is_admin=is_admin)
+    return await service.get_image_by_id(image_id=image_id, is_admin=admin is not None)
 
 
 @router.post(

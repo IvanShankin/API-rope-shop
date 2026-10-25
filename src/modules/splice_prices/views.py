@@ -19,9 +19,9 @@ router = APIRouter(prefix="/splice_prices", tags=["Splice Price Rules"])
 async def get_all_rules(
     is_active: Optional[bool] = Query(None, description="Filter by active status"),
     service: SplicePriceRuleService = Depends(get_splice_price_service),
-    is_admin: bool = Depends(get_optional_admin),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
 ):
-    return await service.get_all_rules(is_active=is_active, is_admin=is_admin)
+    return await service.get_all_rules(is_active=is_active, is_admin=admin is not None)
 
 @router.get("/applicable", response_model=List[SplicePriceRuleWithRelationsResponseDTO], status_code=status.HTTP_200_OK)
 async def get_applicable_rules(
@@ -40,9 +40,9 @@ async def get_applicable_rules(
 async def get_rule(
     rule_id: int,
     service: SplicePriceRuleService = Depends(get_splice_price_service),
-    is_admin: bool = Depends(get_optional_admin),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
 ):
-    return await service.get_rule_by_id(rule_id, is_admin=is_admin)
+    return await service.get_rule_by_id(rule_id, is_admin=admin is not None)
 
 @router.post("", response_model=SplicePriceRuleResponseDTO, status_code=status.HTTP_201_CREATED)
 async def create_rule(

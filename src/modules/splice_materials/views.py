@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends, Query
 from starlette import status
 
@@ -23,10 +23,10 @@ router = APIRouter(prefix="/splice_materials", tags=["Splice Materials"])
 async def get_all_splice_materials(
     include_rules: bool = Query(False, description="Include nested price rules in the response"),
     service: SpliceMaterialService = Depends(get_splice_material_service),
-    is_admin: bool = Depends(get_optional_admin),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
 ) -> List[SpliceMaterialResponseDTO]:
     """Get all splice materials (public)."""
-    return await service.get_all_materials(include_rules=include_rules, is_admin=is_admin)
+    return await service.get_all_materials(include_rules=include_rules, is_admin=admin is not None)
 
 
 @router.get(
@@ -38,10 +38,10 @@ async def get_splice_material(
     material_id: int,
     include_rules: bool = Query(False, description="Include nested price rules in the response"),
     service: SpliceMaterialService = Depends(get_splice_material_service),
-    is_admin: bool = Depends(get_optional_admin),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
 ) -> SpliceMaterialResponseDTO:
     """Get splice material by ID (public)."""
-    return await service.get_material_by_id(material_id, include_rules=include_rules, is_admin=is_admin)
+    return await service.get_material_by_id(material_id, include_rules=include_rules, is_admin=admin is not None)
 
 
 @router.post("", response_model=SpliceMaterialResponseDTO, status_code=status.HTTP_201_CREATED)

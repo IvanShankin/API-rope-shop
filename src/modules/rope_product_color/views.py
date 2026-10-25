@@ -26,13 +26,13 @@ async def get_colors_by_product(
     product_id: int,
     locale: Optional[Language] = Query(None, description="Language for color name localization"),
     service: RopeProductColorService = Depends(get_rope_product_color_service),
-    is_admin: bool = Depends(get_optional_admin),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
 ):
     """Get all colors of a specific product (public)."""
     return await service.get_colors_by_product_id(
         product_id=product_id,
         locale=locale,
-        is_admin=is_admin,
+        is_admin=admin is not None,
     )
 
 
@@ -44,10 +44,10 @@ async def get_colors_by_product(
 async def get_rope_product_color(
     id: int,
     service: RopeProductColorService = Depends(get_rope_product_color_service),
-    is_admin: bool = Depends(get_optional_admin),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
 ):
     """Get product color link by ID (public)."""
-    return await service.get_by_id(item_id=id, is_admin=is_admin)
+    return await service.get_by_id(item_id=id, is_admin=admin is not None)
 
 
 @router.post(

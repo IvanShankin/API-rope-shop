@@ -38,9 +38,9 @@ async def get_all_applications(
     skip: int = Query(0, ge=0, description="Offset"),
     limit: Optional[int] = Query(None, ge=1, description="Limit"),
     service: ProductApplicationService = Depends(get_product_application_service),
-    is_admin: bool = Depends(get_optional_admin),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
 ) -> List[ProductApplicationResponseDTO]:
-    effective_active = is_active if is_admin else True
+    effective_active = is_active if admin is not None else True
     return await service.get_all_applications(
         locale=locale,
         is_active=effective_active,
@@ -59,9 +59,9 @@ async def get_all_applications(
 async def get_application_by_code(
     code: str,
     service: ProductApplicationService = Depends(get_product_application_service),
-    is_admin: bool = Depends(get_optional_admin),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
 ) -> ProductApplicationResponseDTO:
-    return await service.get_application_by_code(code=code, is_admin=is_admin)
+    return await service.get_application_by_code(code=code, is_admin=admin is not None)
 
 
 @router.get(
@@ -74,9 +74,9 @@ async def get_application_by_code(
 async def get_application_by_id(
     id: int,
     service: ProductApplicationService = Depends(get_product_application_service),
-    is_admin: bool = Depends(get_optional_admin),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
 ) -> ProductApplicationResponseDTO:
-    return await service.get_application_by_id(app_id=id, is_admin=is_admin)
+    return await service.get_application_by_id(app_id=id, is_admin=admin is not None)
 
 
 @router.post(
@@ -205,9 +205,9 @@ async def get_product_applications(
     product_id: int,
     locale: Optional[Language] = Query(None, description="Language for application name localization"),
     service: ProductApplicationService = Depends(get_product_application_service),
-    is_admin: bool = Depends(get_optional_admin),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
 ) -> List[ProductApplicationLocalizedResponseDTO]:
-    return await service.get_product_applications(product_id=product_id, locale=locale, is_admin=is_admin)
+    return await service.get_product_applications(product_id=product_id, locale=locale, is_admin=admin is not None)
 
 
 @router.post(

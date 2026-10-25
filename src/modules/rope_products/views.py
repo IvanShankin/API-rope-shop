@@ -35,7 +35,7 @@ async def get_all_rope_products(
     material_group_id: Optional[int] = Query(None, description="Filter by material group ID"),
     can_be_spliced: Optional[bool] = Query(None, description="Filter by spliceability"),
     service: RopeProductsService = Depends(get_rope_products_service),
-    is_admin: bool = Depends(get_optional_admin),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
 ):
     """
     Get list of rope configurator settings (admin/internal settings).
@@ -45,7 +45,7 @@ async def get_all_rope_products(
     return await service.get_all_rope_products(
         material_group_id=material_group_id,
         can_be_spliced=can_be_spliced,
-        is_admin=is_admin,
+        is_admin=admin is not None,
     )
 
 
@@ -57,10 +57,10 @@ async def get_all_rope_products(
 async def get_rope_product(
     product_id: int,
     service: RopeProductsService = Depends(get_rope_products_service),
-    is_admin: bool = Depends(get_optional_admin),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
 ):
     """Get rope configurator setting by product ID with variants, colors and allowed splices (public)."""
-    return await service.get_rope_product(product_id=product_id, is_admin=is_admin)
+    return await service.get_rope_product(product_id=product_id, is_admin=admin is not None)
 
 
 @router.post(
@@ -116,10 +116,10 @@ async def get_variants_for_product(
     product_id: int,
     is_active: Optional[bool] = Query(None, description="Filter by active status"),
     service: RopeProductsService = Depends(get_rope_products_service),
-    is_admin: bool = Depends(get_optional_admin),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
 ):
     """Get all variants of a product sorted by index (public)."""
-    return await service.get_variants_for_product(product_id=product_id, is_active=is_active, is_admin=is_admin)
+    return await service.get_variants_for_product(product_id=product_id, is_active=is_active, is_admin=admin is not None)
 
 
 @router.post(
@@ -161,10 +161,10 @@ async def create_variant(
 async def get_variant_by_id(
     id: int,
     service: RopeProductsService = Depends(get_rope_products_service),
-    is_admin: bool = Depends(get_optional_admin),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
 ):
     """Get variant by ID (public)."""
-    return await service.get_variant_by_id(variant_id=id, is_admin=is_admin)
+    return await service.get_variant_by_id(variant_id=id, is_admin=admin is not None)
 
 
 @variants_router.patch(

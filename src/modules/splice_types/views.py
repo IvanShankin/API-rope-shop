@@ -27,10 +27,10 @@ async def get_all_splice_types(
     is_active: Optional[bool] = Query(None, description="Filter by active status"),
     category: Optional[SpliceCategory] = Query(None, description="Filter by category (loop, splice)"),
     service: SpliceTypeService = Depends(get_splice_type_service),
-    is_admin: bool = Depends(get_optional_admin),
+    admin: Optional[UserDTO] = Depends(get_optional_admin),
 ):
     """Get all splice types (public)."""
-    effective_active = is_active if is_admin else True
+    effective_active = is_active if admin is not None else True
     if category:
         return await service.get_splice_types_by_category(category=category, locale=locale, is_active=effective_active)
     return await service.get_all_splice_types(locale=locale, is_active=effective_active)

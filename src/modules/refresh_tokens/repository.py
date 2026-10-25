@@ -74,7 +74,7 @@ class RefreshTokenRepository(BaseRepository):
     async def delete_expires_tokens(self) -> List[RefreshToken]:
         result_db = await self.session.execute(
             delete(RefreshToken)
-            .where(RefreshToken.expires_at < datetime.now())
+            .where(RefreshToken.expires_at < datetime.now(UTC))
             .returning(RefreshToken)
         )
         return result_db.scalars().all()

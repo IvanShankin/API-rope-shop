@@ -21,6 +21,13 @@ class SettingsResponseDTO(ORMDTO):
     updated_at: datetime
 
 
+class SettingsPublicResponseDTO(ORMDTO):
+    company_name: str = "Rope Shop"
+    contact_email: Optional[str] = None
+    contact_phone: Optional[str] = None
+    site_url: Optional[str] = None
+
+
 class SettingsUpdateDTO(BaseModel):
     telegram_chat_id: Optional[str] = None
     telegram_notifications_enabled: Optional[bool] = None

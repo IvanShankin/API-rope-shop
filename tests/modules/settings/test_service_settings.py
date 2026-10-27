@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.base.exception import NoDataForUpdate
-from src.modules.settings.models_dto import SettingsUpdateDTO
+from src.modules.settings.models_dto import SettingsUpdateDTO, SettingsPublicResponseDTO
 from src.modules.settings.repository import SettingsRepository
 from src.modules.settings.service import SettingsService
 
@@ -17,6 +17,16 @@ async def test_get_settings_auto_initializes(session_db: AsyncSession):
     assert settings.company_name == "Rope Shop"
     assert settings.telegram_notifications_enabled is True
     assert settings.email_notifications_enabled is True
+
+
+@pytest.mark.asyncio
+async def test_get_public_settings_success(session_db: AsyncSession):
+    repo = SettingsRepository(session=session_db)
+    service = SettingsService(repo=repo, session=session_db)
+
+    settings = await service.get_public_settings()
+    assert isinstance(settings, SettingsPublicResponseDTO)
+    assert settings.company_name == "Rope Shop"
 
 
 @pytest.mark.asyncio

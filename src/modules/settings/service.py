@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.config import Config
 from src.modules.base.exception import NoDataForUpdate
 from src.modules.settings.models import Settings
-from src.modules.settings.models_dto import SettingsResponseDTO, SettingsUpdateDTO
+from src.modules.settings.models_dto import SettingsResponseDTO, SettingsUpdateDTO, SettingsPublicResponseDTO
 from src.modules.settings.repository import SettingsRepository
 
 
@@ -49,6 +49,11 @@ class SettingsService:
         if not settings:
             settings = await self._initialize_default_settings()
         return SettingsResponseDTO.model_validate(settings)
+
+    async def get_public_settings(self) -> SettingsPublicResponseDTO:
+        """Получение публичных настроек сайта (без чувствительных данных)."""
+        full_settings = await self.get_settings()
+        return SettingsPublicResponseDTO.model_validate(full_settings)
 
     async def get_settings_model(self) -> Settings:
         """Получение ORM-модели настроек (для внутреннего использования сервисами)."""

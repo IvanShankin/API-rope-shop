@@ -2,7 +2,11 @@ import pytest
 
 from src.modules.users.models import UserRole
 from tests.modules.users.fixtures.models_dto import CreateUserFixtureDTO
-from src.modules.settings.models_dto import SettingsResponseDTO, SettingsUpdateDTO
+from src.modules.settings.models_dto import (
+    SettingsResponseDTO,
+    SettingsUpdateDTO,
+    SettingsPublicResponseDTO,
+)
 
 
 class TestsForSuccess:
@@ -25,6 +29,82 @@ class TestsForSuccess:
         assert dto.id is not None
         assert dto.company_name == "Rope Shop"
         assert dto.telegram_notifications_enabled is True
+
+    @pytest.mark.asyncio
+    async def test_get_settings_public_unauthorized_success(
+        self,
+        client_for_tests,
+    ):
+        """Публичный пользователь (без авторизации) успешно получает открытые настройки."""
+        response = await client_for_tests.get("/settings/public")
+        assert response.status_code == 200
+
+        data = response.json()
+        dto = SettingsPublicResponseDTO.model_validate(data)
+        assert dto.company_name == "Rope Shop"
+
+        # Проверяем, что чувствительные и системные поля не отдаются публично
+        assert "telegram_chat_id" not in data
+        assert "telegram_notifications_enabled" not in data
+        assert "email_notifications_enabled" not in data
+        assert "manager_notification_email" not in data
+        assert "manager_email_notifications_enabled" not in data
+        assert "id" not in data
+        assert "created_at" not in data
+        assert "updated_at" not in data
+
+    @pytest.mark.asyncio
+    async def test_get_settings_public_authorized_user_success(
+        self,
+        client_for_tests,
+        create_user_fixture,
+    ):
+        """Авторизованный пользователь с ролью USER также успешно получает открытые настройки."""
+        user, token = await create_user_fixture(CreateUserFixtureDTO(role=UserRole.USER))
+
+        response = await client_for_tests.get(
+            "/settings/public",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 200
+        dto = SettingsPublicResponseDTO.model_validate(response.json())
+        assert dto.company_name == "Rope Shop"
+
+    @pytest.mark.asyncio
+    async def test_get_settings_public_reflects_admin_updates(
+        self,
+        client_for_tests,
+        create_user_fixture,
+    ):
+        """Публичный эндпоинт отдает обновленные администратором публичные данные."""
+        admin, token = await create_user_fixture(CreateUserFixtureDTO(role=UserRole.ADMIN))
+
+        payload = SettingsUpdateDTO(
+            company_name="Updated Public Rope Store",
+            contact_email="public@ropestore.de",
+            contact_phone="+49 987 654321",
+            site_url="https://ropestore.de",
+            telegram_chat_id="-10099999999",
+        )
+
+        patch_response = await client_for_tests.patch(
+            "/settings",
+            headers={"Authorization": f"Bearer {token}"},
+            json=payload.model_dump(exclude_unset=True),
+        )
+        assert patch_response.status_code == 200
+
+        # Запрашиваем без токена
+        public_response = await client_for_tests.get("/settings/public")
+        assert public_response.status_code == 200
+        data = public_response.json()
+        dto = SettingsPublicResponseDTO.model_validate(data)
+
+        assert dto.company_name == "Updated Public Rope Store"
+        assert dto.contact_email == "public@ropestore.de"
+        assert dto.contact_phone == "+49 987 654321"
+        assert dto.site_url == "https://ropestore.de"
+        assert "telegram_chat_id" not in data
 
     @pytest.mark.asyncio
     async def test_patch_settings_admin_success(

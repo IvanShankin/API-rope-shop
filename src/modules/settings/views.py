@@ -5,12 +5,26 @@ from src.modules.check_permission.depends import get_current_admin
 from src.modules.users.models_dto import UserDTO
 from src.modules.settings.models_dto import (
     SettingsResponseDTO,
-    SettingsUpdateDTO,
+    SettingsUpdateDTO, SettingsPublicResponseDTO,
 )
 from src.modules.settings.service import SettingsService
 from src.modules.settings.depends import get_settings_service
 
 router = APIRouter(prefix="/settings", tags=["Settings"])
+
+
+@router.get(
+    "/public",
+    response_model=SettingsPublicResponseDTO,
+    status_code=status.HTTP_200_OK,
+    summary="Get public settings",
+    description="Get public site settings (public access, no credentials exposed).",
+)
+async def get_public_settings(
+    service: SettingsService = Depends(get_settings_service),
+) -> SettingsPublicResponseDTO:
+    """Получение публичных настроек сайта (публичный доступ)."""
+    return await service.get_public_settings()
 
 
 @router.get(

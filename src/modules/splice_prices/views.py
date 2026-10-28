@@ -5,6 +5,8 @@ from starlette import status
 from src.modules.check_permission.depends import get_current_admin, get_optional_admin
 from src.modules.users.models_dto import UserDTO
 from src.modules.splice_prices.models_dto import (
+    SplicePriceRuleBatchRequest,
+    SplicePriceRuleBatchResponseDTO,
     SplicePriceRuleResponseDTO,
     SplicePriceRuleWithRelationsResponseDTO,
     SplicePriceRuleCreate,
@@ -43,6 +45,22 @@ async def get_rule(
     admin: Optional[UserDTO] = Depends(get_optional_admin),
 ):
     return await service.get_rule_by_id(rule_id, is_admin=admin is not None)
+
+@router.post(
+    "/batch",
+    response_model=SplicePriceRuleBatchResponseDTO,
+    status_code=status.HTTP_200_OK,
+    summary="Batch save splice price rules",
+    description="Atomically create, update, and optionally delete price rules in a single transaction (admin only).",
+)
+async def batch_save_rules(
+    data: SplicePriceRuleBatchRequest,
+    service: SplicePriceRuleService = Depends(get_splice_price_service),
+    admin: UserDTO = Depends(get_current_admin),
+) -> SplicePriceRuleBatchResponseDTO:
+    """Atomically save splice price grid (admin only)."""
+    return await service.batch_save_rules(data)
+
 
 @router.post("", response_model=SplicePriceRuleResponseDTO, status_code=status.HTTP_201_CREATED)
 async def create_rule(

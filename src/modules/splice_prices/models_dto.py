@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from pydantic import BaseModel
 
@@ -36,3 +36,27 @@ class SplicePriceRuleResponseDTO(SplicePriceRuleBase, ORMDTO):
 
 class SplicePriceRuleWithRelationsResponseDTO(SplicePriceRuleResponseDTO):
     splice_type: SpliceTypeResponseDTO
+
+
+# ==================== Batch DTOs ====================
+
+class SplicePriceRuleBatchItem(BaseModel):
+    id: Optional[int] = None
+    splice_type_id: int
+    splice_material_id: int
+    diameter_from_mm: Optional[float] = None
+    diameter_to_mm: Optional[float] = None
+    price: float
+    is_active: bool = True
+
+
+class SplicePriceRuleBatchRequest(BaseModel):
+    rules: List[SplicePriceRuleBatchItem] = []
+    delete_rule_ids: Optional[List[int]] = []
+
+
+class SplicePriceRuleBatchResponseDTO(BaseModel):
+    created_count: int
+    updated_count: int
+    deleted_count: int
+    rules: List[SplicePriceRuleResponseDTO] = []

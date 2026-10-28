@@ -5,6 +5,7 @@ from starlette import status
 from src.modules.check_permission.depends import get_current_admin, get_optional_admin
 from src.modules.users.models_dto import UserDTO
 from src.modules.splice_materials.models_dto import (
+    SpliceMaterialDependenciesDTO,
     SpliceMaterialResponseDTO,
     SpliceMaterialCreate,
     SpliceMaterialUpdate
@@ -63,6 +64,22 @@ async def update_splice_material(
 ):
     """Update a splice material (admin only)."""
     return await service.update_material(material_id, data)
+
+
+@router.get(
+    "/{material_id}/dependencies",
+    response_model=SpliceMaterialDependenciesDTO,
+    status_code=status.HTTP_200_OK,
+    summary="Get splice material dependencies",
+    description="Get count and list of linked price rules and rope products before deletion (admin only).",
+)
+async def get_splice_material_dependencies(
+    material_id: int,
+    service: SpliceMaterialService = Depends(get_splice_material_service),
+    admin: UserDTO = Depends(get_current_admin),
+) -> SpliceMaterialDependenciesDTO:
+    """Get splice material dependencies before deletion (admin only)."""
+    return await service.get_dependencies(material_id)
 
 
 @router.delete("/{material_id}", status_code=status.HTTP_204_NO_CONTENT)

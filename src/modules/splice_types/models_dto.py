@@ -60,3 +60,27 @@ class SpliceTypeLocalizedResponseDTO(SpliceTypeBase, ORMDTO):
     updated_at: datetime
     name: str
     description: Optional[str] = None
+
+
+# ==================== Dependencies DTOs ====================
+
+class SplicePriceRuleDependencyDTO(BaseModel):
+    id: int
+    splice_material_id: int
+    diameter_from_mm: float
+    diameter_to_mm: float
+    price: float
+
+
+class RopeDependencyDTO(BaseModel):
+    product_id: int
+    name: Optional[str] = None
+
+
+class SpliceTypeDependenciesDTO(BaseModel):
+    has_dependencies: bool
+    can_delete: bool
+    rules_count: int
+    ropes_count: int
+    rules: List[SplicePriceRuleDependencyDTO] = []
+    ropes: List[RopeDependencyDTO] = []

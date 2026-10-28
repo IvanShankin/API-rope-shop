@@ -7,6 +7,7 @@ from src.modules.check_permission.depends import get_current_admin, get_optional
 from src.modules.users.models_dto import UserDTO
 from src.modules.splice_types.models import SpliceCategory
 from src.modules.splice_types.models_dto import (
+    SpliceTypeDependenciesDTO,
     SpliceTypeResponseDTO,
     SpliceTypeLocalizedResponseDTO,
     SpliceTypeCreate,
@@ -92,6 +93,22 @@ async def delete_splice_type_image(
 ):
     """Delete image of a splice type (admin only)."""
     return await service.delete_image(type_id=type_id)
+
+
+@router.get(
+    "/{type_id}/dependencies",
+    response_model=SpliceTypeDependenciesDTO,
+    status_code=status.HTTP_200_OK,
+    summary="Get splice type dependencies",
+    description="Get count and list of linked price rules and rope products before deletion (admin only).",
+)
+async def get_splice_type_dependencies(
+    type_id: int,
+    service: SpliceTypeService = Depends(get_splice_type_service),
+    admin: UserDTO = Depends(get_current_admin),
+) -> SpliceTypeDependenciesDTO:
+    """Get splice type dependencies before deletion (admin only)."""
+    return await service.get_dependencies(type_id)
 
 
 @router.delete("/{type_id}", status_code=status.HTTP_204_NO_CONTENT)

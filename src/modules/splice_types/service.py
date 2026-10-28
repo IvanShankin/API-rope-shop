@@ -9,6 +9,9 @@ from src.modules.path_builder.service import PathBuilder
 from src.modules.splice_types.repository import SpliceTypeRepository, SpliceTypeTranslationRepository
 from src.modules.splice_types.models import SpliceCategory
 from src.modules.splice_types.models_dto import (
+    SpliceTypeDependenciesDTO,
+    SplicePriceRuleDependencyDTO,
+    RopeDependencyDTO,
     SpliceTypeBase,
     SpliceTypeCreate,
     SpliceTypeUpdate,
@@ -179,6 +182,47 @@ class SpliceTypeService:
 
         updated_type = await self.type_repo.get_by_id(type_id)
         return SpliceTypeResponseDTO.model_validate(updated_type)
+
+    async def get_dependencies(self, type_id: int) -> SpliceTypeDependenciesDTO:
+        """Получение зависимостей заделки перед удалением."""
+        item = await self.type_repo.get_by_id(type_id)
+        if not item:
+            raise SpliceTypeNotFound(f"SpliceType with id {type_id} not found.")
+
+        deps = await self.type_repo.get_dependencies(type_id)
+        rules = deps["rules"]
+        ropes = deps["ropes"]
+
+        rules_dto = [
+            SplicePriceRuleDependencyDTO(
+                id=r.id,
+                splice_material_id=r.splice_material_id,
+                diameter_from_mm=float(r.diameter_from_mm),
+                diameter_to_mm=float(r.diameter_to_mm),
+                price=float(r.price),
+            )
+            for r in rules
+        ]
+        ropes_dto = [
+            RopeDependencyDTO(
+                product_id=p.id,
+                name=p.translations[0].name if p.translations else f"Product #{p.id}",
+            )
+            for p in ropes
+        ]
+
+        rules_count = len(rules_dto)
+        ropes_count = len(ropes_dto)
+        has_dependencies = (rules_count > 0 or ropes_count > 0)
+
+        return SpliceTypeDependenciesDTO(
+            has_dependencies=has_dependencies,
+            can_delete=not has_dependencies,
+            rules_count=rules_count,
+            ropes_count=ropes_count,
+            rules=rules_dto,
+            ropes=ropes_dto,
+        )
 
     async def delete_splice_type(self, type_id: int) -> None:
         splice_type = await self.type_repo.get_by_id(type_id)

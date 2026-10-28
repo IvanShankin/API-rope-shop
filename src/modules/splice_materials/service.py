@@ -3,6 +3,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.splice_materials.repository import SpliceMaterialRepository
 from src.modules.splice_materials.models_dto import (
+    SpliceMaterialDependenciesDTO,
+    SpliceMaterialPriceRuleDependencyDTO,
+    SpliceMaterialRopeDependencyDTO,
     SpliceMaterialCreate,
     SpliceMaterialUpdate,
     SpliceMaterialResponseDTO,
@@ -72,6 +75,48 @@ class SpliceMaterialService:
             
         updated_material = await self.material_repo.get_by_id(material_id)
         return SpliceMaterialResponseDTO.model_validate(updated_material)
+
+    async def get_dependencies(self, material_id: int) -> SpliceMaterialDependenciesDTO:
+        """Получение зависимостей тарифного материала перед удалением."""
+        item = await self.material_repo.get_by_id(material_id)
+        if not item:
+            raise SpliceMaterialNotFound(f"Splice material with id {material_id} not found.")
+
+        deps = await self.material_repo.get_dependencies(material_id)
+        rules = deps["rules"]
+        ropes = deps["ropes"]
+
+        rules_dto = [
+            SpliceMaterialPriceRuleDependencyDTO(
+                id=r.id,
+                splice_type_id=r.splice_type_id,
+                splice_type_code=r.splice_type.code if r.splice_type else None,
+                diameter_from_mm=float(r.diameter_from_mm),
+                diameter_to_mm=float(r.diameter_to_mm),
+                price=float(r.price),
+            )
+            for r in rules
+        ]
+        ropes_dto = [
+            SpliceMaterialRopeDependencyDTO(
+                product_id=p.id,
+                name=p.translations[0].name if p.translations else f"Product #{p.id}",
+            )
+            for p in ropes
+        ]
+
+        rules_count = len(rules_dto)
+        ropes_count = len(ropes_dto)
+        has_dependencies = (rules_count > 0 or ropes_count > 0)
+
+        return SpliceMaterialDependenciesDTO(
+            has_dependencies=has_dependencies,
+            can_delete=not has_dependencies,
+            rules_count=rules_count,
+            ropes_count=ropes_count,
+            rules=rules_dto,
+            ropes=ropes_dto,
+        )
 
     async def delete_material(self, material_id: int) -> None:
         material = await self.material_repo.get_by_id(material_id)

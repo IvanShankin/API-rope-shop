@@ -41,3 +41,28 @@ class SpliceMaterialResponseDTO(SpliceMaterialBase, ORMDTO):
 
 class SpliceMaterialWithRulesResponseDTO(SpliceMaterialResponseDTO):
     rules: Optional[List[SplicePriceRuleWithRelationsResponseDTO]] = []
+
+
+# ==================== Dependencies DTOs ====================
+
+class SpliceMaterialPriceRuleDependencyDTO(BaseModel):
+    id: int
+    splice_type_id: int
+    splice_type_code: Optional[str] = None
+    diameter_from_mm: float
+    diameter_to_mm: float
+    price: float
+
+
+class SpliceMaterialRopeDependencyDTO(BaseModel):
+    product_id: int
+    name: Optional[str] = None
+
+
+class SpliceMaterialDependenciesDTO(BaseModel):
+    has_dependencies: bool
+    can_delete: bool
+    rules_count: int
+    ropes_count: int
+    rules: List[SpliceMaterialPriceRuleDependencyDTO] = []
+    ropes: List[SpliceMaterialRopeDependencyDTO] = []

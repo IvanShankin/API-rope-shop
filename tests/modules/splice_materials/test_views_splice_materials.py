@@ -280,3 +280,54 @@ class TestsForErrors:
         # 4. 401 без авторизации
         resp_unauth = await client_for_tests.get(f"/splice_materials/{mat_linked.id}/dependencies")
         assert resp_unauth.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_splice_material_is_active_filtering_and_patch(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_splice_material_fixture,
+    ):
+        """Проверка мягкой деактивации тарифного материала и фильтрации по is_active."""
+        admin_user, access_token = await create_user_fixture(CreateUserFixtureDTO(role=UserRole.ADMIN))
+        headers = {"Authorization": f"Bearer {access_token}"}
+
+        # Создаем активный и неактивный материал
+        mat_act = await create_splice_material_fixture(CreateSpliceMaterialFixtureDTO(code="mat_act", is_active=True))
+        mat_inact = await create_splice_material_fixture(CreateSpliceMaterialFixtureDTO(code="mat_inact", is_active=False))
+
+        # 1. Публичный GET /splice_materials возвращает только активные
+        resp_pub = await client_for_tests.get("/splice_materials")
+        assert resp_pub.status_code == 200
+        pub_ids = [m["id"] for m in resp_pub.json()]
+        assert mat_act.id in pub_ids
+        assert mat_inact.id not in pub_ids
+
+        # 2. Публичный GET /splice_materials/{inact_id} -> 404
+        resp_pub_inact = await client_for_tests.get(f"/splice_materials/{mat_inact.id}")
+        assert resp_pub_inact.status_code == 404
+
+        # 3. Админ GET /splice_materials?is_active=false возвращает неактивные
+        resp_adm_inact = await client_for_tests.get("/splice_materials?is_active=false", headers=headers)
+        assert resp_adm_inact.status_code == 200
+        inact_ids = [m["id"] for m in resp_adm_inact.json()]
+        assert mat_inact.id in inact_ids
+        assert mat_act.id not in inact_ids
+
+        # 4. Админ GET /splice_materials/{inact_id} -> 200
+        resp_adm_get = await client_for_tests.get(f"/splice_materials/{mat_inact.id}", headers=headers)
+        assert resp_adm_get.status_code == 200
+        assert resp_adm_get.json()["is_active"] is False
+
+        # 5. Админ PATCH деактивирует активный материал
+        resp_patch = await client_for_tests.patch(
+            f"/splice_materials/{mat_act.id}",
+            json={"is_active": False},
+            headers=headers,
+        )
+        assert resp_patch.status_code == 200
+        assert resp_patch.json()["is_active"] is False
+
+        # Теперь он тоже скрыт от публичного API
+        resp_pub_after = await client_for_tests.get(f"/splice_materials/{mat_act.id}")
+        assert resp_pub_after.status_code == 404

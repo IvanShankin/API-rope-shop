@@ -155,6 +155,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('code', sa.String(length=100), nullable=False),
     sa.Column('name', sa.String(length=255), nullable=False),
+    sa.Column('is_active', sa.Boolean(), server_default='true', nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('code')
     )

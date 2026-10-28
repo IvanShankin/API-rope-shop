@@ -46,9 +46,12 @@ class ConfiguratorRepository(BaseRepository):
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
-    async def get_splice_materials(self) -> Sequence[SpliceMaterial]:
+    async def get_splice_materials(self, is_active: Optional[bool] = True) -> Sequence[SpliceMaterial]:
         """Получение списка тарифных групп материалов заделок."""
-        stmt = select(SpliceMaterial).order_by(SpliceMaterial.id)
+        stmt = select(SpliceMaterial)
+        if is_active is not None:
+            stmt = stmt.where(SpliceMaterial.is_active == is_active)
+        stmt = stmt.order_by(SpliceMaterial.id)
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
@@ -86,9 +89,10 @@ class ConfiguratorRepository(BaseRepository):
         if category is not None:
             stmt = stmt.where(SpliceType.category == category)
         if is_active is not None:
-            stmt = stmt.where(
+            stmt = stmt.join(SplicePriceRule.splice_material).where(
                 SplicePriceRule.is_active == is_active,
                 SpliceType.is_active == is_active,
+                SpliceMaterial.is_active == is_active,
             )
         stmt = stmt.order_by(SplicePriceRule.diameter_from_mm.asc().nulls_first(), SplicePriceRule.id.asc())
         result = await self.session.execute(stmt)

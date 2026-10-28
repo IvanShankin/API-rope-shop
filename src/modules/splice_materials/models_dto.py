@@ -9,6 +9,7 @@ from src.modules.splice_prices.models_dto import SplicePriceRuleWithRelationsRes
 class SpliceMaterialBase(BaseModel):
     code: str
     name: str
+    is_active: bool = True
 
 
 class SpliceMaterialCreate(SpliceMaterialBase):
@@ -18,6 +19,7 @@ class SpliceMaterialCreate(SpliceMaterialBase):
 class SpliceMaterialUpdate(BaseModel):
     code: Optional[str] = None
     name: Optional[str] = None
+    is_active: Optional[bool] = None
 
 
 class SpliceMaterialResponseDTO(SpliceMaterialBase, ORMDTO):
@@ -34,6 +36,7 @@ class SpliceMaterialResponseDTO(SpliceMaterialBase, ORMDTO):
                     "id": getattr(data, "id", None),
                     "code": getattr(data, "code", None),
                     "name": getattr(data, "name", None),
+                    "is_active": getattr(data, "is_active", True),
                     "rules": None,
                 }
         return data

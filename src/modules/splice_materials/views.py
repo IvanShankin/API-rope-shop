@@ -23,11 +23,16 @@ router = APIRouter(prefix="/splice_materials", tags=["Splice Materials"])
 )
 async def get_all_splice_materials(
     include_rules: bool = Query(False, description="Include nested price rules in the response"),
+    is_active: Optional[bool] = Query(None, description="Filter by active status"),
     service: SpliceMaterialService = Depends(get_splice_material_service),
     admin: Optional[UserDTO] = Depends(get_optional_admin),
 ) -> List[SpliceMaterialResponseDTO]:
     """Get all splice materials (public)."""
-    return await service.get_all_materials(include_rules=include_rules, is_admin=admin is not None)
+    return await service.get_all_materials(
+        include_rules=include_rules,
+        is_admin=admin is not None,
+        is_active=is_active,
+    )
 
 
 @router.get(

@@ -21,9 +21,15 @@ class SpliceMaterialRepository(BaseRepository):
         """Добавление новой группы материалов для прайса."""
         return self.add(data)
 
-    async def get_all(self, include_rules: bool = False) -> Sequence[SpliceMaterial]:
+    async def get_all(
+        self,
+        include_rules: bool = False,
+        is_active: Optional[bool] = None,
+    ) -> Sequence[SpliceMaterial]:
         """Получение всех групп материалов."""
         stmt = select(SpliceMaterial).order_by(SpliceMaterial.id)
+        if is_active is not None:
+            stmt = stmt.where(SpliceMaterial.is_active == is_active)
         if include_rules:
             stmt = stmt.options(
                 selectinload(SpliceMaterial.rules)
@@ -34,9 +40,16 @@ class SpliceMaterialRepository(BaseRepository):
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
-    async def get_by_id(self, material_id: int, include_rules: bool = False) -> SpliceMaterial | None:
+    async def get_by_id(
+        self,
+        material_id: int,
+        include_rules: bool = False,
+        is_active: Optional[bool] = None,
+    ) -> SpliceMaterial | None:
         """Получение группы материалов по ID."""
         stmt = select(SpliceMaterial).where(SpliceMaterial.id == material_id)
+        if is_active is not None:
+            stmt = stmt.where(SpliceMaterial.is_active == is_active)
         if include_rules:
             stmt = stmt.options(
                 selectinload(SpliceMaterial.rules)

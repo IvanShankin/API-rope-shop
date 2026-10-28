@@ -13,6 +13,7 @@ async def create_splice_material_factory(
     material = SpliceMaterial(
         code=random_string() if new_material.code is None else new_material.code,
         name=random_string() if new_material.name is None else new_material.name,
+        is_active=True if new_material.is_active is None else new_material.is_active,
     )
     session_db.add(material)
     await session_db.commit()

@@ -308,3 +308,78 @@ class QuoteRequestResponseDTO(ORMDTO):
 class QuoteRequestListResponseDTO(PaginatedResponse[QuoteRequestResponseDTO]):
     """Ответ со списком заявок и метаданными пагинации."""
     limit: int = 50
+
+
+# ==================== Calculation (Dry-Run) DTOs ====================
+
+class QuoteRequestCalculateDTO(BaseModel):
+    configurator_type: ConfiguratorType
+    is_urgent: bool = Field(default=False, description="Urgent order flag")
+    locale: Optional[Language] = Field(Language.GER, description="Language to use for item snapshots")
+    rope_items: List[QuoteRopeItemCreate] = Field(
+        default_factory=list,
+        description="List of configured ropes (for ROPE_WITH_SPLICE)"
+    )
+    service_items: List[QuoteServiceItemCreate] = Field(
+        default_factory=list,
+        description="List of services / splices (for LOOP_ONLY or SPLICE_ONLY)"
+    )
+    extra_items: List[QuoteExtraItemCreate] = Field(
+        default_factory=list,
+        description="List of configurator extras"
+    )
+
+
+class QuoteCalculationRopeItemDTO(BaseModel):
+    product_id: int
+    color_id: int
+    product_name_snapshot: str
+    color_name_snapshot: str
+    diameter_mm: float
+    length_m: float
+    quantity: int
+    price_per_meter_snapshot: float
+    total_rope_cost: float
+    end_a_type_id: Optional[int] = None
+    end_a_name_snapshot: Optional[str] = None
+    end_a_eye_size_cm: Optional[float] = None
+    end_a_cost: float = 0.0
+    end_b_type_id: Optional[int] = None
+    end_b_name_snapshot: Optional[str] = None
+    end_b_eye_size_cm: Optional[float] = None
+    end_b_cost: float = 0.0
+    total_cost: float
+
+
+class QuoteCalculationServiceItemDTO(BaseModel):
+    splice_type_id: int
+    splice_material_id: int
+    service_name_snapshot: str
+    material_name_snapshot: str
+    diameter_mm: float
+    eye_size_cm: Optional[float] = None
+    quantity: int
+    unit_price_snapshot: float
+    total_cost: float
+
+
+class QuoteCalculationExtraItemDTO(BaseModel):
+    extra_id: int
+    name_snapshot: str
+    billing_type_snapshot: str
+    quantity: int
+    unit_price_snapshot: float
+    total_cost: float
+
+
+class QuoteCalculationResponseDTO(BaseModel):
+    configurator_type: ConfiguratorType
+    currency: Currency
+    subtotal: float
+    urgent_surcharge: float
+    total_price: float
+    vat_rate: float
+    is_urgent: bool
+    rope_items: List[QuoteCalculationRopeItemDTO] = []
+    service_items: List[QuoteCalculationServiceItemDTO] = []
+    extra_items: List[QuoteCalculationExtraItemDTO] = []

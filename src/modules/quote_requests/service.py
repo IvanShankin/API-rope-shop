@@ -3,7 +3,7 @@ from __future__ import annotations
 import secrets
 from decimal import Decimal, ROUND_HALF_UP
 import logging
-from typing import List, Optional
+from typing import List, Optional, Union
 from datetime import datetime, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,6 +29,11 @@ from src.modules.quote_requests.models import (
     QuoteRequestStatus,
 )
 from src.modules.quote_requests.models_dto import (
+    QuoteRequestCalculateDTO,
+    QuoteCalculationResponseDTO,
+    QuoteCalculationRopeItemDTO,
+    QuoteCalculationServiceItemDTO,
+    QuoteCalculationExtraItemDTO,
     QuoteRequestCreate,
     QuoteRopeItemCreate,
     QuoteServiceItemCreate,
@@ -169,9 +174,108 @@ class QuoteRequestService:
         return dto
 
 
+    async def calculate_quote(self, data: QuoteRequestCalculateDTO) -> QuoteCalculationResponseDTO:
+        """Предварительный расчет стоимости заявки с подробной детализацией (без сохранения в БД)."""
+        setting = await self.configurator_setting_repo.get_settings()
+        locale = data.locale or Language.GER
+
+        self._validate_request_items(data, setting)
+
+        rope_items: List[ResolvedRopeItemDTO] = []
+        if data.configurator_type == ConfiguratorType.ROPE_WITH_SPLICE:
+            rope_items = await self._resolve_rope_items(data.rope_items, locale, setting)
+
+        service_items: List[ResolvedServiceItemDTO] = []
+        if data.configurator_type in (ConfiguratorType.LOOP_ONLY, ConfiguratorType.SPLICE_ONLY):
+            service_items = await self._resolve_service_items(data.service_items, locale)
+
+        extra_items = await self._resolve_extra_items(data, rope_items, service_items, locale)
+
+        total_splices = sum(r.splices_count for r in rope_items) + sum(s.splices_count for s in service_items)
+        if data.is_urgent and setting:
+            if total_splices > setting.urgent_max_splices:
+                raise QuoteRequestValidationError(
+                    f"Urgent orders allow at most {setting.urgent_max_splices} splices, requested: {total_splices}."
+                )
+
+        totals = self._calculate_totals(
+            rope_items=rope_items,
+            service_items=service_items,
+            extra_items=extra_items,
+            is_urgent=data.is_urgent,
+            setting=setting,
+        )
+
+        currency = setting.currency if setting and setting.currency else Currency.EUR
+        vat_rate = float(setting.vat_rate) if setting and setting.vat_rate is not None else 0.0
+
+        rope_dtos = [
+            QuoteCalculationRopeItemDTO(
+                product_id=r.product_id,
+                color_id=r.color_id,
+                product_name_snapshot=r.product_name_snapshot,
+                color_name_snapshot=r.color_name_snapshot,
+                diameter_mm=r.diameter_mm,
+                length_m=r.length_m,
+                quantity=r.quantity,
+                price_per_meter_snapshot=r.price_per_meter_snapshot,
+                total_rope_cost=r.total_rope_cost,
+                end_a_type_id=r.end_a_type_id,
+                end_a_name_snapshot=r.end_a_name_snapshot,
+                end_a_eye_size_cm=r.end_a_eye_size_cm,
+                end_a_cost=r.end_a_cost,
+                end_b_type_id=r.end_b_type_id,
+                end_b_name_snapshot=r.end_b_name_snapshot,
+                end_b_eye_size_cm=r.end_b_eye_size_cm,
+                end_b_cost=r.end_b_cost,
+                total_cost=r.total_cost,
+            )
+            for r in rope_items
+        ]
+
+        service_dtos = [
+            QuoteCalculationServiceItemDTO(
+                splice_type_id=s.splice_type_id,
+                splice_material_id=s.splice_material_id,
+                service_name_snapshot=s.service_name_snapshot,
+                material_name_snapshot=s.material_name_snapshot,
+                diameter_mm=s.diameter_mm,
+                eye_size_cm=s.eye_size_cm,
+                quantity=s.quantity,
+                unit_price_snapshot=s.unit_price_snapshot,
+                total_cost=s.total_cost,
+            )
+            for s in service_items
+        ]
+
+        extra_dtos = [
+            QuoteCalculationExtraItemDTO(
+                extra_id=e.extra_id,
+                name_snapshot=e.name_snapshot,
+                billing_type_snapshot=e.billing_type_snapshot,
+                quantity=e.quantity,
+                unit_price_snapshot=e.unit_price_snapshot,
+                total_cost=e.total_cost,
+            )
+            for e in extra_items
+        ]
+
+        return QuoteCalculationResponseDTO(
+            configurator_type=data.configurator_type,
+            currency=currency,
+            subtotal=totals.subtotal,
+            urgent_surcharge=totals.urgent_surcharge,
+            total_price=totals.total_price,
+            vat_rate=vat_rate,
+            is_urgent=data.is_urgent,
+            rope_items=rope_dtos,
+            service_items=service_dtos,
+            extra_items=extra_dtos,
+        )
+
     def _validate_request_items(
         self,
-        data: QuoteRequestCreate,
+        data: Union[QuoteRequestCreate, QuoteRequestCalculateDTO],
         setting: Optional[ConfiguratorSetting],
     ) -> None:
         """Валидация наличия и состава позиций заявки для выбранного типа конфигуратора."""

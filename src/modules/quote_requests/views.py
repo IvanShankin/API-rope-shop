@@ -13,6 +13,8 @@ from src.modules.quote_requests.models import (
     QuoteRequestStatus,
 )
 from src.modules.quote_requests.models_dto import (
+    QuoteRequestCalculateDTO,
+    QuoteCalculationResponseDTO,
     QuoteRequestCreate,
     QuoteRequestUpdateDTO,
     QuoteRequestUpdateStatusDTO,
@@ -27,6 +29,23 @@ from src.modules.notifications.depends import get_notification_service
 from src.modules.notifications.service import NotificationService
 
 router = APIRouter(prefix="/quote_requests", tags=["Quote Requests"])
+
+
+@router.post(
+    "/calculate",
+    response_model=QuoteCalculationResponseDTO,
+    status_code=status.HTTP_200_OK,
+    summary="Calculate quote price (dry-run)",
+    description="Calculate detailed price breakdown for configured ropes/services and extras without creating an order (public).",
+)
+@limiter.limit("60/minute")
+async def calculate_quote(
+    request: Request,
+    data: QuoteRequestCalculateDTO,
+    service: QuoteRequestService = Depends(get_quote_request_service),
+) -> QuoteCalculationResponseDTO:
+    """Preview / dry-run calculation before submitting contact data (public)."""
+    return await service.calculate_quote(data=data)
 
 
 @router.post(

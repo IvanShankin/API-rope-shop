@@ -1036,3 +1036,153 @@ class TestsForFailures:
         }
         resp_invalid = await client_for_tests.post("/quote_requests", json=payload_invalid)
         assert resp_invalid.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_calculate_quote_dry_run_rope_with_splice(
+        self,
+        client_for_tests,
+        not_open_session_db,
+        create_configurator_setting_fixture,
+        create_material_group_fixture,
+        create_splice_material_fixture,
+        create_color_fixture,
+        create_splice_type_fixture,
+        create_splice_price_rule_fixture,
+        create_rope_product_fixture,
+        create_rope_variant_fixture,
+        create_rope_product_color_fixture,
+        create_rope_allowed_splice_fixture,
+        create_configurator_extra_fixture,
+    ):
+        """
+        Проверка предварительного расчета (dry-run):
+        - Возвращает подробную калькуляцию без обязательных контактных данных (name, email, phone).
+        - В базе данных НЕ создается запись QuoteRequest.
+        """
+        await create_configurator_setting_fixture(
+            CreateConfiguratorSettingFixtureDTO(
+                min_length_m=1.0,
+                max_length_m=200.0,
+                splice_allowance_until_mm=12.0,
+                splice_allowance_until_m=0.5,
+                urgent_surcharge_per_splice=10.0,
+                vat_rate=19.0,
+            )
+        )
+        group = await create_material_group_fixture(CreateMaterialGroupFixtureDTO())
+        splice_mat = await create_splice_material_fixture(CreateSpliceMaterialFixtureDTO())
+        color = await create_color_fixture(CreateColorFixtureDTO())
+        splice_a = await create_splice_type_fixture(CreateSpliceTypeFixtureDTO(name="Augspleiss"))
+        splice_b = await create_splice_type_fixture(CreateSpliceTypeFixtureDTO(name="Takling"))
+
+        product = await create_rope_product_fixture(
+            CreateRopeProductFixtureDTO(
+                material_group_id=group.id,
+                splice_material_id=splice_mat.id,
+                can_be_spliced=True,
+            )
+        )
+        await create_rope_variant_fixture(
+            CreateRopeVariantFixtureDTO(product_id=product.product_id, size_value=10.0, price=4.0)
+        )
+        await create_rope_product_color_fixture(
+            CreateRopeProductColorFixtureDTO(product_id=product.product_id, color_id=color.id)
+        )
+        await create_rope_allowed_splice_fixture(
+            CreateRopeAllowedSpliceFixtureDTO(product_id=product.product_id, splice_type_id=splice_a.id)
+        )
+        await create_rope_allowed_splice_fixture(
+            CreateRopeAllowedSpliceFixtureDTO(product_id=product.product_id, splice_type_id=splice_b.id)
+        )
+
+        await create_splice_price_rule_fixture(
+            CreateSplicePriceRuleFixtureDTO(
+                splice_type_id=splice_a.id,
+                splice_material_id=splice_mat.id,
+                diameter_from_mm=8.0,
+                diameter_to_mm=12.0,
+                price=15.0,
+            )
+        )
+        await create_splice_price_rule_fixture(
+            CreateSplicePriceRuleFixtureDTO(
+                splice_type_id=splice_b.id,
+                splice_material_id=splice_mat.id,
+                diameter_from_mm=8.0,
+                diameter_to_mm=12.0,
+                price=12.0,
+            )
+        )
+
+        extra = await create_configurator_extra_fixture(
+            CreateConfiguratorExtraFixtureDTO(code="CERT", price=20.0, billing_type=BillingType.FIXED)
+        )
+
+        # Запрос расчета без name, email, phone:
+        # Длина: 10м + 2*0.5м припуск = 11м * 4.0 = 44.0 EUR
+        # Заделка A: 15.0 EUR, Заделка B: 12.0 EUR
+        # Extra: 20.0 EUR
+        # Срочность is_urgent=True: 2 заделки * 10 = 20.0 EUR
+        # Subtotal = 44 + 15 + 12 + 20 = 91.0 EUR
+        # Total = 91.0 + 20.0 = 111.0 EUR
+        calc_payload = {
+            "configurator_type": "rope_with_splice",
+            "is_urgent": True,
+            "rope_items": [
+                {
+                    "product_id": product.product_id,
+                    "color_id": color.id,
+                    "diameter_mm": 10.0,
+                    "length_m": 10.0,
+                    "quantity": 1,
+                    "end_a_type_id": splice_a.id,
+                    "end_b_type_id": splice_b.id,
+                }
+            ],
+            "extra_items": [{"extra_id": extra.id}],
+        }
+
+        resp = await client_for_tests.post("/quote_requests/calculate", json=calc_payload)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["configurator_type"] == "rope_with_splice"
+        assert data["is_urgent"] is True
+        assert data["subtotal"] == 91.0
+        assert data["urgent_surcharge"] == 20.0
+        assert data["total_price"] == 111.0
+        assert len(data["rope_items"]) == 1
+        assert data["rope_items"][0]["total_rope_cost"] == 44.0
+        assert data["rope_items"][0]["end_a_cost"] == 15.0
+        assert data["rope_items"][0]["end_b_cost"] == 12.0
+        assert len(data["extra_items"]) == 1
+        assert data["extra_items"][0]["total_cost"] == 20.0
+
+        # Проверяем, что в БД ничего не создалось
+        async with not_open_session_db() as s:
+            result = await s.execute(select(QuoteRequest))
+            assert len(result.scalars().all()) == 0
+
+    @pytest.mark.asyncio
+    async def test_calculate_quote_validation_error(
+        self,
+        client_for_tests,
+        create_configurator_setting_fixture,
+    ):
+        """Валидация длины срабатывает и в эндпоинте предварительного расчета."""
+        await create_configurator_setting_fixture(
+            CreateConfiguratorSettingFixtureDTO(min_length_m=5.0, max_length_m=100.0)
+        )
+        payload = {
+            "configurator_type": "rope_with_splice",
+            "rope_items": [
+                {
+                    "product_id": 1,
+                    "color_id": 1,
+                    "diameter_mm": 10.0,
+                    "length_m": 2.0,  # Меньше 5.0m
+                    "quantity": 1,
+                }
+            ],
+        }
+        resp = await client_for_tests.post("/quote_requests/calculate", json=payload)
+        assert resp.status_code == 400

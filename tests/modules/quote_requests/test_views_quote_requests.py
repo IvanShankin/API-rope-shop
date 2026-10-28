@@ -6,6 +6,7 @@ from src.modules.users.models import UserRole
 from tests.modules.users.fixtures.models_dto import CreateUserFixtureDTO
 from src.modules.configurator_setting.models import Currency
 from src.modules.configurator_extra.models import BillingType
+from src.modules.splice_types.models import SpliceCategory
 from src.modules.quote_requests.models import (
     QuoteRequest,
     ConfiguratorType,
@@ -874,3 +875,164 @@ class TestsForFailures:
             headers={"Authorization": f"Bearer {access_token}"},
         )
         assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_create_quote_request_with_per_loop_extra(
+        self,
+        client_for_tests,
+        create_configurator_setting_fixture,
+        create_material_group_fixture,
+        create_splice_material_fixture,
+        create_color_fixture,
+        create_splice_type_fixture,
+        create_splice_price_rule_fixture,
+        create_rope_product_fixture,
+        create_rope_variant_fixture,
+        create_rope_product_color_fixture,
+        create_rope_allowed_splice_fixture,
+        create_configurator_extra_fixture,
+    ):
+        """
+        Проверка начисления доп. опции с типом PER_LOOP (чехол на огон):
+        - Канат с 2 огонами (end_a=LOOP, end_b=LOOP) при unit_price=9 EUR -> 2 * 9 = 18 EUR
+        - Попытка применить PER_LOOP к канату без огонов -> 422
+        """
+        await create_configurator_setting_fixture(CreateConfiguratorSettingFixtureDTO())
+        group = await create_material_group_fixture(CreateMaterialGroupFixtureDTO())
+        splice_mat = await create_splice_material_fixture(CreateSpliceMaterialFixtureDTO())
+        color = await create_color_fixture(CreateColorFixtureDTO())
+
+        # Создаем тип заделки огон (LOOP) и тип без огона (SPLICE)
+        loop_splice = await create_splice_type_fixture(
+            CreateSpliceTypeFixtureDTO(code="eye_loop_splice", name="Eye Loop", category=SpliceCategory.LOOP)
+        )
+        straight_splice = await create_splice_type_fixture(
+            CreateSpliceTypeFixtureDTO(code="straight_splice", name="Straight Splice", category=SpliceCategory.SPLICE)
+        )
+
+        product = await create_rope_product_fixture(
+            CreateRopeProductFixtureDTO(
+                material_group_id=group.id,
+                splice_material_id=splice_mat.id,
+                can_be_spliced=True,
+            )
+        )
+        await create_rope_variant_fixture(
+            CreateRopeVariantFixtureDTO(product_id=product.product_id, size_value=10.0, price=5.0)
+        )
+        await create_rope_product_color_fixture(
+            CreateRopeProductColorFixtureDTO(product_id=product.product_id, color_id=color.id)
+        )
+        await create_rope_allowed_splice_fixture(
+            CreateRopeAllowedSpliceFixtureDTO(product_id=product.product_id, splice_type_id=loop_splice.id)
+        )
+        await create_rope_allowed_splice_fixture(
+            CreateRopeAllowedSpliceFixtureDTO(product_id=product.product_id, splice_type_id=straight_splice.id)
+        )
+
+        await create_splice_price_rule_fixture(
+            CreateSplicePriceRuleFixtureDTO(
+                splice_type_id=loop_splice.id,
+                splice_material_id=splice_mat.id,
+                diameter_from_mm=8.0,
+                diameter_to_mm=12.0,
+                price=10.0,
+            )
+        )
+        await create_splice_price_rule_fixture(
+            CreateSplicePriceRuleFixtureDTO(
+                splice_type_id=straight_splice.id,
+                splice_material_id=splice_mat.id,
+                diameter_from_mm=8.0,
+                diameter_to_mm=12.0,
+                price=10.0,
+            )
+        )
+
+        # Чехол за 9.00 EUR с начислением PER_LOOP
+        extra_cover = await create_configurator_extra_fixture(
+            CreateConfiguratorExtraFixtureDTO(
+                code="COVER",
+                name="Loop Protective Cover",
+                billing_type=BillingType.PER_LOOP,
+                price=9.0,
+            )
+        )
+
+        # 1. Заказ 1 каната с двумя огонами (End A + End B)
+        # Ожидаем: 2 огона * 9 EUR = 18 EUR за чехол
+        payload = {
+            "configurator_type": "rope_with_splice",
+            "name": "Ilya Customer",
+            "email": "customer@example.com",
+            "phone": "+49123456789",
+            "is_urgent": False,
+            "rope_items": [
+                {
+                    "product_id": product.product_id,
+                    "color_id": color.id,
+                    "diameter_mm": 10.0,
+                    "length_m": 10.0,
+                    "quantity": 1,
+                    "end_a_type_id": loop_splice.id,
+                    "end_b_type_id": loop_splice.id,
+                }
+            ],
+            "extra_items": [{"extra_id": extra_cover.id}],
+        }
+        resp = await client_for_tests.post("/quote_requests", json=payload)
+        assert resp.status_code == 201
+        data = resp.json()
+        extra_res = next(e for e in data["extra_items"] if e["extra_id"] == extra_cover.id)
+        assert extra_res["quantity"] == 2
+        assert extra_res["total_cost"] == 18.0
+        assert extra_res["billing_type_snapshot"] == "per_loop"
+
+        # 2. Заказ 2 канатов с 1 огоном и 1 прямой заделкой:
+        # Всего огонов: 2 каната * 1 огон = 2 огона -> 18 EUR
+        payload_2 = {
+            "configurator_type": "rope_with_splice",
+            "name": "Ilya Customer",
+            "email": "customer@example.com",
+            "is_urgent": False,
+            "rope_items": [
+                {
+                    "product_id": product.product_id,
+                    "color_id": color.id,
+                    "diameter_mm": 10.0,
+                    "length_m": 10.0,
+                    "quantity": 2,
+                    "end_a_type_id": loop_splice.id,
+                    "end_b_type_id": straight_splice.id,
+                }
+            ],
+            "extra_items": [{"extra_id": extra_cover.id}],
+        }
+        resp_2 = await client_for_tests.post("/quote_requests", json=payload_2)
+        assert resp_2.status_code == 201
+        data_2 = resp_2.json()
+        extra_res_2 = next(e for e in data_2["extra_items"] if e["extra_id"] == extra_cover.id)
+        assert extra_res_2["quantity"] == 2
+        assert extra_res_2["total_cost"] == 18.0
+
+        # 3. Заказ каната БЕЗ огонов с опцией PER_LOOP -> 422 ошибка валидации
+        payload_invalid = {
+            "configurator_type": "rope_with_splice",
+            "name": "Ilya Customer",
+            "email": "customer@example.com",
+            "is_urgent": False,
+            "rope_items": [
+                {
+                    "product_id": product.product_id,
+                    "color_id": color.id,
+                    "diameter_mm": 10.0,
+                    "length_m": 10.0,
+                    "quantity": 1,
+                    "end_a_type_id": straight_splice.id,
+                    "end_b_type_id": straight_splice.id,
+                }
+            ],
+            "extra_items": [{"extra_id": extra_cover.id}],
+        }
+        resp_invalid = await client_for_tests.post("/quote_requests", json=payload_invalid)
+        assert resp_invalid.status_code == 400

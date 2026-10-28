@@ -55,7 +55,7 @@ def upgrade() -> None:
     sa.Column('code', sa.String(length=100), nullable=False),
     sa.Column('price', sa.Numeric(precision=10, scale=2), nullable=False),
     sa.Column('currency', sa.Enum('EUR', name='currency', native_enum=False, length=50), nullable=False),
-    sa.Column('billing_type', sa.Enum('fixed', 'per_item', 'per_meter', name='billing_type', native_enum=False, length=50), nullable=False),
+    sa.Column('billing_type', sa.Enum('fixed', 'per_item', 'per_meter', 'per_loop', name='billing_type', native_enum=False, length=50), nullable=False),
     sa.Column('index', sa.Integer(), nullable=False),
     sa.Column('is_active', sa.Boolean(), server_default='true', nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),

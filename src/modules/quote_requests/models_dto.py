@@ -97,6 +97,7 @@ class QuoteRequestUpdateDTO(BaseModel):
 class ResolvedEndSpliceDTO(BaseModel):
     name_snapshot: Optional[str] = None
     cost: float = 0.0
+    is_loop: bool = False
 
 
 class ResolvedRopeItemDTO(BaseModel):
@@ -113,10 +114,12 @@ class ResolvedRopeItemDTO(BaseModel):
     end_a_name_snapshot: Optional[str] = None
     end_a_eye_size_cm: Optional[float] = None
     end_a_cost: float = 0.0
+    end_a_is_loop: bool = False
     end_b_type_id: Optional[int] = None
     end_b_name_snapshot: Optional[str] = None
     end_b_eye_size_cm: Optional[float] = None
     end_b_cost: float = 0.0
+    end_b_is_loop: bool = False
 
     @property
     def total_cost(self) -> float:
@@ -143,6 +146,7 @@ class ResolvedServiceItemDTO(BaseModel):
     quantity: int
     unit_price_snapshot: float
     total_cost: float
+    is_loop: bool = False
 
     @property
     def splices_count(self) -> int:

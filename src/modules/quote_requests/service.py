@@ -21,6 +21,7 @@ from src.modules.rope_products.models import RopeConfiguratorSetting
 from src.modules.rope_products.repository import RopeProductRepository, ProductVariantRepository
 from src.modules.splice_materials.repository import SpliceMaterialRepository
 from src.modules.splice_prices.repository import SplicePriceRuleRepository
+from src.modules.splice_types.models import SpliceCategory
 from src.modules.splice_types.repository import SpliceTypeRepository
 from src.modules.quote_requests.models import (
     ConfiguratorType,
@@ -303,10 +304,12 @@ class QuoteRequestService:
             end_a_name_snapshot=end_a.name_snapshot,
             end_a_eye_size_cm=r_item.end_a_eye_size_cm,
             end_a_cost=end_a.cost,
+            end_a_is_loop=end_a.is_loop,
             end_b_type_id=r_item.end_b_type_id,
             end_b_name_snapshot=end_b.name_snapshot,
             end_b_eye_size_cm=r_item.end_b_eye_size_cm,
             end_b_cost=end_b.cost,
+            end_b_is_loop=end_b.is_loop,
         )
 
     def _validate_product_color_compatibility(self, rope_product: RopeConfiguratorSetting, color_id: int) -> None:
@@ -385,7 +388,8 @@ class QuoteRequestService:
             Decimal("0.01"), rounding=ROUND_HALF_UP
         )
 
-        return ResolvedEndSpliceDTO(name_snapshot=name_snapshot, cost=float(cost))
+        is_loop = (splice_type.category == SpliceCategory.LOOP)
+        return ResolvedEndSpliceDTO(name_snapshot=name_snapshot, cost=float(cost), is_loop=is_loop)
 
     async def _resolve_service_items(
         self,
@@ -433,6 +437,7 @@ class QuoteRequestService:
         ) or splice_type.code
         material_name_snapshot = splice_material.name
         unit_price_dec = Decimal(str(unit_price))
+        is_loop = (splice_type.category == SpliceCategory.LOOP)
         total_cost = (unit_price_dec * Decimal(s_item.quantity)).quantize(
             Decimal("0.01"), rounding=ROUND_HALF_UP
         )
@@ -447,6 +452,7 @@ class QuoteRequestService:
             quantity=s_item.quantity,
             unit_price_snapshot=float(unit_price_dec),
             total_cost=float(total_cost),
+            is_loop=is_loop,
         )
 
     async def _resolve_extra_items(
@@ -509,6 +515,26 @@ class QuoteRequestService:
                     )
                 quantity = max(1, int(round(float(total_length_dec))))
                 total_cost = (unit_price_dec * total_length_dec).quantize(
+                    Decimal("0.01"), rounding=ROUND_HALF_UP
+                )
+
+            elif billing_type == BillingType.PER_LOOP:
+                if data.configurator_type == ConfiguratorType.ROPE_WITH_SPLICE:
+                    total_loops = sum(
+                        ((1 if r.end_a_is_loop else 0) + (1 if r.end_b_is_loop else 0)) * r.quantity
+                        for r in rope_items
+                    )
+                else:
+                    total_loops = sum(
+                        s.quantity for s in service_items if s.is_loop
+                    )
+
+                if total_loops <= 0:
+                    raise QuoteRequestValidationError(
+                        f"Extra '{extra.code}' with per-loop billing requires at least one loop (eye splice) in the order."
+                    )
+                quantity = total_loops
+                total_cost = (unit_price_dec * Decimal(quantity)).quantize(
                     Decimal("0.01"), rounding=ROUND_HALF_UP
                 )
 

@@ -13,6 +13,7 @@ class BillingType(str, enum.Enum):
     FIXED = "fixed"         # Фиксированная цена за весь заказ
     PER_ITEM = "per_item"   # За каждое готовое изделие (за штуку)
     PER_METER = "per_meter" # За каждый метр длины каната
+    PER_LOOP = "per_loop"   # За каждый огон (петлю / loop) на концах изделия
 
 
 class ConfiguratorExtra(BaseModelWithRelationshipTranslation):

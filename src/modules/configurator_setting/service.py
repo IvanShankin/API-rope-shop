@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.database.locks import acquire_advisory_lock, LOCK_ID_INIT_CONFIGURATOR_SETTING
 from src.modules.base.exception import NoDataForUpdate
 from src.modules.configurator_setting.models import ConfiguratorSetting, Currency
 from src.modules.configurator_setting.models_dto import (
@@ -72,6 +73,10 @@ class ConfiguratorSettingService:
 
     async def _initialize_default_settings(self) -> ConfiguratorSetting:
         """Создание начальной строки настроек по умолчанию."""
+        await acquire_advisory_lock(self.session, LOCK_ID_INIT_CONFIGURATOR_SETTING)
+        existing = await self.repo.get_settings()
+        if existing:
+            return existing
         setting = ConfiguratorSetting(**DEFAULT_SETTINGS)
         self.session.add(setting)
         await self.session.commit()

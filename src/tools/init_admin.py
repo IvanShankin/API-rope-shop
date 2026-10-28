@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import Config
 from src.core.config.config import AdminConfig
+from src.core.database.locks import acquire_advisory_lock, LOCK_ID_INIT_ADMIN
 import src.modules.db_models  # noqa: F401 - ensure all ORM models are registered
 from src.modules.users.models import User, UserRole
 
@@ -65,6 +66,9 @@ async def _create_admin_if_not_exists(
       - если уже есть пользователь с совпадающим email или username, обновляет его роль до ADMIN.
       - иначе создаёт нового администратора без удаления каких-либо существующих учётных записей.
     """
+    # Захватываем рекомендательную блокировку для предотвращения параллельного создания
+    await acquire_advisory_lock(session, LOCK_ID_INIT_ADMIN)
+
     # 1. Проверяем, существует ли уже хотя бы один администратор
     stmt_admin = select(User).where(User.role == UserRole.ADMIN).limit(1)
     existing_admin = (await session.execute(stmt_admin)).scalar_one_or_none()
@@ -74,6 +78,7 @@ async def _create_admin_if_not_exists(
             f"Admin already exists (id={existing_admin.id}, username='{existing_admin.username}'). "
             "Skipping creation."
         )
+        await session.commit()
         return existing_admin
 
     # 2. Администратора нет. Проверяем, есть ли пользователь с совпадающим email или username
@@ -103,6 +108,7 @@ async def _create_admin_if_not_exists(
     # 3. Создаём нового администратора
     if not admin_config.password:
         logger.warning("Admin creation skipped: no admin password configured in environment.")
+        await session.commit()
         return None
 
     logger.info("No admin found in database. Creating initial admin...")

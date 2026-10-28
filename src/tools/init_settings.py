@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import Config
+from src.core.database.locks import acquire_advisory_lock, LOCK_ID_INIT_SETTINGS
 from src.modules.settings.models import Settings
 
 logging.basicConfig(
@@ -40,6 +41,9 @@ async def init_settings(
 
 
 async def _create_settings_if_not_exists(session: AsyncSession, default_data: dict) -> Settings:
+    # Захватываем рекомендательную блокировку для предотвращения гонок между несколькими воркерами
+    await acquire_advisory_lock(session, LOCK_ID_INIT_SETTINGS)
+
     stmt = select(Settings).limit(1)
     result = await session.execute(stmt)
     setting = result.scalar_one_or_none()
@@ -62,6 +66,7 @@ async def _create_settings_if_not_exists(session: AsyncSession, default_data: di
             setting = res.scalar_one_or_none()
     else:
         logger.info(f"Site settings already exist (id={setting.id}). Skipping creation.")
+        await session.commit()
 
     return setting
 

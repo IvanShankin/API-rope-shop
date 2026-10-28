@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import Config
+from src.core.database.locks import acquire_advisory_lock, LOCK_ID_INIT_CONTACT_REQUEST
 from src.modules.contact_requests.models import ContactRequest
 
 logging.basicConfig(
@@ -51,6 +52,9 @@ async def _create_contact_request_if_not_exists(
     Проверяет наличие хотя бы одной записи в таблице contact_requests.
     Если таблица пуста, создаёт запись со значениями по умолчанию.
     """
+    # Захватываем рекомендательную блокировку для предотвращения дублирования между воркерами
+    await acquire_advisory_lock(session, LOCK_ID_INIT_CONTACT_REQUEST)
+
     stmt = select(ContactRequest).limit(1)
     result = await session.execute(stmt)
     contact = result.scalar_one_or_none()
@@ -72,6 +76,7 @@ async def _create_contact_request_if_not_exists(
             contact = res.scalar_one_or_none()
     else:
         logger.info(f"ContactRequest already exists (id={contact.id}). Skipping creation.")
+        await session.commit()
 
     return contact
 

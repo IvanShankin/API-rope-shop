@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import Config
+from src.core.database.locks import acquire_advisory_lock, LOCK_ID_INIT_CONFIGURATOR_SETTING
 from src.modules.configurator_setting.models import ConfiguratorSetting
 
 logging.basicConfig(
@@ -42,6 +43,9 @@ async def _create_setting_if_not_exists(session: AsyncSession) -> ConfiguratorSe
     Проверяет наличие записи ConfiguratorSetting и создаёт её с дефолтными значениями,
     если таблица пуста.
     """
+    # Захватываем рекомендательную блокировку для предотвращения дублирования между воркерами
+    await acquire_advisory_lock(session, LOCK_ID_INIT_CONFIGURATOR_SETTING)
+
     stmt = select(ConfiguratorSetting).limit(1)
     result = await session.execute(stmt)
     setting = result.scalar_one_or_none()
@@ -65,6 +69,7 @@ async def _create_setting_if_not_exists(session: AsyncSession) -> ConfiguratorSe
             setting = res.scalar_one_or_none()
     else:
         logger.info(f"ConfiguratorSetting already exists (id={setting.id}). Skipping creation.")
+        await session.commit()
 
     return setting
 

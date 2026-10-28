@@ -2,6 +2,7 @@ from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import Config
+from src.core.database.locks import acquire_advisory_lock, LOCK_ID_INIT_SETTINGS
 from src.modules.base.exception import NoDataForUpdate
 from src.modules.settings.models import Settings
 from src.modules.settings.models_dto import SettingsResponseDTO, SettingsUpdateDTO, SettingsPublicResponseDTO
@@ -25,6 +26,10 @@ class SettingsService:
 
     async def _initialize_default_settings(self) -> Settings:
         """Инициализация настроек по умолчанию из конфигурации."""
+        await acquire_advisory_lock(self.session, LOCK_ID_INIT_SETTINGS)
+        existing = await self.repo.get_settings()
+        if existing:
+            return existing
         defaults = self._get_default_settings_dict()
         settings = await self.repo.add_settings(defaults)
         await self.session.commit()

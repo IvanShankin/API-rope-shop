@@ -12,11 +12,21 @@ Backend REST API для интернет-магазина по продаже в
 
 ---
 
+## Архитектура монорепозитория
+- **Backend/** — серверная часть (FastAPI, модели, эндпоинты, миграции Alembic, тесты Pytest, Dockerfile).
+- **Frontend/** — клиентская часть (каталог, конфигуратор, админ-панель, стили и скрипты).
+- **nginx/** — единая точка входа: раздача статики и проксирование API на 80 порту.
+- **media/** — медиа-файлы (фотографии товаров, заделок, благотворительности).
+- **run.py** — единый скрипт для запуска, миграций, сидов и проверки стека в одну команду.
+- **docker-compose.yaml** / **docker-compose.prod.yaml** — оркестрация контейнеров.
+
+---
+
 ## Быстрый запуск
 
-### 🚀 Вариант 1 (Рекомендуемый) — Единый скрипт автоматизации `src/tools/run.py`
+### 🚀 Вариант 1 (Рекомендуемый) — Единый скрипт автоматизации `run.py`
 
-Для быстрого развёртывания, управления контейнерами и инициализации данных подготовлен скрипт `src/tools/run.py`.
+Для быстрого развёртывания, управления контейнерами и инициализации данных подготовлен скрипт `run.py`.
 
 #### Возможности скрипта:
 - **Проверка Docker**: автоматически валидирует наличие установленного Docker и активность демона Docker Desktop.
@@ -29,24 +39,24 @@ Backend REST API для интернет-магазина по продаже в
 #### Основные команды:
 ```bash
 # 1. Запуск проекта (по умолчанию выполняется start)
-python src/tools/run.py
+python run.py
 # или явно:
-python src/tools/run.py start
+python run.py start
 
 # 2. Остановка проекта и контейнеров
-python src/tools/run.py stop
+python run.py stop
 
 # 3. Проверка доступности запущенных сервисов (healthcheck)
-python src/tools/run.py check
+python run.py check
 
 # 4. Применение миграций базы данных (Alembic upgrade head)
-python src/tools/run.py migrate
+python run.py migrate
 
 # 5. Заполнение базы данных тестовыми данными
-python src/tools/run.py seed
+python run.py seed
 
 # 6. Вывод справки по командам и параметрам
-python src/tools/run.py help
+python run.py help
 ```
 
 #### Флаги конфигурации стека:
@@ -57,11 +67,11 @@ python src/tools/run.py help
   - Документация API: [http://localhost/docs](http://localhost/docs) или [http://localhost:8018/docs](http://localhost:8018/docs)
 - **`--prod`**: запускает полный production-стек (`docker-compose.prod.yaml`) с Uvicorn workers и Nginx на порту `80`:
   ```bash
-  python src/tools/run.py start --prod
+  python run.py start --prod
   ```
 - **`--local`**: запускает стек на альтернативном порту `8080` (`docker-compose.local.yaml`), если 80 порт занят:
   ```bash
-  python src/tools/run.py start --local
+  python run.py start --local
   ```
 
 #### Публикация в интернет через туннель (Tuna / Ngrok):

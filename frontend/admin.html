@@ -1,0 +1,1448 @@
+<!doctype html>
+<html lang="ru" class="admin-page">
+
+<head>
+  <meta charset="utf-8">
+  <script src="/js/api/remote-api.js?v=20261029.1"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Панель управления — Rope-Pro-Line</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <link rel="icon" type="image/png" href="/img/favicon-64.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Unbounded:wght@400;500&display=swap">
+  <style>
+    .admin[hidden], .admin-session[hidden] { display: none !important; }
+    .admin-session { min-height: 100vh; display: grid; place-items: center; padding: 24px; box-sizing: border-box; }
+    .admin-session__card { width: 100%; max-width: 480px; text-align: center; }
+    .admin-session__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 24px; }
+  </style>
+  <link rel="stylesheet" href="/css/admin.css?v=20261028.18">
+  <script>
+    // Мгновенная проверка наличия сессии до построения DOM
+    if (!localStorage.getItem('rope_access_token')) {
+      window.location.replace('/login/');
+    }
+  </script>
+  <script type="module" src="/js/app.js?v=20261028.18"></script>
+  <link rel="stylesheet" href="/css/custom-selects.css?v=20261027.10">
+  <script type="module" src="/js/ui/custom-selects.js?v=20261027.10"></script>
+  <script type="module" src="/js/ui/admin-mobile-nav.js?v=20261027.10"></script>
+</head>
+
+<body class="admin-page__body">
+  <section class="admin-session" aria-live="polite">
+    <div class="admin-session__card">
+      <p role="status">Проверяем вход…</p>
+      <noscript>Для входа в панель управления включите JavaScript.</noscript>
+    </div>
+  </section>
+  <div class="admin" hidden>
+
+    <!-- мобильное меню: кнопка-гамбургер и подложка под выдвижной панелью -->
+    <button class="admin-burger" type="button" aria-label="Открыть меню разделов" aria-expanded="false"
+      aria-controls="admin-sidebar">
+      <svg class="admin-burger__icon admin-burger__icon--open" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 7h16M4 12h16M4 17h16" />
+      </svg>
+      <svg class="admin-burger__icon admin-burger__icon--close" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M6 6l12 12M18 6L6 18" />
+      </svg>
+      <span class="admin-burger__text admin-burger__text--open">Меню</span>
+      <span class="admin-burger__text admin-burger__text--close">Закрыть</span>
+    </button>
+    <div class="admin-nav-backdrop" aria-hidden="true"></div>
+
+    <!-- боковая панель -->
+    <aside class="admin__sidebar sidebar" id="admin-sidebar">
+      <a class="sidebar__logo" href="/">
+        <img class="sidebar__logo-image" srcset="/img/logo.mobile.webp 768w, /img/logo.optimized.webp 925w" sizes="(max-width: 767px) 100vw, 100vw" src="/img/logo.optimized.webp" alt="Rope-Pro-Line — Spleiße Atelier" width="925" height="634">
+        <span class="sidebar__logo-caption">панель управления сайтом</span>
+      </a>
+
+      <nav class="sidebar__nav" aria-label="Управление сайтом">
+        <p class="admin-navigation-label">Подготовка каталога</p>
+        <button class="sidebar__tab" type="button" data-panel="groups">Разделы каталога</button>
+        <button class="sidebar__tab" type="button" data-panel="colors">Цвета товаров</button>
+        <button class="sidebar__tab" type="button" data-panel="configurator">Конфигуратор и цены</button>
+        <button class="sidebar__tab sidebar__tab--active" type="button" data-panel="catalog">Товары и диаметры</button>
+        <p class="admin-navigation-label">Заказы</p>
+        <button class="sidebar__tab" type="button" data-panel="requests">Заявки покупателей</button>
+        <p class="admin-navigation-label" data-next-content hidden>Содержимое сайта</p>
+        <button class="sidebar__tab" type="button" data-panel="content" data-next-content hidden>Тексты страниц</button>
+        <button class="sidebar__tab" type="button" data-panel="gallery" data-next-content hidden>Галереи</button>
+        <button class="sidebar__tab" type="button" data-panel="reviews" data-next-content hidden>Отзывы</button>
+        <button class="sidebar__tab" type="button" data-panel="contacts" data-next-content hidden>Контакты</button>
+        <button class="sidebar__tab" type="button" data-panel="settings" data-next-content hidden>Настройки и пароль</button>
+      </nav>
+
+      <div class="sidebar__footer">
+        <a class="sidebar__link" href="/" target="_blank" rel="noopener">
+          <svg class="sidebar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></svg>
+          Открыть сайт
+        </a>
+        <div class="sidebar__user">
+          <span class="sidebar__avatar" aria-hidden="true">А</span>
+          <span class="sidebar__user-name">Администратор</span>
+          <a class="sidebar__logout" href="#">Выйти</a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="admin__main"><section class="panel" id="panel-groups" hidden></section>
+      <section class="panel" id="panel-content" hidden></section>
+      <section class="panel" id="panel-gallery" hidden></section>
+
+      <section class="panel" id="panel-colors" aria-labelledby="colors-title" hidden>
+        <header class="panel__head"><h1 class="panel__title" id="colors-title">Цвета канатов</h1></header>
+        <p>Общий справочник цветов. Названия доступны на EN и DE. Отключение цвета скрывает его у всех канатов.</p>
+        <div class="product-toolbar">
+          <button class="btn" type="button" data-color-new>Добавить цвет</button>
+          <button class="btn btn--ghost" type="button" data-colors-refresh>Обновить цвета</button>
+        </div>
+        <div data-color-select></div>
+        <p data-color-status role="status" aria-live="polite"></p>
+        <div data-color-editor></div>
+      </section>
+
+      <section class="panel" id="panel-requests" aria-labelledby="requests-title" hidden>
+        <header class="panel__head">
+          <div class="panel__heading"><h1 class="panel__title" id="requests-title">Заявки</h1></div>
+          <button class="btn btn--primary" type="button" data-requests-refresh>Обновить</button>
+        </header>
+        <p>По 50 заявок на странице. Нажмите номер для просмотра состава.</p>
+        <div class="requests-table" id="admin-requests-list" aria-live="polite"></div>
+      </section>
+
+      <!-- главная -->
+      <section class="panel" data-savable id="panel-home" aria-labelledby="home-title">
+        <header class="panel__head">
+          <div class="panel__heading">
+            <h1 class="panel__title" id="home-title">Главная страница</h1>
+            <p class="panel__subtitle">Здесь меняются тексты и фотографии на главной странице сайта. Блоки идут
+              в&nbsp;том же порядке, что и&nbsp;на&nbsp;сайте&nbsp;— сверху вниз.</p>
+          </div>
+          <a class="btn btn--ghost" href="/" target="_blank" rel="noopener">
+            <svg class="btn__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></svg>
+            Посмотреть сайт
+          </a>
+        </header>
+
+        <!-- короткая инструкция -->
+        <ol class="guide">
+          <li class="guide__step">
+            <span class="guide__number">1</span>
+            <span class="guide__text">Нажмите на&nbsp;название блока, чтобы открыть&nbsp;его</span>
+          </li>
+          <li class="guide__step">
+            <span class="guide__number">2</span>
+            <span class="guide__text">Исправьте текст в&nbsp;белом поле или&nbsp;нажмите «Заменить фото»</span>
+          </li>
+          <li class="guide__step">
+            <span class="guide__number">3</span>
+            <span class="guide__text">Нажмите синюю кнопку «Сохранить изменения» внизу экрана</span>
+          </li>
+        </ol>
+
+        <!-- язык текстов -->
+        <div class="language">
+          <div class="language__info">
+            <p class="language__title">Язык текстов</p>
+            <p class="language__text">Сайт есть на&nbsp;трёх языках. Сейчас вы&nbsp;редактируете
+              <b>русский</b>. Чтобы поменять английский или немецкий текст, нажмите EN или&nbsp;DE. Фотографии
+              общие для&nbsp;всех языков.</p>
+          </div>
+          <div class="lang-switch" role="group" aria-label="Язык текстов">
+            <button class="lang-switch__button lang-switch__button--active" type="button">Русский</button>
+            <button class="lang-switch__button" type="button">EN</button>
+            <button class="lang-switch__button" type="button">DE</button>
+          </div>
+        </div>
+
+        <!-- первый экран -->
+        <details class="card" open>
+          <summary class="card__head">
+            <span class="card__number">1</span>
+            <span class="card__heading">
+              <span class="card__title">Первый экран</span>
+              <span class="card__hint">Самый верх сайта: большое фото, название, слоган и&nbsp;три цифры</span>
+            </span>
+            <svg class="card__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+          </summary>
+          <div class="card__body">
+            <div class="fields fields--two">
+              <div class="image-slot">
+                <img class="image-slot__preview" data-admin-preview-srcset="/img/hero/rope-blue.mobile.webp 768w, /img/hero/rope-blue.optimized.webp 1280w" sizes="(max-width: 767px) 100vw, 100vw" data-admin-preview-src="/img/hero/rope-blue.optimized.webp" alt="" width="1280" height="960">
+                <div class="image-slot__info">
+                  <p class="image-slot__label">Большое фото</p>
+                  <p class="image-slot__hint">Фон первого экрана. Нажмите «Заменить фото» и выберите файл
+                    на&nbsp;компьютере.</p>
+                  <button class="btn btn--ghost btn--small" type="button">Заменить фото</button>
+                </div>
+              </div>
+              <div class="image-slot">
+                <img class="image-slot__preview image-slot__preview--transparent"
+                  data-admin-preview-src="/img/hero/rope-blue-cutout.webp" alt="" width="1280" height="960">
+                <div class="image-slot__info">
+                  <p class="image-slot__label">Верёвка без фона</p>
+                  <p class="image-slot__hint">Та же верёвка, что на&nbsp;фото, но&nbsp;вырезанная&nbsp;— она ложится
+                    поверх названия. Меняется вместе с&nbsp;большим фото, готовит дизайнер.</p>
+                  <button class="btn btn--ghost btn--small" type="button">Заменить фото</button>
+                </div>
+              </div>
+            </div>
+
+            <label class="field">
+              <span class="field__label">Название на фото</span>
+              <span class="field__hint">Огромное слово поверх фото. Чем короче, тем крупнее буквы.</span>
+              <input class="field__input" type="text" value="ROPE-PRO-LINE">
+            </label>
+
+            <label class="field">
+              <span class="field__label">Слоган</span>
+              <span class="field__hint">Крупная фраза внизу первого экрана, над описанием.</span>
+              <input class="field__input" type="text" value="Больше, чем просто канаты">
+            </label>
+
+            <label class="field">
+              <span class="field__label">Описание</span>
+              <span class="field__hint">Пара предложений под слоганом. Не&nbsp;длиннее 200 символов, иначе
+                на&nbsp;телефоне текст закроет фото.</span>
+              <textarea class="field__textarea" rows="3">Надёжность, качество и профессиональное мастерство — в каждом метре каната.</textarea>
+              <span class="field__counter">75 из 200 символов</span>
+            </label>
+
+            <div class="fields fields--two">
+              <label class="field">
+                <span class="field__label">Надпись на белой кнопке</span>
+                <span class="field__hint">Главная кнопка, по&nbsp;ней клиент оставляет заявку.</span>
+                <input class="field__input" type="text" value="Обсудить заказ">
+              </label>
+              <label class="field">
+                <span class="field__label">Надпись на второй кнопке</span>
+                <span class="field__hint">Прозрачная кнопка рядом, ведёт в&nbsp;каталог.</span>
+                <input class="field__input" type="text" value="Смотреть каталог">
+              </label>
+            </div>
+
+            <fieldset class="group">
+              <legend class="group__title">Три цифры в правом нижнем углу</legend>
+              <p class="field__hint">Слева&nbsp;— сама цифра (например, «12 лет»), справа&nbsp;— короткая
+                подпись к&nbsp;ней.</p>
+              <div class="fields fields--pair">
+                <input class="field__input" type="text" value="12 лет" aria-label="Цифра 1">
+                <input class="field__input" type="text" value="опыта в сплайсинге" aria-label="Подпись к цифре 1">
+              </div>
+              <div class="fields fields--pair">
+                <input class="field__input" type="text" value="2 500+" aria-label="Цифра 2">
+                <input class="field__input" type="text" value="соединений для яхт и бизнеса"
+                  aria-label="Подпись к цифре 2">
+              </div>
+              <div class="fields fields--pair">
+                <input class="field__input" type="text" value="100%" aria-label="Цифра 3">
+                <input class="field__input" type="text" value="ручная работа и тест на разрыв"
+                  aria-label="Подпись к цифре 3">
+              </div>
+            </fieldset>
+          </div>
+        </details>
+
+        <!-- о нас -->
+        <details class="card" open>
+          <summary class="card__head">
+            <span class="card__number">2</span>
+            <span class="card__heading">
+              <span class="card__title">О нас</span>
+              <span class="card__hint">Рассказ о&nbsp;компании и&nbsp;«Почему выбирают»&nbsp;— четыре пункта с&nbsp;фотографиями</span>
+            </span>
+            <svg class="card__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+          </summary>
+          <div class="card__body">
+            <label class="field">
+              <span class="field__label">Заголовок</span>
+              <span class="field__hint">Большой заголовок блока.</span>
+              <input class="field__input" type="text" value="Качество, которое имеет значение">
+            </label>
+
+            <label class="field">
+              <span class="field__label">Рассказ о компании</span>
+              <span class="field__hint">Чтобы начать новый абзац, нажмите Enter два раза&nbsp;— оставьте пустую
+                строку.</span>
+              <textarea class="field__textarea" rows="7">Rope-Pro-Line — это высококачественные канаты, профессиональное сращивание и индивидуальные решения для тех, кто не готов идти на компромиссы в вопросах безопасности, прочности и долговечности.
+
+Мы создаём решения, на которые можно положиться — в работе, в спорте, на воде и в любых ситуациях, где от качества каната зависит результат.</textarea>
+            </label>
+
+            <div class="fields fields--two">
+              <label class="field">
+                <span class="field__label">Имя для подписи</span>
+                <span class="field__hint">Стоит под рассказом, как подпись. Если подпись не&nbsp;нужна, оставьте пустым.</span>
+                <input class="field__input" type="text" value="Имя Фамилия">
+              </label>
+              <label class="field">
+                <span class="field__label">Кто это</span>
+                <span class="field__hint">Пишется мелко рядом с&nbsp;именем.</span>
+                <input class="field__input" type="text" value="специалист по сплайсингу, основатель Rope-Pro-Line">
+              </label>
+            </div>
+
+            <label class="field">
+              <span class="field__label">Заголовок над пунктами</span>
+              <span class="field__hint">Стоит над четырьмя пунктами с&nbsp;фотографиями.</span>
+              <input class="field__input" type="text" value="Почему выбирают Rope-Pro-Line?">
+            </label>
+
+            <fieldset class="group">
+              <legend class="group__title">Четыре пункта с фотографиями</legend>
+              <p class="field__hint">На&nbsp;сайте пункты стоят слева, а&nbsp;справа большое фото. Когда посетитель
+                наводит на&nbsp;пункт, показывается его фото. Стрелками можно поменять порядок.</p>
+              <ol class="items">
+                <li class="items__row">
+                  <img class="items__thumb" data-admin-preview-srcset="/img/works/rope-red.mobile.webp 768w, /img/works/rope-red.optimized.webp 1280w" sizes="(max-width: 767px) 100vw, 100vw" data-admin-preview-src="/img/works/rope-red.optimized.webp" alt="" width="1280" height="960">
+                  <div class="items__fields">
+                    <input class="field__input" type="text" value="Профессиональное сращивание" aria-label="Название пункта 1">
+                    <input class="field__input field__input--muted" type="text"
+                      value="Точная и аккуратная работа опытных специалистов. Каждое соединение выполняется с максимальным вниманием к деталям"
+                      aria-label="Описание пункта 1">
+                  </div>
+                  <div class="items__controls">
+                    <button class="btn btn--ghost btn--small" type="button">Заменить фото</button>
+                    <div class="items__move">
+                      <button class="items__arrow" type="button" aria-label="Поднять выше" disabled>↑</button>
+                      <button class="items__arrow" type="button" aria-label="Опустить ниже">↓</button>
+                    </div>
+                  </div>
+                </li>
+                <li class="items__row">
+                  <img class="items__thumb" data-admin-preview-srcset="/img/works/rope-blue.mobile.webp 768w, /img/works/rope-blue.optimized.webp 1280w" sizes="(max-width: 767px) 100vw, 100vw" data-admin-preview-src="/img/works/rope-blue.optimized.webp" alt="" width="1280" height="960">
+                  <div class="items__fields">
+                    <input class="field__input" type="text" value="Качество, которому доверяют" aria-label="Название пункта 2">
+                    <input class="field__input field__input--muted" type="text"
+                      value="Мы используем качественные материалы и уделяем особое внимание обработке каждого изделия"
+                      aria-label="Описание пункта 2">
+                  </div>
+                  <div class="items__controls">
+                    <button class="btn btn--ghost btn--small" type="button">Заменить фото</button>
+                    <div class="items__move">
+                      <button class="items__arrow" type="button" aria-label="Поднять выше">↑</button>
+                      <button class="items__arrow" type="button" aria-label="Опустить ниже">↓</button>
+                    </div>
+                  </div>
+                </li>
+                <li class="items__row">
+                  <img class="items__thumb" data-admin-preview-src="/img/works/rope-red-shackle.jpg" alt="" width="650" height="520">
+                  <div class="items__fields">
+                    <input class="field__input" type="text" value="Решения именно для вас" aria-label="Название пункта 3">
+                    <input class="field__input field__input--muted" type="text"
+                      value="Не просто стандартный продукт, а индивидуальный подход. Мы подбираем и изготавливаем решения с учётом конкретных задач и требований клиента"
+                      aria-label="Описание пункта 3">
+                  </div>
+                  <div class="items__controls">
+                    <button class="btn btn--ghost btn--small" type="button">Заменить фото</button>
+                    <div class="items__move">
+                      <button class="items__arrow" type="button" aria-label="Поднять выше">↑</button>
+                      <button class="items__arrow" type="button" aria-label="Опустить ниже">↓</button>
+                    </div>
+                  </div>
+                </li>
+                <li class="items__row">
+                  <img class="items__thumb" data-admin-preview-src="/img/works/rope-blue-ring.jpg" alt="" width="500" height="400">
+                  <div class="items__fields">
+                    <input class="field__input" type="text" value="Надёжность без компромиссов" aria-label="Название пункта 4">
+                    <input class="field__input field__input--muted" type="text"
+                      value="Для нас важны не только качественный продукт, но и честность, ответственность, пунктуальность и личный контакт с каждым клиентом"
+                      aria-label="Описание пункта 4">
+                  </div>
+                  <div class="items__controls">
+                    <button class="btn btn--ghost btn--small" type="button">Заменить фото</button>
+                    <div class="items__move">
+                      <button class="items__arrow" type="button" aria-label="Поднять выше">↑</button>
+                      <button class="items__arrow" type="button" aria-label="Опустить ниже" disabled>↓</button>
+                    </div>
+                  </div>
+                </li>
+              </ol>
+            </fieldset>
+          </div>
+        </details>
+
+        <!-- конфигуратор -->
+        <details class="card">
+          <summary class="card__head">
+            <span class="card__number">3</span>
+            <span class="card__heading">
+              <span class="card__title">Конфигуратор троса</span>
+              <span class="card__hint">Заголовок и&nbsp;тексты блока, где клиент собирает трос</span>
+            </span>
+            <svg class="card__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+          </summary>
+          <div class="card__body">
+            <div class="note">
+              <p class="note__text">Цены, тросы, цвета и&nbsp;варианты концов меняются в&nbsp;отдельном разделе.</p>
+              <button class="btn btn--ghost btn--small" type="button" data-open-panel="configurator">Открыть цены</button>
+            </div>
+
+            <label class="field">
+              <span class="field__label">Заголовок</span>
+              <span class="field__hint">Большой заголовок над конфигуратором.</span>
+              <input class="field__input" type="text" value="Соберите трос под свою задачу">
+            </label>
+
+            <label class="field">
+              <span class="field__label">Текст под заголовком</span>
+              <span class="field__hint">Коротко: как пользоваться и&nbsp;что будет после заявки.</span>
+              <textarea class="field__textarea" rows="3">Выберите трос, длину и что сделать на концах — схема и цена пересчитаются сразу. Перед изготовлением мы проверим конфигурацию и свяжемся с вами.</textarea>
+            </label>
+
+            <div class="fields fields--two">
+              <label class="field">
+                <span class="field__label">Надпись на кнопке заявки</span>
+                <span class="field__hint">Тёмная кнопка под итоговой ценой.</span>
+                <input class="field__input" type="text" value="Отправить на проверку">
+              </label>
+              <label class="field">
+                <span class="field__label">Ссылка под кнопкой</span>
+                <span class="field__hint">Для тех, кто не&nbsp;знает, что выбрать.</span>
+                <input class="field__input" type="text" value="Не уверены? Опишите задачу — подберём сами">
+              </label>
+            </div>
+
+            <label class="field">
+              <span class="field__label">Мелкий текст под кнопкой</span>
+              <span class="field__hint">Условия оплаты и&nbsp;возврата.</span>
+              <textarea class="field__textarea" rows="2">Оплата — после того, как мы подтвердим конфигурацию. Изделия на заказ не подлежат возврату.</textarea>
+            </label>
+          </div>
+        </details>
+
+        <!-- благотворительность -->
+        <details class="card">
+          <summary class="card__head">
+            <span class="card__number">4</span>
+            <span class="card__heading">
+              <span class="card__title">Благотворительность</span>
+              <span class="card__hint">Текст о&nbsp;помощи и&nbsp;фотографии</span>
+            </span>
+            <svg class="card__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+          </summary>
+          <div class="card__body">
+            <label class="field">
+              <span class="field__label">Короткий заголовок</span>
+              <span class="field__hint">Крупная строка над текстом.</span>
+              <input class="field__input" type="text" value="Покупая у нас, вы делаете больше">
+            </label>
+
+            <label class="field">
+              <span class="field__label">Текст</span>
+              <span class="field__hint">Стоит под большой надписью «1 заказ = 1 €». Чтобы начать новый абзац, оставьте пустую строку.</span>
+              <textarea class="field__textarea" rows="6">Мы считаем, что успешный бизнес — это не только прибыль, но и ответственность перед обществом. Поэтому с каждой продажи мы жертвуем 1 евро в пользу приютов для животных и на поддержку пожилых людей.
+
+Ваш заказ приносит пользу не только вам. Вы выбираете качественный продукт — и одновременно помогаете тем, кому нужна поддержка.</textarea>
+            </label>
+
+            <fieldset class="group">
+              <legend class="group__title">Фотографии</legend>
+              <p class="field__hint">На&nbsp;сайте фото листаются стрелками. Под каждым фото напишите, что
+                на&nbsp;нём. Чтобы убрать фото, нажмите крестик.</p>
+              <ul class="photos">
+                <li class="photos__item">
+                  <img class="photos__image" data-admin-preview-srcset="/img/charity/seniors-help.mobile.webp 768w, /img/charity/seniors-help.optimized.webp 1280w" sizes="(max-width: 767px) 100vw, 100vw" data-admin-preview-src="/img/charity/seniors-help.optimized.webp" alt="" width="1280" height="960">
+                  <input class="field__input" type="text" value="Продукты для пожилых людей"
+                    aria-label="Подпись к фото">
+                  <button class="photos__remove" type="button" aria-label="Удалить фото">×</button>
+                </li>
+                <li class="photos__item">
+                  <button class="photos__add" type="button">
+                    <span class="photos__plus" aria-hidden="true">+</span>
+                    Добавить фото
+                  </button>
+                </li>
+              </ul>
+            </fieldset>
+          </div>
+        </details>
+      </section>
+
+      <!-- отзывы -->
+      <section class="panel" id="panel-reviews" aria-labelledby="reviews-title" hidden>
+        <header class="panel__head">
+          <div class="panel__heading">
+            <h1 class="panel__title" id="reviews-title">Отзывы</h1>
+            <p class="panel__subtitle">Все отзывы клиентов приходят сюда. На&nbsp;сайте появятся только те,
+              которые вы&nbsp;опубликуете.</p>
+          </div>
+        </header>
+
+        <div class="help">
+          <p class="help__title">Что делать с новым отзывом</p>
+          <ul class="help__list">
+            <li class="help__item"><b>Опубликовать</b>&nbsp;— отзыв сразу появится на&nbsp;сайте.</li>
+            <li class="help__item"><b>Отклонить</b>&nbsp;— отзыв не&nbsp;будет виден на&nbsp;сайте. Его можно
+              вернуть позже во&nbsp;вкладке «Отклонённые».</li>
+          </ul>
+        </div>
+
+        <div class="filters" role="group" aria-label="Какие отзывы показать">
+          <button class="filters__tab filters__tab--active" type="button" data-filter="new">
+            Новые, ждут решения <span class="filters__count">3</span>
+          </button>
+          <button class="filters__tab" type="button" data-filter="published">
+            На сайте <span class="filters__count">12</span>
+          </button>
+          <button class="filters__tab" type="button" data-filter="rejected">
+            Отклонённые <span class="filters__count">2</span>
+          </button>
+        </div>
+
+        <!-- новые -->
+        <ul class="reviews" data-list="new">
+          <li class="review review--new">
+            <div class="review__head">
+              <span class="review__avatar" aria-hidden="true">А</span>
+              <div class="review__author">
+                <p class="review__name">Андрей К.</p>
+                <p class="review__meta">28 сентября · заказывал мягкие скобы, 4 шт.</p>
+              </div>
+              <span class="review__status review__status--new">Ждёт решения</span>
+            </div>
+            <p class="review__rating" aria-label="Оценка 5 из 5">★★★★★</p>
+            <p class="review__text">Заказывал мягкие скобы на яхту. Сделано аккуратно, место сращивания почти
+              не видно. Отправили быстро, всё упаковано. Буду заказывать ещё.</p>
+            <div class="review__actions">
+              <button class="btn btn--success" type="button">✓ Опубликовать</button>
+              <button class="btn btn--ghost" type="button">Отклонить</button>
+            </div>
+          </li>
+          <li class="review review--new">
+            <div class="review__head">
+              <span class="review__avatar" aria-hidden="true">М</span>
+              <div class="review__author">
+                <p class="review__name">Мария С.</p>
+                <p class="review__meta">26 сентября · заказывала огон на швартовом конце</p>
+              </div>
+              <span class="review__status review__status--new">Ждёт решения</span>
+            </div>
+            <p class="review__rating" aria-label="Оценка 4 из 5">★★★★<span class="review__star-off">★</span></p>
+            <p class="review__text">Работа отличная, но ждать пришлось на неделю дольше, чем договаривались.</p>
+            <div class="review__actions">
+              <button class="btn btn--success" type="button">✓ Опубликовать</button>
+              <button class="btn btn--ghost" type="button">Отклонить</button>
+            </div>
+          </li>
+          <li class="review review--new">
+            <div class="review__head">
+              <span class="review__avatar" aria-hidden="true">Т</span>
+              <div class="review__author">
+                <p class="review__name">ООО «Такелаж-Сервис»</p>
+                <p class="review__meta">25 сентября · оптовый заказ</p>
+              </div>
+              <span class="review__status review__status--new">Ждёт решения</span>
+            </div>
+            <p class="review__rating" aria-label="Оценка 5 из 5">★★★★★</p>
+            <p class="review__text">Сотрудничаем второй год. Все изделия проходят проверку, претензий не было
+              ни разу.</p>
+            <div class="review__actions">
+              <button class="btn btn--success" type="button">✓ Опубликовать</button>
+              <button class="btn btn--ghost" type="button">Отклонить</button>
+            </div>
+          </li>
+        </ul>
+
+        <!-- на сайте -->
+        <ul class="reviews" data-list="published" hidden>
+          <li class="review">
+            <div class="review__head">
+              <span class="review__avatar" aria-hidden="true">И</span>
+              <div class="review__author">
+                <p class="review__name">Игорь П.</p>
+                <p class="review__meta">12 сентября · сращивание двух тросов</p>
+              </div>
+              <span class="review__status review__status--published">Виден на сайте</span>
+            </div>
+            <p class="review__rating" aria-label="Оценка 5 из 5">★★★★★</p>
+            <p class="review__text">Срастили два куска шкота так, что не отличить от целого. Спасибо мастеру!</p>
+            <div class="review__actions">
+              <button class="btn btn--ghost" type="button">Убрать с сайта</button>
+            </div>
+          </li>
+          <li class="review">
+            <div class="review__head">
+              <span class="review__avatar" aria-hidden="true">Е</span>
+              <div class="review__author">
+                <p class="review__name">Елена В.</p>
+                <p class="review__meta">3 сентября · поводок для собаки</p>
+              </div>
+              <span class="review__status review__status--published">Виден на сайте</span>
+            </div>
+            <p class="review__rating" aria-label="Оценка 5 из 5">★★★★★</p>
+            <p class="review__text">Очень красивый и прочный поводок, сделан именно под нашу собаку.</p>
+            <div class="review__actions">
+              <button class="btn btn--ghost" type="button">Убрать с сайта</button>
+            </div>
+          </li>
+        </ul>
+
+        <!-- отклонённые -->
+        <ul class="reviews" data-list="rejected" hidden>
+          <li class="review review--rejected">
+            <div class="review__head">
+              <span class="review__avatar" aria-hidden="true">?</span>
+              <div class="review__author">
+                <p class="review__name">Гость</p>
+                <p class="review__meta">1 сентября · без заказа</p>
+              </div>
+              <span class="review__status review__status--rejected">Не показывается</span>
+            </div>
+            <p class="review__rating" aria-label="Оценка 1 из 5">★<span class="review__star-off">★★★★</span></p>
+            <p class="review__text">Реклама стороннего магазина со ссылкой.</p>
+            <div class="review__actions">
+              <button class="btn btn--ghost" type="button">Вернуть в новые</button>
+              <button class="btn btn--danger" type="button">Удалить навсегда</button>
+            </div>
+          </li>
+        </ul>
+      </section>
+
+      <!-- контакты -->
+      <section class="panel" id="panel-settings" aria-label="Настройки и пароль" hidden></section>
+      <section class="panel" data-savable id="panel-contacts" aria-labelledby="contacts-title" hidden>
+        <header class="panel__head">
+          <div class="panel__heading">
+            <h1 class="panel__title" id="contacts-title">Телефон и почта</h1>
+            <p class="panel__subtitle">Эти контакты показываются на&nbsp;всех страницах сайта: в&nbsp;шапке,
+              в&nbsp;меню и&nbsp;внизу сайта.</p>
+          </div>
+        </header>
+
+        <div class="card card--static">
+          <div class="card__body">
+            <label class="field">
+              <span class="field__label">Телефон</span>
+              <span class="field__hint">Пишите так, как хотите видеть на&nbsp;сайте. По&nbsp;нему клиент сможет
+                позвонить в&nbsp;одно нажатие.</span>
+              <input class="field__input" type="tel" value="+7 900 000-00-00">
+            </label>
+            <label class="field">
+              <span class="field__label">Электронная почта</span>
+              <span class="field__hint">На&nbsp;этот адрес будут приходить заявки с&nbsp;сайта.</span>
+              <input class="field__input" type="email" value="info@rope-pro-line.example">
+            </label>
+            <div class="fields fields--two">
+              <label class="field">
+                <span class="field__label">Telegram</span>
+                <span class="field__hint">Ваше имя пользователя, начинается с&nbsp;@.</span>
+                <input class="field__input" type="text" value="@rope_pro_line">
+              </label>
+              <label class="field">
+                <span class="field__label">WhatsApp</span>
+                <span class="field__hint">Номер, к&nbsp;которому привязан WhatsApp.</span>
+                <input class="field__input" type="tel" value="+7 900 000-00-00">
+              </label>
+            </div>
+            <label class="field">
+              <span class="field__label">Адрес мастерской</span>
+              <span class="field__hint">Если адрес показывать не&nbsp;нужно, оставьте поле пустым.</span>
+              <input class="field__input" type="text" placeholder="Например: Москва, ул. Морская, 5">
+            </label>
+
+            <fieldset class="group">
+              <legend class="group__title">Социальные сети</legend>
+              <p class="field__hint">Круглые значки внизу сайта. Вставьте ссылку на&nbsp;свою страницу. Если
+                соцсети нет, оставьте поле пустым&nbsp;— значок пропадёт.</p>
+              <label class="field">
+                <span class="field__label">Instagram</span>
+                <input class="field__input" type="url" placeholder="https://instagram.com/…">
+              </label>
+              <label class="field">
+                <span class="field__label">Facebook</span>
+                <input class="field__input" type="url" placeholder="https://facebook.com/…">
+              </label>
+              <label class="field">
+                <span class="field__label">YouTube</span>
+                <input class="field__input" type="url" placeholder="https://youtube.com/…">
+              </label>
+            </fieldset>
+          </div>
+        </div>
+      </section>
+
+      <!-- цены конфигуратора -->
+      <section class="panel" data-savable id="panel-configurator" aria-labelledby="configurator-title" hidden>
+        <header class="panel__head">
+          <div class="panel__heading">
+            <h1 class="panel__title" id="configurator-title">Цены конфигуратора</h1>
+            <p class="panel__subtitle">Здесь меняются тросы, цены и&nbsp;варианты в&nbsp;конфигураторе на&nbsp;главной странице. Клиент сразу видит итоговую цену&nbsp;— проверьте цифры перед сохранением.</p>
+          </div>
+          <a class="btn btn--ghost" href="/#configurator" target="_blank" rel="noopener">
+            <svg class="btn__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></svg>
+            Посмотреть на сайте
+          </a>
+        </header>
+
+        <!-- как считается цена -->
+        <div class="formula">
+          <p class="formula__title">Как сайт считает цену одного троса</p>
+          <div class="formula__row">
+            <span class="formula__part"><b class="formula__name">Длина</b> + запас на&nbsp;сплайсы</span>
+            <span class="formula__sign" aria-label="умножить на">×</span>
+            <span class="formula__part"><b class="formula__name">Цена за метр</b> из&nbsp;блока 1</span>
+            <span class="formula__sign" aria-label="плюс">+</span>
+            <span class="formula__part"><b class="formula__name">Концы A и B</b> работа и&nbsp;фурнитура из&nbsp;блока 2</span>
+            <span class="formula__sign" aria-label="плюс">+</span>
+            <span class="formula__part"><b class="formula__name">Дополнительно</b> из&nbsp;блока 4</span>
+          </div>
+          <p class="formula__text">До&nbsp;12&nbsp;мм включительно сайт добавляет 0,6&nbsp;м на&nbsp;каждое сращивание, свыше 12&nbsp;мм&nbsp;— 1&nbsp;м. Цена изделия умножается на&nbsp;количество. Срочный заказ добавляет 10&nbsp;€ за&nbsp;каждое сращивание, если их не&nbsp;больше десяти.</p>
+          <p class="formula__example">Пример с&nbsp;текущими демонстрационными ценами: Dyneema SK78, 8&nbsp;мм, 10&nbsp;м, огон и&nbsp;огон с&nbsp;коушем&nbsp;= <b>84,28&nbsp;€</b></p>
+        </div>
+
+        <!-- тросы -->
+        <details class="card" open>
+          <summary class="card__head">
+            <span class="card__number">1</span>
+            <span class="card__heading">
+              <span class="card__title">Тросы и цены за метр</span>
+              <span class="card__hint">Какие тросы можно выбрать, их диаметры, цена и&nbsp;прочность</span>
+            </span>
+            <svg class="card__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+          </summary>
+          <div class="card__body">
+            <p class="field__hint">Каждый трос&nbsp;— отдельная карточка. В таблице одна строка&nbsp;— один диаметр. Чтобы убрать диаметр, нажмите крестик, чтобы добавить&nbsp;— кнопку под таблицей.</p>
+
+            <div class="rope-card">
+              <div class="rope-card__head">
+                <label class="field rope-card__name">
+                  <span class="field__label">Название троса</span>
+                  <input class="field__input" type="text" value="Dyneema SK78">
+                </label>
+                <label class="switch"><input class="switch__input" type="checkbox" checked><span class="switch__track" aria-hidden="true"></span><span class="switch__text">Показывать на&nbsp;сайте</span></label>
+              </div>
+              <label class="field">
+                <span class="field__label">Описание</span>
+                <span class="field__hint">Мелкий текст в&nbsp;карточке троса. Для чего он&nbsp;и&nbsp;чем хорош.</span>
+                <textarea class="field__textarea" rows="2">12 прядей, с покрытием. Лёгкий, почти не тянется и не впитывает воду. Лебёдки, такелаж, стропы.</textarea>
+              </label>
+              <div class="fields fields--two">
+                <label class="field">
+                  <span class="field__label">Как сплетён трос</span>
+                  <span class="field__hint">От&nbsp;этого зависит цена сплайса&nbsp;— см.&nbsp;«Работа мастера» в&nbsp;блоке&nbsp;2.</span>
+                  <select class="field__input field__select" aria-label="Как сплетён трос">
+                    <option value="hollow" selected>Полое плетение из&nbsp;Dyneema / Vectran / Zylon (Hohlgeflecht)</option>
+                    <option value="hm">Сердечник Dyneema / Vectran / Zylon в&nbsp;оплётке (Kern-Mantel)</option>
+                    <option value="core">Сердечник и&nbsp;оплётка из&nbsp;полиэстера (Kern-Mantel)</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span class="field__label">Прочность после сплайса</span>
+                  <span class="field__hint">Сколько процентов прочности остаётся у&nbsp;троса с&nbsp;огоном. Обычно 85–90.</span>
+                  <span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="90" aria-label="Прочность после сплайса"><span class="field__suffix">%</span></span>
+                </label>
+              </div>
+              <label class="tick"><input class="tick__input" type="checkbox" checked><span class="tick__box" aria-hidden="true"></span><span class="tick__text">Из&nbsp;этого троса можно сделать мягкую скобу</span></label>
+
+              <div class="prices">
+                <div class="prices__head" aria-hidden="true"><span>Диаметр</span><span>Цена за&nbsp;1&nbsp;метр</span><span>Разрывная нагрузка</span><span></span></div>
+                <div class="prices__row">
+                  <span class="prices__size">3&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Цена за&nbsp;1&nbsp;метр</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="1,1" aria-label="Цена за метр, 3 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Разрывная нагрузка</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="950" aria-label="Разрывная нагрузка, 3 мм"><span class="field__suffix">кг</span></span></label>
+                  <button class="prices__remove" type="button" aria-label="Убрать диаметр 3 мм">×</button>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__size">4&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Цена за&nbsp;1&nbsp;метр</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="1,5" aria-label="Цена за метр, 4 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Разрывная нагрузка</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="1 600" aria-label="Разрывная нагрузка, 4 мм"><span class="field__suffix">кг</span></span></label>
+                  <button class="prices__remove" type="button" aria-label="Убрать диаметр 4 мм">×</button>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__size">5&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Цена за&nbsp;1&nbsp;метр</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="2,1" aria-label="Цена за метр, 5 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Разрывная нагрузка</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="2 500" aria-label="Разрывная нагрузка, 5 мм"><span class="field__suffix">кг</span></span></label>
+                  <button class="prices__remove" type="button" aria-label="Убрать диаметр 5 мм">×</button>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__size">6&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Цена за&nbsp;1&nbsp;метр</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="2,8" aria-label="Цена за метр, 6 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Разрывная нагрузка</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="3 500" aria-label="Разрывная нагрузка, 6 мм"><span class="field__suffix">кг</span></span></label>
+                  <button class="prices__remove" type="button" aria-label="Убрать диаметр 6 мм">×</button>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__size">8&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Цена за&nbsp;1&nbsp;метр</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="4,4" aria-label="Цена за метр, 8 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Разрывная нагрузка</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="6 000" aria-label="Разрывная нагрузка, 8 мм"><span class="field__suffix">кг</span></span></label>
+                  <button class="prices__remove" type="button" aria-label="Убрать диаметр 8 мм">×</button>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__size">10&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Цена за&nbsp;1&nbsp;метр</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="6,9" aria-label="Цена за метр, 10 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Разрывная нагрузка</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="9 000" aria-label="Разрывная нагрузка, 10 мм"><span class="field__suffix">кг</span></span></label>
+                  <button class="prices__remove" type="button" aria-label="Убрать диаметр 10 мм">×</button>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__size">12&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Цена за&nbsp;1&nbsp;метр</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="9,8" aria-label="Цена за метр, 12 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Разрывная нагрузка</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="12 800" aria-label="Разрывная нагрузка, 12 мм"><span class="field__suffix">кг</span></span></label>
+                  <button class="prices__remove" type="button" aria-label="Убрать диаметр 12 мм">×</button>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__size">14&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Цена за&nbsp;1&nbsp;метр</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="13,5" aria-label="Цена за метр, 14 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Разрывная нагрузка</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="16 000" aria-label="Разрывная нагрузка, 14 мм"><span class="field__suffix">кг</span></span></label>
+                  <button class="prices__remove" type="button" aria-label="Убрать диаметр 14 мм">×</button>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__size">16&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Цена за&nbsp;1&nbsp;метр</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="17,9" aria-label="Цена за метр, 16 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Разрывная нагрузка</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="19 200" aria-label="Разрывная нагрузка, 16 мм"><span class="field__suffix">кг</span></span></label>
+                  <button class="prices__remove" type="button" aria-label="Убрать диаметр 16 мм">×</button>
+                </div>
+                <button class="prices__add" type="button"><span class="prices__plus" aria-hidden="true">+</span> Добавить диаметр</button>
+              </div>
+
+              <div class="rope-card__footer">
+                <div class="items__move">
+                  <button class="items__arrow" type="button" aria-label="Поднять выше" disabled>↑</button>
+                  <button class="items__arrow" type="button" aria-label="Опустить ниже">↓</button>
+                </div>
+                <button class="btn btn--danger btn--small" type="button">Удалить трос</button>
+              </div>
+            </div>
+
+            <div class="rope-card">
+              <div class="rope-card__head">
+                <label class="field rope-card__name">
+                  <span class="field__label">Название троса</span>
+                  <input class="field__input" type="text" value="Dyneema в оплётке">
+                </label>
+                <label class="switch"><input class="switch__input" type="checkbox" checked><span class="switch__track" aria-hidden="true"></span><span class="switch__text">Показывать на&nbsp;сайте</span></label>
+              </div>
+              <label class="field">
+                <span class="field__label">Описание</span>
+                <span class="field__hint">Мелкий текст в&nbsp;карточке троса. Для чего он&nbsp;и&nbsp;чем хорош.</span>
+                <textarea class="field__textarea" rows="2">Сердечник Dyneema в полиэстеровой оплётке: приятно держать в руках, хорошо работает в стопорах. Шкоты и фалы.</textarea>
+              </label>
+              <div class="fields fields--two">
+                <label class="field">
+                  <span class="field__label">Как сплетён трос</span>
+                  <span class="field__hint">От&nbsp;этого зависит цена сплайса&nbsp;— см.&nbsp;«Работа мастера» в&nbsp;блоке&nbsp;2.</span>
+                  <select class="field__input field__select" aria-label="Как сплетён трос">
+                    <option value="hollow">Полое плетение из&nbsp;Dyneema / Vectran / Zylon (Hohlgeflecht)</option>
+                    <option value="hm" selected>Сердечник Dyneema / Vectran / Zylon в&nbsp;оплётке (Kern-Mantel)</option>
+                    <option value="core">Сердечник и&nbsp;оплётка из&nbsp;полиэстера (Kern-Mantel)</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span class="field__label">Прочность после сплайса</span>
+                  <span class="field__hint">Сколько процентов прочности остаётся у&nbsp;троса с&nbsp;огоном. Обычно 85–90.</span>
+                  <span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="85" aria-label="Прочность после сплайса"><span class="field__suffix">%</span></span>
+                </label>
+              </div>
+              <label class="tick"><input class="tick__input" type="checkbox" checked><span class="tick__box" aria-hidden="true"></span><span class="tick__text">Из&nbsp;этого троса можно сделать мягкую скобу</span></label>
+
+              <div class="prices">
+                <div class="prices__head" aria-hidden="true"><span>Диаметр</span><span>Цена за&nbsp;1&nbsp;метр</span><span>Разрывная нагрузка</span><span></span></div>
+                <div class="prices__row">
+                  <span class="prices__size">5&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Цена за&nbsp;1&nbsp;метр</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="2,6" aria-label="Цена за метр, 5 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Разрывная нагрузка</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="1 800" aria-label="Разрывная нагрузка, 5 мм"><span class="field__suffix">кг</span></span></label>
+                  <button class="prices__remove" type="button" aria-label="Убрать диаметр 5 мм">×</button>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__size">6&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Цена за&nbsp;1&nbsp;метр</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="3,4" aria-label="Цена за метр, 6 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Разрывная нагрузка</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="2 600" aria-label="Разрывная нагрузка, 6 мм"><span class="field__suffix">кг</span></span></label>
+                  <button class="prices__remove" type="button" aria-label="Убрать диаметр 6 мм">×</button>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__size">8&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Цена за&nbsp;1&nbsp;метр</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="5,2" aria-label="Цена за метр, 8 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Разрывная нагрузка</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="4 500" aria-label="Разрывная нагрузка, 8 мм"><span class="field__suffix">кг</span></span></label>
+                  <button class="prices__remove" type="button" aria-label="Убрать диаметр 8 мм">×</button>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__size">10&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Цена за&nbsp;1&nbsp;метр</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="7,9" aria-label="Цена за метр, 10 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Разрывная нагрузка</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="7 000" aria-label="Разрывная нагрузка, 10 мм"><span class="field__suffix">кг</span></span></label>
+                  <button class="prices__remove" type="button" aria-label="Убрать диаметр 10 мм">×</button>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__size">12&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Цена за&nbsp;1&nbsp;метр</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="11,2" aria-label="Цена за метр, 12 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Разрывная нагрузка</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="9 500" aria-label="Разрывная нагрузка, 12 мм"><span class="field__suffix">кг</span></span></label>
+                  <button class="prices__remove" type="button" aria-label="Убрать диаметр 12 мм">×</button>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__size">14&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Цена за&nbsp;1&nbsp;метр</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="15" aria-label="Цена за метр, 14 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Разрывная нагрузка</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="12 500" aria-label="Разрывная нагрузка, 14 мм"><span class="field__suffix">кг</span></span></label>
+                  <button class="prices__remove" type="button" aria-label="Убрать диаметр 14 мм">×</button>
+                </div>
+                <button class="prices__add" type="button"><span class="prices__plus" aria-hidden="true">+</span> Добавить диаметр</button>
+              </div>
+
+              <div class="rope-card__footer">
+                <div class="items__move">
+                  <button class="items__arrow" type="button" aria-label="Поднять выше">↑</button>
+                  <button class="items__arrow" type="button" aria-label="Опустить ниже">↓</button>
+                </div>
+                <button class="btn btn--danger btn--small" type="button">Удалить трос</button>
+              </div>
+            </div>
+
+            <div class="rope-card">
+              <div class="rope-card__head">
+                <label class="field rope-card__name">
+                  <span class="field__label">Название троса</span>
+                  <input class="field__input" type="text" value="Полиэстер двойного плетения">
+                </label>
+                <label class="switch"><input class="switch__input" type="checkbox" checked><span class="switch__track" aria-hidden="true"></span><span class="switch__text">Показывать на&nbsp;сайте</span></label>
+              </div>
+              <label class="field">
+                <span class="field__label">Описание</span>
+                <span class="field__hint">Мелкий текст в&nbsp;карточке троса. Для чего он&nbsp;и&nbsp;чем хорош.</span>
+                <textarea class="field__textarea" rows="2">Классика для швартовов: мягко гасит рывки, не боится солнца и истирания.</textarea>
+              </label>
+              <div class="fields fields--two">
+                <label class="field">
+                  <span class="field__label">Как сплетён трос</span>
+                  <span class="field__hint">От&nbsp;этого зависит цена сплайса&nbsp;— см.&nbsp;«Работа мастера» в&nbsp;блоке&nbsp;2.</span>
+                  <select class="field__input field__select" aria-label="Как сплетён трос">
+                    <option value="hollow">Полое плетение из&nbsp;Dyneema / Vectran / Zylon (Hohlgeflecht)</option>
+                    <option value="hm">Сердечник Dyneema / Vectran / Zylon в&nbsp;оплётке (Kern-Mantel)</option>
+                    <option value="core" selected>Сердечник и&nbsp;оплётка из&nbsp;полиэстера (Kern-Mantel)</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span class="field__label">Прочность после сплайса</span>
+                  <span class="field__hint">Сколько процентов прочности остаётся у&nbsp;троса с&nbsp;огоном. Обычно 85–90.</span>
+                  <span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="85" aria-label="Прочность после сплайса"><span class="field__suffix">%</span></span>
+                </label>
+              </div>
+              <label class="tick"><input class="tick__input" type="checkbox"><span class="tick__box" aria-hidden="true"></span><span class="tick__text">Из&nbsp;этого троса можно сделать мягкую скобу</span></label>
+
+              <div class="prices">
+                <div class="prices__head" aria-hidden="true"><span>Диаметр</span><span>Цена за&nbsp;1&nbsp;метр</span><span>Разрывная нагрузка</span><span></span></div>
+                <div class="prices__row">
+                  <span class="prices__size">6&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Цена за&nbsp;1&nbsp;метр</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="0,9" aria-label="Цена за метр, 6 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Разрывная нагрузка</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="800" aria-label="Разрывная нагрузка, 6 мм"><span class="field__suffix">кг</span></span></label>
+                  <button class="prices__remove" type="button" aria-label="Убрать диаметр 6 мм">×</button>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__size">8&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Цена за&nbsp;1&nbsp;метр</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="1,3" aria-label="Цена за метр, 8 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Разрывная нагрузка</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="1 450" aria-label="Разрывная нагрузка, 8 мм"><span class="field__suffix">кг</span></span></label>
+                  <button class="prices__remove" type="button" aria-label="Убрать диаметр 8 мм">×</button>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__size">10&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Цена за&nbsp;1&nbsp;метр</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="1,9" aria-label="Цена за метр, 10 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Разрывная нагрузка</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="2 250" aria-label="Разрывная нагрузка, 10 мм"><span class="field__suffix">кг</span></span></label>
+                  <button class="prices__remove" type="button" aria-label="Убрать диаметр 10 мм">×</button>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__size">12&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Цена за&nbsp;1&nbsp;метр</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="2,6" aria-label="Цена за метр, 12 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Разрывная нагрузка</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="3 200" aria-label="Разрывная нагрузка, 12 мм"><span class="field__suffix">кг</span></span></label>
+                  <button class="prices__remove" type="button" aria-label="Убрать диаметр 12 мм">×</button>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__size">14&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Цена за&nbsp;1&nbsp;метр</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="3,4" aria-label="Цена за метр, 14 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Разрывная нагрузка</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="4 300" aria-label="Разрывная нагрузка, 14 мм"><span class="field__suffix">кг</span></span></label>
+                  <button class="prices__remove" type="button" aria-label="Убрать диаметр 14 мм">×</button>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__size">16&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Цена за&nbsp;1&nbsp;метр</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="4,3" aria-label="Цена за метр, 16 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Разрывная нагрузка</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="5 500" aria-label="Разрывная нагрузка, 16 мм"><span class="field__suffix">кг</span></span></label>
+                  <button class="prices__remove" type="button" aria-label="Убрать диаметр 16 мм">×</button>
+                </div>
+                <button class="prices__add" type="button"><span class="prices__plus" aria-hidden="true">+</span> Добавить диаметр</button>
+              </div>
+
+              <div class="rope-card__footer">
+                <div class="items__move">
+                  <button class="items__arrow" type="button" aria-label="Поднять выше">↑</button>
+                  <button class="items__arrow" type="button" aria-label="Опустить ниже" disabled>↓</button>
+                </div>
+                <button class="btn btn--danger btn--small" type="button">Удалить трос</button>
+              </div>
+            </div>
+
+            <button class="add-button" type="button"><span class="add-button__plus" aria-hidden="true">+</span> Добавить трос</button>
+          </div>
+        </details>
+
+        <!-- концы и фурнитура -->
+        <details class="card">
+          <summary class="card__head">
+            <span class="card__number">2</span>
+            <span class="card__heading">
+              <span class="card__title">Концы троса и фурнитура</span>
+              <span class="card__hint">Работа мастера, коуши, скобы и&nbsp;длины огонов</span>
+            </span>
+            <svg class="card__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+          </summary>
+          <div class="card__body">
+            <fieldset class="group">
+              <legend class="group__title">Какие концы можно выбрать</legend>
+              <p class="field__hint">Выключите вариант, если сейчас его не&nbsp;делаете,&nbsp;— он пропадёт из&nbsp;конфигуратора.</p>
+              <div class="switches">
+                <label class="switch"><input class="switch__input" type="checkbox" checked><span class="switch__track" aria-hidden="true"></span><span class="switch__text">Оплавленный торец</span></label>
+                <label class="switch"><input class="switch__input" type="checkbox" checked><span class="switch__track" aria-hidden="true"></span><span class="switch__text">Такелажная обмотка</span></label>
+                <label class="switch"><input class="switch__input" type="checkbox" checked><span class="switch__track" aria-hidden="true"></span><span class="switch__text">Огон</span></label>
+                <label class="switch"><input class="switch__input" type="checkbox" checked><span class="switch__track" aria-hidden="true"></span><span class="switch__text">Огон с&nbsp;коушем</span></label>
+                <label class="switch"><input class="switch__input" type="checkbox" checked><span class="switch__track" aria-hidden="true"></span><span class="switch__text">Огон со&nbsp;скобой</span></label>
+                <label class="switch"><input class="switch__input" type="checkbox" checked><span class="switch__track" aria-hidden="true"></span><span class="switch__text">Мягкая скоба</span></label>
+              </div>
+            </fieldset>
+
+            <fieldset class="group">
+              <legend class="group__title">Работа мастера</legend>
+              <p class="field__hint">Цена за&nbsp;одну штуку. Цена сплайса зависит от&nbsp;того, как сплетён трос (выбирается в&nbsp;карточке троса, блок&nbsp;1), и&nbsp;от&nbsp;диаметра. «До&nbsp;14&nbsp;мм» значит 14&nbsp;мм и&nbsp;тоньше, «толще»&nbsp;— все диаметры больше предыдущей строки.</p>
+
+              <p class="group__subtitle">Концы без сплайса</p>
+              <div class="prices prices--work">
+                <div class="prices__row">
+                  <span class="prices__name"><b class="prices__title">Оплавленный торец</b><span class="field__hint">Конец обрезан и&nbsp;оплавлен. 0&nbsp;— бесплатно.</span></span>
+                  <label class="prices__cell"><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="0" aria-label="Оплавленный торец"><span class="field__suffix">€</span></span></label>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__name"><b class="prices__title">Такелажная обмотка, до&nbsp;12&nbsp;мм</b><span class="field__hint">Takling&nbsp;— обмотка ниткой на&nbsp;конце троса.</span></span>
+                  <label class="prices__cell"><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="1,50" aria-label="Такелажная обмотка до 12 мм"><span class="field__suffix">€</span></span></label>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__name"><b class="prices__title">Такелажная обмотка, толще</b></span>
+                  <label class="prices__cell"><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="2,50" aria-label="Такелажная обмотка толще 12 мм"><span class="field__suffix">€</span></span></label>
+                </div>
+              </div>
+
+              <p class="group__subtitle">Сплайс огона (Augspleiß)&nbsp;— сердечник и&nbsp;оплётка из&nbsp;полиэстера</p>
+              <div class="prices prices--work">
+                <div class="prices__row">
+                  <span class="prices__name"><b class="prices__title">До&nbsp;14&nbsp;мм</b></span>
+                  <label class="prices__cell"><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="15" aria-label="Сплайс, полиэстер, до 14 мм"><span class="field__suffix">€</span></span></label>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__name"><b class="prices__title">До&nbsp;22&nbsp;мм</b></span>
+                  <label class="prices__cell"><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="20" aria-label="Сплайс, полиэстер, до 22 мм"><span class="field__suffix">€</span></span></label>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__name"><b class="prices__title">Толще</b></span>
+                  <label class="prices__cell"><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="35" aria-label="Сплайс, полиэстер, толще 22 мм"><span class="field__suffix">€</span></span></label>
+                </div>
+              </div>
+
+              <p class="group__subtitle">Сплайс огона&nbsp;— сердечник Dyneema / Vectran / Zylon в&nbsp;оплётке</p>
+              <div class="prices prices--work">
+                <div class="prices__row">
+                  <span class="prices__name"><b class="prices__title">До&nbsp;14&nbsp;мм</b></span>
+                  <label class="prices__cell"><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="30" aria-label="Сплайс, сердечник Dyneema, до 14 мм"><span class="field__suffix">€</span></span></label>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__name"><b class="prices__title">Толще</b></span>
+                  <label class="prices__cell"><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="40" aria-label="Сплайс, сердечник Dyneema, толще 14 мм"><span class="field__suffix">€</span></span></label>
+                </div>
+              </div>
+
+              <p class="group__subtitle">Сплайс огона&nbsp;— полое плетение Dyneema / Vectran / Zylon</p>
+              <div class="prices prices--work">
+                <div class="prices__row">
+                  <span class="prices__name"><b class="prices__title">Любой диаметр</b></span>
+                  <label class="prices__cell"><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="12" aria-label="Сплайс, полое плетение"><span class="field__suffix">€</span></span></label>
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset class="group">
+              <legend class="group__title">Фурнитура по&nbsp;диаметру троса</legend>
+              <p class="field__hint">Цена за&nbsp;одну штуку. Оставьте клетку пустой, если для этого диаметра вариант не&nbsp;делаете,&nbsp;— на&nbsp;сайте он станет серым с&nbsp;пояснением.</p>
+              <ul class="help__list help__list--plain">
+                <li class="help__item"><b>Огон с&nbsp;коушем</b>&nbsp;= сплайс + коуш</li>
+                <li class="help__item"><b>Огон со&nbsp;скобой</b>&nbsp;= сплайс + коуш + стальная скоба</li>
+                <li class="help__item"><b>Мягкая скоба</b>&nbsp;= сплайс + мягкая скоба (вместе с&nbsp;работой)</li>
+              </ul>
+              <div class="prices prices--hardware">
+                <div class="prices__head" aria-hidden="true"><span>Диаметр</span><span>Коуш</span><span>Стальная скоба</span><span>Мягкая скоба</span></div>
+                <div class="prices__row">
+                  <span class="prices__size">3&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Коуш</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="7" aria-label="Коуш, 3 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Стальная скоба</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="15" aria-label="Стальная скоба, 3 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Мягкая скоба</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="33" aria-label="Мягкая скоба, 3 мм"><span class="field__suffix">€</span></span></label>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__size">4&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Коуш</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="8" aria-label="Коуш, 4 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Стальная скоба</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="17" aria-label="Стальная скоба, 4 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Мягкая скоба</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="34" aria-label="Мягкая скоба, 4 мм"><span class="field__suffix">€</span></span></label>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__size">5&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Коуш</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="9" aria-label="Коуш, 5 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Стальная скоба</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="19" aria-label="Стальная скоба, 5 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Мягкая скоба</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="36" aria-label="Мягкая скоба, 5 мм"><span class="field__suffix">€</span></span></label>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__size">6&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Коуш</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="9" aria-label="Коуш, 6 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Стальная скоба</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="21" aria-label="Стальная скоба, 6 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Мягкая скоба</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="37" aria-label="Мягкая скоба, 6 мм"><span class="field__suffix">€</span></span></label>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__size">8&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Коуш</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="11" aria-label="Коуш, 8 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Стальная скоба</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="26" aria-label="Стальная скоба, 8 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Мягкая скоба</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="40" aria-label="Мягкая скоба, 8 мм"><span class="field__suffix">€</span></span></label>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__size">10&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Коуш</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="13" aria-label="Коуш, 10 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Стальная скоба</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="30" aria-label="Стальная скоба, 10 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Мягкая скоба</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="43" aria-label="Мягкая скоба, 10 мм"><span class="field__suffix">€</span></span></label>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__size">12&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Коуш</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="15" aria-label="Коуш, 12 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Стальная скоба</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="34" aria-label="Стальная скоба, 12 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Мягкая скоба</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="" placeholder="не делаем" aria-label="Мягкая скоба, 12 мм"><span class="field__suffix">€</span></span></label>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__size">14&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Коуш</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="17" aria-label="Коуш, 14 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Стальная скоба</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="39" aria-label="Стальная скоба, 14 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Мягкая скоба</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="" placeholder="не делаем" aria-label="Мягкая скоба, 14 мм"><span class="field__suffix">€</span></span></label>
+                </div>
+                <div class="prices__row">
+                  <span class="prices__size">16&nbsp;мм</span>
+                  <label class="prices__cell"><span class="prices__label">Коуш</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="18" aria-label="Коуш, 16 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Стальная скоба</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="43" aria-label="Стальная скоба, 16 мм"><span class="field__suffix">€</span></span></label>
+                  <label class="prices__cell"><span class="prices__label">Мягкая скоба</span><span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="" placeholder="не делаем" aria-label="Мягкая скоба, 16 мм"><span class="field__suffix">€</span></span></label>
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset class="group">
+              <legend class="group__title">Длины огона на&nbsp;выбор</legend>
+              <p class="field__hint">Эти варианты клиент видит, когда выбирает огон. Длина&nbsp;— внутренняя, в&nbsp;сантиметрах.</p>
+              <ul class="chips">
+                <li class="chips__item">10&nbsp;см<button class="chips__remove" type="button" aria-label="Убрать 10 см">×</button></li>
+                <li class="chips__item">20&nbsp;см<button class="chips__remove" type="button" aria-label="Убрать 20 см">×</button></li>
+                <li class="chips__item">30&nbsp;см<button class="chips__remove" type="button" aria-label="Убрать 30 см">×</button></li>
+                <li class="chips__item">50&nbsp;см<button class="chips__remove" type="button" aria-label="Убрать 50 см">×</button></li>
+                <li class="chips__item chips__item--new"><input class="chips__input" type="text" inputmode="numeric" placeholder="40" aria-label="Новая длина огона, см"><span class="chips__unit">см</span><button class="btn btn--ghost btn--small" type="button">Добавить</button></li>
+              </ul>
+            </fieldset>
+
+            <label class="field">
+              <span class="field__label">Самый короткий огон</span>
+              <span class="field__hint">Во сколько раз огон длиннее диаметра троса&nbsp;— не&nbsp;меньше. Сейчас 12: для троса 10 мм огон от&nbsp;12 см. Короткие варианты сайт сам сделает серыми.</span>
+              <span class="field__affix field__affix--short"><input class="field__input" type="text" inputmode="numeric" value="12" aria-label="Самый короткий огон"><span class="field__suffix">диаметров</span></span>
+            </label>
+          </div>
+        </details>
+
+        <!-- цвета -->
+        <details class="card">
+          <summary class="card__head">
+            <span class="card__number">3</span>
+            <span class="card__heading">
+              <span class="card__title">Цвета</span>
+              <span class="card__hint">Какие цвета троса можно выбрать</span>
+            </span>
+            <svg class="card__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+          </summary>
+          <div class="card__body">
+            <p class="field__hint">Кружок слева&nbsp;— цвет троса на&nbsp;схеме. Нажмите на&nbsp;него, чтобы выбрать оттенок. Клиенту важнее название.</p>
+            <ul class="colors">
+              <li class="colors__row">
+                <input class="colors__swatch" type="color" value="#2F6DB0" aria-label="Оттенок: синий">
+                <input class="field__input colors__name" type="text" value="Синий" aria-label="Название цвета">
+                <label class="switch"><input class="switch__input" type="checkbox" checked><span class="switch__track" aria-hidden="true"></span><span class="switch__text">На&nbsp;сайте</span></label>
+                <button class="prices__remove" type="button" aria-label="Удалить цвет: синий">×</button>
+              </li>
+              <li class="colors__row">
+                <input class="colors__swatch" type="color" value="#C23A33" aria-label="Оттенок: красный">
+                <input class="field__input colors__name" type="text" value="Красный" aria-label="Название цвета">
+                <label class="switch"><input class="switch__input" type="checkbox" checked><span class="switch__track" aria-hidden="true"></span><span class="switch__text">На&nbsp;сайте</span></label>
+                <button class="prices__remove" type="button" aria-label="Удалить цвет: красный">×</button>
+              </li>
+              <li class="colors__row">
+                <input class="colors__swatch" type="color" value="#E07A2C" aria-label="Оттенок: оранжевый">
+                <input class="field__input colors__name" type="text" value="Оранжевый" aria-label="Название цвета">
+                <label class="switch"><input class="switch__input" type="checkbox" checked><span class="switch__track" aria-hidden="true"></span><span class="switch__text">На&nbsp;сайте</span></label>
+                <button class="prices__remove" type="button" aria-label="Удалить цвет: оранжевый">×</button>
+              </li>
+              <li class="colors__row">
+                <input class="colors__swatch" type="color" value="#2A2E35" aria-label="Оттенок: чёрный">
+                <input class="field__input colors__name" type="text" value="Чёрный" aria-label="Название цвета">
+                <label class="switch"><input class="switch__input" type="checkbox" checked><span class="switch__track" aria-hidden="true"></span><span class="switch__text">На&nbsp;сайте</span></label>
+                <button class="prices__remove" type="button" aria-label="Удалить цвет: чёрный">×</button>
+              </li>
+              <li class="colors__row">
+                <input class="colors__swatch" type="color" value="#8C98A5" aria-label="Оттенок: серый">
+                <input class="field__input colors__name" type="text" value="Серый" aria-label="Название цвета">
+                <label class="switch"><input class="switch__input" type="checkbox" checked><span class="switch__track" aria-hidden="true"></span><span class="switch__text">На&nbsp;сайте</span></label>
+                <button class="prices__remove" type="button" aria-label="Удалить цвет: серый">×</button>
+              </li>
+              <li class="colors__row">
+                <input class="colors__swatch" type="color" value="#E6ECF1" aria-label="Оттенок: белый">
+                <input class="field__input colors__name" type="text" value="Белый" aria-label="Название цвета">
+                <label class="switch"><input class="switch__input" type="checkbox" checked><span class="switch__track" aria-hidden="true"></span><span class="switch__text">На&nbsp;сайте</span></label>
+                <button class="prices__remove" type="button" aria-label="Удалить цвет: белый">×</button>
+              </li>
+            </ul>
+            <button class="add-button" type="button"><span class="add-button__plus" aria-hidden="true">+</span> Добавить цвет</button>
+          </div>
+        </details>
+
+        <!-- дополнительные услуги -->
+        <details class="card">
+          <summary class="card__head">
+            <span class="card__number">4</span>
+            <span class="card__heading">
+              <span class="card__title">Дополнительные услуги</span>
+              <span class="card__hint">Галочки в&nbsp;шаге «Дополнительно»: чехол, бирка, тест</span>
+            </span>
+            <svg class="card__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+          </summary>
+          <div class="card__body">
+            <ul class="extras">
+              <li class="extras__row">
+                <div class="extras__fields">
+                  <input class="field__input" type="text" value="Защитный чехол на огоны" aria-label="Название услуги">
+                  <input class="field__input field__input--muted" type="text" value="Бережёт огон от истирания о кнехт, крюк или ствол дерева" aria-label="Описание услуги">
+                </div>
+                <div class="extras__price">
+                  <span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="9" aria-label="Цена: защитный чехол на огоны"><span class="field__suffix">€</span></span>
+                  <select class="field__input field__select" aria-label="За что берётся цена">
+                    <option value="eye" selected>за каждый огон</option>
+                    <option value="piece">за штуку</option>
+                    <option value="order">один раз за заказ</option>
+                  </select>
+                </div>
+                <label class="switch"><input class="switch__input" type="checkbox" checked><span class="switch__track" aria-hidden="true"></span><span class="switch__text">На&nbsp;сайте</span></label>
+              </li>
+              <li class="extras__row">
+                <div class="extras__fields">
+                  <input class="field__input" type="text" value="Бирка с надписью" aria-label="Название услуги">
+                  <input class="field__input field__input--muted" type="text" value="Имя лодки, назначение троса или дата — напишите в комментарии" aria-label="Описание услуги">
+                </div>
+                <div class="extras__price">
+                  <span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="5" aria-label="Цена: бирка с надписью"><span class="field__suffix">€</span></span>
+                  <select class="field__input field__select" aria-label="За что берётся цена">
+                    <option value="eye">за каждый огон</option>
+                    <option value="piece" selected>за штуку</option>
+                    <option value="order">один раз за заказ</option>
+                  </select>
+                </div>
+                <label class="switch"><input class="switch__input" type="checkbox" checked><span class="switch__track" aria-hidden="true"></span><span class="switch__text">На&nbsp;сайте</span></label>
+              </li>
+              <li class="extras__row">
+                <div class="extras__fields">
+                  <input class="field__input" type="text" value="Срочный заказ за 24 часа" aria-label="Название услуги">
+                  <input class="field__input field__input--muted" type="text" value="Доплата за каждое сращивание. Доступно для заказов не более чем с 10 сращиваниями" aria-label="Описание услуги">
+                </div>
+                <div class="extras__price">
+                  <span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="10" aria-label="Цена срочности за одно сращивание"><span class="field__suffix">€</span></span>
+                  <select class="field__input field__select" aria-label="За что берётся цена">
+                    <option value="eye" selected>за каждое сращивание</option>
+                    <option value="piece">за штуку</option>
+                    <option value="order">один раз за заказ</option>
+                  </select>
+                </div>
+                <label class="switch"><input class="switch__input" type="checkbox" checked><span class="switch__track" aria-hidden="true"></span><span class="switch__text">На&nbsp;сайте</span></label>
+              </li>
+            </ul>
+            <button class="add-button" type="button"><span class="add-button__plus" aria-hidden="true">+</span> Добавить услугу</button>
+          </div>
+        </details>
+
+        <!-- быстрый старт -->
+        <details class="card">
+          <summary class="card__head">
+            <span class="card__number">5</span>
+            <span class="card__heading">
+              <span class="card__title">Быстрый старт</span>
+              <span class="card__hint">Кнопки с&nbsp;готовыми наборами над конфигуратором</span>
+            </span>
+            <svg class="card__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+          </summary>
+          <div class="card__body">
+            <p class="field__hint">Клиент нажимает кнопку&nbsp;— конфигуратор сразу заполняется готовым набором. Слева надпись на&nbsp;кнопке, под ней что подставится.</p>
+            <ol class="items">
+              <li class="items__row">
+                <div class="items__fields">
+                  <input class="field__input" type="text" value="Трос для лебёдки" aria-label="Надпись на кнопке 1">
+                  <p class="items__summary">Dyneema SK78&nbsp;·&nbsp;10 мм&nbsp;· красный&nbsp;·&nbsp;30 м&nbsp;· Dyneema Locking Eye Splice&nbsp;· торец / огон со скобой</p>
+                </div>
+                <div class="items__controls">
+                  <button class="btn btn--ghost btn--small" type="button">Изменить набор</button>
+                  <div class="items__move">
+                    <button class="items__arrow" type="button" aria-label="Поднять выше" disabled>↑</button>
+                    <button class="items__arrow" type="button" aria-label="Опустить ниже">↓</button>
+                  </div>
+                </div>
+              </li>
+              <li class="items__row">
+                <div class="items__fields">
+                  <input class="field__input" type="text" value="Шкот с мягкой скобой" aria-label="Надпись на кнопке 2">
+                  <p class="items__summary">Dyneema в оплётке&nbsp;·&nbsp;8 мм&nbsp;· синий&nbsp;·&nbsp;12 м&nbsp;· обмотка / мягкая скоба&nbsp;· бирка</p>
+                </div>
+                <div class="items__controls">
+                  <button class="btn btn--ghost btn--small" type="button">Изменить набор</button>
+                  <div class="items__move">
+                    <button class="items__arrow" type="button" aria-label="Поднять выше">↑</button>
+                    <button class="items__arrow" type="button" aria-label="Опустить ниже">↓</button>
+                  </div>
+                </div>
+              </li>
+              <li class="items__row">
+                <div class="items__fields">
+                  <input class="field__input" type="text" value="Стропа с огонами" aria-label="Надпись на кнопке 3">
+                  <p class="items__summary">Dyneema SK78&nbsp;·&nbsp;6 мм&nbsp;· серый&nbsp;·&nbsp;1,5 м&nbsp;· огон&nbsp;20 см с обеих сторон&nbsp;· чехол</p>
+                </div>
+                <div class="items__controls">
+                  <button class="btn btn--ghost btn--small" type="button">Изменить набор</button>
+                  <div class="items__move">
+                    <button class="items__arrow" type="button" aria-label="Поднять выше">↑</button>
+                    <button class="items__arrow" type="button" aria-label="Опустить ниже" disabled>↓</button>
+                  </div>
+                </div>
+              </li>
+            </ol>
+          </div>
+        </details>
+
+        <!-- общие настройки -->
+        <details class="card">
+          <summary class="card__head">
+            <span class="card__number">6</span>
+            <span class="card__heading">
+              <span class="card__title">Общие настройки</span>
+              <span class="card__hint">Валюта, сроки изготовления, запас прочности</span>
+            </span>
+            <svg class="card__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+          </summary>
+          <div class="card__body">
+            <div class="field">
+              <span class="field__label">Валюта</span>
+              <span class="field__hint">Знак у всех цен в&nbsp;конфигураторе. Сами цифры не&nbsp;пересчитываются&nbsp;— после смены валюты поменяйте цены вручную.</span>
+              <div class="lang-switch" role="group" aria-label="Валюта">
+                <button class="lang-switch__button" type="button">$&nbsp;доллар</button>
+                <button class="lang-switch__button lang-switch__button--active" type="button">€&nbsp;евро</button>
+                <button class="lang-switch__button" type="button">₽&nbsp;рубль</button>
+              </div>
+            </div>
+
+            <div class="fields fields--two">
+              <label class="field">
+                <span class="field__label">Обычный срок изготовления</span>
+                <span class="field__hint">Показывается под итоговой ценой.</span>
+                <input class="field__input" type="text" value="3–5 рабочих дней">
+              </label>
+              <label class="field">
+                <span class="field__label">Срок для большого заказа</span>
+                <span class="field__hint">Показывается вместо обычного, если заказ большой.</span>
+                <input class="field__input" type="text" value="7–10 рабочих дней">
+              </label>
+            </div>
+
+            <div class="fields fields--two">
+              <label class="field">
+                <span class="field__label">Большой заказ — больше, чем</span>
+                <span class="field__hint">Сколько штук в&nbsp;одном заказе.</span>
+                <span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="10" aria-label="Штук в большом заказе"><span class="field__suffix">шт.</span></span>
+              </label>
+              <label class="field">
+                <span class="field__label">…или больше, чем</span>
+                <span class="field__hint">Сколько метров троса всего в&nbsp;заказе.</span>
+                <span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="200" aria-label="Метров в большом заказе"><span class="field__suffix">м</span></span>
+              </label>
+            </div>
+
+            <div class="fields fields--two">
+              <label class="field">
+                <span class="field__label">Запас прочности</span>
+                <span class="field__hint">Во сколько раз рабочая нагрузка меньше разрывной. Обычно 5.</span>
+                <span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="5" aria-label="Запас прочности"><span class="field__suffix">раз</span></span>
+              </label>
+              <label class="field">
+                <span class="field__label">Самый длинный трос</span>
+                <span class="field__hint">Больше этой длины в&nbsp;конфигураторе не&nbsp;выбрать.</span>
+                <span class="field__affix"><input class="field__input" type="text" inputmode="decimal" value="200" aria-label="Самый длинный трос"><span class="field__suffix">м</span></span>
+              </label>
+            </div>
+      </section>
+
+      <!-- каталог -->
+      <section class="panel" id="panel-catalog" aria-labelledby="catalog-title" hidden>
+        <header class="panel__head"><h1 class="panel__title" id="catalog-title">Товары и диаметры</h1><a class="btn btn--ghost" href="/catalog/" target="_blank" rel="noopener">Открыть каталог</a></header>
+        <p>Выберите товар, чтобы изменить его характеристики, диаметры, цены и доступные цвета. Для нового товара нажмите «Добавить канат».</p>
+        <div class="product-toolbar">
+          <button class="btn" type="button" data-product-new>Добавить канат</button>
+          <button class="btn btn--ghost" type="button" data-products-refresh>Обновить</button>
+        </div>
+        <div data-product-select></div>
+        <p data-product-status role="status" aria-live="polite"></p>
+        <div data-product-editor></div>
+      </section>
+
+      <!-- страницы, которые ещё не свёрстаны -->
+      <section class="panel" id="panel-business" aria-labelledby="business-title" hidden>
+        <header class="panel__head">
+          <div class="panel__heading">
+            <h1 class="panel__title" id="business-title">Бизнесу</h1>
+          </div>
+        </header>
+        <div class="empty">
+          <p class="empty__title">Этот раздел пока в разработке</p>
+          <p class="empty__text">Когда страница появится на&nbsp;сайте, здесь можно будет менять её тексты
+            и&nbsp;фотографии.</p>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-private" aria-labelledby="private-title" hidden>
+        <header class="panel__head">
+          <div class="panel__heading">
+            <h1 class="panel__title" id="private-title">Частным клиентам</h1>
+          </div>
+        </header>
+        <div class="empty">
+          <p class="empty__title">Этот раздел пока в разработке</p>
+          <p class="empty__text">Когда страница появится на&nbsp;сайте, здесь можно будет менять её тексты
+            и&nbsp;фотографии.</p>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-charity" aria-labelledby="charity-title" hidden>
+        <header class="panel__head">
+          <div class="panel__heading">
+            <h1 class="panel__title" id="charity-title">Благотворительность</h1>
+          </div>
+        </header>
+        <div class="empty">
+          <p class="empty__title">Отдельная страница пока в разработке</p>
+          <p class="empty__text">Короткий блок о&nbsp;благотворительности на&nbsp;главной уже можно менять:
+            слева «Главная» → блок «Благотворительность».</p>
+        </div>
+      </section>
+
+      <!-- кнопка сохранения всегда внизу экрана -->
+      <div class="savebar">
+        <p class="savebar__text">
+          <svg class="savebar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8v5M12 16.5v.5M12 3l9.5 17h-19z" /></svg>
+          Изменения появятся на&nbsp;сайте только после нажатия этой кнопки
+        </p>
+        <button class="btn btn--primary btn--large" type="button">Сохранить изменения</button>
+      </div>
+
+    </main>
+  </div>
+</body>
+
+</html>

@@ -1,7 +1,7 @@
 services:
   backend_rope_shopo:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
     container_name: backend_rope_shopo
     command: >
@@ -18,7 +18,7 @@ services:
       REDIS_HOST: redis
     volumes:
       - ./media:/app/media
-      - ./tests:/app/tests:ro
+      - ./backend/tests:/app/tests:ro
     depends_on:
       postgres:
         condition: service_healthy

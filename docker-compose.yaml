@@ -1,6 +1,8 @@
 services:
   backend_rope_shopo:
-    build: .
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: backend_rope_shopo
     command: >
       sh -c "alembic upgrade head &&
@@ -13,7 +15,7 @@ services:
       - DB_HOST=postgres
       - REDIS_HOST=redis
     volumes:
-      - .:/app
+      - ./backend:/app
       - ./media:/app/media
     depends_on:
       postgres:

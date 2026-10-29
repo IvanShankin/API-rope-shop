@@ -1,0 +1,644 @@
+import pytest
+from sqlalchemy import select
+
+from src.core.config import Config
+from src.modules.base.database_model import Language
+from src.modules.users.models import UserRole
+from src.modules.work_photos.models import WorkPhoto
+from src.modules.work_photos.models_dto import (
+    CreateWorkPhotoRequestDTO,
+    UpdateWorkPhotoIndexRequestDTO,
+    UpdateWorkPhotoRequestDTO,
+    WorkPhotoResponseDTO,
+)
+from tests.helpers.functions import comparison_models
+from tests.modules.users.fixtures.models_dto import CreateUserFixtureDTO
+from tests.modules.work_photos.fixtures.models_dto import (
+    CreateWorkPhotoFixtureDTO,
+)
+
+
+class TestsForSuccess:
+
+    @pytest.mark.asyncio
+    async def test_get_all_work_photos(
+        self,
+        client_for_tests,
+        create_work_photo_fixture,
+    ):
+        """Получение списка фотографий работ (публичный доступ)."""
+        photo_1 = await create_work_photo_fixture(
+            CreateWorkPhotoFixtureDTO(index=0, is_active=True, title="Photo 1")
+        )
+        photo_2 = await create_work_photo_fixture(
+            CreateWorkPhotoFixtureDTO(index=1, is_active=True, title="Photo 2")
+        )
+
+        response = await client_for_tests.get("/work_photos")
+        assert response.status_code == 200
+
+        data = [WorkPhotoResponseDTO.model_validate(item) for item in response.json()]
+        assert len(data) == 2
+        assert data[0].id == photo_1.id
+        assert data[1].id == photo_2.id
+
+    @pytest.mark.asyncio
+    async def test_get_all_work_photos_filter_active(
+        self,
+        client_for_tests,
+        create_work_photo_fixture,
+    ):
+        """Получение списка фотографий работ с фильтрацией по is_active."""
+        active_photo = await create_work_photo_fixture(
+            CreateWorkPhotoFixtureDTO(index=0, is_active=True)
+        )
+        await create_work_photo_fixture(
+            CreateWorkPhotoFixtureDTO(index=1, is_active=False)
+        )
+
+        response = await client_for_tests.get("/work_photos?is_active=true")
+        assert response.status_code == 200
+
+        data = [WorkPhotoResponseDTO.model_validate(item) for item in response.json()]
+        assert len(data) == 1
+        assert data[0].id == active_photo.id
+
+    @pytest.mark.asyncio
+    async def test_get_all_work_photos_anonymous_excludes_inactive_by_default(
+        self,
+        client_for_tests,
+        create_work_photo_fixture,
+    ):
+        """Анонимный запрос без фильтра не возвращает отключенные фотографии."""
+        active_photo = await create_work_photo_fixture(
+            CreateWorkPhotoFixtureDTO(index=0, is_active=True)
+        )
+        await create_work_photo_fixture(
+            CreateWorkPhotoFixtureDTO(index=1, is_active=False)
+        )
+
+        response = await client_for_tests.get("/work_photos")
+        assert response.status_code == 200
+
+        data = [WorkPhotoResponseDTO.model_validate(item) for item in response.json()]
+        assert len(data) == 1
+        assert data[0].id == active_photo.id
+
+    @pytest.mark.asyncio
+    async def test_get_all_work_photos_anonymous_ignores_is_active_false(
+        self,
+        client_for_tests,
+        create_work_photo_fixture,
+    ):
+        """Анонимный запрос с ?is_active=false принудительно возвращает только активные фото."""
+        active_photo = await create_work_photo_fixture(
+            CreateWorkPhotoFixtureDTO(index=0, is_active=True)
+        )
+        await create_work_photo_fixture(
+            CreateWorkPhotoFixtureDTO(index=1, is_active=False)
+        )
+
+        response = await client_for_tests.get("/work_photos?is_active=false")
+        assert response.status_code == 200
+
+        data = [WorkPhotoResponseDTO.model_validate(item) for item in response.json()]
+        assert len(data) == 1
+        assert data[0].id == active_photo.id
+
+    @pytest.mark.asyncio
+    async def test_get_all_work_photos_admin_sees_inactive(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_work_photo_fixture,
+    ):
+        """Администратор видит отключенные фотографии и может фильтровать по ним."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        active_photo = await create_work_photo_fixture(
+            CreateWorkPhotoFixtureDTO(index=0, is_active=True)
+        )
+        inactive_photo = await create_work_photo_fixture(
+            CreateWorkPhotoFixtureDTO(index=1, is_active=False)
+        )
+
+        # Без фильтра - видит все
+        response_all = await client_for_tests.get(
+            "/work_photos",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert response_all.status_code == 200
+        data_all = [WorkPhotoResponseDTO.model_validate(item) for item in response_all.json()]
+        assert len(data_all) == 2
+
+        # С фильтром is_active=false - видит только неактивные
+        response_inactive = await client_for_tests.get(
+            "/work_photos?is_active=false",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert response_inactive.status_code == 200
+        data_inactive = [WorkPhotoResponseDTO.model_validate(item) for item in response_inactive.json()]
+        assert len(data_inactive) == 1
+        assert data_inactive[0].id == inactive_photo.id
+
+    @pytest.mark.asyncio
+    async def test_get_work_photo_by_id_admin_accesses_inactive(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_work_photo_fixture,
+    ):
+        """Администратор имеет доступ к деталям неактивной фотографии."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        inactive_photo = await create_work_photo_fixture(
+            CreateWorkPhotoFixtureDTO(index=0, is_active=False)
+        )
+
+        response = await client_for_tests.get(
+            f"/work_photos/{inactive_photo.id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert response.status_code == 200
+        data = WorkPhotoResponseDTO.model_validate(response.json())
+        assert data.id == inactive_photo.id
+        assert data.is_active is False
+
+    @pytest.mark.asyncio
+    async def test_get_work_photo_by_id(
+        self,
+        client_for_tests,
+        create_work_photo_fixture,
+    ):
+        """Получение одной фотографии работы по ID (публичный доступ)."""
+        photo = await create_work_photo_fixture()
+
+        response = await client_for_tests.get(f"/work_photos/{photo.id}")
+        assert response.status_code == 200
+
+        data = WorkPhotoResponseDTO.model_validate(response.json())
+        assert data.id == photo.id
+        assert data.image_url == photo.image_url
+
+    @pytest.mark.asyncio
+    async def test_create_work_photo_file(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_image_bytes_fixture,
+        session_db,
+        config_fix: Config,
+    ):
+        """Создание фотографии работы через multipart upload (админ)."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        img_bytes = create_image_bytes_fixture(format_="PNG", size=(200, 200), color="blue")
+
+        response = await client_for_tests.post(
+            "/work_photos",
+            headers={"Authorization": f"Bearer {access_token}"},
+            files={"file": ("work_photo.png", img_bytes, "image/png")},
+            data={
+                "title": "Custom Title",
+                "description": "Custom Description",
+                "index": "0",
+                "is_active": "true",
+            },
+        )
+        assert response.status_code == 201
+
+        resp_dto = WorkPhotoResponseDTO.model_validate(response.json())
+        assert resp_dto.title == "Custom Title"
+        assert resp_dto.description == "Custom Description"
+        assert resp_dto.index == 0
+        assert resp_dto.is_active is True
+        assert resp_dto.image_url.startswith(
+            f"/{config_fix.paths.media.name}/{config_fix.paths.work_photos.name}"
+        )
+        assert resp_dto.image_url.endswith(".webp")
+
+        db_obj = await session_db.scalar(
+            select(WorkPhoto).where(WorkPhoto.id == resp_dto.id)
+        )
+        assert db_obj is not None
+        assert db_obj.image_url == resp_dto.image_url
+        assert db_obj.title == resp_dto.title
+
+    @pytest.mark.asyncio
+    async def test_upload_work_photo_file(
+        self,
+        config_fix,
+        client_for_tests,
+        create_user_fixture,
+        create_image_bytes_fixture,
+        session_db,
+    ):
+        """Загрузка файла фотографии работы (админ)."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        img_bytes = create_image_bytes_fixture(format_="PNG", size=(200, 200), color="blue")
+
+        response = await client_for_tests.post(
+            "/work_photos/upload",
+            headers={"Authorization": f"Bearer {access_token}"},
+            files={"file": ("photo.png", img_bytes, "image/png")},
+            data={"title": "Uploaded Work", "description": "Desc", "is_active": "true"},
+        )
+        assert response.status_code == 201
+
+        resp_dto = WorkPhotoResponseDTO.model_validate(response.json())
+        assert resp_dto.title == "Uploaded Work"
+        assert resp_dto.description == "Desc"
+        assert resp_dto.image_url.startswith(f"/{config_fix.paths.media.name}/{config_fix.paths.work_photos.name}")
+        assert resp_dto.image_url.endswith(".webp")
+
+        db_obj = await session_db.scalar(
+            select(WorkPhoto).where(WorkPhoto.id == resp_dto.id)
+        )
+        assert db_obj is not None
+        assert db_obj.image_url == resp_dto.image_url
+
+    @pytest.mark.asyncio
+    async def test_upload_image_for_existing_work_photo(
+        self,
+        config_fix,
+        client_for_tests,
+        create_user_fixture,
+        create_work_photo_fixture,
+        create_image_bytes_fixture,
+        session_db,
+    ):
+        """Замена файла для существующей фотографии работы (админ)."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        photo = await create_work_photo_fixture()
+        img_bytes = create_image_bytes_fixture(format_="PNG", size=(200, 200), color="green")
+
+        response = await client_for_tests.post(
+            f"/work_photos/{photo.id}/upload-image",
+            headers={"Authorization": f"Bearer {access_token}"},
+            files={"file": ("new_photo.png", img_bytes, "image/png")},
+        )
+        assert response.status_code == 200
+
+        resp_dto = WorkPhotoResponseDTO.model_validate(response.json())
+        assert resp_dto.id == photo.id
+        assert resp_dto.image_url.startswith(f"/{config_fix.paths.media.name}/{config_fix.paths.work_photos.name}")
+        assert resp_dto.image_url.endswith(".webp")
+
+    @pytest.mark.asyncio
+    async def test_update_work_photo(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_work_photo_fixture,
+        create_image_bytes_fixture,
+        session_db,
+        config_fix: Config,
+    ):
+        """Обновление атрибутов фотографии работы и замена файла изображения (админ)."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        photo = await create_work_photo_fixture()
+
+        update_dto = UpdateWorkPhotoRequestDTO(
+            title="Updated Title",
+            description="Updated Description",
+            is_active=False,
+        )
+
+        response = await client_for_tests.patch(
+            f"/work_photos/{photo.id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+            json=update_dto.model_dump(exclude_unset=True),
+        )
+        assert response.status_code == 200
+
+        resp_dto = WorkPhotoResponseDTO.model_validate(response.json())
+        assert resp_dto.title == "Updated Title"
+        assert resp_dto.description == "Updated Description"
+        assert resp_dto.is_active is False
+        assert resp_dto.image_url == photo.image_url
+
+        # Замена файла изображения через PATCH
+        new_img_bytes = create_image_bytes_fixture(format_="PNG", size=(150, 150), color="purple")
+        replace_res = await client_for_tests.patch(
+            f"/work_photos/{photo.id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+            files={"file": ("replaced_work.png", new_img_bytes, "image/png")},
+            data={"title": "Replaced Work Title"},
+        )
+        assert replace_res.status_code == 200
+        replace_dto = WorkPhotoResponseDTO.model_validate(replace_res.json())
+        assert replace_dto.title == "Replaced Work Title"
+        assert replace_dto.image_url != photo.image_url
+        assert replace_dto.image_url.startswith(
+            f"/{config_fix.paths.media.name}/{config_fix.paths.work_photos.name}"
+        )
+
+    @pytest.mark.asyncio
+    async def test_reorder_work_photo(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_work_photo_fixture,
+        session_db,
+    ):
+        """Перемещение позиции фотографии работы со сдвигом соседей (админ)."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        p0 = await create_work_photo_fixture(CreateWorkPhotoFixtureDTO(index=0))
+        p1 = await create_work_photo_fixture(CreateWorkPhotoFixtureDTO(index=1))
+        p2 = await create_work_photo_fixture(CreateWorkPhotoFixtureDTO(index=2))
+
+        # Перемещаем p2 на позицию 0 (сдвигает p0->1, p1->2)
+        reorder_dto = UpdateWorkPhotoIndexRequestDTO(new_index=0)
+        response = await client_for_tests.patch(
+            f"/work_photos/{p2.id}/index",
+            headers={"Authorization": f"Bearer {access_token}"},
+            json=reorder_dto.model_dump(),
+        )
+        assert response.status_code == 200
+        resp_dto = WorkPhotoResponseDTO.model_validate(response.json())
+        assert resp_dto.index == 0
+
+        # Проверяем в базе
+        db_p0 = await session_db.scalar(select(WorkPhoto).where(WorkPhoto.id == p0.id))
+        db_p1 = await session_db.scalar(select(WorkPhoto).where(WorkPhoto.id == p1.id))
+        db_p2 = await session_db.scalar(select(WorkPhoto).where(WorkPhoto.id == p2.id))
+
+        assert db_p2.index == 0
+        assert db_p0.index == 1
+        assert db_p1.index == 2
+
+    @pytest.mark.asyncio
+    async def test_delete_work_photo(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_work_photo_fixture,
+        session_db,
+    ):
+        """Удаление фотографии работы со сдвигом последующих индексов (админ)."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        p0 = await create_work_photo_fixture(CreateWorkPhotoFixtureDTO(index=0))
+        p1 = await create_work_photo_fixture(CreateWorkPhotoFixtureDTO(index=1))
+
+        response = await client_for_tests.delete(
+            f"/work_photos/{p0.id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert response.status_code == 204
+
+        # p0 удален
+        deleted = await session_db.scalar(select(WorkPhoto).where(WorkPhoto.id == p0.id))
+        assert deleted is None
+
+        # p1 сдвинулся на index 0
+        remaining = await session_db.scalar(select(WorkPhoto).where(WorkPhoto.id == p1.id))
+        assert remaining.index == 0
+
+    @pytest.mark.asyncio
+    async def test_get_work_photos_with_locale(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_work_photo_fixture,
+    ):
+        """Получение фотографий работ с запросом определенной локали."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        photo = await create_work_photo_fixture(
+            CreateWorkPhotoFixtureDTO(title="English Title", description="English Desc")
+        )
+        # Добавляем перевод на русский через API
+        add_res = await client_for_tests.post(
+            f"/work_photos/{photo.id}/translations",
+            headers={"Authorization": f"Bearer {access_token}"},
+            json={
+                "locale": "rus",
+                "title": "Русское название",
+                "description": "Русское описание",
+            },
+        )
+        assert add_res.status_code == 201
+
+        # Запрос с locale=ru
+        resp_ru = await client_for_tests.get(f"/work_photos/{photo.id}?locale=ru")
+        assert resp_ru.status_code == 200
+        dto_ru = WorkPhotoResponseDTO.model_validate(resp_ru.json())
+        assert dto_ru.title == "Русское название"
+        assert dto_ru.description == "Русское описание"
+        assert len(dto_ru.translations) == 2
+
+        # Запрос с locale=en
+        resp_en = await client_for_tests.get(f"/work_photos/{photo.id}?locale=en")
+        assert resp_en.status_code == 200
+        dto_en = WorkPhotoResponseDTO.model_validate(resp_en.json())
+        assert dto_en.title == "English Title"
+
+    @pytest.mark.asyncio
+    async def test_work_photo_translations_crud(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_work_photo_fixture,
+    ):
+        """CRUD операции с переводами фотографии работы (админ)."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        photo = await create_work_photo_fixture(
+            CreateWorkPhotoFixtureDTO(title="Work EN", description="Desc EN")
+        )
+
+        # 1. Добавление перевода (ger)
+        add_res = await client_for_tests.post(
+            f"/work_photos/{photo.id}/translations",
+            headers={"Authorization": f"Bearer {access_token}"},
+            json={
+                "locale": "ger",
+                "title": "Arbeit DE",
+                "description": "Beschreibung DE",
+            },
+        )
+        assert add_res.status_code == 201
+        tr_data = add_res.json()
+        assert tr_data["locale"] == "ger"
+        assert tr_data["title"] == "Arbeit DE"
+        tr_id = tr_data["id"]
+
+        # 2. Обновление перевода
+        patch_res = await client_for_tests.patch(
+            f"/work_photos/{photo.id}/translations/{tr_id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+            json={"title": "Aktualisierte Arbeit DE"},
+        )
+        assert patch_res.status_code == 200
+        assert patch_res.json()["title"] == "Aktualisierte Arbeit DE"
+
+        # 3. Удаление перевода
+        del_res = await client_for_tests.delete(
+            f"/work_photos/{photo.id}/translations/{tr_id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert del_res.status_code == 204
+
+
+class TestsForFailed:
+
+    @pytest.mark.asyncio
+    async def test_get_nonexistent_work_photo_returns_404(
+        self,
+        client_for_tests,
+    ):
+        """Запрос несуществующей фотографии работы возвращает 404."""
+        response = await client_for_tests.get("/work_photos/999999")
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_create_work_photo_unauthorized_returns_401(
+        self,
+        client_for_tests,
+    ):
+        """Создание фотографии работы без токена возвращает 401."""
+        response = await client_for_tests.post(
+            "/work_photos",
+            files={"file": ("photo.png", b"test", "image/png")},
+            data={"title": "Test"},
+        )
+        assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_create_work_photo_regular_user_returns_403(
+        self,
+        client_for_tests,
+        create_user_fixture,
+    ):
+        """Создание фотографии работы обычным пользователем возвращает 403."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.USER)
+        )
+        response = await client_for_tests.post(
+            "/work_photos",
+            headers={"Authorization": f"Bearer {access_token}"},
+            files={"file": ("photo.png", b"test", "image/png")},
+            data={"title": "Test"},
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_upload_work_photo_regular_user_returns_403(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_image_bytes_fixture,
+    ):
+        """Загрузка файла обычным пользователем возвращает 403."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.USER)
+        )
+        img_bytes = create_image_bytes_fixture()
+
+        response = await client_for_tests.post(
+            "/work_photos/upload",
+            headers={"Authorization": f"Bearer {access_token}"},
+            files={"file": ("photo.png", img_bytes, "image/png")},
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_update_work_photo_no_data_returns_400(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_work_photo_fixture,
+    ):
+        """Обновление фотографии без данных возвращает 400."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        photo = await create_work_photo_fixture()
+
+        response = await client_for_tests.patch(
+            f"/work_photos/{photo.id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+            json={},
+        )
+        assert response.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_update_nonexistent_work_photo_returns_404(
+        self,
+        client_for_tests,
+        create_user_fixture,
+    ):
+        """Обновление несуществующей фотографии возвращает 404."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        response = await client_for_tests.patch(
+            "/work_photos/999999",
+            headers={"Authorization": f"Bearer {access_token}"},
+            json={"title": "New Title"},
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_delete_nonexistent_work_photo_returns_404(
+        self,
+        client_for_tests,
+        create_user_fixture,
+    ):
+        """Удаление несуществующей фотографии возвращает 404."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        response = await client_for_tests.delete(
+            "/work_photos/999999",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_get_inactive_work_photo_anonymous_returns_404(
+        self,
+        client_for_tests,
+        create_work_photo_fixture,
+    ):
+        """Анонимный запрос к неактивной фотографии возвращает 404."""
+        photo = await create_work_photo_fixture(
+            CreateWorkPhotoFixtureDTO(index=0, is_active=False)
+        )
+        response = await client_for_tests.get(f"/work_photos/{photo.id}")
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_get_inactive_work_photo_regular_user_returns_404(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_work_photo_fixture,
+    ):
+        """Обычный пользователь (не админ) при запросе неактивной фотографии получает 404."""
+        _, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.USER)
+        )
+        photo = await create_work_photo_fixture(
+            CreateWorkPhotoFixtureDTO(index=0, is_active=False)
+        )
+        response = await client_for_tests.get(
+            f"/work_photos/{photo.id}",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+        assert response.status_code == 404

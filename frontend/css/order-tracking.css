@@ -1,0 +1,17 @@
+.tracking { max-width: 900px; padding: 48px 20px 64px; }
+.tracking__brand { display: inline-flex; align-items: center; min-height: 44px; margin-bottom: 40px; font-size: 24px; }
+.tracking h1 { font-size: clamp(32px, 6vw, 64px); margin-bottom: 24px; }
+.tracking p { margin: 16px 0; overflow-wrap: anywhere; }
+.tracking section { padding: 24px; margin: 24px 0; background: var(--color-surface, #0f2442); border-radius: 24px; }
+.tracking h2 { font-size: 24px; margin: 24px 0 12px; }
+.tracking ul { padding-left: 20px; }
+.tracking li { margin: 12px 0; overflow-wrap: anywhere; white-space: pre-line; }
+.tracking__summary { display: grid; grid-template-columns: minmax(100px, 1fr) 2fr; gap: 12px 24px; }
+.tracking__summary dd { margin: 0; overflow-wrap: anywhere; }
+.tracking > a:last-child { display: inline-flex; min-height: 44px; align-items: center; }
+@media (max-width: 480px) {
+  .tracking { padding: 24px 16px 48px; }
+  .tracking section { padding: 18px; }
+  .tracking__summary { grid-template-columns: 1fr; gap: 6px; }
+  .tracking__summary dd { margin-bottom: 12px; }
+}

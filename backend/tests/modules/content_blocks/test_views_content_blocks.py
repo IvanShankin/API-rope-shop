@@ -1,0 +1,794 @@
+import pytest
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
+
+from src.modules.base.database_model import Language
+from src.modules.content_blocks.models import ContentBlock, ContentBlockTranslation
+from src.modules.content_blocks.models_dto import (
+    ContentBlockResponseDTO,
+    ContentBlockTranslationUpsertDTO,
+    ContentBlockUpdateDTO,
+)
+from src.modules.users.models import UserRole
+from tests.modules.content_blocks.fixtures.models_dto import (
+    CreateContentBlockFixtureDTO,
+    CreateContentBlockTranslationFixtureDTO,
+)
+from tests.modules.users.fixtures.models_dto import CreateUserFixtureDTO
+
+
+class TestsForSuccess:
+
+    @pytest.mark.asyncio
+    async def test_get_blocks_by_page_code_path_public(
+        self,
+        client_for_tests,
+        create_content_block_fixture,
+    ):
+        """Получение списка блоков контента по page_code в пути (публичный доступ)."""
+        block_1 = await create_content_block_fixture(
+            CreateContentBlockFixtureDTO(
+                page_code="home",
+                block_code="home_hero",
+                is_active=True,
+                title="Hero Title",
+                content="Hero Content",
+            )
+        )
+        block_2 = await create_content_block_fixture(
+            CreateContentBlockFixtureDTO(
+                page_code="home",
+                block_code="home_features",
+                is_active=True,
+                title="Features Title",
+                content="Features Content",
+            )
+        )
+        # Блок для другой страницы
+        await create_content_block_fixture(
+            CreateContentBlockFixtureDTO(
+                page_code="about",
+                block_code="about_story",
+                is_active=True,
+            )
+        )
+
+        response = await client_for_tests.get("/content_blocks/page/home")
+        assert response.status_code == 200
+
+        data = [
+            ContentBlockResponseDTO.model_validate(item)
+            for item in response.json()
+        ]
+        assert len(data) == 2
+        block_codes = [b.block_code for b in data]
+        assert "home_hero" in block_codes
+        assert "home_features" in block_codes
+
+        # Проверяем, что переводы всегда подгружены
+        for b in data:
+            assert len(b.translations) > 0
+            assert b.translations[0].locale is not None
+
+    @pytest.mark.asyncio
+    async def test_get_blocks_by_page_code_query_public(
+        self,
+        client_for_tests,
+        create_content_block_fixture,
+    ):
+        """Получение списка блоков контента через query-параметр ?page_code=..."""
+        block = await create_content_block_fixture(
+            CreateContentBlockFixtureDTO(
+                page_code="catalog_page",
+                block_code="catalog_banner",
+                is_active=True,
+            )
+        )
+
+        response = await client_for_tests.get(
+            "/content_blocks", params={"page_code": "catalog_page"}
+        )
+        assert response.status_code == 200
+
+        data = [
+            ContentBlockResponseDTO.model_validate(item)
+            for item in response.json()
+        ]
+        assert len(data) == 1
+        assert data[0].block_code == "catalog_banner"
+        assert len(data[0].translations) > 0
+
+    @pytest.mark.asyncio
+    async def test_get_blocks_by_page_filter_is_active(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_content_block_fixture,
+    ):
+        """
+        Публичный пользователь видит только активные блоки.
+        Администратор может просматривать все блоки или фильтровать по is_active.
+        """
+        active_block = await create_content_block_fixture(
+            CreateContentBlockFixtureDTO(
+                page_code="contact",
+                block_code="contact_info",
+                is_active=True,
+            )
+        )
+        inactive_block = await create_content_block_fixture(
+            CreateContentBlockFixtureDTO(
+                page_code="contact",
+                block_code="contact_promo",
+                is_active=False,
+            )
+        )
+
+        # Публичный запрос: только активные
+        resp_pub = await client_for_tests.get("/content_blocks/page/contact")
+        assert resp_pub.status_code == 200
+        pub_data = [
+            ContentBlockResponseDTO.model_validate(item)
+            for item in resp_pub.json()
+        ]
+        assert len(pub_data) == 1
+        assert pub_data[0].block_code == "contact_info"
+
+        # Публичный запрос с фильтром is_active=false: все равно возвращаются только активные
+        resp_pub_filter_false = await client_for_tests.get(
+            "/content_blocks/page/contact",
+            params={"is_active": "false"},
+        )
+        assert resp_pub_filter_false.status_code == 200
+        pub_filter_data = [
+            ContentBlockResponseDTO.model_validate(item)
+            for item in resp_pub_filter_false.json()
+        ]
+        assert len(pub_filter_data) == 1
+        assert pub_filter_data[0].block_code == "contact_info"
+
+        # Публичный запрос через query ?page_code=contact&is_active=false
+        resp_pub_query_filter_false = await client_for_tests.get(
+            "/content_blocks",
+            params={"page_code": "contact", "is_active": "false"},
+        )
+        assert resp_pub_query_filter_false.status_code == 200
+        pub_query_data = [
+            ContentBlockResponseDTO.model_validate(item)
+            for item in resp_pub_query_filter_false.json()
+        ]
+        assert len(pub_query_data) == 1
+        assert pub_query_data[0].block_code == "contact_info"
+
+        # Админский запрос без фильтра: видит оба
+        _, admin_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        resp_admin = await client_for_tests.get(
+            "/content_blocks/page/contact", headers=headers
+        )
+        assert resp_admin.status_code == 200
+        admin_data = [
+            ContentBlockResponseDTO.model_validate(item)
+            for item in resp_admin.json()
+        ]
+        assert len(admin_data) == 2
+
+        # Админский запрос с фильтром is_active=false
+        resp_inactive = await client_for_tests.get(
+            "/content_blocks/page/contact",
+            headers=headers,
+            params={"is_active": "false"},
+        )
+        assert resp_inactive.status_code == 200
+        inactive_data = [
+            ContentBlockResponseDTO.model_validate(item)
+            for item in resp_inactive.json()
+        ]
+        assert len(inactive_data) == 1
+        assert inactive_data[0].block_code == "contact_promo"
+
+    @pytest.mark.asyncio
+    async def test_get_block_by_code_public(
+        self,
+        client_for_tests,
+        create_content_block_fixture,
+    ):
+        """Получение одного экземпляра блока по block_code (публичный доступ)."""
+        block = await create_content_block_fixture(
+            CreateContentBlockFixtureDTO(
+                block_code="unique_cta",
+                is_active=True,
+                title="Call to Action",
+                content="Subscribe now",
+            )
+        )
+
+        response = await client_for_tests.get(f"/content_blocks/{block.block_code}")
+        assert response.status_code == 200
+
+        data = ContentBlockResponseDTO.model_validate(response.json())
+        assert data.id == block.id
+        assert data.block_code == "unique_cta"
+        assert len(data.translations) > 0
+
+    @pytest.mark.asyncio
+    async def test_get_block_with_locale_and_fallback(
+        self,
+        client_for_tests,
+        create_content_block_fixture,
+        create_content_block_translation_fixture,
+    ):
+        """Проверка локализации и fallback при получении блока контента."""
+        block = await create_content_block_fixture(
+            CreateContentBlockFixtureDTO(
+                block_code="locale_block",
+                locale=Language.ENG,
+                title="English Title",
+                content="English Content",
+                is_active=True,
+            )
+        )
+        await create_content_block_translation_fixture(
+            CreateContentBlockTranslationFixtureDTO(
+                content_block_id=block.id,
+                locale=Language.GER,
+                title="Deutscher Titel",
+                content="Deutscher Inhalt",
+            )
+        )
+
+        # Запрос с locale=ger -> немецкий перевод
+        resp_ger = await client_for_tests.get(
+            f"/content_blocks/{block.block_code}", params={"locale": "ger"}
+        )
+        assert resp_ger.status_code == 200
+        data_ger = ContentBlockResponseDTO.model_validate(resp_ger.json())
+        assert data_ger.title == "Deutscher Titel"
+        assert data_ger.content == "Deutscher Inhalt"
+        assert data_ger.locale == Language.GER
+        assert len(data_ger.translations) == 2
+
+        # Запрос с отсутствующей русской локалью -> fallback на eng
+        resp_ru = await client_for_tests.get(
+            f"/content_blocks/{block.block_code}", params={"locale": "rus"}
+        )
+        assert resp_ru.status_code == 200
+        data_ru = ContentBlockResponseDTO.model_validate(resp_ru.json())
+        assert data_ru.title == "English Title"
+        assert data_ru.content == "English Content"
+
+    @pytest.mark.asyncio
+    async def test_update_block_by_code_admin(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_content_block_fixture,
+        session_db,
+    ):
+        """
+        Изменение блока по block_code администратором.
+        В рамках одной транзакции обновляются атрибуты блока и пачка переводов по всем языкам.
+        """
+        _, admin_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        headers = {"Authorization": f"Bearer {admin_token}"}
+
+        block = await create_content_block_fixture(
+            CreateContentBlockFixtureDTO(
+                block_code="footer_block",
+                locale=Language.ENG,
+                title="Old English Title",
+                content="Old Content",
+                is_active=True,
+            )
+        )
+
+        update_dto = ContentBlockUpdateDTO(
+            is_active=False,
+            translations=[
+                ContentBlockTranslationUpsertDTO(
+                    locale=Language.ENG,
+                    title="Updated EN Title",
+                    content="Updated EN Content",
+                ),
+                ContentBlockTranslationUpsertDTO(
+                    locale=Language.RUS,
+                    title="Заголовок на русском",
+                    content="Контент на русском",
+                ),
+                ContentBlockTranslationUpsertDTO(
+                    locale=Language.GER,
+                    title="Deutscher Titel",
+                    content="Deutscher Inhalt",
+                ),
+            ],
+        )
+
+        response = await client_for_tests.patch(
+            f"/content_blocks/{block.block_code}",
+            headers=headers,
+            json=update_dto.model_dump(mode="json"),
+        )
+        assert response.status_code == 200
+
+        resp_dto = ContentBlockResponseDTO.model_validate(response.json())
+        assert resp_dto.block_code == "footer_block"
+        assert resp_dto.is_active is False
+        assert len(resp_dto.translations) == 3
+
+        # Проверка в БД
+        res = await session_db.execute(
+            select(ContentBlock)
+            .where(ContentBlock.id == block.id)
+            .options(selectinload(ContentBlock.translations))
+        )
+        db_block = res.scalar_one()
+        assert db_block.is_active is False
+        assert len(db_block.translations) == 3
+        locales = [t.locale for t in db_block.translations]
+        assert Language.ENG in locales
+        assert Language.RUS in locales
+        assert Language.GER in locales
+
+    @pytest.mark.asyncio
+    async def test_update_block_create_if_not_exists_upsert(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        session_db,
+    ):
+        """
+        Если блок с block_code еще не существует, но передан page_code,
+        он создается с переводами (upsert для админки).
+        """
+        _, admin_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        headers = {"Authorization": f"Bearer {admin_token}"}
+
+        create_dto = ContentBlockUpdateDTO(
+            page_code="new_page",
+            is_active=True,
+            translations=[
+                ContentBlockTranslationUpsertDTO(
+                    locale=Language.ENG,
+                    title="Created via Upsert",
+                    content="Brand new content",
+                ),
+                ContentBlockTranslationUpsertDTO(
+                    locale=Language.RUS,
+                    title="Создан через upsert",
+                    content="Совершенно новый контент",
+                ),
+            ],
+        )
+
+        response = await client_for_tests.put(
+            "/content_blocks/newly_created_block",
+            headers=headers,
+            json=create_dto.model_dump(mode="json"),
+        )
+        assert response.status_code == 200
+
+        resp_dto = ContentBlockResponseDTO.model_validate(response.json())
+        assert resp_dto.block_code == "newly_created_block"
+        assert resp_dto.page_code == "new_page"
+        assert resp_dto.is_active is True
+        assert len(resp_dto.translations) == 2
+
+        # Проверяем в БД
+        res = await session_db.execute(
+            select(ContentBlock)
+            .where(ContentBlock.block_code == "newly_created_block")
+            .options(selectinload(ContentBlock.translations))
+        )
+        db_block = res.scalar_one_or_none()
+        assert db_block is not None
+        assert db_block.page_code == "new_page"
+        assert len(db_block.translations) == 2
+
+    @pytest.mark.asyncio
+    async def test_admin_can_view_inactive_block(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_content_block_fixture,
+    ):
+        """Администратор может получить неактивный блок по block_code."""
+        _, admin_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        headers = {"Authorization": f"Bearer {admin_token}"}
+
+        block = await create_content_block_fixture(
+            CreateContentBlockFixtureDTO(
+                block_code="admin_draft",
+                is_active=False,
+            )
+        )
+
+        response = await client_for_tests.get(
+            f"/content_blocks/{block.block_code}", headers=headers
+        )
+        assert response.status_code == 200
+        data = ContentBlockResponseDTO.model_validate(response.json())
+        assert data.block_code == "admin_draft"
+        assert data.is_active is False
+
+
+class TestsForFailed:
+
+    @pytest.mark.asyncio
+    async def test_get_nonexistent_block_by_code_returns_404(
+        self,
+        client_for_tests,
+    ):
+        """Запрос несуществующего block_code возвращает 404."""
+        response = await client_for_tests.get("/content_blocks/nonexistent_code")
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_public_user_cannot_view_inactive_block_returns_404(
+        self,
+        client_for_tests,
+        create_content_block_fixture,
+    ):
+        """Обычный пользователь получает 404 при запросе неактивного блока."""
+        block = await create_content_block_fixture(
+            CreateContentBlockFixtureDTO(
+                block_code="inactive_block",
+                is_active=False,
+            )
+        )
+
+        response = await client_for_tests.get(f"/content_blocks/{block.block_code}")
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_update_block_unauthorized_returns_401(
+        self,
+        client_for_tests,
+        create_content_block_fixture,
+    ):
+        """Попытка изменения блока без авторизации возвращает 401."""
+        block = await create_content_block_fixture()
+
+        response = await client_for_tests.patch(
+            f"/content_blocks/{block.block_code}",
+            json={"is_active": False},
+        )
+        assert response.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_update_block_regular_user_returns_403(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_content_block_fixture,
+    ):
+        """Попытка изменения блока пользователем с ролью USER возвращает 403."""
+        _, user_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.USER)
+        )
+        headers = {"Authorization": f"Bearer {user_token}"}
+        block = await create_content_block_fixture()
+
+        response = await client_for_tests.patch(
+            f"/content_blocks/{block.block_code}",
+            headers=headers,
+            json={"is_active": False},
+        )
+        assert response.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_update_nonexistent_block_without_page_code_returns_404(
+        self,
+        client_for_tests,
+        create_user_fixture,
+    ):
+        """
+        Попытка обновления несуществующего блока без указания page_code
+        возвращает 404.
+        """
+        _, admin_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        headers = {"Authorization": f"Bearer {admin_token}"}
+
+        response = await client_for_tests.patch(
+            "/content_blocks/unknown_block",
+            headers=headers,
+            json={"is_active": False},
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_anonymous_cannot_access_inactive_block_via_filter(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_content_block_fixture,
+    ):
+        """
+        Проверка контракта интеграции:
+        Создаем блок test_content_contract_20261019 на странице integration_checks с is_active=False.
+        Без Authorization:
+        - GET /content_blocks/test_content_contract_20261019 -> 404
+        - GET /content_blocks/page/integration_checks -> 200, пустой список
+        - GET /content_blocks/page/integration_checks?is_active=false -> 200, пустой список (отключенный блок не отдается)
+        - GET /content_blocks?page_code=integration_checks&is_active=false -> 200, пустой список
+        С Authorization (админ):
+        - GET /content_blocks/test_content_contract_20261019 -> 200
+        - GET /content_blocks/page/integration_checks?is_active=false -> 200 с отключенным блоком
+        """
+        block = await create_content_block_fixture(
+            CreateContentBlockFixtureDTO(
+                page_code="integration_checks",
+                block_code="test_content_contract_20261019",
+                is_active=False,
+                title="Secret Inactive Title",
+                content="Secret Inactive Content",
+            )
+        )
+
+        # 1. Без Authorization: GET /content_blocks/test_content_contract_20261019 -> 404
+        resp_direct = await client_for_tests.get(f"/content_blocks/{block.block_code}")
+        assert resp_direct.status_code == 404
+
+        # 2. Без Authorization: GET /content_blocks/page/integration_checks -> 200, пустой список
+        resp_page = await client_for_tests.get("/content_blocks/page/integration_checks")
+        assert resp_page.status_code == 200
+        assert resp_page.json() == []
+
+        # 3. Без Authorization: GET /content_blocks/page/integration_checks?is_active=false -> 200, пустой список
+        resp_page_filter = await client_for_tests.get(
+            "/content_blocks/page/integration_checks",
+            params={"is_active": "false"},
+        )
+        assert resp_page_filter.status_code == 200
+        assert resp_page_filter.json() == []
+
+        # 4. Без Authorization: GET /content_blocks?page_code=integration_checks&is_active=false -> 200, пустой список
+        resp_query_filter = await client_for_tests.get(
+            "/content_blocks",
+            params={"page_code": "integration_checks", "is_active": "false"},
+        )
+        assert resp_query_filter.status_code == 200
+        assert resp_query_filter.json() == []
+
+        # 5. С Authorization (админ):
+        _, admin_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        headers = {"Authorization": f"Bearer {admin_token}"}
+
+        resp_admin_direct = await client_for_tests.get(
+            f"/content_blocks/{block.block_code}",
+            headers=headers,
+        )
+        assert resp_admin_direct.status_code == 200
+        assert resp_admin_direct.json()["block_code"] == "test_content_contract_20261019"
+
+        resp_admin_filter = await client_for_tests.get(
+            "/content_blocks/page/integration_checks",
+            headers=headers,
+            params={"is_active": "false"},
+        )
+        assert resp_admin_filter.status_code == 200
+        admin_data = resp_admin_filter.json()
+        assert len(admin_data) == 1
+        assert admin_data[0]["block_code"] == "test_content_contract_20261019"
+        assert admin_data[0]["is_active"] is False
+
+    @pytest.mark.asyncio
+    async def test_same_block_code_on_different_pages(
+        self,
+        client_for_tests,
+        create_content_block_fixture,
+    ):
+        """
+        Проверка, что один и тот же block_code может использоваться на разных страницах
+        (например, 'intro' на 'b2b' и 'intro' на 'b2c').
+        """
+        block_b2b = await create_content_block_fixture(
+            CreateContentBlockFixtureDTO(
+                page_code="b2b",
+                block_code="intro",
+                index=10,
+                title="B2B Intro",
+                content="Content for B2B",
+            )
+        )
+        block_b2c = await create_content_block_fixture(
+            CreateContentBlockFixtureDTO(
+                page_code="b2c",
+                block_code="intro",
+                index=20,
+                title="B2C Intro",
+                content="Content for B2C",
+            )
+        )
+
+        assert block_b2b.id != block_b2c.id
+        assert block_b2b.block_code == block_b2c.block_code == "intro"
+        assert block_b2b.page_code == "b2b"
+        assert block_b2c.page_code == "b2c"
+
+        # Запрос по b2b
+        resp_b2b = await client_for_tests.get("/content_blocks/page/b2b")
+        assert resp_b2b.status_code == 200
+        data_b2b = resp_b2b.json()
+        assert len(data_b2b) == 1
+        assert data_b2b[0]["page_code"] == "b2b"
+        assert data_b2b[0]["block_code"] == "intro"
+        assert data_b2b[0]["title"] == "B2B Intro"
+
+        # Запрос по b2c
+        resp_b2c = await client_for_tests.get("/content_blocks/page/b2c")
+        assert resp_b2c.status_code == 200
+        data_b2c = resp_b2c.json()
+        assert len(data_b2c) == 1
+        assert data_b2c[0]["page_code"] == "b2c"
+        assert data_b2c[0]["block_code"] == "intro"
+        assert data_b2c[0]["title"] == "B2C Intro"
+
+        # Запрос одиночного блока с page_code
+        resp_single_b2b = await client_for_tests.get(
+            "/content_blocks/intro", params={"page_code": "b2b"}
+        )
+        assert resp_single_b2b.status_code == 200
+        assert resp_single_b2b.json()["title"] == "B2B Intro"
+
+        resp_single_b2c = await client_for_tests.get(
+            "/content_blocks/intro", params={"page_code": "b2c"}
+        )
+        assert resp_single_b2c.status_code == 200
+        assert resp_single_b2c.json()["title"] == "B2C Intro"
+
+    @pytest.mark.asyncio
+    async def test_duplicate_page_code_and_block_code_violates_constraint(
+        self,
+        create_content_block_fixture,
+    ):
+        """
+        Проверка, что пара (page_code, block_code) уникальна.
+        Повторная вставка того же block_code на той же странице вызывает ошибку целостности.
+        """
+        from sqlalchemy.exc import IntegrityError
+
+        await create_content_block_fixture(
+            CreateContentBlockFixtureDTO(
+                page_code="landing",
+                block_code="hero",
+            )
+        )
+
+        with pytest.raises(IntegrityError):
+            await create_content_block_fixture(
+                CreateContentBlockFixtureDTO(
+                    page_code="landing",
+                    block_code="hero",
+                )
+            )
+
+    @pytest.mark.asyncio
+    async def test_blocks_sorted_by_index_asc(
+        self,
+        client_for_tests,
+        create_content_block_fixture,
+    ):
+        """Проверка, что блоки на странице сортируются по index.asc(), id.asc()."""
+        await create_content_block_fixture(
+            CreateContentBlockFixtureDTO(
+                page_code="ordering_page",
+                block_code="third_block",
+                index=30,
+            )
+        )
+        await create_content_block_fixture(
+            CreateContentBlockFixtureDTO(
+                page_code="ordering_page",
+                block_code="first_block",
+                index=10,
+            )
+        )
+        await create_content_block_fixture(
+            CreateContentBlockFixtureDTO(
+                page_code="ordering_page",
+                block_code="second_block",
+                index=20,
+            )
+        )
+
+        resp = await client_for_tests.get("/content_blocks/page/ordering_page")
+        assert resp.status_code == 200
+        items = resp.json()
+        assert len(items) == 3
+        assert [item["block_code"] for item in items] == [
+            "first_block",
+            "second_block",
+            "third_block",
+        ]
+        assert [item["index"] for item in items] == [10, 20, 30]
+
+    @pytest.mark.asyncio
+    async def test_put_same_block_code_different_pages_returns_correct_page_dto(
+        self,
+        client_for_tests,
+        create_user_fixture,
+    ):
+        """
+        Проверка: создать через PUT /content_blocks/{block_code} блоки для integration_a и integration_b.
+        Второй PUT обязан возвращать DTO страницы integration_b, а не integration_a.
+        """
+        admin_user, access_token = await create_user_fixture(
+            CreateUserFixtureDTO(role=UserRole.ADMIN)
+        )
+        headers = {"Authorization": f"Bearer {access_token}"}
+
+        # 1. Первый PUT для integration_a
+        put_payload_a = {
+            "page_code": "integration_a",
+            "index": 1,
+            "is_active": True,
+            "translations": [
+                {"locale": "eng", "title": "Title A", "content": "Content A"}
+            ],
+        }
+        resp_a = await client_for_tests.put(
+            "/content_blocks/same_code",
+            headers=headers,
+            json=put_payload_a,
+        )
+        assert resp_a.status_code == 200
+        data_a = resp_a.json()
+        assert data_a["page_code"] == "integration_a"
+        assert data_a["block_code"] == "same_code"
+        assert data_a["title"] == "Title A"
+
+        # 2. Второй PUT для integration_b с тем же block_code
+        put_payload_b = {
+            "page_code": "integration_b",
+            "index": 2,
+            "is_active": True,
+            "translations": [
+                {"locale": "eng", "title": "Title B", "content": "Content B"}
+            ],
+        }
+        resp_b = await client_for_tests.put(
+            "/content_blocks/same_code",
+            headers=headers,
+            json=put_payload_b,
+        )
+        assert resp_b.status_code == 200
+        data_b = resp_b.json()
+        assert data_b["page_code"] == "integration_b"
+        assert data_b["block_code"] == "same_code"
+        assert data_b["title"] == "Title B"
+        assert data_b["id"] != data_a["id"]
+
+        # 3. Также проверяем через query-параметр page_code при PUT
+        put_payload_c = {
+            "index": 3,
+            "is_active": True,
+            "translations": [
+                {"locale": "eng", "title": "Title C", "content": "Content C"}
+            ],
+        }
+        resp_c = await client_for_tests.put(
+            "/content_blocks/same_code",
+            params={"page_code": "integration_c"},
+            headers=headers,
+            json=put_payload_c,
+        )
+        assert resp_c.status_code == 200
+        data_c = resp_c.json()
+        assert data_c["page_code"] == "integration_c"
+        assert data_c["block_code"] == "same_code"
+        assert data_c["title"] == "Title C"
+        assert data_c["id"] != data_a["id"]
+        assert data_c["id"] != data_b["id"]
+

@@ -1,0 +1,101 @@
+/* Decorative ships stay in the layout, outside text and interactive controls. */
+.service-configurator:has(+ .configurator-ship-divider) { margin-bottom: 0; }
+.configurator-ship-divider {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: clamp(24px, 4vw, 56px) auto;
+  scroll-margin-top: 160px;
+  pointer-events: none;
+  user-select: none;
+}
+.configurator-ship-divider img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  border-radius: clamp(16px, 2vw, 28px);
+  object-fit: contain;
+}
+.configurator-ship-divider + .service-configurator { margin-top: 0; }
+.page-head--marine .page-head__inner {
+  grid-template-columns: minmax(0, 1.5fr) minmax(200px, 1fr);
+  column-gap: clamp(24px, 4vw, 64px);
+  align-items: center;
+}
+.page-head--marine .page-head__title {
+  grid-column: 1;
+  grid-row: 2;
+  overflow-wrap: anywhere;
+}
+.page-head__ship {
+  grid-column: 2;
+  grid-row: 2;
+  width: 100%;
+  max-width: 440px;
+  height: clamp(190px, 21vw, 300px);
+  margin: 0;
+  justify-self: end;
+  pointer-events: none;
+  user-select: none;
+}
+.page-head__ship img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.page-head__ship--sail { max-width: 300px; }
+.page-head__ship--overhead {
+  max-width: 250px;
+  mask-image: radial-gradient(ellipse 64% 52% at 51% 52%, #000 48%, transparent 100%);
+}
+.page-head--marine .page-head__actions { grid-column: 1; grid-row: 3; }
+.page-head--marine:has(.page-head__actions) .page-head__ship { grid-row: 2 / 4; }
+.page-head--marine .audience-actions { margin-top: 0; }
+@media (max-width: 767px) {
+  .page-head--marine .page-head__inner { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .page-head__ship {
+    grid-column: 1;
+    grid-row: 3;
+    justify-self: end;
+    width: min(100%, 340px);
+    height: 170px;
+  }
+  .page-head__ship--sail { width: 185px; height: 185px; }
+  .page-head__ship--overhead { width: 150px; height: 185px; }
+  .page-head--marine .page-head__actions { grid-row: 4; }
+  .page-head--marine:has(.page-head__actions) .page-head__ship { grid-row: 3; }
+}
+
+/* Compact catalog heading: the illustration must not add a separate tall row. */
+.page-head--catalog {
+  margin: 0 0 40px;
+  padding: 168px 0 0;
+}
+.page-head--catalog .page-head__inner {
+  grid-template-columns: minmax(0, 1fr) 200px;
+  grid-template-rows: auto 1fr;
+  row-gap: 24px;
+  align-items: start;
+}
+.page-head--catalog .page-head__breadcrumbs {
+  grid-column: 1;
+  margin-bottom: 0;
+}
+.page-head--catalog .page-head__ship {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  width: 200px;
+  height: 180px;
+}
+.page-head--catalog + .catalog,
+.page-head--catalog + .products { margin-top: 0; }
+@media (max-width: 767px) {
+  .page-head--catalog { padding-top: 160px; margin-bottom: 28px; }
+  .page-head--catalog .page-head__inner {
+    grid-template-columns: minmax(0, 1fr) 96px;
+    gap: 20px 16px;
+  }
+  .page-head--catalog .page-head__ship { width: 96px; height: 100px; }
+}

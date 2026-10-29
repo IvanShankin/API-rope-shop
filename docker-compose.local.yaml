@@ -1,35 +1,10 @@
-# Local integration over the supplied production stack; application code is unchanged.
+# Local integration over the production stack with alternative port 8080
 services:
-  backend_rope_shopo:
-    container_name: rope-backend
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8018/openapi.json', timeout=5)"]
-      interval: 5s
-      timeout: 6s
-      retries: 30
-      start_period: 20s
-    ports:
-      - "127.0.0.1:8018:8018"
-    volumes:
-      - ./media:/app/src/media
-  postgres:
-    container_name: rope-postgres
-    ports: !reset []
-  redis:
-    container_name: rope-redis
-    ports: !reset []
   nginx:
-    container_name: rope-nginx
-    depends_on:
-      backend_rope_shopo:
-        condition: service_healthy
     ports: !override
-      - "127.0.0.1:8080:80"
+      - "8080:80"
     volumes: !override
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/local:/etc/nginx/conf.d:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./frontend:/site:ro
       - ./media:/app/media:ro
-      - ../frontend:/site:ro
-  certbot:
-    container_name: rope-certbot
-    profiles: [https]

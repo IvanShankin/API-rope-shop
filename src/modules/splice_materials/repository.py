@@ -1,5 +1,5 @@
 from src.modules.products.models import Product
-from typing import Sequence, Union, Any
+from typing import Sequence, Union, Any, Optional
 
 from sqlalchemy import select, update, delete, exists
 from sqlalchemy.ext.asyncio import AsyncSession

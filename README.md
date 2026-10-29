@@ -50,18 +50,26 @@ python src/tools/run.py help
 ```
 
 #### Флаги конфигурации стека:
-- **По умолчанию** (без флагов): запускает стандартный стек бэкенда (`docker-compose.yaml`).
-  - Сервер API: [http://localhost:8018](http://localhost:8018)
-  - Документация Swagger UI: [http://localhost:8018/docs](http://localhost:8018/docs)
-  - Документация ReDoc: [http://localhost:8018/redoc](http://localhost:8018/redoc)
-- **`--prod`**: запускает полный production-стек (`docker-compose.prod.yaml`) с Nginx на порту `80`:
+- **По умолчанию** (`docker-compose.yaml`): запускает полный стек разработчика (Nginx + Frontend + FastAPI с автоперезагрузкой `--reload` + PostgreSQL + Redis):
+  - Главная страница магазина (HTML): [http://localhost](http://localhost)
+  - Каталог товаров: [http://localhost/catalog/](http://localhost/catalog/)
+  - Панель администратора: [http://localhost/admin/](http://localhost/admin/)
+  - Документация API: [http://localhost/docs](http://localhost/docs) или [http://localhost:8018/docs](http://localhost:8018/docs)
+- **`--prod`**: запускает полный production-стек (`docker-compose.prod.yaml`) с Uvicorn workers и Nginx на порту `80`:
   ```bash
   python src/tools/run.py start --prod
   ```
-- **`--local`**: запускает локальный интеграционный стек с Nginx и фронтендом (`docker-compose.local.yaml`) на порту `8080`:
+- **`--local`**: запускает стек на альтернативном порту `8080` (`docker-compose.local.yaml`), если 80 порт занят:
   ```bash
   python src/tools/run.py start --local
   ```
+
+#### Публикация в интернет через туннель (Tuna / Ngrok):
+Так как сайт и API объединены через Nginx на порту `80`, для публикации всего магазина и админки наружу достаточно одной команды:
+```bash
+tuna http 80
+```
+*(Все страницы, статика, конфигуратор канатов, вход в админку и запросы к API будут мгновенно работать по единой ссылке).*
 
 ---
 
@@ -105,10 +113,13 @@ docker compose exec backend_rope_shopo python -m src.tools.create_test_data
 
 ---
 
-## Документация API
-После запуска интерактивная документация доступна по адресам:
-- **Swagger UI**: [http://localhost:8018/docs](http://localhost:8018/docs)
-- **ReDoc**: [http://localhost:8018/redoc](http://localhost:8018/redoc)
+## Документация API и Панель управления
+После запуска проект предоставляет:
+- **Сайт магазина**: [http://localhost](http://localhost)
+- **Каталог товаров**: [http://localhost/catalog/](http://localhost/catalog/)
+- **Панель управления (админка)**: [http://localhost/admin/](http://localhost/admin/) (логин: admin, пароль из .env или ADMIN_CREDENTIALS.txt)
+- **Swagger UI**: [http://localhost/docs](http://localhost/docs) или [http://localhost:8018/docs](http://localhost:8018/docs)
+- **ReDoc**: [http://localhost/redoc](http://localhost/redoc) или [http://localhost:8018/redoc](http://localhost:8018/redoc)
 
 ---
 

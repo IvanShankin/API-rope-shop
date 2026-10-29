@@ -24,6 +24,14 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+# Безопасная кодировка для консоли Windows
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 # Корень проекта
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent
 ENV_FILE = ROOT_DIR / ".env"
@@ -162,8 +170,8 @@ def has_service(service_name: str, compose_base: list[str]) -> bool:
 def get_active_service_info() -> tuple[str, list[str]]:
     """Возвращает базовый URL и тестовые маршруты в зависимости от открытого порта."""
     candidates = [
-        (8080, "http://127.0.0.1:8080", ["/", "/api/products", "/api/configurator_settings"]),
-        (80, "http://127.0.0.1:80", ["/health", "/api/products", "/products"]),
+        (80, "http://127.0.0.1:80", ["/health", "/api/products", "/admin/"]),
+        (8080, "http://127.0.0.1:8080", ["/health", "/api/products", "/admin/"]),
         (8018, "http://127.0.0.1:8018", ["/docs", "/products", "/configurator_settings"]),
     ]
     for port, base_url, paths in candidates:
@@ -173,18 +181,18 @@ def get_active_service_info() -> tuple[str, list[str]]:
     # Если порт пока не открыт, определяем по флагам вызова
     args = sys.argv[1:]
     if "--local" in args:
-        return "http://127.0.0.1:8080", ["/", "/api/products", "/api/configurator_settings"]
+        return "http://127.0.0.1:8080", ["/health", "/api/products", "/admin/"]
     elif "--prod" in args:
-        return "http://127.0.0.1:80", ["/health", "/api/products", "/products"]
-    return "http://127.0.0.1:8018", ["/docs", "/products", "/configurator_settings"]
+        return "http://127.0.0.1:80", ["/health", "/api/products", "/admin/"]
+    return "http://127.0.0.1:80", ["/health", "/api/products", "/admin/"]
 
 
 def healthcheck(timeout: int = 30) -> bool:
     """Ожидание доступности сервисов по HTTP."""
     print("[*] Проверка доступности сервисов...")
     candidates = [
-        (8080, "http://127.0.0.1:8080", ["/", "/api/products", "/api/configurator_settings"]),
-        (80, "http://127.0.0.1:80", ["/health", "/api/products", "/products"]),
+        (80, "http://127.0.0.1:80", ["/health", "/api/products", "/admin/"]),
+        (8080, "http://127.0.0.1:8080", ["/health", "/api/products", "/admin/"]),
         (8018, "http://127.0.0.1:8018", ["/docs", "/products", "/configurator_settings"]),
     ]
 
@@ -220,7 +228,7 @@ def healthcheck(timeout: int = 30) -> bool:
             except Exception:
                 time.sleep(0.5)
         if success:
-            print(f" [✓] {url} доступен")
+            print(f" [+] {url} доступен")
         else:
             print(f" [!] {url} пока не ответил 200 OK")
             all_ok = False
@@ -244,16 +252,17 @@ def start():
 
     base_url, _ = get_active_service_info()
     print("\n" + "=" * 55)
-    print(" [✓] ПРОЕКТ УСПЕШНО ЗАПУЩЕН!")
+    print(" [OK] ПРОЕКТ УСПЕШНО ЗАПУЩЕН!")
     print("=" * 55)
     if "8080" in base_url or "80" == base_url.split(":")[-1]:
-        print(f"  • Главная страница: {base_url}")
-        print(f"  • Панель админа:    {base_url}/admin/")
-        print("  • Документация API: http://localhost:8018/docs")
+        print(f"  * Главная страница (сайт): {base_url}")
+        print(f"  * Каталог товаров:        {base_url}/catalog/")
+        print(f"  * Панель администратора:  {base_url}/admin/")
+        print(f"  * Документация API:       {base_url}/docs (или http://localhost:8018/docs)")
     else:
-        print("  • Сервер API:       http://localhost:8018")
-        print("  • Документация API: http://localhost:8018/docs")
-        print("  • ReDoc:            http://localhost:8018/redoc")
+        print("  * Сервер API:             http://localhost:8018")
+        print("  * Документация API:       http://localhost:8018/docs")
+        print("  * ReDoc:                  http://localhost:8018/redoc")
     print("=" * 55 + "\n")
 
 
@@ -263,7 +272,7 @@ def stop():
     desc = " ".join(compose_cmd[2:]) if len(compose_cmd) > 2 else "docker-compose.yaml"
     print(f"[*] Остановка контейнеров ({desc})...")
     run_cmd([*compose_cmd, "down"])
-    print("[✓] Проект остановлен.")
+    print("[+] Проект остановлен.")
 
 
 def migrate():
@@ -272,7 +281,7 @@ def migrate():
     compose_cmd = get_compose_cmd()
     print("[*] Применение миграций Alembic...")
     run_cmd([*compose_cmd, "exec", "backend_rope_shopo", "alembic", "upgrade", "head"])
-    print("[✓] Миграции успешно применены.")
+    print("[+] Миграции успешно применены.")
 
 
 def seed():
@@ -281,7 +290,7 @@ def seed():
     compose_cmd = get_compose_cmd()
     print("[*] Генерация тестовых данных...")
     run_cmd([*compose_cmd, "exec", "backend_rope_shopo", "python", "-m", "src.tools.create_test_data"])
-    print("[✓] Тестовые данные успешно созданы.")
+    print("[+] Тестовые данные успешно созданы.")
 
 
 def print_help():

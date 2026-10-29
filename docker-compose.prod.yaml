@@ -9,6 +9,8 @@ services:
              uvicorn src.main:app --host 0.0.0.0 --port 8018 --workers 4 --proxy-headers --forwarded-allow-ips='*'"
     expose:
       - "8018"
+    ports:
+      - "127.0.0.1:8018:8018"
     env_file:
       - .env
     environment:
@@ -61,6 +63,7 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./frontend:/site:ro
       - ./media:/app/media:ro
       - certbot_conf:/etc/letsencrypt:ro
       - certbot_www:/var/www/certbot:ro

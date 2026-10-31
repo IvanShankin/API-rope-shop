@@ -502,4 +502,176 @@ async def test_notify_new_contact_request_disabled_skips_sending():
         assert mock_send.call_count == 0
         assert mock_post.call_count == 0
 
+@pytest.mark.asyncio
+async def test_send_test_telegram_success():
+    config = Config()
+    config.telegram = TelegramConfig(bot_token="123456:ABC-DEF")
+
+    settings = SettingsResponseDTO(
+        id=1,
+        telegram_chat_id="-100987654321",
+        telegram_notifications_enabled=True,
+        company_name="Alpine Rope Shop",
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
+
+    mock_settings_service = _create_mock_settings_service(settings)
+    service = _create_notification_service(config=config, settings_service=mock_settings_service)
+
+    with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
+        mock_post.return_value = httpx.Response(200, json={"ok": True})
+
+        result = await service.send_test_telegram()
+
+        assert result.success is True
+        assert result.target == "-100987654321"
+        assert "успешно" in result.message.lower()
+        assert mock_post.call_count == 1
+        assert "Alpine Rope Shop" in mock_post.call_args[1]["json"]["text"]
+
+
+@pytest.mark.asyncio
+async def test_send_test_telegram_missing_chat_id():
+    config = Config()
+    config.telegram = TelegramConfig(bot_token="123456:ABC-DEF")
+
+    settings = SettingsResponseDTO(
+        id=1,
+        telegram_chat_id=None,
+        telegram_notifications_enabled=True,
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
+
+    mock_settings_service = _create_mock_settings_service(settings)
+    service = _create_notification_service(config=config, settings_service=mock_settings_service)
+
+    result = await service.send_test_telegram()
+
+    assert result.success is False
+    assert "не указан 'telegram_chat_id'" in result.message
+
+
+@pytest.mark.asyncio
+async def test_send_test_telegram_sender_error():
+    config = Config()
+    config.telegram = TelegramConfig(bot_token="123456:ABC-DEF")
+
+    settings = SettingsResponseDTO(
+        id=1,
+        telegram_chat_id="-100987654321",
+        telegram_notifications_enabled=True,
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
+
+    mock_settings_service = _create_mock_settings_service(settings)
+    service = _create_notification_service(config=config, settings_service=mock_settings_service)
+
+    with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
+        mock_post.return_value = httpx.Response(
+            400,
+            json={"error_code": 400, "description": "Bad Request: chat not found"},
+        )
+
+        result = await service.send_test_telegram()
+
+        assert result.success is False
+        assert "ошибка отправки в telegram" in result.message.lower()
+
+
+@pytest.mark.asyncio
+async def test_send_test_email_success():
+    config = Config()
+    config.email = EmailConfig(
+        smtp_host="smtp.test.com",
+        smtp_port=587,
+        smtp_user="test@test.com",
+        smtp_password="test_password",
+        from_email="noreply@ropeshop.com",
+    )
+
+    settings = SettingsResponseDTO(
+        id=1,
+        manager_notification_email="manager@ropeshop.com",
+        email_notifications_enabled=True,
+        company_name="Alpine Rope Shop",
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
+
+    mock_settings_service = _create_mock_settings_service(settings)
+    service = _create_notification_service(config=config, settings_service=mock_settings_service)
+
+    with patch("aiosmtplib.send", new_callable=AsyncMock) as mock_send:
+        result = await service.send_test_email()
+
+        assert result.success is True
+        assert result.target == "manager@ropeshop.com"
+        assert "успешно" in result.message.lower()
+        assert mock_send.call_count == 1
+        sent_msg = mock_send.call_args[0][0]
+        assert sent_msg["To"] == "manager@ropeshop.com"
+        assert "Тестовое уведомление" in sent_msg["Subject"]
+
+
+@pytest.mark.asyncio
+async def test_send_test_email_missing_target():
+    config = Config()
+    config.email = EmailConfig(
+        smtp_host="smtp.test.com",
+        smtp_port=587,
+        smtp_user="test@test.com",
+        smtp_password="test_password",
+        from_email="noreply@ropeshop.com",
+    )
+    if hasattr(config, "admin"):
+        config.admin.email = None
+
+    settings = SettingsResponseDTO(
+        id=1,
+        manager_notification_email=None,
+        contact_email=None,
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
+
+    mock_settings_service = _create_mock_settings_service(settings)
+    service = _create_notification_service(config=config, settings_service=mock_settings_service)
+
+    result = await service.send_test_email()
+
+    assert result.success is False
+    assert "не указан email для уведомлений" in result.message
+
+
+@pytest.mark.asyncio
+async def test_send_test_email_sender_error():
+    import aiosmtplib
+
+    config = Config()
+    config.email = EmailConfig(
+        smtp_host="smtp.test.com",
+        smtp_port=587,
+        smtp_user="test@test.com",
+        smtp_password="test_password",
+        from_email="noreply@ropeshop.com",
+    )
+
+    settings = SettingsResponseDTO(
+        id=1,
+        manager_notification_email="manager@ropeshop.com",
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
+
+    mock_settings_service = _create_mock_settings_service(settings)
+    service = _create_notification_service(config=config, settings_service=mock_settings_service)
+
+    with patch("aiosmtplib.send", side_effect=aiosmtplib.SMTPConnectError("Connection refused")):
+        result = await service.send_test_email()
+
+        assert result.success is False
+        assert "ошибка отправки email" in result.message.lower()
 

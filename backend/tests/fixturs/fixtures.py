@@ -40,6 +40,22 @@ class DummyNotificationService:
     async def notify_new_contact_request(self, contact, settings=None) -> None:
         pass
 
+    async def send_test_telegram(self, chat_id=None):
+        from src.modules.notifications.models_dto import TestNotificationResponseDTO
+        return TestNotificationResponseDTO(
+            success=True,
+            message=f"Тестовое сообщение в Telegram успешно отправлено в чат {chat_id or '-100123456789'}.",
+            target=chat_id or "-100123456789",
+        )
+
+    async def send_test_email(self, to_email=None):
+        from src.modules.notifications.models_dto import TestNotificationResponseDTO
+        return TestNotificationResponseDTO(
+            success=True,
+            message=f"Тестовое email-сообщение успешно отправлено на {to_email or 'manager@test.com'}.",
+            target=to_email or "manager@test.com",
+        )
+
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
 async def lifespan_for_tests(app_fastapi: FastAPI, config_fix: Config,) -> AsyncGenerator[FastAPI, None]:

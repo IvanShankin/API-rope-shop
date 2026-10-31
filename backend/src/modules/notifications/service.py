@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import html
 import logging
+from datetime import datetime
 from typing import TYPE_CHECKING, Optional, Tuple
 
 from src.core.config.config import Config
+from src.modules.notifications.models_dto import TestNotificationResponseDTO
 from src.modules.senders.email_service import EmailSenderService
 from src.modules.senders.exception import (
     EmailSenderException,
@@ -652,3 +654,168 @@ class NotificationService:
         except Exception as e:
             logger.error("Unexpected error sending customer confirmation email for #%s: %s", contact.id, e, exc_info=True)
             return False
+
+    async def send_test_telegram(
+        self,
+        chat_id: Optional[str] = None,
+    ) -> TestNotificationResponseDTO:
+        """
+        Отправляет тестовое сообщение в Telegram, используя данные из настроек сайта.
+        Возвращает результат отправки и диагностическое сообщение для пользователя.
+        """
+        try:
+            settings = await self.get_settings()
+        except Exception as e:
+            logger.error("Failed to load site settings for Telegram test: %s", e)
+            return TestNotificationResponseDTO(
+                success=False,
+                message=f"Не удалось загрузить настройки сайта: {e}",
+                target=None,
+            )
+
+        target_chat_id = (chat_id or settings.telegram_chat_id or "").strip()
+        if not target_chat_id:
+            msg = "В настройках сайта не указан 'telegram_chat_id'."
+            logger.warning("Telegram test failed: %s", msg)
+            return TestNotificationResponseDTO(
+                success=False,
+                message=msg,
+                target=None,
+            )
+
+        if not self.config.telegram.is_configured:
+            msg = "В конфигурации окружения (.env) не настроен 'TELEGRAM_BOT_TOKEN'."
+            logger.warning("Telegram test failed: %s", msg)
+            return TestNotificationResponseDTO(
+                success=False,
+                message=msg,
+                target=target_chat_id,
+            )
+
+        company_name = settings.company_name or "Rope Shop"
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        status_note = ""
+        if not settings.telegram_notifications_enabled:
+            status_note = "\n<i>(Примечание: в настройках сайта Telegram-уведомления сейчас выключены)</i>\n"
+
+        text = (
+            f"🧪 <b>Тестовое уведомление</b>\n\n"
+            f"Интернет-магазин: <b>{html.escape(company_name)}</b>\n"
+            f"Тестовая отправка в Telegram выполнена успешно! Чат и бот настроены корректно.{status_note}\n"
+            f"⏱ <i>Время отправки: {now_str}</i>"
+        )
+
+        try:
+            await self.telegram_sender.send_message(
+                chat_id=target_chat_id,
+                text=text,
+                parse_mode="HTML",
+            )
+            msg = f"Тестовое сообщение в Telegram успешно отправлено в чат {target_chat_id}."
+            logger.info(msg)
+            return TestNotificationResponseDTO(
+                success=True,
+                message=msg,
+                target=target_chat_id,
+            )
+        except TelegramSenderException as e:
+            err_msg = f"Ошибка отправки в Telegram: {e.message}"
+            logger.error(err_msg)
+            return TestNotificationResponseDTO(
+                success=False,
+                message=err_msg,
+                target=target_chat_id,
+            )
+        except Exception as e:
+            err_msg = f"Непредвиденная ошибка при отправке в Telegram: {e}"
+            logger.error(err_msg, exc_info=True)
+            return TestNotificationResponseDTO(
+                success=False,
+                message=err_msg,
+                target=target_chat_id,
+            )
+
+    async def send_test_email(
+        self,
+        to_email: Optional[str] = None,
+    ) -> TestNotificationResponseDTO:
+        """
+        Отправляет тестовое email-сообщение, используя данные из настроек сайта.
+        Возвращает результат отправки и диагностическое сообщение для пользователя.
+        """
+        try:
+            settings = await self.get_settings()
+        except Exception as e:
+            logger.error("Failed to load site settings for Email test: %s", e)
+            return TestNotificationResponseDTO(
+                success=False,
+                message=f"Не удалось загрузить настройки сайта: {e}",
+                target=None,
+            )
+
+        target_email = to_email or settings.manager_notification_email or settings.contact_email
+        if not target_email and hasattr(self.config, "admin"):
+            target_email = getattr(self.config.admin, "email", None)
+
+        target_email = (target_email or "").strip()
+        if not target_email:
+            msg = "В настройках сайта не указан email для уведомлений (manager_notification_email или contact_email)."
+            logger.warning("Email test failed: %s", msg)
+            return TestNotificationResponseDTO(
+                success=False,
+                message=msg,
+                target=None,
+            )
+
+        if not self.config.email.is_configured:
+            msg = "В конфигурации окружения (.env) не настроены параметры SMTP сервера."
+            logger.warning("Email test failed: %s", msg)
+            return TestNotificationResponseDTO(
+                success=False,
+                message=msg,
+                target=target_email,
+            )
+
+        company_name = settings.company_name or "Rope Shop"
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        status_note = ""
+        if not settings.email_notifications_enabled and not settings.manager_email_notifications_enabled:
+            status_note = "\n(Примечание: в настройках сайта email-уведомления сейчас выключены)\n"
+
+        subject = f"Тестовое уведомление — {company_name}"
+        body = (
+            f"Здравствуйте!\n\n"
+            f"Это тестовое email-сообщение от интернет-магазина {company_name}.\n"
+            f"Почтовый сервер настроен и работает корректно!{status_note}\n\n"
+            f"Время отправки: {now_str}\n"
+        )
+
+        try:
+            await self.email_sender.send_email(
+                to_email=target_email,
+                subject=subject,
+                body=body,
+            )
+            msg = f"Тестовое email-сообщение успешно отправлено на {target_email}."
+            logger.info(msg)
+            return TestNotificationResponseDTO(
+                success=True,
+                message=msg,
+                target=target_email,
+            )
+        except EmailSenderException as e:
+            err_msg = f"Ошибка отправки email: {e.message}"
+            logger.error(err_msg)
+            return TestNotificationResponseDTO(
+                success=False,
+                message=err_msg,
+                target=target_email,
+            )
+        except Exception as e:
+            err_msg = f"Непредвиденная ошибка при отправке email: {e}"
+            logger.error(err_msg, exc_info=True)
+            return TestNotificationResponseDTO(
+                success=False,
+                message=err_msg,
+                target=target_email,
+            )

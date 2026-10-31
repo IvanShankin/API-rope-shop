@@ -39,6 +39,31 @@ class TestsForSuccess:
         assert data.id is not None
 
     @pytest.mark.asyncio
+    async def test_create_contact_request_triggers_notifications(
+        self,
+        client_for_tests,
+    ):
+        """Проверка, что при создании заявки вызывается отправка уведомлений."""
+        from unittest.mock import AsyncMock, patch
+
+        payload = {
+            "name": "Jane Notification Test",
+            "email": "jane@example.com",
+            "phone": "+49 170 9999999",
+            "message": "Testing automatic notification trigger.",
+        }
+
+        with patch("tests.fixturs.fixtures.DummyNotificationService.notify_new_contact_request", new_callable=AsyncMock) as mock_notify:
+            response = await client_for_tests.post("/contact_requests", json=payload)
+            assert response.status_code == 201
+            assert mock_notify.call_count == 1
+            call_dto = mock_notify.call_args[1].get("contact") if "contact" in mock_notify.call_args[1] else mock_notify.call_args[0][0]
+            assert call_dto.name == payload["name"]
+            assert call_dto.email == payload["email"]
+            call_settings = mock_notify.call_args[1].get("settings") if "settings" in mock_notify.call_args[1] else mock_notify.call_args[0][1]
+            assert call_settings is not None
+
+    @pytest.mark.asyncio
     async def test_list_contact_requests_admin_success(
         self,
         client_for_tests,

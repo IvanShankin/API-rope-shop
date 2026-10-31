@@ -7,15 +7,13 @@ from typing import TYPE_CHECKING, Optional, Tuple
 
 import aiosmtplib
 import httpx
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-
 from src.core.config.config import Config
 from src.modules.settings.models_dto import SettingsResponseDTO
-from src.modules.settings.repository import SettingsRepository
 from src.modules.settings.service import SettingsService
 
 if TYPE_CHECKING:
     from src.modules.quote_requests.models_dto import QuoteRequestResponseDTO
+    from src.modules.contact_requests.models_dto import ContactRequestResponseDTO
 
 logger = logging.getLogger(__name__)
 
@@ -77,17 +75,137 @@ EMAIL_TRANSLATIONS = {
     },
 }
 
+CONTACT_EMAIL_TRANSLATIONS = {
+    "ger": {
+        "subject": "Ihre Kontaktanfrage #{contact_id} — {company_name}",
+        "greeting": "Hallo {name}!\n",
+        "intro": "Vielen Dank für Ihre Anfrage bei {company_name}.",
+        "registered": "Ihre Nachricht wurde erfolgreich empfangen (Vorgangsnummer: #{contact_id}).",
+        "footer": "\nUnser Team wird sich in Kürze mit Ihnen in Verbindung setzen.",
+        "phone": "Telefon: {phone}",
+        "email": "E-Mail: {email}",
+    },
+    "eng": {
+        "subject": "Your inquiry #{contact_id} — {company_name}",
+        "greeting": "Hello {name}!\n",
+        "intro": "Thank you for contacting {company_name}.",
+        "registered": "Your message has been successfully received (Inquiry ID: #{contact_id}).",
+        "footer": "\nOur team will get back to you shortly.",
+        "phone": "Phone: {phone}",
+        "email": "Email: {email}",
+    },
+    "rus": {
+        "subject": "Ваше обращение #{contact_id} — {company_name}",
+        "greeting": "Здравствуйте, {name}!\n",
+        "intro": "Благодарим вас за обращение в компанию {company_name}.",
+        "registered": "Ваше сообщение успешно получено (номер обращения: #{contact_id}).",
+        "footer": "\nНаш специалист свяжется с вами в ближайшее время.",
+        "phone": "Телефон для справок: {phone}",
+        "email": "Email поддержки: {email}",
+    },
+}
+
 
 class NotificationService:
     def __init__(
         self,
         config: Config,
-        settings_service: Optional[SettingsService] = None,
-        session_factory: Optional[async_sessionmaker[AsyncSession]] = None,
+        settings_service: SettingsService,
     ):
         self.config = config
         self.settings_service = settings_service
-        self.session_factory = session_factory
+
+    async def get_settings(self) -> SettingsResponseDTO:
+        if self.settings_service is None:
+            raise RuntimeError("SettingsService is not configured in NotificationService")
+        return await self.settings_service.get_settings()
+
+    def can_send_customer_email(
+        self,
+        settings: SettingsResponseDTO,
+        recipient_email: Optional[str] = None,
+        identifier: str = "",
+    ) -> bool:
+        """
+        Проверяет возможность и необходимость отправки email клиенту:
+        - включены ли email-уведомления в настройках сайта;
+        - настроены ли SMTP-параметры сервера;
+        - передан ли непустой адрес получателя.
+        """
+        if not settings.email_notifications_enabled:
+            logger.info("Customer email notifications disabled in settings. Skipping for %s", identifier)
+            return False
+
+        if not self.config.email.is_configured:
+            logger.info("SMTP credentials not configured in env. Skipping customer email for %s", identifier)
+            return False
+
+        if not recipient_email or not recipient_email.strip():
+            logger.info("Recipient email is empty. Skipping customer email for %s", identifier)
+            return False
+
+        return True
+
+    def can_send_manager_email(
+        self,
+        settings: SettingsResponseDTO,
+        manager_email: Optional[str] = None,
+        identifier: str = "",
+    ) -> bool:
+        """
+        Проверяет возможность и необходимость отправки email менеджеру:
+        - настроены ли SMTP-параметры сервера;
+        - включены ли email-уведомления менеджеров / общие email-уведомления;
+        - задан ли адрес менеджера.
+        """
+        if not self.config.email.is_configured:
+            logger.info("SMTP credentials not configured in env. Skipping manager email for %s", identifier)
+            return False
+
+        if not settings.manager_email_notifications_enabled and not settings.email_notifications_enabled:
+            logger.info("Manager email notifications disabled in settings. Skipping for %s", identifier)
+            return False
+
+        if not manager_email or not manager_email.strip():
+            logger.info("Manager notification email not configured. Skipping manager email for %s", identifier)
+            return False
+
+        return True
+
+    def can_send_telegram(
+        self,
+        settings: SettingsResponseDTO,
+        identifier: str = "",
+    ) -> Tuple[bool, Optional[str]]:
+        """
+        Проверяет возможность и необходимость отправки Telegram-уведомления:
+        - включены ли TG-уведомления в настройках;
+        - задан ли рабочий chat_id в настройках;
+        - настроен ли TELEGRAM_BOT_TOKEN в окружении.
+        """
+        if not settings.telegram_notifications_enabled:
+            msg = f"Telegram notifications disabled in settings. Skipping for {identifier}"
+            logger.info(msg)
+            return False, "Telegram notifications are disabled in site settings"
+
+        chat_id = settings.telegram_chat_id
+        if not chat_id or not str(chat_id).strip():
+            msg = (
+                f"Telegram notification skipped for {identifier}: "
+                "'telegram_chat_id' is not configured in site settings."
+            )
+            logger.warning(msg)
+            return False, msg
+
+        if not self.config.telegram.is_configured:
+            msg = (
+                f"Telegram notification skipped for {identifier}: "
+                "'TELEGRAM_BOT_TOKEN' is not configured in environment variables."
+            )
+            logger.warning(msg)
+            return False, msg
+
+        return True, None
 
     @staticmethod
     def _normalize_locale(locale_val: Optional[str]) -> str:
@@ -100,7 +218,11 @@ class NotificationService:
             return "eng"
         return "ger"
 
-    async def notify_new_quote_request(self, quote: QuoteRequestResponseDTO) -> None:
+    async def notify_new_quote_request(
+        self,
+        quote: QuoteRequestResponseDTO,
+        settings: Optional[SettingsResponseDTO] = None,
+    ) -> None:
         """
         Фоновая задача для отправки уведомлений по новой заявке:
         - Email клиенту (на языке заказа)
@@ -110,15 +232,8 @@ class NotificationService:
         Любые ошибки внутри каналов логируются и не прерывают выполнение других каналов.
         """
         try:
-            if self.session_factory is not None:
-                async with self.session_factory() as session:
-                    repo = SettingsRepository(session)
-                    service = SettingsService(repo=repo, session=session, config=self.config)
-                    settings = await service.get_settings()
-            elif self.settings_service is not None:
-                settings = await self.settings_service.get_settings()
-            else:
-                raise RuntimeError("No session_factory or settings_service configured in NotificationService")
+            if settings is None:
+                settings = await self.get_settings()
         except Exception as e:
             logger.error(
                 "Failed to load settings for notification %s: %s",
@@ -166,12 +281,11 @@ class NotificationService:
         quote: QuoteRequestResponseDTO,
         settings: SettingsResponseDTO,
     ) -> bool:
-        if not settings.email_notifications_enabled:
-            logger.info("Customer email notifications disabled in settings. Skipping for %s", quote.request_number)
-            return False
-
-        if not self.config.email.is_configured:
-            logger.info("SMTP credentials not configured in env. Skipping customer email for %s", quote.request_number)
+        if not self.can_send_customer_email(
+            settings=settings,
+            recipient_email=quote.email,
+            identifier=quote.request_number,
+        ):
             return False
 
         lang = self._normalize_locale(getattr(quote, "locale", None))
@@ -272,26 +386,11 @@ class NotificationService:
         Отправляет уведомление в Telegram менеджерам с детальной обработкой ошибок.
         Возвращает (success: bool, error_message: Optional[str]).
         """
-        if not settings.telegram_notifications_enabled:
-            logger.info("Telegram notifications disabled in settings. Skipping for %s", quote.request_number)
-            return False, "Telegram notifications are disabled in site settings"
+        can_send, reason = self.can_send_telegram(settings=settings, identifier=quote.request_number)
+        if not can_send:
+            return False, reason
 
         chat_id = settings.telegram_chat_id
-        if not chat_id:
-            msg = (
-                f"Telegram notification skipped for {quote.request_number}: "
-                "'telegram_chat_id' is not configured in site settings."
-            )
-            logger.warning(msg)
-            return False, msg
-
-        if not self.config.telegram.is_configured:
-            msg = (
-                f"Telegram notification skipped for {quote.request_number}: "
-                "'TELEGRAM_BOT_TOKEN' is not configured in environment variables."
-            )
-            logger.warning(msg)
-            return False, msg
 
         urgent_badge = "🚨 <b>ВНИМАНИЕ: СРОЧНЫЙ ЗАКАЗ!</b>\n" if quote.is_urgent else ""
         escaped_name = html.escape(quote.name)
@@ -398,10 +497,14 @@ class NotificationService:
         quote: QuoteRequestResponseDTO,
         settings: SettingsResponseDTO,
     ) -> bool:
-        if not settings.manager_email_notifications_enabled or not settings.manager_notification_email:
+        if not settings.manager_email_notifications_enabled:
             return False
 
-        if not self.config.email.is_configured:
+        if not self.can_send_manager_email(
+            settings=settings,
+            manager_email=settings.manager_notification_email,
+            identifier=quote.request_number,
+        ):
             return False
 
         currency_val = quote.currency.value if hasattr(quote.currency, "value") else str(quote.currency)
@@ -433,4 +536,196 @@ class NotificationService:
             start_tls=self.config.email.use_tls,
         )
         logger.info("Manager copy email sent to %s for %s", settings.manager_notification_email, quote.request_number)
+        return True
+
+    async def notify_new_contact_request(
+        self,
+        contact: ContactRequestResponseDTO,
+        settings: SettingsResponseDTO,
+    ) -> None:
+        """
+        Фоновая/сервисная задача для отправки уведомлений по новой контактной заявке:
+        - Telegram менеджерам (пуш в рабочий чат)
+        - Email менеджерам (уведомление о новой заявке)
+        - Email клиенту (подтверждение получения)
+
+        Любые ошибки логируются и не прерывают выполнение сервиса.
+        """
+        # 1. Отправка Telegram в чат менеджеров
+        try:
+            await self.send_contact_telegram(contact, settings)
+        except Exception as e:
+            logger.error(
+                "Failed to send Telegram notification for contact request #%s: %s",
+                getattr(contact, "id", None),
+                e,
+                exc_info=True,
+            )
+
+        # 2. Отправка Email менеджерам (уведомление о новой заявке)
+        try:
+            await self.send_contact_manager_email(contact, settings)
+        except Exception as e:
+            logger.error(
+                "Failed to send manager email for contact request #%s: %s",
+                getattr(contact, "id", None),
+                e,
+                exc_info=True,
+            )
+
+        # 3. Отправка Email клиенту (подтверждение)
+        try:
+            await self.send_contact_customer_email(contact, settings)
+        except Exception as e:
+            logger.error(
+                "Failed to send customer email for contact request #%s: %s",
+                getattr(contact, "id", None),
+                e,
+                exc_info=True,
+            )
+
+    async def send_contact_telegram(
+        self,
+        contact: ContactRequestResponseDTO,
+        settings: SettingsResponseDTO,
+    ) -> Tuple[bool, Optional[str]]:
+        """
+        Отправляет уведомление в Telegram менеджерам о новой заявке из контактной формы.
+        """
+        can_send, reason = self.can_send_telegram(settings=settings, identifier=f"contact #{contact.id}")
+        if not can_send:
+            return False, reason
+
+        chat_id = settings.telegram_chat_id
+        escaped_name = html.escape(contact.name)
+        escaped_email = html.escape(contact.email)
+        escaped_phone = html.escape(contact.phone or "не указан")
+        escaped_message = html.escape(contact.message or "—")
+
+        text = (
+            f"📩 <b>Новая контактная заявка:</b> <code>#{contact.id}</code>\n"
+            f"👤 <b>Клиент:</b> {escaped_name}\n"
+            f"📧 <b>Email:</b> {escaped_email}\n"
+            f"📞 <b>Телефон:</b> {escaped_phone}\n"
+            f"💬 <b>Сообщение:</b>\n{escaped_message}\n"
+        )
+
+        url = f"https://api.telegram.org/bot{self.config.telegram.bot_token}/sendMessage"
+        payload = {
+            "chat_id": chat_id,
+            "text": text,
+            "parse_mode": "HTML",
+        }
+
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.post(url, json=payload)
+        except Exception as e:
+            logger.error("Error sending Telegram message for contact #%s: %s", contact.id, e)
+            return False, str(e)
+
+        if response.status_code == 200:
+            logger.info("Telegram notification sent for contact #%s to chat %s", contact.id, chat_id)
+            return True, None
+
+        logger.error(
+            "Failed to send Telegram notification for contact #%s (Status: %d): %s",
+            contact.id,
+            response.status_code,
+            response.text,
+        )
+        return False, response.text
+
+    async def send_contact_manager_email(
+        self,
+        contact: ContactRequestResponseDTO,
+        settings: SettingsResponseDTO,
+    ) -> bool:
+        """
+        Отправляет уведомление на почту менеджера о новой контактной заявке.
+        """
+        to_email = settings.manager_notification_email or settings.contact_email
+        if not to_email and hasattr(self.config, "admin"):
+            to_email = getattr(self.config.admin, "email", None)
+
+        if not self.can_send_manager_email(
+            settings=settings,
+            manager_email=to_email,
+            identifier=f"contact #{contact.id}",
+        ):
+            return False
+
+        msg = EmailMessage()
+        msg["From"] = self.config.email.from_email
+        msg["To"] = to_email
+        msg["Subject"] = f"Новая контактная заявка #{contact.id} — {contact.name}"
+
+        body = (
+            f"Поступила новая заявка через форму обратной связи #{contact.id}\n\n"
+            f"Клиент: {contact.name}\n"
+            f"Email: {contact.email}\n"
+            f"Телефон: {contact.phone or 'не указан'}\n\n"
+            f"Сообщение:\n{contact.message or '—'}\n"
+        )
+        msg.set_content(body)
+
+        await aiosmtplib.send(
+            msg,
+            hostname=self.config.email.smtp_host,
+            port=self.config.email.smtp_port,
+            username=self.config.email.smtp_user,
+            password=self.config.email.smtp_password,
+            start_tls=self.config.email.use_tls,
+        )
+        logger.info("Manager contact email sent to %s for contact #%s", to_email, contact.id)
+        return True
+
+    async def send_contact_customer_email(
+        self,
+        contact: ContactRequestResponseDTO,
+        settings: SettingsResponseDTO,
+    ) -> bool:
+        """
+        Отправляет клиенту подтверждение получения его контактного обращения.
+        """
+        if not self.can_send_customer_email(
+            settings=settings,
+            recipient_email=contact.email,
+            identifier=f"contact #{contact.id}",
+        ):
+            return False
+
+        lang = "rus"
+        t = CONTACT_EMAIL_TRANSLATIONS.get(lang, CONTACT_EMAIL_TRANSLATIONS["rus"])
+        company_name = settings.company_name or "Rope Shop"
+
+        msg = EmailMessage()
+        msg["From"] = self.config.email.from_email
+        msg["To"] = contact.email
+        msg["Subject"] = t["subject"].format(contact_id=contact.id, company_name=company_name)
+
+        lines = [
+            t["greeting"].format(name=contact.name),
+            t["intro"].format(company_name=company_name),
+            t["registered"].format(contact_id=contact.id),
+            t["footer"],
+        ]
+        if contact.message:
+            lines.append(f"\nВаше сообщение:\n{contact.message}")
+        if settings.contact_phone:
+            lines.append(t["phone"].format(phone=settings.contact_phone))
+        if settings.contact_email:
+            lines.append(t["email"].format(email=settings.contact_email))
+
+        msg.set_content("\n".join(lines))
+
+        await aiosmtplib.send(
+            msg,
+            hostname=self.config.email.smtp_host,
+            port=self.config.email.smtp_port,
+            username=self.config.email.smtp_user,
+            password=self.config.email.smtp_password,
+            start_tls=self.config.email.use_tls,
+        )
+        logger.info("Customer confirmation email sent to %s for contact #%s", contact.email, contact.id)
         return True

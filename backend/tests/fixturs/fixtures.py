@@ -18,7 +18,26 @@ from src.modules.users.service import UsersService
 
 class DummyNotificationService:
     """Mock-сервис уведомлений для тестов, предотвращающий deadlock фоновых задач с clearing_db."""
-    async def notify_new_quote_request(self, quote) -> None:
+    async def get_settings(self):
+        from datetime import datetime
+        from src.modules.settings.models_dto import SettingsResponseDTO
+        return SettingsResponseDTO(
+            id=1,
+            telegram_chat_id="-100123456789",
+            telegram_notifications_enabled=True,
+            email_notifications_enabled=True,
+            manager_notification_email="manager@test.com",
+            manager_email_notifications_enabled=True,
+            company_name="Test Shop",
+            site_url="https://test.com",
+            created_at=datetime.now(),
+            updated_at=datetime.now(),
+        )
+
+    async def notify_new_quote_request(self, quote, settings=None) -> None:
+        pass
+
+    async def notify_new_contact_request(self, contact, settings=None) -> None:
         pass
 
 

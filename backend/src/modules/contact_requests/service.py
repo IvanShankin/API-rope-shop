@@ -1,5 +1,8 @@
+import logging
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.config import Config
 from src.modules.base.exception import NoDataForUpdate
 from src.modules.contact_requests.exception import ContactRequestNotFound
 from src.modules.contact_requests.models import ContactRequest
@@ -9,6 +12,9 @@ from src.modules.contact_requests.models_dto import (
     ContactRequestUpdateDTO,
 )
 from src.modules.contact_requests.repository import ContactRequestRepository
+from src.modules.notifications.service import NotificationService
+
+logger = logging.getLogger(__name__)
 
 
 DEFAULT_CONTACT_REQUEST = {
@@ -24,9 +30,13 @@ class ContactRequestService:
         self,
         repo: ContactRequestRepository,
         session: AsyncSession,
+        notification_service: NotificationService,
+        config: Config,
     ):
         self.repo = repo
         self.session = session
+        self.notification_service = notification_service
+        self.config = config
 
     async def create_contact(
         self,
@@ -39,7 +49,19 @@ class ContactRequestService:
         self.repo.add_contact(contact)
         await self.session.commit()
         await self.session.refresh(contact)
-        return ContactRequestResponseDTO.model_validate(contact)
+        response_dto = ContactRequestResponseDTO.model_validate(contact)
+
+        # Отправка уведомлений в ТГ и на почту о новой заявке
+        try:
+            settings = await self.notification_service.get_settings()
+            await self.notification_service.notify_new_contact_request(
+                contact=response_dto,
+                settings=settings,
+            )
+        except Exception as e:
+            logger.error("Failed to send contact request notifications: %s", e, exc_info=True)
+
+        return response_dto
 
     async def get_contact_requests(
         self,

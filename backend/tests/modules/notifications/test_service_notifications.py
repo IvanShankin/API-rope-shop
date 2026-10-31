@@ -64,6 +64,24 @@ def _create_mock_settings_service(settings: SettingsResponseDTO) -> MagicMock:
     return service
 
 
+from src.modules.senders.email_service import EmailSenderService
+from src.modules.senders.telegram_service import TelegramSenderService
+
+
+def _create_notification_service(
+    config: Config,
+    settings_service,
+    email_sender: EmailSenderService | None = None,
+    telegram_sender: TelegramSenderService | None = None,
+) -> NotificationService:
+    return NotificationService(
+        config=config,
+        settings_service=settings_service,
+        email_sender=email_sender or EmailSenderService(config=config),
+        telegram_sender=telegram_sender or TelegramSenderService(config=config),
+    )
+
+
 @pytest.mark.asyncio
 async def test_notify_new_quote_request_german_email_and_telegram():
     config = Config()
@@ -95,7 +113,7 @@ async def test_notify_new_quote_request_german_email_and_telegram():
 
     quote = _create_sample_quote_dto(locale="ger")
     mock_settings_service = _create_mock_settings_service(settings)
-    service = NotificationService(config=config, settings_service=mock_settings_service)
+    service = _create_notification_service(config=config, settings_service=mock_settings_service)
 
     with patch("aiosmtplib.send", new_callable=AsyncMock) as mock_send, \
          patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
@@ -145,7 +163,7 @@ async def test_notify_new_quote_request_english_and_russian_email():
     )
 
     mock_settings_service = _create_mock_settings_service(settings)
-    service = NotificationService(config=config, settings_service=mock_settings_service)
+    service = _create_notification_service(config=config, settings_service=mock_settings_service)
 
     # 1. English
     quote_en = _create_sample_quote_dto(locale="en")
@@ -180,7 +198,7 @@ async def test_telegram_error_handling_chat_not_found():
         updated_at=datetime.now(),
     )
     quote = _create_sample_quote_dto()
-    service = NotificationService(config=config, settings_service=MagicMock())
+    service = _create_notification_service(config=config, settings_service=MagicMock())
 
     # Мокаем 400 Bad Request: chat not found
     mock_resp = MagicMock()
@@ -211,7 +229,7 @@ async def test_telegram_error_handling_unauthorized():
         updated_at=datetime.now(),
     )
     quote = _create_sample_quote_dto()
-    service = NotificationService(config=config, settings_service=MagicMock())
+    service = _create_notification_service(config=config, settings_service=MagicMock())
 
     mock_resp = MagicMock()
     mock_resp.status_code = 401
@@ -237,7 +255,7 @@ async def test_telegram_error_handling_timeout():
         updated_at=datetime.now(),
     )
     quote = _create_sample_quote_dto()
-    service = NotificationService(config=config, settings_service=MagicMock())
+    service = _create_notification_service(config=config, settings_service=MagicMock())
 
     with patch("httpx.AsyncClient.post", side_effect=httpx.TimeoutException("Read timed out")):
         success, err = await service.send_manager_telegram(quote=quote, settings=settings)
@@ -270,7 +288,7 @@ async def test_notifications_disabled_in_settings_skips_sending():
 
     quote = _create_sample_quote_dto()
     mock_settings_service = _create_mock_settings_service(settings)
-    service = NotificationService(config=config, settings_service=mock_settings_service)
+    service = _create_notification_service(config=config, settings_service=mock_settings_service)
 
     with patch("aiosmtplib.send", new_callable=AsyncMock) as mock_send, \
          patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
@@ -297,7 +315,7 @@ async def test_notify_new_quote_request_with_explicit_settings():
     )
 
     mock_settings_service = _create_mock_settings_service(settings)
-    service = NotificationService(config=config, settings_service=mock_settings_service)
+    service = _create_notification_service(config=config, settings_service=mock_settings_service)
 
     with patch("aiosmtplib.send", new_callable=AsyncMock) as mock_send, \
          patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
@@ -338,7 +356,7 @@ async def test_notification_service_validation_helpers():
         updated_at=datetime.now(),
     )
 
-    service = NotificationService(config=config, settings_service=MagicMock())
+    service = _create_notification_service(config=config, settings_service=MagicMock())
 
     # 1. Customer email validation
     assert service.can_send_customer_email(settings, "client@example.com") is True
@@ -411,7 +429,7 @@ async def test_notify_new_contact_request_telegram_and_email():
     )
 
     mock_settings_service = _create_mock_settings_service(settings)
-    service = NotificationService(config=config, settings_service=mock_settings_service)
+    service = _create_notification_service(config=config, settings_service=mock_settings_service)
 
     with patch("aiosmtplib.send", new_callable=AsyncMock) as mock_send, \
          patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
@@ -474,7 +492,7 @@ async def test_notify_new_contact_request_disabled_skips_sending():
     )
 
     mock_settings_service = _create_mock_settings_service(settings)
-    service = NotificationService(config=config, settings_service=mock_settings_service)
+    service = _create_notification_service(config=config, settings_service=mock_settings_service)
 
     with patch("aiosmtplib.send", new_callable=AsyncMock) as mock_send, \
          patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:

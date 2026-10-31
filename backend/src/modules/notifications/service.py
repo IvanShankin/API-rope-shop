@@ -2,18 +2,21 @@ from __future__ import annotations
 
 import html
 import logging
-from email.message import EmailMessage
 from typing import TYPE_CHECKING, Optional, Tuple
 
-import aiosmtplib
-import httpx
 from src.core.config.config import Config
+from src.modules.senders.email_service import EmailSenderService
+from src.modules.senders.exception import (
+    EmailSenderException,
+    TelegramSenderException,
+)
+from src.modules.senders.telegram_service import TelegramSenderService
 from src.modules.settings.models_dto import SettingsResponseDTO
 from src.modules.settings.service import SettingsService
 
 if TYPE_CHECKING:
-    from src.modules.quote_requests.models_dto import QuoteRequestResponseDTO
     from src.modules.contact_requests.models_dto import ContactRequestResponseDTO
+    from src.modules.quote_requests.models_dto import QuoteRequestResponseDTO
 
 logger = logging.getLogger(__name__)
 
@@ -111,9 +114,13 @@ class NotificationService:
         self,
         config: Config,
         settings_service: SettingsService,
+        email_sender: EmailSenderService,
+        telegram_sender: TelegramSenderService,
     ):
         self.config = config
         self.settings_service = settings_service
+        self.email_sender = email_sender
+        self.telegram_sender = telegram_sender
 
     async def get_settings(self) -> SettingsResponseDTO:
         if self.settings_service is None:
@@ -291,14 +298,6 @@ class NotificationService:
         lang = self._normalize_locale(getattr(quote, "locale", None))
         t = EMAIL_TRANSLATIONS.get(lang, EMAIL_TRANSLATIONS["ger"])
 
-        msg = EmailMessage()
-        msg["From"] = self.config.email.from_email
-        msg["To"] = quote.email
-        msg["Subject"] = t["subject"].format(
-            request_number=quote.request_number,
-            company_name=settings.company_name,
-        )
-
         currency_val = quote.currency.value if hasattr(quote.currency, "value") else str(quote.currency)
         lines = [
             t["greeting"].format(name=quote.name),
@@ -359,23 +358,26 @@ class NotificationService:
         if settings.contact_email:
             lines.append(t["email"].format(email=settings.contact_email))
 
-        msg.set_content("\n".join(lines))
+        subject = t["subject"].format(
+            request_number=quote.request_number,
+            company_name=settings.company_name,
+        )
+        body = "\n".join(lines)
 
-        await aiosmtplib.send(
-            msg,
-            hostname=self.config.email.smtp_host,
-            port=self.config.email.smtp_port,
-            username=self.config.email.smtp_user,
-            password=self.config.email.smtp_password,
-            start_tls=self.config.email.use_tls,
-        )
-        logger.info(
-            "Confirmation email (%s) sent to %s for %s",
-            lang,
-            quote.email,
-            quote.request_number,
-        )
-        return True
+        try:
+            await self.email_sender.send_email(
+                to_email=quote.email,
+                subject=subject,
+                body=body,
+            )
+            logger.info("Confirmation email (%s) sent to %s for %s", lang, quote.email, quote.request_number)
+            return True
+        except EmailSenderException as e:
+            logger.error("Failed to send customer email for %s: %s", quote.request_number, e.message)
+            return False
+        except Exception as e:
+            logger.error("Unexpected error sending customer email for %s: %s", quote.request_number, e, exc_info=True)
+            return False
 
     async def send_manager_telegram(
         self,
@@ -391,7 +393,6 @@ class NotificationService:
             return False, reason
 
         chat_id = settings.telegram_chat_id
-
         urgent_badge = "🚨 <b>ВНИМАНИЕ: СРОЧНЫЙ ЗАКАЗ!</b>\n" if quote.is_urgent else ""
         escaped_name = html.escape(quote.name)
         escaped_email = html.escape(quote.email)
@@ -412,85 +413,20 @@ class NotificationService:
         if quote.rope_items:
             text += f"🪢 <b>Позиций канатов:</b> {len(quote.rope_items)}\n"
 
-        url = f"https://api.telegram.org/bot{self.config.telegram.bot_token}/sendMessage"
-        payload = {
-            "chat_id": chat_id,
-            "text": text,
-            "parse_mode": "HTML",
-        }
-
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.post(url, json=payload)
-        except httpx.TimeoutException as e:
-            err = (
-                f"Telegram API timeout after 10.0s while sending notification for {quote.request_number} "
-                f"to chat '{chat_id}'. Check network connectivity."
+            await self.telegram_sender.send_message(
+                chat_id=chat_id,
+                text=text,
+                parse_mode="HTML",
             )
-            logger.error(err)
-            return False, err
-        except httpx.ConnectError as e:
-            err = (
-                f"Telegram API connection failed for {quote.request_number} to chat '{chat_id}': "
-                f"Unable to reach api.telegram.org ({e}). Check DNS/firewall/proxy."
-            )
-            logger.error(err)
-            return False, err
-        except httpx.HTTPError as e:
-            err = f"Telegram HTTP network transport error for {quote.request_number} to chat '{chat_id}': {e}"
-            logger.error(err)
-            return False, err
-        except Exception as e:
-            err = f"Unexpected error while sending Telegram notification for {quote.request_number}: {e}"
-            logger.error(err, exc_info=True)
-            return False, err
-
-        # Обработка ответов API Telegram
-        if response.status_code == 200:
             logger.info("Telegram notification sent for %s to chat %s", quote.request_number, chat_id)
             return True, None
-
-        # Разбор ошибки от Telegram Bot API
-        try:
-            err_json = response.json()
-            err_code = err_json.get("error_code", response.status_code)
-            err_desc = err_json.get("description", response.text)
-        except Exception:
-            err_code = response.status_code
-            err_desc = response.text
-
-        # Человекочитаемая диагностика
-        if err_code == 400:
-            if "chat not found" in err_desc.lower():
-                diagnostic = (
-                    f"Telegram chat '{chat_id}' was not found. Verify the chat ID in site settings, "
-                    "or ensure the bot has been added to the chat/channel and user started the bot."
-                )
-            elif "can't parse entities" in err_desc.lower():
-                diagnostic = f"Telegram HTML markup parsing error in notification text: {err_desc}"
-            else:
-                diagnostic = f"Telegram Bad Request (400): {err_desc}"
-        elif err_code == 401:
-            diagnostic = "Telegram Unauthorized (401): TELEGRAM_BOT_TOKEN is invalid or revoked. Check .env."
-        elif err_code == 403:
-            diagnostic = (
-                f"Telegram Forbidden (403): Bot lacks permission to send messages to chat '{chat_id}'. "
-                f"The bot may be blocked by user, kicked from group, or not an administrator in the channel. ({err_desc})"
-            )
-        elif err_code == 429:
-            diagnostic = f"Telegram Too Many Requests (429): Rate limit exceeded. Details: {err_desc}"
-        elif 500 <= err_code < 600:
-            diagnostic = f"Telegram Server Error ({err_code}): api.telegram.org internal error. Details: {err_desc}"
-        else:
-            diagnostic = f"Telegram API error ({err_code}): {err_desc}"
-
-        logger.error(
-            "Failed to send Telegram notification for %s (Status: %d): %s",
-            quote.request_number,
-            err_code,
-            diagnostic,
-        )
-        return False, diagnostic
+        except TelegramSenderException as e:
+            logger.error("Failed to send Telegram notification for %s: %s", quote.request_number, e.message)
+            return False, e.message
+        except Exception as e:
+            logger.error("Unexpected error while sending Telegram notification for %s: %s", quote.request_number, e, exc_info=True)
+            return False, str(e)
 
     async def send_manager_email(
         self,
@@ -508,11 +444,8 @@ class NotificationService:
             return False
 
         currency_val = quote.currency.value if hasattr(quote.currency, "value") else str(quote.currency)
-        msg = EmailMessage()
-        msg["From"] = self.config.email.from_email
-        msg["To"] = settings.manager_notification_email
         urgent_prefix = "[СРОЧНО] " if quote.is_urgent else ""
-        msg["Subject"] = (
+        subject = (
             f"{urgent_prefix}Новая заявка {quote.request_number} на сумму "
             f"{quote.total_price:.2f} {currency_val}"
         )
@@ -525,18 +458,21 @@ class NotificationService:
             f"Сумма: {quote.total_price:.2f} {currency_val}\n"
             f"Комментарий: {quote.comment or 'нет'}\n"
         )
-        msg.set_content(body)
 
-        await aiosmtplib.send(
-            msg,
-            hostname=self.config.email.smtp_host,
-            port=self.config.email.smtp_port,
-            username=self.config.email.smtp_user,
-            password=self.config.email.smtp_password,
-            start_tls=self.config.email.use_tls,
-        )
-        logger.info("Manager copy email sent to %s for %s", settings.manager_notification_email, quote.request_number)
-        return True
+        try:
+            await self.email_sender.send_email(
+                to_email=settings.manager_notification_email,
+                subject=subject,
+                body=body,
+            )
+            logger.info("Manager copy email sent to %s for %s", settings.manager_notification_email, quote.request_number)
+            return True
+        except EmailSenderException as e:
+            logger.error("Failed to send manager email for %s: %s", quote.request_number, e.message)
+            return False
+        except Exception as e:
+            logger.error("Unexpected error sending manager email for %s: %s", quote.request_number, e, exc_info=True)
+            return False
 
     async def notify_new_contact_request(
         self,
@@ -596,7 +532,6 @@ class NotificationService:
         if not can_send:
             return False, reason
 
-        chat_id = settings.telegram_chat_id
         escaped_name = html.escape(contact.name)
         escaped_email = html.escape(contact.email)
         escaped_phone = html.escape(contact.phone or "не указан")
@@ -610,31 +545,20 @@ class NotificationService:
             f"💬 <b>Сообщение:</b>\n{escaped_message}\n"
         )
 
-        url = f"https://api.telegram.org/bot{self.config.telegram.bot_token}/sendMessage"
-        payload = {
-            "chat_id": chat_id,
-            "text": text,
-            "parse_mode": "HTML",
-        }
-
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.post(url, json=payload)
-        except Exception as e:
-            logger.error("Error sending Telegram message for contact #%s: %s", contact.id, e)
-            return False, str(e)
-
-        if response.status_code == 200:
-            logger.info("Telegram notification sent for contact #%s to chat %s", contact.id, chat_id)
+            await self.telegram_sender.send_message(
+                chat_id=settings.telegram_chat_id,
+                text=text,
+                parse_mode="HTML",
+            )
+            logger.info("Telegram notification sent for contact #%s to chat %s", contact.id, settings.telegram_chat_id)
             return True, None
-
-        logger.error(
-            "Failed to send Telegram notification for contact #%s (Status: %d): %s",
-            contact.id,
-            response.status_code,
-            response.text,
-        )
-        return False, response.text
+        except TelegramSenderException as e:
+            logger.error("Failed to send Telegram notification for contact #%s: %s", contact.id, e.message)
+            return False, e.message
+        except Exception as e:
+            logger.error("Unexpected error sending Telegram message for contact #%s: %s", contact.id, e, exc_info=True)
+            return False, str(e)
 
     async def send_contact_manager_email(
         self,
@@ -655,11 +579,7 @@ class NotificationService:
         ):
             return False
 
-        msg = EmailMessage()
-        msg["From"] = self.config.email.from_email
-        msg["To"] = to_email
-        msg["Subject"] = f"Новая контактная заявка #{contact.id} — {contact.name}"
-
+        subject = f"Новая контактная заявка #{contact.id} — {contact.name}"
         body = (
             f"Поступила новая заявка через форму обратной связи #{contact.id}\n\n"
             f"Клиент: {contact.name}\n"
@@ -667,18 +587,21 @@ class NotificationService:
             f"Телефон: {contact.phone or 'не указан'}\n\n"
             f"Сообщение:\n{contact.message or '—'}\n"
         )
-        msg.set_content(body)
 
-        await aiosmtplib.send(
-            msg,
-            hostname=self.config.email.smtp_host,
-            port=self.config.email.smtp_port,
-            username=self.config.email.smtp_user,
-            password=self.config.email.smtp_password,
-            start_tls=self.config.email.use_tls,
-        )
-        logger.info("Manager contact email sent to %s for contact #%s", to_email, contact.id)
-        return True
+        try:
+            await self.email_sender.send_email(
+                to_email=to_email,
+                subject=subject,
+                body=body,
+            )
+            logger.info("Manager contact email sent to %s for contact #%s", to_email, contact.id)
+            return True
+        except EmailSenderException as e:
+            logger.error("Failed to send manager contact email for #%s: %s", contact.id, e.message)
+            return False
+        except Exception as e:
+            logger.error("Unexpected error sending manager contact email for #%s: %s", contact.id, e, exc_info=True)
+            return False
 
     async def send_contact_customer_email(
         self,
@@ -699,11 +622,7 @@ class NotificationService:
         t = CONTACT_EMAIL_TRANSLATIONS.get(lang, CONTACT_EMAIL_TRANSLATIONS["rus"])
         company_name = settings.company_name or "Rope Shop"
 
-        msg = EmailMessage()
-        msg["From"] = self.config.email.from_email
-        msg["To"] = contact.email
-        msg["Subject"] = t["subject"].format(contact_id=contact.id, company_name=company_name)
-
+        subject = t["subject"].format(contact_id=contact.id, company_name=company_name)
         lines = [
             t["greeting"].format(name=contact.name),
             t["intro"].format(company_name=company_name),
@@ -717,15 +636,19 @@ class NotificationService:
         if settings.contact_email:
             lines.append(t["email"].format(email=settings.contact_email))
 
-        msg.set_content("\n".join(lines))
+        body = "\n".join(lines)
 
-        await aiosmtplib.send(
-            msg,
-            hostname=self.config.email.smtp_host,
-            port=self.config.email.smtp_port,
-            username=self.config.email.smtp_user,
-            password=self.config.email.smtp_password,
-            start_tls=self.config.email.use_tls,
-        )
-        logger.info("Customer confirmation email sent to %s for contact #%s", contact.email, contact.id)
-        return True
+        try:
+            await self.email_sender.send_email(
+                to_email=contact.email,
+                subject=subject,
+                body=body,
+            )
+            logger.info("Customer confirmation email sent to %s for contact #%s", contact.email, contact.id)
+            return True
+        except EmailSenderException as e:
+            logger.error("Failed to send customer confirmation email for #%s: %s", contact.id, e.message)
+            return False
+        except Exception as e:
+            logger.error("Unexpected error sending customer confirmation email for #%s: %s", contact.id, e, exc_info=True)
+            return False

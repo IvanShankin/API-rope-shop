@@ -1,0 +1,455 @@
+{
+  "capturedAt": "2026-11-05T19:12:19.420Z",
+  "desktop": {
+    "viewport": {
+      "w": 1440,
+      "h": 1000,
+      "scrollWidth": 1440,
+      "scrollHeight": 2106
+    },
+    "headerBox": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 131.8
+    },
+    "filterBox": {
+      "x": 15,
+      "y": 388,
+      "w": 230,
+      "h": 330.4
+    },
+    "fieldsetBox": {
+      "x": 15,
+      "y": 388,
+      "w": 230,
+      "h": 330.4
+    },
+    "titleBox": null,
+    "ssBox": {
+      "x": 15,
+      "y": 420.4,
+      "w": 230,
+      "h": 52.8
+    },
+    "checkBox": {
+      "x": 15,
+      "y": 606.4,
+      "w": 230,
+      "h": 44
+    },
+    "inputBox": {
+      "x": 15,
+      "y": 609.4,
+      "w": 18,
+      "h": 18
+    },
+    "resetBox": {
+      "x": 15,
+      "y": 674.4,
+      "w": 122.9,
+      "h": 44
+    },
+    "itemsBox": {
+      "x": 285,
+      "y": 388,
+      "w": 1140,
+      "h": 1098.1
+    },
+    "firstProductBox": {
+      "x": 285,
+      "y": 388,
+      "w": 1140,
+      "h": 517.1
+    },
+    "productsLeft": 285,
+    "styles": {
+      "filter": {
+        "font": "400 16px/25.6px Manrope, system-ui, sans-serif",
+        "color": "rgb(246, 250, 253)",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(246, 250, 253)",
+        "radius": "0px",
+        "padding": "0px",
+        "gap": "normal",
+        "minHeight": "auto",
+        "opacity": "1",
+        "w": 230,
+        "h": 330.4
+      },
+      "title": null,
+      "field": {
+        "font": "400 14px/22.4px Manrope, system-ui, sans-serif",
+        "color": "rgb(246, 250, 253)",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(246, 250, 253)",
+        "radius": "0px",
+        "padding": "0px",
+        "gap": "10px",
+        "minHeight": "auto",
+        "opacity": "1",
+        "w": 230,
+        "h": 85.2
+      },
+      "ssMain": {
+        "font": "400 14px/22.4px Manrope, system-ui, sans-serif",
+        "color": "rgb(246, 250, 253)",
+        "background": "rgb(26, 61, 99)",
+        "border": "1px solid rgba(179, 207, 229, 0.18)",
+        "radius": "10px",
+        "padding": "12px",
+        "gap": "12px",
+        "minHeight": "48px",
+        "opacity": "1",
+        "w": 230,
+        "h": 52.8
+      },
+      "ssText": {
+        "font": "400 14px/16.8px Manrope, system-ui, sans-serif",
+        "color": "rgb(246, 250, 253)",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(246, 250, 253)",
+        "radius": "0px",
+        "padding": "0px 7px 0px 4px",
+        "gap": "normal",
+        "minHeight": "auto",
+        "opacity": "1",
+        "w": 166,
+        "h": 16.8
+      },
+      "check": {
+        "font": "400 14px/22.4px Manrope, system-ui, sans-serif",
+        "color": "rgb(246, 250, 253)",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(246, 250, 253)",
+        "radius": "0px",
+        "padding": "0px",
+        "gap": "10px",
+        "minHeight": "44px",
+        "opacity": "1",
+        "w": 230,
+        "h": 44
+      },
+      "input": {
+        "font": "400 13.3333px/normal Arial",
+        "color": "rgb(255, 255, 255)",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(255, 255, 255)",
+        "radius": "0px",
+        "padding": "0px",
+        "gap": "normal",
+        "minHeight": "auto",
+        "opacity": "1",
+        "w": 18,
+        "h": 18
+      },
+      "reset": {
+        "font": "400 14px/22.4px Manrope, system-ui, sans-serif",
+        "color": "rgb(246, 250, 253)",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(246, 250, 253)",
+        "radius": "0px",
+        "padding": "8px 0px",
+        "gap": "normal",
+        "minHeight": "44px",
+        "opacity": "0.4",
+        "w": 122.9,
+        "h": 44
+      }
+    },
+    "titleExists": false,
+    "titleText": null,
+    "htmlLang": "de"
+  },
+  "mobile": {
+    "viewport": {
+      "w": 390,
+      "h": 844,
+      "scrollWidth": 390,
+      "scrollHeight": 3057
+    },
+    "headerBox": {
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 135.7
+    },
+    "filterBox": {
+      "x": 5,
+      "y": 300.8,
+      "w": 380,
+      "h": 209.2
+    },
+    "fieldsetBox": {
+      "x": 5,
+      "y": 300.8,
+      "w": 380,
+      "h": 209.2
+    },
+    "titleBox": null,
+    "ssBox": {
+      "x": 5,
+      "y": 333.2,
+      "w": 183,
+      "h": 52.8
+    },
+    "checkBox": {
+      "x": 5,
+      "y": 404,
+      "w": 380,
+      "h": 44
+    },
+    "inputBox": {
+      "x": 5,
+      "y": 407,
+      "w": 18,
+      "h": 18
+    },
+    "resetBox": {
+      "x": 5,
+      "y": 466,
+      "w": 122.9,
+      "h": 44
+    },
+    "itemsBox": {
+      "x": 5,
+      "y": 542,
+      "w": 380,
+      "h": 1609
+    },
+    "firstProductBox": {
+      "x": 5,
+      "y": 542,
+      "w": 380,
+      "h": 792.7
+    },
+    "productsLeft": 5,
+    "styles": {
+      "filter": {
+        "font": "400 16px/25.6px Manrope, system-ui, sans-serif",
+        "color": "rgb(246, 250, 253)",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(246, 250, 253)",
+        "radius": "0px",
+        "padding": "0px",
+        "gap": "normal",
+        "minHeight": "auto",
+        "opacity": "1",
+        "w": 380,
+        "h": 209.2
+      },
+      "title": null,
+      "field": {
+        "font": "400 14px/22.4px Manrope, system-ui, sans-serif",
+        "color": "rgb(246, 250, 253)",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(246, 250, 253)",
+        "radius": "0px",
+        "padding": "0px",
+        "gap": "10px",
+        "minHeight": "auto",
+        "opacity": "1",
+        "w": 183,
+        "h": 85.2
+      },
+      "ssMain": {
+        "font": "400 14px/22.4px Manrope, system-ui, sans-serif",
+        "color": "rgb(246, 250, 253)",
+        "background": "rgb(26, 61, 99)",
+        "border": "1px solid rgba(179, 207, 229, 0.18)",
+        "radius": "10px",
+        "padding": "12px",
+        "gap": "12px",
+        "minHeight": "48px",
+        "opacity": "1",
+        "w": 183,
+        "h": 52.8
+      },
+      "ssText": {
+        "font": "400 14px/16.8px Manrope, system-ui, sans-serif",
+        "color": "rgb(246, 250, 253)",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(246, 250, 253)",
+        "radius": "0px",
+        "padding": "0px 7px 0px 4px",
+        "gap": "normal",
+        "minHeight": "auto",
+        "opacity": "1",
+        "w": 119,
+        "h": 16.8
+      },
+      "check": {
+        "font": "400 14px/22.4px Manrope, system-ui, sans-serif",
+        "color": "rgb(246, 250, 253)",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(246, 250, 253)",
+        "radius": "0px",
+        "padding": "0px",
+        "gap": "10px",
+        "minHeight": "44px",
+        "opacity": "1",
+        "w": 380,
+        "h": 44
+      },
+      "input": {
+        "font": "400 13.3333px/normal Arial",
+        "color": "rgb(255, 255, 255)",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(255, 255, 255)",
+        "radius": "0px",
+        "padding": "0px",
+        "gap": "normal",
+        "minHeight": "auto",
+        "opacity": "1",
+        "w": 18,
+        "h": 18
+      },
+      "reset": {
+        "font": "400 14px/22.4px Manrope, system-ui, sans-serif",
+        "color": "rgb(246, 250, 253)",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(246, 250, 253)",
+        "radius": "0px",
+        "padding": "8px 0px",
+        "gap": "normal",
+        "minHeight": "44px",
+        "opacity": "0.4",
+        "w": 122.9,
+        "h": 44
+      }
+    },
+    "titleExists": false,
+    "titleText": null,
+    "htmlLang": "de"
+  },
+  "states": {
+    "default": {
+      "url": "?group=1",
+      "lang": "de",
+      "products": 2,
+      "empty": false,
+      "resetDisabled": true,
+      "values": [
+        "",
+        ""
+      ],
+      "ssValues": [
+        "Alle Varianten",
+        "Alle Varianten"
+      ],
+      "checked": false,
+      "title": null,
+      "fieldLabels": [
+        "Konstruktion",
+        "Durchmesser, mm"
+      ]
+    },
+    "mobileDefault": {
+      "url": "?group=1",
+      "lang": "de",
+      "products": 2,
+      "empty": false,
+      "resetDisabled": true,
+      "values": [
+        "",
+        ""
+      ],
+      "ssValues": [
+        "Alle Varianten",
+        "Alle Varianten"
+      ],
+      "checked": false,
+      "title": null,
+      "fieldLabels": [
+        "Konstruktion",
+        "Durchmesser, mm"
+      ]
+    }
+  },
+  "cls": {
+    "desktop": {
+      "total": 0.0033,
+      "entries": [
+        {
+          "value": 0.00075,
+          "startTime": 288.9,
+          "sources": [
+            {
+              "node": "NAV.header__nav.nav",
+              "prev": "406,46 546x38",
+              "cur": "363,46 598x38"
+            },
+            {
+              "node": "DIV.header__actions",
+              "prev": "1151,44 233x42",
+              "cur": "1118,44 266x42"
+            },
+            {
+              "node": "A.nav__link",
+              "prev": "810,46 142x38",
+              "cur": "827,46 136x38"
+            }
+          ]
+        },
+        {
+          "value": 0.00035,
+          "startTime": 485.1,
+          "sources": [
+            {
+              "node": "#text",
+              "prev": "15,223 1152x122",
+              "cur": "15,218 1152x122"
+            }
+          ]
+        },
+        {
+          "value": 0.00223,
+          "startTime": 506.4,
+          "sources": [
+            {
+              "node": "DIV.product__table-wrap",
+              "prev": "963,560 462x240",
+              "cur": "963,586 462x240"
+            },
+            {
+              "node": "NAV.header__nav.nav",
+              "prev": "363,46 598x38",
+              "cur": "352,46 614x38"
+            },
+            {
+              "node": "A.button.button--primary",
+              "prev": "963,823 181x54",
+              "cur": "963,849 187x54"
+            },
+            {
+              "node": "DIV.header__actions",
+              "prev": "1118,44 266x42",
+              "cur": "1112,44 272x42"
+            },
+            {
+              "node": "LI.breadcrumbs__item",
+              "prev": "140,187 112x21",
+              "cur": "150,187 117x21"
+            }
+          ]
+        }
+      ]
+    },
+    "mobile": {
+      "total": 0.1932,
+      "entries": [
+        {
+          "value": 0.19316,
+          "startTime": 281,
+          "sources": [
+            {
+              "node": "SECTION.products.products--filtered",
+              "prev": "5,288 380x556",
+              "cur": "5,301 380x543"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

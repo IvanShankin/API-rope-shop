@@ -977,6 +977,7 @@ button {
 /* заголовок блока «о нас» */
 .about__head {
   display: block;
+  margin-bottom: clamp(20px, 2.2vw, 32px);
 }
 
 .about__title {
@@ -1020,19 +1021,8 @@ button {
   color: var(--color-text-muted);
 }
 
-/* «Почему выбирают» над витриной */
-.about__subtitle {
-  margin: clamp(72px, 9vw, 140px) 0 clamp(20px, 2.4vw, 32px);
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: clamp(22px, 2vw, 30px);
-  line-height: 1.15;
-  letter-spacing: -0.01em;
-}
-
 /* появление блока «о нас» */
 .about__head,
-.about__subtitle,
 .about__showcase {
   opacity: 0;
   translate: 0 32px;
@@ -1040,14 +1030,9 @@ button {
 }
 
 .about--visible .about__head,
-.about--visible .about__subtitle,
 .about--visible .about__showcase {
   opacity: 1;
   translate: 0 0;
-}
-
-.about--visible .about__subtitle {
-  transition-delay: 0.1s;
 }
 
 .about--visible .about__showcase {
@@ -2496,7 +2481,7 @@ button {
 
 .configurator-entry__card {
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
   align-items: center;
   overflow: hidden;
   border: 1px solid var(--color-line);
@@ -2516,7 +2501,7 @@ button {
   display: block;
   width: 100%;
   height: 100%;
-  aspect-ratio: 1;
+  aspect-ratio: 1 / 1.12;
   object-fit: cover;
 }
 
@@ -2530,15 +2515,17 @@ button {
 
 .configurator-entry__name {
   margin: 0;
-  font-size: 21px;
+  font-size: 26px;
   font-weight: 500;
   line-height: 1.3;
+  hyphens: auto;
+  overflow-wrap: break-word;
 }
 
 .configurator-entry__description {
   margin: 14px 0 0;
   color: var(--color-text-muted);
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.6;
 }
 
@@ -2555,7 +2542,7 @@ button {
   }
 
   .configurator-entry__card {
-    grid-template-columns: minmax(0, 1fr) 300px;
+    grid-template-columns: minmax(0, 1fr) 340px;
   }
 
   .configurator-entry__body {
@@ -2563,7 +2550,11 @@ button {
   }
 
   .configurator-entry__name {
-    font-size: 26px;
+    font-size: 32px;
+  }
+
+  .configurator-entry__description {
+    font-size: 16px;
   }
 
   .configurator-entry__arrow {
@@ -2581,7 +2572,7 @@ button {
   }
 
   .configurator-entry__card {
-    grid-template-columns: minmax(0, 1fr) clamp(96px, 30vw, 180px);
+    grid-template-columns: minmax(0, 1fr) clamp(140px, 44vw, 300px);
   }
 
   .configurator-entry__body {
@@ -2589,12 +2580,12 @@ button {
   }
 
   .configurator-entry__name {
-    font-size: 18px;
+    font-size: 22.5px;
   }
 
   .configurator-entry__description {
     margin-top: 10px;
-    font-size: 13px;
+    font-size: 14.5px;
   }
 
   .configurator-entry__arrow {

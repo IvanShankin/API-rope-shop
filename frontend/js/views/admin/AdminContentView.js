@@ -12,7 +12,7 @@ export class AdminContentView {
       ${this.sectionCards?`<nav class="config-section-menu" aria-label="${gallery?'Выбор галереи':'Выбор страницы'}">${Object.entries(sections).map(([code,title],index)=>`<button type="button" class="config-section-card" data-content-section-choice="${esc(code)}" aria-pressed="${index===0}"><span class="config-section-card__name">${esc(title)}</span></button>`).join('')}</nav>`:''}
       <div class="config-admin-toolbar"><label class="field" ${this.sectionCards?'hidden':''}>${gallery?'Галерея':'Страница'}<select class="field__input" data-config-section ${this.sectionCards?'data-native-select':''}>${Object.entries(sections).map(([code,title])=>`<option value="${code}">${esc(title)}</option>`).join('')}</select></label>
       ${gallery?'<button class="btn" type="button" data-config-new>Добавить фотографию</button>':''}<button class="btn" type="button" data-content-refresh>Обновить</button></div>
-      <div data-config-record></div><p role="status" data-content-status></p><div data-content-editor></div>`;
+      <div data-config-record></div><p role="status" data-content-status></p><div data-content-editor class="admin-content-editor"></div>`;
     this.recordList = new AdminRecordList(root.querySelector("[data-config-record]"), this.events.signal);
   }
   bind(actions) {
@@ -48,8 +48,8 @@ export class AdminContentView {
     const translationFields=['rus','eng','ger'].map(locale=>{
       const t=item.translations?.find(t=>t.locale===locale)||{};
       return `<details class="admin-disclosure" data-editor-disclosure="${locale}" open><summary>${{rus:'Русский',eng:'Английский',ger:'Немецкий'}[locale]}</summary><div class="admin-fields">
-        ${titleEnabled?`<label class="field">${this.gallery?'Подпись':'Заголовок'} ${{rus:'(рус.)',eng:'(англ.)',ger:'(нем.)'}[locale]}<textarea class="field__input" name="title_${locale}" maxlength="${this.gallery?255:500}">${esc(t.title||'')}</textarea></label>`:''}
-        ${textEnabled?`<label class="field">Текст ${{rus:'(рус.)',eng:'(англ.)',ger:'(нем.)'}[locale]}<textarea class="field__input" name="content_${locale}" rows="5">${esc(t.content??t.description??'')}</textarea></label>`:''}</div></details>`;
+        ${titleEnabled?`<label class="field">${this.gallery?'Подпись':'Заголовок'}<textarea class="field__input" name="title_${locale}" maxlength="${this.gallery?255:500}">${esc(t.title||'')}</textarea></label>`:''}
+        ${textEnabled?`<label class="field">Текст<textarea class="field__input" name="content_${locale}" rows="5">${esc(t.content??t.description??'')}</textarea></label>`:''}</div></details>`;
     }).join('');
     this.root.querySelector('[data-content-editor]').innerHTML=`<h2>${esc(item.label||(item.id?`Фотография #${item.id}`:'Новая фотография'))}</h2>
       ${this.gallery&&item.image_url?`<img class="admin-image-preview" src="${esc(mediaUrl(item.image_url))}" alt="Фото галереи">`:''}

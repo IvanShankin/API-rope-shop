@@ -39,13 +39,13 @@ const settingsHints = {
   vat_note:'Пометка о НДС.',
 };
 const sectionHints = {
-  categories:{slug:'Заполнится из названия.',index:'Место в списке: меньше — выше.'},
-  material_groups:{index:'Место в списке: меньше — выше.'},
+  categories:{slug:'Заполнится из названия.',index:'Меньше — выше.'},
+  material_groups:{index:'Меньше — выше.'},
   materials:{material_group_id:'Группа материала; в карточке товара выбирается она.',index:'Место материала в группе.'},
-  splice_types:{category:'Где покупатель ищет работу.',visual_type:'Вид на схеме в конфигураторе.',index:'Место в списке: меньше — выше.'},
+  splice_types:{category:'Где покупатель ищет работу.',visual_type:'Вид на схеме в конфигураторе.',index:'Меньше — выше.'},
   splice_materials:{name:'Из чего считается цена.'},
   splice_prices:{splice_type_id:'Для какой работы цена.',splice_material_id:'Для какой группы троса.',diameter_from_mm:'С какого диаметра. Пусто — без ограничения.',diameter_to_mm:'До какого диаметра. Пусто — без ограничения.',price:'Цена работы для этой группы и диаметра.'},
-  configurator_extras:{price:'Стоимость опции; итог зависит от начисления.',billing_type:'За заказ, за изделие или за метр.',index:'Место в списке: меньше — выше.'},
+  configurator_extras:{price:'Стоимость опции; итог зависит от начисления.',billing_type:'За заказ, за изделие или за метр.',index:'Меньше — выше.'},
 };
 export class AdminConfigView {
   constructor(root, { sections = sectionOrder.filter(key => API_CONFIG.CATALOG_V2 || !['material_groups', 'materials'].includes(key)), title = 'Конфигуратор и цены' } = {}) {
@@ -164,7 +164,7 @@ export class AdminConfigView {
     };
     const fields=schema.fields.map(renderField).join('');
     const settingsFields=section==='configurator_settings' ? settingsGroups.map(([key,title,names])=>`<details class="admin-disclosure" data-editor-disclosure="settings-${key}" open><summary>${title}</summary>${key==='allowance'?'<p class="admin-settings-example" data-settings-allowance-example></p>':''}<div class="admin-fields">${names.map(name=>renderField(schema.fields.find(field=>field.name===name))).join('')}</div></details>`).join('') : '';
-    const translations=schema.translated?['rus','eng','ger'].map(locale=>{const t=item.translations?.find(t=>t.locale===locale)||{};return `<div class="admin-language-heading">${{rus:'Русский',eng:'Английский',ger:'Немецкий'}[locale]}</div><label class="field">Название ${{rus:'(рус.)',eng:'(англ.)',ger:'(нем.)'}[locale]}<input class="field__input" name="name_${locale}" maxlength="255" value="${esc(t.name||'')}"></label>${schema.description?`<label class="field">Описание ${{rus:'(рус.)',eng:'(англ.)',ger:'(нем.)'}[locale]}<textarea class="field__input" name="description_${locale}" rows="3">${esc(t.description||'')}</textarea></label>`:''}`;}).join(''):'';
+    const translations=schema.translated?['rus','eng','ger'].map(locale=>{const t=item.translations?.find(t=>t.locale===locale)||{};return `<label class="field">Название ${{rus:'(рус.)',eng:'(англ.)',ger:'(нем.)'}[locale]}<input class="field__input" name="name_${locale}" maxlength="255" value="${esc(t.name||'')}"></label>${schema.description?`<label class="field">Описание ${{rus:'(рус.)',eng:'(англ.)',ger:'(нем.)'}[locale]}<textarea class="field__input" name="description_${locale}" rows="3">${esc(t.description||'')}</textarea></label>`:''}`;}).join(''):'';
     this.root.querySelector('[data-config-editor]').innerHTML=`<h2>${esc(schema.title)}${item.id?` #${item.id}`:''}</h2><form class="product-editor admin-card" ${section==='configurator_settings'?'data-settings-form':''}><div class="admin-disclosures-group">${section==='configurator_settings'?settingsFields:`<details class="admin-disclosure" data-editor-disclosure="parameters" open><summary>Основные параметры</summary><div class="admin-fields">${fields}</div></details>`}${translations ? `<details class="admin-disclosure" data-editor-disclosure="translations" open><summary>Названия и переводы</summary><p class="admin-editor-hint">Заполните название хотя бы на одном языке.</p><div class="admin-fields">${translations}</div></details>` : ''}</div><div class="admin-form-actions"><button class="btn btn--primary" type="submit">Сохранить</button>${item.id&&!schema.singleton?'<button class="btn btn--danger" type="button" data-config-remove>Удалить запись</button>':''}</div></form>${((section==='categories') || (section==='splice_types'&&item.id))?`<div class="config-admin-upload admin-card">
       <span class="field__label">Изображение записи</span>
       <input type="file" accept=".jpg,.jpeg,.png,.webp,.heic,.heif" data-image-file hidden>

@@ -1,9 +1,9 @@
-import { catalogLink, updateLoadState } from '../../ui/load-state.js?v=20261027.10';
-import { BaseView } from '../BaseView.js?v=20261027.10';
-import { escapeHtml as esc } from '../../utils/text.js?v=20261027.10';
-import { translate } from '../../i18n/translate.js?v=20261027.10';
-import { getLanguage } from '../../i18n/locale.js?v=20261027.10';
-import { mediaUrl } from '../../utils/media.js?v=20261027.10';
+import { catalogLink, updateLoadState } from '../../ui/load-state.js?v=20261105.7';
+import { BaseView } from '../BaseView.js?v=20261105.7';
+import { escapeHtml as esc } from '../../utils/text.js?v=20261105.7';
+import { translate } from '../../i18n/translate.js?v=20261105.7';
+import { getLanguage } from '../../i18n/locale.js?v=20261105.7';
+import { mediaUrl } from '../../utils/media.js?v=20261105.7';
 
 const filterLabels = {
   title: ['Фильтр', 'Filter', 'Filter'],
@@ -53,7 +53,8 @@ export class CatalogView extends BaseView {
     if (!this.sidebar) return;
     const codes = [...new Set([...options.constructions, filters.construction].filter(Boolean))];
     const diameters = [...new Set([...options.diameters, filters.diameter].filter(Boolean).map(Number))].sort((a, b) => a - b);
-    this.sidebar.innerHTML = `<fieldset class="catalog-filter__fields">
+    this.sidebar.innerHTML = `<h2 class="catalog-filter__title">${label('title')}</h2>
+        <fieldset class="catalog-filter__fields">
         <label class="catalog-filter__field">${label('construction')}
           <select name="construction" class="catalog-filter__select"><option value="">${label('all')}</option>${codes.map(code => `<option value="${esc(code)}">${esc(constructions.find(c => c.code === code)?.name || code)}</option>`).join('')}</select>
         </label>

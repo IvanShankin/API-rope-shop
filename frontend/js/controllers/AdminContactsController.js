@@ -54,7 +54,7 @@ export class AdminContactsController {
     try{
       const items=await api.listRequests(offset);
       if(!Array.isArray(items))throw Error('Некорректный список обращений');
-      root.querySelector('[data-inquiries-list]').innerHTML=items.length?items.map(item=>`<article class="admin-card"><h2>${esc(item.name)}</h2><p>${esc(item.email)} ${esc(item.phone||'')}</p><p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(item.message||'')}</p></article>`).join(''):'<p>Обращений пока нет.</p>';
+      root.querySelector('[data-inquiries-list]').innerHTML=items.length?items.map(item=>`<article class="admin-card"><h2>${esc(item.name)}</h2><p>${esc(item.email)}${item.phone?' · '+esc(item.phone):''}</p><p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(item.message||'')}</p></article>`).join(''):'<p>Обращений пока нет.</p>';
       this.offset=offset;this.inquiriesLoaded=true;this.inquiriesHasNext=items.length===25;status.textContent=`Страница ${offset/25+1}`;
     }catch {status.textContent='Не удалось загрузить обращения. Нажмите «Обновить обращения».';}
     finally{this.inquiriesBusy=false;root.querySelectorAll('button').forEach(button=>button.disabled=false);root.querySelector('[data-inquiries-prev]').disabled=!this.offset;root.querySelector('[data-inquiries-next]').disabled=!this.inquiriesHasNext;}

@@ -1,0 +1,20 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { launch, openPage, state, openDropdown, pickOpenOption, OUT, sleep, HOST } from './lib.mjs';
+
+const browser = await launch();
+const page = await openPage(browser, { width: 1440, height: 1000, url: HOST + '/category/?group=2' });
+const result = { initial: await state(page) };
+const values = await page.evaluate(() => [...document.querySelectorAll('.catalog-filter select')[1].options].map(o => o.value).filter(Boolean));
+const pick = values[0];
+await openDropdown(page, 1);
+result.pick = { value: pick, clicked: await pickOpenOption(page, pick) };
+await sleep(900);
+result.applied = await state(page);
+await page.evaluate(() => document.querySelector('.catalog-filter__reset').click());
+await sleep(1000);
+result.reset = await state(page);
+await page.close();
+fs.writeFileSync(path.join(OUT, 'group2-functional.json'), JSON.stringify(result, null, 2));
+await browser.close();
+console.log(JSON.stringify(result));

@@ -1,6 +1,6 @@
-import { BaseView } from '../BaseView.js?v=20261027.10';
-import { escapeHtml } from '../../utils/text.js?v=20261027.10';
-import { AdminNotificationView } from './AdminNotificationView.js?v=20261027.10';
+import { BaseView } from '../BaseView.js?v=20261105.7';
+import { escapeHtml } from '../../utils/text.js?v=20261105.7';
+import { AdminNotificationView } from './AdminNotificationView.js?v=20261105.7';
 
 const requestDateText = value => {
   const raw = String(value ?? '').trim();
@@ -137,18 +137,6 @@ export class AdminView extends BaseView {
     gate.hidden = false;
     gate.querySelector('.admin-session__card').replaceChildren(error, actions);
   }
-
-  showUnavailablePanels() {
-    for (const name of ['home','business','private','charity','reviews','contacts']) {
-      const panel = this.$(`#panel-${name}`);
-      if (!panel || (['reviews','contacts'].includes(name) && panel.querySelector('[data-content-editor]'))) continue;
-      panel.removeAttribute('data-savable');
-      const title = panel.querySelector('h1')?.textContent || 'Контент сайта';
-      panel.innerHTML = `<header class="panel__head"><h1 class="panel__title">${escapeHtml(title)}</h1></header><p>Редактирование этого раздела пока недоступно: изменения пока нельзя сохранить. Текущие страницы сайта не изменились.</p><p>Каталог, цвета, конфигуратор и заявки доступны в меню слева.</p>`;
-    }
-    if (this.savebar) this.savebar.hidden = true;
-  }
-
   /**
    * Инициализация переключения вкладок в сайдбаре
    */

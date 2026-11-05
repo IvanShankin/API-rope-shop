@@ -1,7 +1,7 @@
 // Stable block codes are shared by the public renderer and the admin editor.
 export const contentPages = { home:'Главная', b2b:'Бизнесу', b2c:'Частным клиентам', catalog:'Каталог' };
 export const contentSlots = [
-  {page:'home',code:'home_about',label:'О нас — заголовок и подзаголовок',title:'#about-title',content:'.about__subtitle'},
+  {page:'home',code:'home_about',label:'О нас — заголовок',title:'#about-title'},
   ...['home','b2b'].flatMap(page=>[1,2,3,4].map(i=>({page,code:`${page}_service_${i}`,label:`Преимущество ${i}`,title:`.showcase__item:nth-child(${i}) .showcase__title`,content:`.showcase__item:nth-child(${i}) .showcase__text`}))),
   {page:'home',code:'home_charity',label:'Благотворительность — вступление',title:'.charity__lead',content:'.charity__text'},
   {page:'home',code:'home_charity_detail',label:'Благотворительность — пояснение',content:'.charity__text + .charity__text'},

@@ -1,19 +1,19 @@
-import {AdminSettingsController} from './AdminSettingsController.js?v=20261028.16';
-import {AdminContactsController} from './AdminContactsController.js?v=20261027.10';
-import {AdminReviewsController} from './AdminReviewsController.js?v=20261028.16';
-import { BaseController } from './BaseController.js?v=20261027.10';
-import { AuthModel } from '../models/AuthModel.js?v=20261027.10';
-import { authApi } from '../api/authApi.js?v=20261027.10';
-import { AdminView } from '../views/admin/AdminView.js?v=20261027.10';
-import { quoteApi } from '../api/quoteApi.js?v=20261027.10';
-import { AdminNotificationView as NotificationView } from '../views/admin/AdminNotificationView.js?v=20261027.10';
-import { AdminProductsController } from './AdminProductsController.js?v=20261028.18';
-import { API_CONFIG } from '../api/config.js?v=20261027.10';
-import { AdminContentController } from './AdminContentController.js?v=20261028.16';
-import { AdminColorsController } from './AdminColorsController.js?v=20261028.16';
-import { AdminConfigController } from './AdminConfigController.js?v=20261028.16';
-import { AdminRequestModel } from '../models/AdminRequestModel.js?v=20261027.10';
-import { AdminNavigation } from '../core/AdminNavigation.js?v=20261028.13';
+import {AdminSettingsController} from './AdminSettingsController.js?v=20261105.7';
+import {AdminContactsController} from './AdminContactsController.js?v=20261105.7';
+import {AdminReviewsController} from './AdminReviewsController.js?v=20261105.7';
+import { BaseController } from './BaseController.js?v=20261105.7';
+import { AuthModel } from '../models/AuthModel.js?v=20261105.7';
+import { authApi } from '../api/authApi.js?v=20261105.7';
+import { AdminView } from '../views/admin/AdminView.js?v=20261105.7';
+import { quoteApi } from '../api/quoteApi.js?v=20261105.7';
+import { AdminNotificationView as NotificationView } from '../views/admin/AdminNotificationView.js?v=20261105.7';
+import { AdminProductsController } from './AdminProductsController.js?v=20261105.7';
+import { API_CONFIG } from '../api/config.js?v=20261105.7';
+import { AdminContentController } from './AdminContentController.js?v=20261105.7';
+import { AdminColorsController } from './AdminColorsController.js?v=20261105.7';
+import { AdminConfigController } from './AdminConfigController.js?v=20261105.7';
+import { AdminRequestModel } from '../models/AdminRequestModel.js?v=20261105.7';
+import { AdminNavigation } from '../core/AdminNavigation.js?v=20261105.7';
 
 export class AdminController extends BaseController {
   constructor() {
@@ -80,7 +80,6 @@ export class AdminController extends BaseController {
         queueMicrotask(() => { validationNoticePending = false; });
       }
     }, true);
-    this.view.showUnavailablePanels();
     this.view.setAdminUser(user);
     this.view.$('[data-requests-refresh]')?.addEventListener('click', () => this.loadRequests());
     this.requestOffset = 0;

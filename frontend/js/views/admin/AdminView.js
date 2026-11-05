@@ -2,6 +2,22 @@ import { BaseView } from '../BaseView.js?v=20261027.10';
 import { escapeHtml } from '../../utils/text.js?v=20261027.10';
 import { AdminNotificationView } from './AdminNotificationView.js?v=20261027.10';
 
+const requestDateText = value => {
+  const raw = String(value ?? '').trim();
+  const match = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/.exec(raw);
+  if (match) return `${match[3]}.${match[2]}.${match[1]} ${match[4]}:${match[5]}`;
+  const date = new Date(raw);
+  if (!raw || Number.isNaN(date.getTime())) return 'дата не указана';
+  const pad = number => String(number).padStart(2, '0');
+  return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
+const requestEyeSizeText = value => {
+  const raw = value === null || value === undefined ? '' : String(value).trim();
+  if (!raw || raw === '—' || raw === '–' || raw === '-') return 'размер петли не указан';
+  return `петля ${escapeHtml(raw)} см`;
+};
+
 /**
  * Представление админ-панели (Dashboard View).
  * Инициализируется только на странице admin.html при подтвержденной сессии.
@@ -14,6 +30,64 @@ export class AdminView extends BaseView {
     this.savebar = this.root ? this.root.querySelector('.savebar') : null;
     this.logoutBtn = this.root ? this.root.querySelector('.sidebar__logout') : null;
     this.userNameEl = this.root ? this.root.querySelector('.sidebar__user-name') : null;
+    this.savebarReady = false;
+    this.savebarTimer = 0;
+  }
+
+  initSavebar({ isDirty, save } = {}) {
+    if (!this.savebar) return;
+    if (this.savebarReady) {
+      this.isSavebarDirty = typeof isDirty === 'function' ? isDirty : () => false;
+      this.savebarSave = typeof save === 'function' ? save : null;
+      return;
+    }
+    this.savebarReady = true;
+    this.isSavebarDirty = typeof isDirty === 'function' ? isDirty : () => false;
+    this.savebarSave = typeof save === 'function' ? save : null;
+    this.savebar.setAttribute('role', 'region');
+    this.savebar.setAttribute('aria-label', 'Сохранение изменений');
+    const text = this.savebar.querySelector('.savebar__text');
+    if (text) {
+      const hint = document.createElement('span');
+      hint.className = 'savebar__hint';
+      hint.textContent = text.textContent.replace(/\s+/g, ' ').trim();
+      const status = document.createElement('span');
+      status.className = 'savebar__status';
+      status.dataset.savebarStatus = '';
+      status.setAttribute('role', 'status');
+      status.setAttribute('aria-live', 'polite');
+      const icon = text.querySelector('.savebar__icon');
+      text.replaceChildren(...(icon ? [icon] : []), status, hint);
+      this.savebarStatus = status;
+    }
+    this.savebarButton = this.savebar.querySelector('.btn');
+    this.savebarButton?.setAttribute('data-savebar-save', '');
+    this.savebarButton?.addEventListener('click', () => this.savebarSave?.());
+    for (const type of ['input', 'change', 'toggle', 'submit', 'click']) {
+      this.root.addEventListener(type, () => this.scheduleSavebarRefresh(), { capture: true });
+    }
+    window.addEventListener('pagehide', () => clearInterval(this.savebarTimer), { once: true });
+    this.savebarTimer = window.setInterval(() => this.refreshSavebar(), 500);
+    this.refreshSavebar();
+  }
+
+  scheduleSavebarRefresh() {
+    clearTimeout(this.savebarDebounce);
+    this.savebarDebounce = window.setTimeout(() => this.refreshSavebar(), 120);
+  }
+
+  refreshSavebar() {
+    if (!this.savebar || !this.savebarReady) return;
+    let dirty = false;
+    try { dirty = !this.root.hidden && this.isSavebarDirty(); } catch { dirty = false; }
+    const panel = this.root.querySelector('.panel:not([hidden])');
+    const visible = Boolean(panel && dirty);
+    this.savebar.hidden = !visible;
+    this.savebar.classList.toggle('savebar--dirty', visible);
+    if (this.savebarStatus) {
+      const label = 'Есть несохранённые изменения';
+      if (this.savebarStatus.textContent !== label) this.savebarStatus.textContent = label;
+    }
   }
 
   /**
@@ -70,7 +144,7 @@ export class AdminView extends BaseView {
       if (!panel || (['reviews','contacts'].includes(name) && panel.querySelector('[data-content-editor]'))) continue;
       panel.removeAttribute('data-savable');
       const title = panel.querySelector('h1')?.textContent || 'Контент сайта';
-      panel.innerHTML = `<header class="panel__head"><h1 class="panel__title">${escapeHtml(title)}</h1></header><p>Редактирование этого раздела пока недоступно: сервер не предоставляет сохранение этих данных. Текущие страницы сайта сохранены.</p><p>Каталог, цвета, конфигуратор и заявки доступны в меню слева.</p>`;
+      panel.innerHTML = `<header class="panel__head"><h1 class="panel__title">${escapeHtml(title)}</h1></header><p>Редактирование этого раздела пока недоступно: изменения пока нельзя сохранить. Текущие страницы сайта не изменились.</p><p>Каталог, цвета, конфигуратор и заявки доступны в меню слева.</p>`;
     }
     if (this.savebar) this.savebar.hidden = true;
   }
@@ -90,14 +164,14 @@ export class AdminView extends BaseView {
       else tab.removeAttribute('aria-current');
     });
     this.panels.forEach(panel => { panel.hidden = panel.id !== `panel-${name}`; });
-    if (this.savebar) this.savebar.hidden = true;
+    this.refreshSavebar();
   }
   /**
    * Отрисовка таблицы заявок из бэкенда
    */
   requestValues(){const form=this.root.querySelector('[data-request-edit]');return form?Object.fromEntries([...form.elements].filter(e=>e.name).map(e=>[e.name,e.type==='checkbox'?e.checked:e.value])):{};}
   requestDirty(){return Boolean(this.requestBaseline&&JSON.stringify(this.requestValues())!==this.requestBaseline);}
-  allowRequestDiscard(){return !this.requestDirty()||window.confirm('Отбросить несохранённые изменения заявки?');}
+  allowRequestDiscard(){return !this.requestDirty()||window.confirm('Не сохранять изменения заявки?');}
 
   renderQuoteRequests(requests, onDetail, actions = {}) {
     this.openRequest = null;
@@ -118,7 +192,7 @@ export class AdminView extends BaseView {
       <table class="admin-table" style="width: 100%; border-collapse: collapse;">
         <thead>
           <tr style="border-bottom: 2px solid #233446; text-align: left;">
-            <th style="padding: 10px;">№ Заявки</th>
+            <th style="padding: 10px;">Номер заявки</th>
             <th style="padding: 10px;">Клиент</th>
             <th style="padding: 10px;">Контакты</th>
             <th style="padding: 10px;">Сумма</th>
@@ -149,13 +223,16 @@ export class AdminView extends BaseView {
       catch(error) { if(this.detailSelection===selection) AdminNotificationView.message(detail, `Не удалось загрузить заявку: ${error.message}. Нажмите её номер повторно.`, 'error'); return; }
       if(this.detailSelection!==selection || !detail.isConnected) return;
       const e=escapeHtml;
-      const ropes=(request.rope_items||[]).map(item=>`<li>${e(item.product_name_snapshot)} · ${e(item.color_name_snapshot)} · ${e(item.diameter_mm)} мм · ${e(item.length_m)} м × ${e(item.quantity)} шт.<br>A: ${e(item.end_a_name_snapshot||'Без обработки')}, петля ${e(item.end_a_eye_size_cm??'—')} см; B: ${e(item.end_b_name_snapshot||'Без обработки')}, петля ${e(item.end_b_eye_size_cm??'—')} см.</li>`).join('');
-      const services=(request.service_items||[]).map(item=>`<li>${e(item.service_name_snapshot)} · ${e(item.material_name_snapshot)} · ${e(item.diameter_mm)} мм × ${e(item.quantity)}; петля ${e(item.eye_size_cm??'—')} см. ${e(item.total_cost)} ${e(request.currency)}</li>`).join('');
+      const ropes=(request.rope_items||[]).map(item=>`<li>${e(item.product_name_snapshot)} · ${e(item.color_name_snapshot)} · ${e(item.diameter_mm)} мм · ${e(item.length_m)} м × ${e(item.quantity)} шт.<br>A: ${e(item.end_a_name_snapshot||'Без заделки')}, ${requestEyeSizeText(item.end_a_eye_size_cm)}; B: ${e(item.end_b_name_snapshot||'Без заделки')}, ${requestEyeSizeText(item.end_b_eye_size_cm)}.</li>`).join('');
+      const services=(request.service_items||[]).map(item=>`<li>${e(item.service_name_snapshot)} · ${e(item.material_name_snapshot)} · ${e(item.diameter_mm)} мм × ${e(item.quantity)}; ${requestEyeSizeText(item.eye_size_cm)}. ${e(item.total_cost)} ${e(request.currency)}</li>`).join('');
       const extras=(request.extra_items||[]).map(item=>`<li>${e(item.name_snapshot)} × ${e(item.quantity)}: ${e(item.total_cost)} ${e(request.currency)}</li>`).join('');
       detail.className = 'admin-card admin-request-card';
-      detail.innerHTML=`<h2>${e(request.request_number)}</h2><p>${e(request.name)} · ${e(request.email)} · ${e(request.phone||'')}</p><p>${request.is_urgent?'Срочное изготовление':'Обычное изготовление'} · ${e(request.created_at)}</p><ul>${ropes}${services}${extras}</ul><p style="white-space:pre-wrap">${e(request.comment||'Без комментария')}</p><p>Итого: ${e(request.total_price)} ${e(request.currency)}</p>`;
+      const created = request.created_at
+        ? `<time datetime="${e(request.created_at)}" title="${e(request.created_at)}">${e(requestDateText(request.created_at))}</time>`
+        : 'дата не указана';
+      detail.innerHTML=`<h2>${e(request.request_number)}</h2><p>${e(request.name)} · ${e(request.email)} · ${e(request.phone||'')}</p><p>${request.is_urgent?'Срочное изготовление':'Обычное изготовление'} · Создана: ${created}</p><ul>${ropes}${services}${extras}</ul>${ropes?'<p class="admin-editor-hint">A и B — концы каната.</p>':''}<p style="white-space:pre-wrap">${e(request.comment||'Без комментария')}</p><p>Итого: ${e(request.total_price)} ${e(request.currency)}</p>`;
       if(actions.update){
-        detail.insertAdjacentHTML('beforeend',`<h3>Редактировать заявку</h3><p>Изменение срочности и итоговой суммы — ручная корректировка. Сервер не пересчитывает состав заказа при таком сохранении.</p><form data-request-edit class="product-editor admin-card"><div class="admin-fields" style="padding: 0;"><label class="field">Имя<input class="field__input" name="name" required maxlength="255" value="${e(request.name)}"></label><label class="field">Email<input class="field__input" name="email" type="email" required value="${e(request.email)}"></label><label class="field">Телефон<input class="field__input" name="phone" maxlength="100" value="${e(request.phone||'')}"></label><label class="field">Итоговая сумма, ${e(request.currency)}<input class="field__input" name="total_price" type="number" min="0" step="0.01" required value="${e(request.total_price)}"></label><label class="field" style="grid-column: 1 / -1;">Комментарий<textarea class="field__input" name="comment">${e(request.comment||'')}</textarea></label></div><label class="admin-toggle"><input type="checkbox" name="is_urgent" ${request.is_urgent?'checked':''}> <span>Срочный заказ</span></label><div class="admin-form-actions"><button class="btn btn--primary" type="submit">Сохранить заявку</button><button class="btn btn--ghost" type="button" data-request-cancel>Отменить изменения</button><button class="btn btn--danger" type="button" data-request-remove>Удалить заявку</button></div></form><p role="status" data-request-edit-status></p>`);
+        detail.insertAdjacentHTML('beforeend',`<h3>Редактировать заявку</h3><p>Изменение срочности и итоговой суммы — ручная корректировка. Состав заказа не пересчитывается автоматически.</p><form data-request-edit class="product-editor admin-card"><div class="admin-fields" style="padding: 0;"><label class="field">Имя<input class="field__input" name="name" required maxlength="255" value="${e(request.name)}"></label><label class="field">Email<input class="field__input" name="email" type="email" required value="${e(request.email)}"></label><label class="field">Телефон<input class="field__input" name="phone" maxlength="100" value="${e(request.phone||'')}"></label><label class="field">Итоговая сумма, ${e(request.currency)}<input class="field__input" name="total_price" type="number" min="0" step="0.01" required value="${e(request.total_price)}"></label><label class="field" style="grid-column: 1 / -1;">Комментарий<textarea class="field__input" name="comment">${e(request.comment||'')}</textarea></label></div><label class="admin-toggle"><input type="checkbox" name="is_urgent" ${request.is_urgent?'checked':''}> <span>Срочный заказ</span></label><div class="admin-form-actions"><button class="btn btn--primary" type="submit">Сохранить заявку</button><button class="btn btn--ghost" type="button" data-request-cancel>Не сохранять изменения</button><button class="btn btn--danger" type="button" data-request-remove>Удалить заявку</button></div></form><p role="status" data-request-edit-status></p>`);
         const form=detail.querySelector('form');const message=(text,type='info')=>{AdminNotificationView.message(detail.querySelector('[data-request-edit-status]'),text,type);};
         const lock=value=>{this.requestBusy=value;detail.querySelectorAll('input,select,textarea,button').forEach(el=>el.disabled=value);tableContainer.querySelectorAll('[data-request-detail]').forEach(el=>el.disabled=value);};
         this.requestBaseline=JSON.stringify(this.requestValues());
@@ -163,7 +240,7 @@ export class AdminView extends BaseView {
           event.preventDefault();if(this.requestBusy||!form.reportValidity())return;
           const values=this.requestValues();lock(true);message('Сохраняем…');
           try{request=await actions.update(request,values);this.requestBaseline='';await actions.reload();}
-          catch(error){message(`Не удалось подтвердить сохранение: ${error.message}. При потере связи обновите заявку перед повтором.`, 'error');}
+          catch(error){message(`Не удалось сохранить заявку: ${error.message}. При потере связи обновите заявку перед повтором.`, 'error');}
           finally{lock(false);}
         });
         detail.querySelector('[data-request-cancel]').addEventListener('click',()=>{if(this.allowRequestDiscard()){form.reset();this.requestBaseline=JSON.stringify(this.requestValues());message('Изменения отменены.', 'notice');}});
@@ -171,7 +248,7 @@ export class AdminView extends BaseView {
           if(this.requestBusy||!window.confirm(`Удалить заявку ${request.request_number} вместе с её составом? Это действие нельзя отменить.`))return;
           lock(true);message('Удаляем…');
           try{await actions.remove(request.id);this.requestBaseline='';await actions.reload();}
-          catch(error){message(`Не удалось подтвердить удаление: ${error.message}. Обновите список перед повтором.`, 'error');}
+          catch(error){message(`Не удалось удалить заявку: ${error.message}. Обновите список перед повтором.`, 'error');}
           finally{lock(false);}
         });
       }

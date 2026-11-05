@@ -22,7 +22,7 @@ export function tariffRows(items, sources = {}) {
         : low === -Infinity ? `До ${high} мм включительно`
         : high === Infinity ? `От ${low} мм` : `${low}–${high} мм`;
       const price = new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'EUR' }).format(Number(item.price));
-      const status = item.is_active === false ? 'Отключён' : conflicts.length ? `Пересечение с ${conflicts.map(id => `#${id}`).join(', ')}` : 'Активен';
+      const status = item.is_active === false ? 'Отключён' : conflicts.length ? `Пересекается с ${conflicts.map(id => `#${id}`).join(', ')}` : 'Действует';
       rows.push({ id: item.id, group, work, material, low, high, range, price, priceValue: Number(item.price), conflicts,
         label: `${work} · ${material}`, detail: `${range} · ${price} · ${status}`, status });
     }
@@ -48,7 +48,7 @@ export class AdminTariffTable extends AdminRecordList {
       input.removeAttribute('aria-invalid');
       this.updatePriceControls();
     },{signal});
-    root.addEventListener('click',event=>{if(this.disabled)return;if(event.target.closest('[data-tariff-save]'))this.onSavePrices?.();if(event.target.closest('[data-tariff-cancel]')&&this.priceDrafts.size&&window.confirm('Отменить все несохранённые изменения цен?')){this.clearPriceDrafts();this.render();}},{signal});
+    root.addEventListener('click',event=>{if(this.disabled)return;if(event.target.closest('[data-tariff-save]'))this.onSavePrices?.();if(event.target.closest('[data-tariff-cancel]')&&this.priceDrafts.size&&window.confirm('Отменить изменения цен?')){this.clearPriceDrafts();this.render();}},{signal});
   }
   clearPriceDrafts(){this.priceDrafts.clear();this.updatePriceControls();}
   updatePriceControls(){
@@ -56,7 +56,7 @@ export class AdminTariffTable extends AdminRecordList {
     panel.hidden=!this.tariffs;
     panel.querySelector('[data-tariff-save]').disabled=this.disabled||!this.priceDrafts.size;
     panel.querySelector('[data-tariff-cancel]').disabled=this.disabled||!this.priceDrafts.size;
-    panel.querySelector('[data-tariff-draft-count]').textContent=this.priceDrafts.size ? `Изменено цен: ${this.priceDrafts.size}` : 'Нет несохранённых цен';
+    panel.querySelector('[data-tariff-draft-count]').textContent=this.priceDrafts.size ? `Изменено цен: ${this.priceDrafts.size}` : 'Цены сохраняются отдельной кнопкой.';
   }
   busy(value){super.busy(value);this.updatePriceControls();}
   setTariffs(items, sources) {
@@ -111,10 +111,10 @@ export class AdminTariffTable extends AdminRecordList {
       <caption>${esc(rows[0].work)} <span>· ${esc(rows[0].material)}</span></caption>
       <thead><tr><th scope="col">Диаметр</th><th scope="col">Цена, €</th><th scope="col">Состояние</th><th scope="col">Запись</th></tr></thead>
       <tbody>${rows.map(row => `<tr class="${row.conflicts.length ? 'admin-tariffs__conflict' : ''}" data-selected="${row.id === this.selected}">
-        <td data-label="Диаметр">${esc(row.range)}</td><td data-label="Цена, €"><input class="field__input admin-tariffs__price" type="text" inputmode="decimal" autocomplete="off" data-tariff-price="${esc(row.id)}" aria-label="Цена EUR: ${esc(row.work)}, ${esc(row.material)}, ${esc(row.range)}" value="${esc(this.priceDrafts.get(row.id) ?? row.priceValue)}"></td><td data-label="Состояние">${esc(row.status)}</td>
-        <td><button type="button" class="btn btn--ghost" data-record-id="${esc(row.id)}" aria-pressed="${row.id === this.selected}" aria-label="Изменить тариф #${esc(row.id)}">Изменить #${esc(row.id)}</button></td></tr>`).join('')}</tbody></table>`).join('') || '<p>Тарифы не найдены.</p>';
+        <td data-label="Диаметр">${esc(row.range)}</td><td data-label="Цена, €"><input class="field__input admin-tariffs__price" type="text" inputmode="decimal" autocomplete="off" data-tariff-price="${esc(row.id)}" aria-label="Цена, €: ${esc(row.work)}, ${esc(row.material)}, ${esc(row.range)}" value="${esc(this.priceDrafts.get(row.id) ?? row.priceValue)}"></td><td data-label="Состояние">${esc(row.status)}</td>
+        <td><button type="button" class="btn btn--ghost" data-record-id="${esc(row.id)}" aria-pressed="${row.id === this.selected}" aria-label="Изменить цену #${esc(row.id)}">Изменить #${esc(row.id)}</button></td></tr>`).join('')}</tbody></table>`).join('') || '<p>Цены не найдены.</p>';
     const conflicts = this.items.filter(row => row.conflicts.length).length;
-    this.root.querySelector('[data-record-count]').textContent = `Найдено тарифов: ${items.length} из ${this.items.length}. Всего с пересечениями: ${conflicts}. Границы диапазонов включены.`;
+    this.root.querySelector('[data-record-count]').textContent = `Найдено: ${items.length}. Пересекаются: ${conflicts}.`;
     this.root.querySelector('[data-record-page]').textContent = `Страница ${this.page} из ${this.pages}`;
     this.updateControls();
     this.updatePriceControls();

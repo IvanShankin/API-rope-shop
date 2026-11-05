@@ -1,0 +1,55 @@
+﻿{
+  "task": "CLS on /category/?group=1 mobile (product skeleton)",
+  "method": {
+    "browser": "Chrome 156 headless (new), CDP",
+    "viewports": ["390x844 mobile", "1440x900 desktop"],
+    "throttling": "CDP Network.emulateNetworkConditions latency=400ms per request, cache disabled",
+    "measurement": "PerformanceObserver('layout-shift', buffered) injected before document scripts; FCP via performance paint entries",
+    "baselineBefore": "current working tree with static skeleton hidden via injected CSS, so skeleton is created only by JS (old behavior)"
+  },
+  "results": {
+    "category_mobile_390": {
+      "clsBefore": 0.2832,
+      "clsBeforeShifts": ["0.09005 footer (JS skeleton appears after FCP)", "0.19316 products section (filter block appears)"],
+      "clsAfter": 0.1932,
+      "clsAfterShifts": ["0.19316 products section (filter block appears)"],
+      "skeletonCardsMax": 3,
+      "skeletonCardsAfterLoad": 0,
+      "productsRendered": 2,
+      "productsSectionHeight": { "beforeFcp_noSkeleton": 420, "skeletonVisible": 1688, "afterContent": 1850 }
+    },
+    "category_mobile_390_isolated_noFilter": {
+      "clsAfter": 0.0097,
+      "note": "filter permanently hidden: skeleton -> real products swap causes ~0.01; proves remaining 0.19 is the async filter block insertion, not the product skeleton"
+    },
+    "category_desktop_1440": {
+      "clsBefore": 0.0009,
+      "clsAfter": 0.0009,
+      "skeletonCardsMax": 3,
+      "skeletonCardsAfterLoad": 0
+    },
+    "catalog_groups_page_regression": {
+      "clsAfter_390": 0,
+      "clsAfter_1440": 0.0011,
+      "catalogGroupCards": 4,
+      "groupSkeletonListsAfterLoad": 0
+    }
+  },
+  "checks": {
+    "node_check": "pass",
+    "style_css_braces": "912 / 912 (style.css not modified)",
+    "http_category": 200,
+    "console_errors": "none on /category/?group=1 and /catalog/",
+    "noProductSkeletonAfterLoad": true,
+    "staticSkeletonWithoutJs": "3 cards / 60 skeleton nodes rendered at both 390 and 1440"
+  },
+  "screenshots": [
+    "reports/screenshots/category-nojs-skeleton-390.png",
+    "reports/screenshots/category-nojs-skeleton-1440.png",
+    "reports/screenshots/category-cls-before-loading-390.png",
+    "reports/screenshots/category-cls-after-loading-390.png",
+    "reports/screenshots/category-cls-after-390.png",
+    "reports/screenshots/category-cls-after-loading-1440.png",
+    "reports/screenshots/category-cls-after-1440.png"
+  ]
+}

@@ -26,7 +26,7 @@ export class AdminProductsView {
     this.root = root;
     this.baselines = new Map();
     this.events = new AbortController();
-    this.recordList = new AdminRecordList(root.querySelector('[data-product-select]'), this.events.signal);
+    this.recordList = new AdminRecordList(root.querySelector('[data-product-select]'), this.events.signal, { search: 'Найти канат', placeholder: 'Название или номер', empty: 'Канатов пока нет. Нажмите «Добавить канат».' });
     this.slugTouched = false;
     this.currentProduct = null;
   }
@@ -91,7 +91,7 @@ export class AdminProductsView {
         if (descEl && !descEl.value.trim()) descEl.value = descRu;
       });
       this.updateLangIndicators();
-      this.message('Текст скопирован в английскую и немецкую версии.', 'success');
+      this.message('Текст скопирован на все языки.', 'success');
     }, options);
 
     // Добавление строки диаметра
@@ -257,7 +257,7 @@ export class AdminProductsView {
     this.recordList.setItems(products.map(p => ({
       id: p.product_id,
       label: p.name || p.translations?.[0]?.name || p.construction || 'Без названия',
-      detail: p.is_active === false ? 'Неактивен' : '',
+      detail: p.is_active === false ? 'Скрыт с сайта' : '',
       search: (p.translations || []).map(t => t.name).join(' ')
     })));
   }
@@ -295,8 +295,8 @@ export class AdminProductsView {
     });
 
     const constructionOptions = [
-      { code: 'hm_core', label: 'Сердечник в оплётке (Kern-Mantel / Dyneema)' },
-      { code: 'hollow', label: 'Полое 12-прядное плетение (Hohlgeflecht)' },
+      { code: 'hm_core', label: 'Сердечник в оплётке (Dyneema)' },
+      { code: 'hollow', label: 'Полое 12-прядное плетение' },
       { code: 'polyester_core', label: 'Полиэстеровый сердечник в оплётке' },
     ];
 
@@ -312,7 +312,7 @@ export class AdminProductsView {
         ${product ? `
           <div class="product-header__actions">
             <a class="btn btn--ghost btn--small" href="/configurator/?product=${Number(p.product_id)}" target="_blank" rel="noopener">
-              Открыть в конфигураторе ↗
+              Посмотреть в конфигураторе
             </a>
             <button class="btn btn--danger btn--small" type="button" data-product-remove>
               Удалить канат
@@ -326,51 +326,51 @@ export class AdminProductsView {
         <!-- Языковые вкладки: Название, подзаголовок и описание -->
         <div class="card card--static card--padded product-text-card">
           <h3 class="product-text-card__title">Название и описание</h3>
-          <p class="product-text-card__hint">Заполните информацию для покупателей на нужных языках.</p>
+          <p class="product-text-card__hint">Текст на трёх языках.</p>
           <div class="product-lang-bar">
             <div class="lang-switch" role="tablist" aria-label="Язык текста товара">
               <button class="lang-switch__button lang-switch__button--active" type="button" data-lang-tab="rus" role="tab">
                 <span class="lang-tab__indicator ${translations.find(t => t.locale === 'rus')?.name ? 'lang-tab__indicator--filled' : ''}" data-lang-indicator="rus"></span> Русский
               </button>
               <button class="lang-switch__button" type="button" data-lang-tab="eng" role="tab">
-                <span class="lang-tab__indicator ${translations.find(t => t.locale === 'eng')?.name ? 'lang-tab__indicator--filled' : ''}" data-lang-indicator="eng"></span> English
+                <span class="lang-tab__indicator ${translations.find(t => t.locale === 'eng')?.name ? 'lang-tab__indicator--filled' : ''}" data-lang-indicator="eng"></span> Английский
               </button>
               <button class="lang-switch__button" type="button" data-lang-tab="ger" role="tab">
-                <span class="lang-tab__indicator ${translations.find(t => t.locale === 'ger')?.name ? 'lang-tab__indicator--filled' : ''}" data-lang-indicator="ger"></span> Deutsch
+                <span class="lang-tab__indicator ${translations.find(t => t.locale === 'ger')?.name ? 'lang-tab__indicator--filled' : ''}" data-lang-indicator="ger"></span> Немецкий
               </button>
             </div>
-            <button class="btn btn--ghost btn--small" type="button" data-copy-translations title="Скопировать русский текст в английскую и немецкую версии">
-               Скопировать из RU в EN и DE
+            <button class="btn btn--ghost btn--small" type="button" data-copy-translations title="Скопировать русский текст на все языки">
+               Скопировать текст на все языки
             </button>
           </div>
 
           <!-- Вкладка RUS -->
           <div class="lang-tab-panel" data-lang-panel="rus">
-            ${input('name_rus', 'Название каната (RU) *', translations.find(t => t.locale === 'rus')?.name, 'required maxlength="255"', 'Основное название, например: LIROS Control-XTR')}
-            ${input('subtitle_rus', 'Короткий подзаголовок (RU)', translations.find(t => t.locale === 'rus')?.subtitle, 'maxlength="255"', 'Пояснение под названием, например: Для яхт и лебёдок')}
+            ${input('name_rus', 'Название (рус.) *', translations.find(t => t.locale === 'rus')?.name, 'required maxlength="255"', 'Например: LIROS Control-XTR')}
+            ${input('subtitle_rus', 'Подзаголовок (рус.)', translations.find(t => t.locale === 'rus')?.subtitle, 'maxlength="255"', 'Например: Для яхт и лебёдок')}
             <label class="field">
-              <span class="field__label">Описание каната (RU)</span>
+              <span class="field__label">Описание (рус.)</span>
               <textarea class="field__input field__textarea" name="description_rus" rows="3">${esc(translations.find(t => t.locale === 'rus')?.description || '')}</textarea>
-              <span class="field__hint">Свойства, конструкция и назначение каната</span>
+              <span class="field__hint">Свойства и назначение</span>
             </label>
           </div>
 
           <!-- Вкладка ENG -->
           <div class="lang-tab-panel" data-lang-panel="eng" hidden>
-            ${input('name_eng', 'Название каната (ENG)', translations.find(t => t.locale === 'eng')?.name, 'maxlength="255"', 'English product name')}
-            ${input('subtitle_eng', 'Подзаголовок (ENG)', translations.find(t => t.locale === 'eng')?.subtitle, 'maxlength="255"', 'English subtitle')}
+            ${input('name_eng', 'Название (англ.)', translations.find(t => t.locale === 'eng')?.name, 'maxlength="255"')}
+            ${input('subtitle_eng', 'Подзаголовок (англ.)', translations.find(t => t.locale === 'eng')?.subtitle, 'maxlength="255"')}
             <label class="field">
-              <span class="field__label">Описание (ENG)</span>
+              <span class="field__label">Описание (англ.)</span>
               <textarea class="field__input field__textarea" name="description_eng" rows="3">${esc(translations.find(t => t.locale === 'eng')?.description || '')}</textarea>
             </label>
           </div>
 
           <!-- Вкладка GER -->
           <div class="lang-tab-panel" data-lang-panel="ger" hidden>
-            ${input('name_ger', 'Название каната (GER)', translations.find(t => t.locale === 'ger')?.name, 'maxlength="255"', 'Deutscher Produktname')}
-            ${input('subtitle_ger', 'Подзаголовок (GER)', translations.find(t => t.locale === 'ger')?.subtitle, 'maxlength="255"', 'Deutscher Untertitel')}
+            ${input('name_ger', 'Название (нем.)', translations.find(t => t.locale === 'ger')?.name, 'maxlength="255"')}
+            ${input('subtitle_ger', 'Подзаголовок (нем.)', translations.find(t => t.locale === 'ger')?.subtitle, 'maxlength="255"')}
             <label class="field">
-              <span class="field__label">Описание (GER)</span>
+              <span class="field__label">Описание (нем.)</span>
               <textarea class="field__input field__textarea" name="description_ger" rows="3">${esc(translations.find(t => t.locale === 'ger')?.description || '')}</textarea>
             </label>
           </div>
@@ -390,7 +390,7 @@ export class AdminProductsView {
                     <option value="">Выберите категорию</option>
                     ${options(this.categories || [], p.category_id)}
                   </select>
-                  <span class="field__hint">Основной раздел сайта, в котором находится канат</span>
+                  <span class="field__hint">Раздел каталога</span>
                 </label>
               ` : ''}
 
@@ -406,16 +406,16 @@ export class AdminProductsView {
 
             <div class="fields fields--two">
               <label class="field">
-                <span class="field__label">Материал для расчёта заделок *</span>
+                <span class="field__label">Материал заделки *</span>
                 <select class="field__input" name="splice_material_id" required>
-                  <option value="">Выберите материал расчёта</option>
+                  <option value="">Выберите материал</option>
                   ${options(materials, p.splice_material_id)}
                 </select>
-                <span class="field__hint">Определяет тариф на заделки</span>
+                <span class="field__hint">От этого зависит цена заделки</span>
               </label>
 
               <label class="field">
-                <span class="field__label">Тип конструкции (для фильтра каталога)</span>
+                <span class="field__label">Тип конструкции</span>
                 <select class="field__input" name="construction_type">
                   <option value="">Не указан (любой)</option>
                   ${constructionOptions.map(opt => `
@@ -425,13 +425,12 @@ export class AdminProductsView {
                     <option value="${esc(currentConst)}" selected>${esc(currentConst)}</option>
                   ` : ''}
                 </select>
-                <span class="field__hint">Используется в фильтре каталога</span>
               </label>
             </div>
 
             <div class="fields fields--two">
-              ${hasV2 ? input('slug', 'Короткий адрес товара *', p.slug, 'required maxlength="150" pattern="[a-zA-Z0-9_-]+"', 'Только часть адреса, например liros-control-xtr. Без https:// и названия сайта') : ''}
-              ${hasV2 ? input('index', 'Порядковый номер при выводе', p.index ?? 0, 'type="number" min="0" step="1" required', 'Чем меньше число, тем выше канат в каталоге') : ''}
+              ${hasV2 ? input('slug', 'Адрес страницы *', p.slug, 'required maxlength="150" pattern="[a-zA-Z0-9_-]+"', 'Заполнится сам из названия — можно не трогать.') : ''}
+              ${hasV2 ? input('index', 'Место в каталоге (меньше — выше)', p.index ?? 0, 'type="number" min="0" step="1" required') : ''}
             </div>
 
             <!-- Дополнительные свойства -->
@@ -439,17 +438,17 @@ export class AdminProductsView {
               <label class="tick">
                 <input class="tick__input" name="is_active" type="checkbox" ${p.is_active !== false ? 'checked' : ''}>
                 <span class="tick__box" aria-hidden="true"></span>
-                <span class="tick__text">Товар активен (виден покупателям в каталоге)</span>
+                <span class="tick__text">Показывать в каталоге</span>
               </label>
               <label class="tick">
                 <input class="tick__input" name="has_configurator" type="checkbox" ${p.has_configurator !== false ? 'checked' : ''}>
                 <span class="tick__box" aria-hidden="true"></span>
-                <span class="tick__text">Доступен заказ через конфигуратор</span>
+                <span class="tick__text">Можно собрать заказ в конфигураторе</span>
               </label>
               <label class="tick">
                 <input class="tick__input" name="can_be_spliced" type="checkbox" ${p.can_be_spliced !== false ? 'checked' : ''}>
                 <span class="tick__box" aria-hidden="true"></span>
-                <span class="tick__text">Допускается сращивание (сплайсинг)</span>
+                <span class="tick__text">Сращивание</span>
               </label>
             </div>
 
@@ -458,12 +457,10 @@ export class AdminProductsView {
               <label class="field">
                 <span class="field__label">Сердечник</span>
                 <textarea class="field__input field__textarea" name="core_description" rows="2">${esc(p.core_description || '')}</textarea>
-                <span class="field__hint">Материал и строение сердечника</span>
               </label>
               <label class="field">
                 <span class="field__label">Оплётка</span>
                 <textarea class="field__input field__textarea" name="cover_description" rows="2">${esc(p.cover_description || '')}</textarea>
-                <span class="field__hint">Материал и строение оплётки</span>
               </label>
             </div>
             <input type="hidden" name="construction" value="${esc(p.construction || '')}">
@@ -473,11 +470,11 @@ export class AdminProductsView {
 
       <!-- Доступные заделки сохраняются вместе с товаром отдельным запросом API. -->
       <details class="admin-disclosure" open>
-        <summary class="admin-disclosure__summary"><span>Доступные заделки каната</span><span class="admin-disclosure__hint">Выберите варианты, которые можно заказать для этого каната</span></summary>
+        <summary class="admin-disclosure__summary"><span>Заделки каната</span><span class="admin-disclosure__hint">Отметьте, какие концы можно заказать</span></summary>
         <div class="admin-disclosure__body">
-          <p class="field__hint">Если ничего не отмечено, ограничений по заделкам нет. Покупателю доступны подходящие активные заделки, если сращивание включено.</p>
+          <p class="field__hint">Ничего не отмечено — доступны все варианты.</p>
           <form data-product-splices-form class="product-editor admin-card">
-            ${spliceChoices.length ? `<div class="admin-checkbox-grid">${spliceChoices.map(type => `<label class="admin-toggle"><input type="checkbox" name="splice_${Number(type.id)}" ${selectedSplices.has(Number(type.id))?'checked':''}><span>${esc(displayName(type)||`Заделка #${type.id}`)}${type.is_active===false?' (отключена)':''}</span></label>`).join('')}</div>` : '<p>Виды заделок пока не добавлены. Добавьте их в разделе «Конфигуратор и цены».</p>'}
+            ${spliceChoices.length ? `<div class="admin-checkbox-grid">${spliceChoices.map(type => `<label class="admin-toggle"><input type="checkbox" name="splice_${Number(type.id)}" ${selectedSplices.has(Number(type.id))?'checked':''}><span>${esc(displayName(type)||`Заделка #${type.id}`)}${type.is_active===false?' (отключена)':''}</span></label>`).join('')}</div>` : '<p>Заделки ещё не настроены. Добавьте их в разделе «Конфигуратор и цены».</p>'}
           </form>
         </div>
       </details>
@@ -486,17 +483,17 @@ export class AdminProductsView {
       <details class="admin-disclosure" open>
         <summary class="admin-disclosure__summary">
           <span>Диаметры и цены каната</span>
-          <span class="admin-disclosure__hint">Задайте диаметры, цены за 1 метр и разрывную нагрузку</span>
+          <span class="admin-disclosure__hint">Диаметры, цена и нагрузка</span>
         </summary>
         <div class="admin-disclosure__body">
           <div class="variants-table-wrap">
             <div class="variants-table-header">
               <div class="col-diam">Диаметр, мм *</div>
               <div class="col-price">Цена/метр, € *</div>
-              <div class="col-load">Разрыв, кг</div>
+              <div class="col-load">Разрывная нагрузка, кг</div>
               <div class="col-weight">Вес, г/м</div>
               <div class="col-sku">Артикул</div>
-              <div class="col-active">Активен</div>
+              <div class="col-active">На сайте</div>
               <div class="col-action"></div>
             </div>
             <div class="variants-table-body" data-variants-container>
@@ -518,7 +515,7 @@ export class AdminProductsView {
       <details class="admin-disclosure" open>
         <summary class="admin-disclosure__summary">
           <span>Доступные цвета каната</span>
-          <span class="admin-disclosure__hint">Отметьте цвета, в которых выпускается этот канат</span>
+          <span class="admin-disclosure__hint">Отметьте цвета этого каната</span>
         </summary>
         <div class="admin-disclosure__body">
           <form data-product-colors-form class="product-editor">
@@ -534,7 +531,7 @@ export class AdminProductsView {
           </form>
           ${(p.colors || []).length ? `
             <details class="admin-disclosure" style="margin-top: 14px;">
-              <summary class="admin-disclosure__summary"><span>Порядок цветов в списке</span></summary>
+              <summary class="admin-disclosure__summary"><span>Место цветов в списке</span></summary>
               <div class="admin-disclosure__body">
                 ${[...(p.colors || [])].sort((a, b) => (Number(a.index) || 0) - (Number(b.index) || 0)).map(link => `
                   <form data-color-order-form data-link-id="${Number(link.id)}" class="product-editor" style="margin-bottom: 8px;">
@@ -552,14 +549,14 @@ export class AdminProductsView {
         <details class="admin-disclosure" data-product-photos open>
           <summary class="admin-disclosure__summary">
             <span>Фотографии каната</span>
-            <span class="admin-disclosure__hint">Главное фото показывается на обложке в каталоге</span>
+            <span class="admin-disclosure__hint">Главное фото — обложка в каталоге</span>
           </summary>
           <div class="admin-disclosure__body">
             ${product ? `
               <div class="admin-photo-dropzone" data-photo-dropzone>
                 <div class="admin-photo-dropzone__icon">📷</div>
                 <div class="admin-photo-dropzone__text">
-                  <strong>Перетащите фотографии сюда</strong> или нажмите для выбора файла на компьютере
+                  <strong>Перетащите фото сюда</strong> или нажмите для выбора
                 </div>
                 <input type="file" accept="image/png,image/jpeg,image/webp,image/heic" data-product-file class="admin-photo-dropzone__input">
                 <button class="btn btn--ghost btn--small" type="button" data-product-image="upload" hidden>Загрузить</button>
@@ -587,7 +584,7 @@ export class AdminProductsView {
                 </div>
               ` : '<p class="field__hint" style="margin-top: 12px;">У этого каната пока нет фотографий.</p>'}
             ` : `
-              <p class="field__hint">Фотографии можно будет загрузить сразу после сохранения нового каната.</p>
+              <p class="field__hint">Фото можно добавить после сохранения каната.</p>
             `}
           </div>
         </details>

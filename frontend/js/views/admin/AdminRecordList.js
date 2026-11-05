@@ -2,8 +2,9 @@ import { escapeHtml as esc } from '../../utils/text.js?v=20261027.10';
 
 // Shared record picker. Editing and unsaved-change checks stay in the controllers.
 export class AdminRecordList {
-  constructor(root, signal) {
+  constructor(root, signal, labels = {}) {
     this.root = root;
+    this.labels = { search: 'Поиск записей', placeholder: 'Название, текст или номер…', empty: 'Записей пока нет.', ...labels };
     this.items = [];
     this.page = 1;
     this.pageSize = 20;
@@ -11,7 +12,7 @@ export class AdminRecordList {
     this.query = '';
     this.disabled = false;
     root.classList.add('admin-record-list');
-    root.innerHTML = `<label class="field">Поиск записей<input class="field__input" type="search" placeholder="Название, текст или номер…" data-record-search></label>
+    root.innerHTML = `<label class="field">${this.labels.search}<input class="field__input" type="search" placeholder="${esc(this.labels.placeholder)}" data-record-search></label>
       <p data-record-count role="status"></p><ul class="admin-record-list__items" data-record-items></ul>
       <nav class="admin-record-list__pages" aria-label="Страницы списка"><button class="btn btn--ghost" type="button" data-record-prev>Назад</button><span data-record-page></span><button class="btn btn--ghost" type="button" data-record-next>Далее</button></nav>`;
     root.querySelector('[data-record-search]').addEventListener('input', e => {
@@ -76,7 +77,7 @@ export class AdminRecordList {
     const activeId = this.root.ownerDocument.activeElement?.dataset?.recordId;
     this.root.querySelector('[data-record-items]').innerHTML = items.slice(start, start + this.pageSize).map(item =>
       `<li><button type="button" class="admin-record-list__row" data-record-id="${esc(item.id)}" aria-pressed="${item.id === this.selected}"><span class="admin-record-list__name">${esc(item.label)}</span><span class="admin-record-list__detail">#${esc(item.id)}${item.detail ? ` · ${esc(item.detail)}` : ''}</span></button></li>`
-    ).join('') || `<li class="admin-record-list__empty">${this.query.trim() ? 'Ничего не найдено. Измените поисковый запрос.' : 'Записей пока нет.'}</li>`;
+    ).join('') || `<li class="admin-record-list__empty">${this.query.trim() ? 'Ничего не найдено. Измените поисковый запрос.' : this.labels.empty}</li>`;
     this.root.querySelector('[data-record-count]').textContent = items.length ? `Показаны ${start + 1}–${Math.min(start + this.pageSize, items.length)} из ${items.length}${this.query.trim() ? ` (всего ${this.items.length})` : ''}` : 'Найдено: 0';
     this.root.querySelector('[data-record-page]').textContent = `Страница ${this.page} из ${this.pages}`;
     this.updateControls();

@@ -86,7 +86,7 @@ export class AdminController extends BaseController {
     this.requestOffset = 0;
     const controls=document.createElement('form');
     controls.className='config-admin-toolbar';
-    controls.innerHTML='<label class="field">Поиск заявки<input class="field__input" name="search" placeholder="Номер, имя, email"></label><button class="btn" type="submit">Найти</button><button class="btn" type="button" data-page-prev>Назад</button><button class="btn" type="button" data-page-next>Далее</button><span data-page-status></span>';
+    controls.innerHTML='<label class="field">Поиск заявки<input class="field__input" name="search" placeholder="Номер, имя или почта"></label><button class="btn" type="submit">Найти</button><button class="btn" type="button" data-page-prev>Назад</button><button class="btn" type="button" data-page-next>Далее</button><span data-page-status></span>';
     this.view.$('#admin-requests-list').before(controls);this.requestControls=controls;
     const filtersBlock = document.createElement('details');
     filtersBlock.className = 'admin-disclosure';
@@ -94,7 +94,7 @@ export class AdminController extends BaseController {
     filtersTitle.textContent = 'Поиск и фильтры заявок';
     controls.before(filtersBlock);
     filtersBlock.append(filtersTitle, controls);
-    controls.querySelector('[name=search]').closest('label').insertAdjacentHTML('afterend',`<label class="field">Вид заказа<select class="field__input" name="configurator_type"><option value="">Все</option><option value="rope_with_splice">Канат</option><option value="loop_only">Петли на своём канате</option><option value="splice_only">Сращивание и обработка</option></select></label><label class="field">Срочность<select class="field__input" name="is_urgent"><option value="">Все</option><option value="true">Срочные</option><option value="false">Обычные</option></select></label><label class="field">Сортировка<select class="field__input" name="sort_by"><option value="created_at">Дата создания</option><option value="updated_at">Дата изменения</option><option value="total_price">Сумма</option><option value="request_number">Номер заявки</option></select></label><label class="field">Порядок<select class="field__input" name="sort_order"><option value="desc">По убыванию</option><option value="asc">По возрастанию</option></select></label>`);
+    controls.querySelector('[name=search]').closest('label').insertAdjacentHTML('afterend',`<label class="field">Вид заказа<select class="field__input" name="configurator_type"><option value="">Все</option><option value="rope_with_splice">Канат</option><option value="loop_only">Только петли</option><option value="splice_only">Сращивание</option></select></label><label class="field">Срочность<select class="field__input" name="is_urgent"><option value="">Все</option><option value="true">Срочные</option><option value="false">Обычные</option></select></label><label class="field">Сортировать по<select class="field__input" name="sort_by"><option value="created_at">Дате создания</option><option value="updated_at">Дате изменения</option><option value="total_price">Сумме</option><option value="request_number">Номеру заявки</option></select></label><label class="field">Направление<select class="field__input" name="sort_order"><option value="desc">По убыванию</option><option value="asc">По возрастанию</option></select></label>`);
     controls.addEventListener('submit',e=>{e.preventDefault();this.loadRequests(false,0);});
     controls.querySelector('[data-page-prev]').addEventListener('click',()=>this.loadRequests(false,Math.max(0,this.requestOffset-50)));
     controls.querySelector('[data-page-next]').addEventListener('click',()=>this.loadRequests(false,this.requestOffset+50));
@@ -152,7 +152,7 @@ export class AdminController extends BaseController {
     try {
       const filters=Object.fromEntries(new FormData(this.requestControls));
       const requests = await quoteApi.listQuoteRequests({...filters,skip:this.requestOffset,limit:50});
-      if (!Array.isArray(requests)) throw new Error('Некорректный ответ сервера');
+      if (!Array.isArray(requests)) throw new Error('Сайт не ответил');
       this.requestControls.querySelector('[data-page-prev]').disabled=this.requestOffset===0;
       this.requestControls.querySelector('[data-page-next]').disabled=requests.length<50;
       this.requestControls.querySelector('[data-page-status]').textContent=`Страница ${this.requestOffset/50+1}`;
@@ -168,7 +168,7 @@ export class AdminController extends BaseController {
         reload:()=>this.loadRequests(true),
       });
     } catch (err) {
-      this.view.showRequestsStatus(`Не удалось загрузить заявки. ${err.message}. Нажмите «Обновить».`, 'error');
+      this.view.showRequestsStatus('Не удалось загрузить заявки. Нажмите «Обновить».', 'error');
     } finally {
       this.loadingRequests = false;
     }

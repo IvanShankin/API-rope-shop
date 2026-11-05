@@ -11,3 +11,7 @@ __pycache__/
 *.test.env
 !.example.env
 !.example.test.env
+
+# локальные креды и рантайм-медиа
+ADMIN_CREDENTIALS.txt
+media/

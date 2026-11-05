@@ -48,10 +48,14 @@ export class AdminNavigation {
               if (name === 'save' && previousKey !== this.currentKey && this.states[previousKey]) {
                 this.states[this.currentKey] = this.states[previousKey];
               }
+              this.applyDefaultDisclosures();
               this.restoring = true;
-              try { await this.restore(); }
+              try {
+                await this.restore({ editor: name === 'select' && this.mobileLayout() && Boolean(this.routeFor().record) });
+              }
               finally {
                 this.restoring = false;
+                this.refreshSavebar();
                 if (this.pending) { const next = this.pending; this.pending = null; this.go(next.route, next.mode); }
               }
             }
@@ -59,7 +63,88 @@ export class AdminNavigation {
         };
       }
     }
+    this.admin.view.initSavebar?.({ isDirty: () => this.currentDirty(), save: () => this.saveCurrent() });
   }
+  currentDirty() {
+    if (this.section === 'requests') return Boolean(this.admin.view.requestDirty?.());
+    const controller = this.controllers[this.section];
+    if (!controller) return false;
+    const view = controller.view;
+    if (typeof view?.dirty === 'function') return view.dirty();
+    if (typeof view?.hasChanges === 'function') return view.hasChanges();
+    if (typeof controller.dirty === 'function') return controller.dirty();
+    return false;
+  }
+  submitForm(form) {
+    if (typeof form.requestSubmit === 'function') form.requestSubmit();
+    else form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+  }
+  saveCurrent() {
+    if (this.restoring) return;
+    const panel = this.panel();
+    if (!panel) return;
+    if (this.section === 'requests') {
+      const form = panel.querySelector('[data-request-edit]');
+      if (form) this.submitForm(form);
+      return;
+    }
+    if (this.section === 'catalog') {
+      const button = panel.querySelector('[data-products-save]');
+      if (button) { button.click(); return; }
+    }
+    const view = this.controllers[this.section]?.view;
+    const priceSave = panel.querySelector('[data-tariff-save]');
+    if (priceSave && !priceSave.disabled && view?.recordList?.priceDrafts?.size && !view.editorDirty?.()) {
+      priceSave.click();
+      return;
+    }
+    const form = panel.querySelector('[data-settings-form]')
+      || panel.querySelector('[data-color-form]')
+      || panel.querySelector('[data-contacts-form]')
+      || panel.querySelector('[data-config-editor] form')
+      || panel.querySelector('[data-content-editor] form')
+      || panel.querySelector('[data-product-form]')
+      || panel.querySelector('form');
+    if (form) this.submitForm(form);
+  }
+  applyDefaultDisclosures() {
+    if (this.section !== 'catalog') return;
+    const editor = this.panel()?.querySelector('[data-product-editor]');
+    if (!editor) return;
+    editor.querySelectorAll(':scope > details.admin-disclosure').forEach(block => { block.open = false; });
+  }
+  editorTarget() {
+    const panel = this.panel();
+    if (!panel) return null;
+    for (const selector of ['[data-product-editor]', '[data-color-editor]', '[data-config-editor]', '[data-content-editor]', '[data-request-content]']) {
+      const target = panel.querySelector(selector);
+      if (target && !target.hidden && target.children.length) return target;
+    }
+    return null;
+  }
+  mobileLayout() { return window.matchMedia('(max-width: 1000px)').matches; }
+  scrollToEditor() {
+    const target = this.editorTarget();
+    if (!target) return false;
+    const top = Math.max(0, window.scrollY + target.getBoundingClientRect().top - 88);
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top, behavior: reduceMotion ? 'auto' : 'smooth' });
+    return true;
+  }
+  scrollToEditorWhenReady() {
+    if (!this.mobileLayout()) return;
+    clearInterval(this.editorScrollTimer);
+    let tries = 0;
+    this.editorScrollTimer = setInterval(() => {
+      if (this.editorTarget()) {
+        clearInterval(this.editorScrollTimer);
+        this.scrollToEditor();
+      } else if (++tries > 30) {
+        clearInterval(this.editorScrollTimer);
+      }
+    }, 120);
+  }
+  refreshSavebar() { this.admin.view.refreshSavebar?.(); }
   routeFor(section = this.section) {
     const controller = this.controllers[section];
     if(!controller&&section!=='requests')return this.routeFor('catalog');
@@ -100,7 +185,7 @@ export class AdminNavigation {
     if (url !== location.pathname + location.search + location.hash) history[mode === 'push' ? 'pushState' : 'replaceState']({}, '', url);
     this.currentKey = this.key(route);
   }
-  async restore() {
+  async restore({ editor = false } = {}) {
     const state = this.states[this.currentKey];
     if (state?.blocks) for (const {block, key} of this.details()) {
       if (typeof state.blocks[key] === 'boolean') block.open = state.blocks[key];
@@ -110,6 +195,7 @@ export class AdminNavigation {
       const timer = setTimeout(resolve, 150);
       requestAnimationFrame(() => requestAnimationFrame(() => { clearTimeout(timer); resolve(); }));
     });
+    if (editor && this.scrollToEditor()) return;
     window.scrollTo({ top: Math.max(0, Number(state?.scroll) || 0), behavior: 'instant' });
   }
   start() {
@@ -122,15 +208,21 @@ export class AdminNavigation {
     this.root.addEventListener('click', event => {
       if (event.target.closest('[data-product-new], [data-config-new], [data-color-new]')) {
         this.capture(); queueMicrotask(() => this.sync('push'));
+        this.scrollToEditorWhenReady();
       }
     }, options);
     this.root.addEventListener('admin:request-open', () => this.sync('push'), options);
-    this.root.addEventListener('admin:product-new', () => this.sync('push'), options);
+    this.root.addEventListener('admin:product-new', () => {
+      this.sync('push');
+      this.applyDefaultDisclosures();
+      if (this.mobileLayout()) this.scrollToEditor();
+    }, options);
     window.addEventListener('popstate', () => this.go(readAdminRoute(location.href), 'pop'), options);
     this.go(readAdminRoute(location.href), 'replace');
   }
   async go(route, mode = 'push') {
     if (this.restoring) { this.pending = { route, mode }; return; }
+    clearInterval(this.editorScrollTimer);
     if (Object.values(this.controllers).some(controller => controller.busy) || this.admin.view.requestBusy) {
       this.sync(); return;
     }
@@ -161,11 +253,13 @@ export class AdminNavigation {
       const url = adminRouteUrl(actual, location.href);
       if (url !== location.pathname + location.search + location.hash) history[mode === 'push' ? 'pushState' : 'replaceState']({}, '', url);
       this.currentKey = this.key(actual);
-      await this.restore();
+      this.applyDefaultDisclosures();
+      await this.restore({ editor: this.mobileLayout() && Boolean(actual.record) });
     } finally {
       this.restoring = false;
+      this.refreshSavebar();
       if (this.pending) { const next = this.pending; this.pending = null; this.go(next.route, next.mode); }
     }
   }
-  destroy() { this.capture(); clearTimeout(this.timer); this.events.abort(); history.scrollRestoration = 'auto'; }
+  destroy() { this.capture(); clearTimeout(this.timer); clearInterval(this.editorScrollTimer); this.events.abort(); history.scrollRestoration = 'auto'; }
 }

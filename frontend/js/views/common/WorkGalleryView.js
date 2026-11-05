@@ -1,5 +1,6 @@
 export class WorkGalleryView {
   constructor(root) {
+    root.querySelector('.work-gallery__skeleton')?.remove();
     const photos = Array.from(root.querySelectorAll('.work-gallery__photo'));
     const dialog = root.querySelector('dialog');
     if (!dialog || !photos.length) return;

@@ -16,9 +16,11 @@ export function catalogLink() {
 }
 
 export function updateLoadState(root, message, state) {
+  const loading = state === 'loading';
   root.dataset.loadState = state;
-  root.setAttribute('aria-busy', String(state === 'loading'));
+  root.setAttribute('aria-busy', String(loading));
   message.classList.add('load-state');
+  message.classList.toggle('visually-hidden', loading);
   message.dataset.state = state;
   message.setAttribute('role', 'status');
   message.setAttribute('aria-atomic', 'true');

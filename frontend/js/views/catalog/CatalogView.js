@@ -23,9 +23,14 @@ export class CatalogView extends BaseView {
     super(root);
     if (!this.root) return;
     this.groupsPage = this.root.dataset.catalog === 'groups';
+    const staticSkeleton = this.root.querySelector(this.groupsPage ? '.catalog__list--skeleton' : '[data-catalog-skeleton]');
+    this.initialSkeleton = staticSkeleton
+      ? this.groupsPage ? [staticSkeleton] : [...staticSkeleton.children]
+      : [];
     this.container = document.createElement('div');
     this.container.className = this.groupsPage ? 'catalog__inner' : 'products__items';
     this.root.replaceChildren(this.container);
+    this.container.append(...this.initialSkeleton);
     if (!this.groupsPage) {
       this.root.classList.add('products--filtered');
       this.sidebar = document.createElement('aside');
@@ -99,6 +104,13 @@ export class CatalogView extends BaseView {
     status.setAttribute('role', 'status');
     status.textContent = message;
     this.container.replaceChildren(status);
+    if (state === 'loading') {
+      if (this.initialSkeleton.length) this.container.append(...this.initialSkeleton);
+      else this.container.insertAdjacentHTML('beforeend', this.skeletonMarkup());
+      this.container.setAttribute('aria-busy', 'true');
+    } else {
+      this.container.setAttribute('aria-busy', 'false');
+    }
     updateLoadState(this.root, status, state);
     this.catalogLink.hidden = this.groupsPage || state === 'loading';
     if (this.retry) this.retry.hidden = !retry;
@@ -106,10 +118,39 @@ export class CatalogView extends BaseView {
     if (this.sidebar?.querySelector('fieldset')) this.sidebar.querySelector('fieldset').disabled = true;
   }
 
+  skeletonMarkup() {
+    if (this.groupsPage) {
+      const cards = Array.from({ length: 6 }, (_, index) => `<li class="catalog__item${index === 0 ? ' catalog__item--wide' : index === 1 ? ' catalog__item--medium' : ''}">
+        <div class="catalog__card catalog__card--skeleton">
+          <span class="skeleton skeleton--cover"></span>
+          <span class="skeleton-lines">
+            <span class="skeleton skeleton--title"></span>
+            <span class="skeleton skeleton--text"></span>
+            <span class="skeleton skeleton--price"></span>
+          </span>
+        </div>
+      </li>`);
+      return `<ul class="catalog__list catalog__list--skeleton" aria-hidden="true">${cards.join('')}</ul>`;
+    }
+    const table = `<span class="skeleton skeleton--cell skeleton--cell-head"></span>`.repeat(4) + `<span class="skeleton skeleton--cell"></span>`.repeat(12);
+    return Array.from({ length: 3 }, () => `<article class="product product--skeleton" aria-hidden="true">
+        <div class="product__gallery">
+          <div class="product__media"><span class="skeleton skeleton--fill"></span></div>
+        </div>
+        <div class="product__info">
+          <span class="skeleton skeleton--heading"></span>
+          <span class="skeleton skeleton--text"></span>
+          <span class="skeleton skeleton--text skeleton--text-short"></span>
+          <div class="skeleton-table">${table}</div>
+        </div>
+      </article>`).join('');
+  }
+
   renderProducts(products, groups) {
     this.retry.hidden = true;
     this.controls.hidden = true;
     this.root.setAttribute('aria-busy', 'false');
+    this.container.setAttribute('aria-busy', 'false');
     this.root.dataset.loadState = 'ready';
     if (!products.length && !this.groupsPage) {
       const message = document.createElement('p'); message.className = 'catalog-filter__empty'; message.textContent = label(this.emptyCategory?'emptyCategory':'empty'); this.container.replaceChildren(message);

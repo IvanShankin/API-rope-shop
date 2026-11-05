@@ -6,11 +6,11 @@ export class AdminReviewsView extends AdminContentView {
   constructor(root){
     super(root,{all:'Все отзывы'},true);
     root.querySelector('h1').textContent='Отзывы';
-    root.querySelector('header + p').textContent='Новые отзывы проходят модерацию. На главной видны только одобренные отзывы с включённой публикацией. Пустое поле перевода удаляет этот перевод; хотя бы один текст обязателен.';
+    root.querySelector('header + p').textContent='Отзыв виден на сайте, если он «Одобрен» и включена публикация.';
     root.querySelector('[data-config-section]').closest('label').hidden=true;
     root.querySelector('[data-config-new]').textContent='Добавить отзыв';
     this.items=[];this.filter='all';
-    root.querySelector('[data-config-record]').insertAdjacentHTML('beforebegin',`<div class="admin-review-filters" role="group" aria-label="Фильтр модерации">${Object.entries(reviewFilters).map(([key,label])=>`<button type="button" class="btn btn--ghost" data-review-filter="${key}" aria-pressed="${key==='all'}">${label} <span data-review-count="${key}">0</span></button>`).join('')}</div><p role="status" data-review-summary>Отзывы ещё не загружены.</p><p data-review-selection hidden>Открытый отзыв не входит в выбранный фильтр. Его форма и несохранённые изменения остаются ниже.</p>`);
+    root.querySelector('[data-config-record]').insertAdjacentHTML('beforebegin',`<div class="admin-review-filters" role="group" aria-label="Фильтр проверки">${Object.entries(reviewFilters).map(([key,label])=>`<button type="button" class="btn btn--ghost" data-review-filter="${key}" aria-pressed="${key==='all'}">${label} <span data-review-count="${key}">0</span></button>`).join('')}</div><p role="status" data-review-summary>Отзывы ещё не загружены.</p><p data-review-selection hidden>Этот отзыв не попал в фильтр. Форма осталась ниже.</p>`);
     root.addEventListener('click',event=>{
       const button=event.target.closest('[data-review-filter]');
       if(!button||button.disabled)return;
@@ -52,13 +52,13 @@ export class AdminReviewsView extends AdminContentView {
       <div class="admin-fields" style="padding: 0;">
         <label class="field">Автор<input class="field__input" name="author_name" maxlength="255" required value="${esc(item.author_name||'')}"></label>
         <label class="field">Оценка<select class="field__input" name="rating"><option value="">Без оценки</option>${[1,2,3,4,5].map(n=>`<option value="${n}" ${item.rating===n?'selected':''}>${n} / 5</option>`).join('')}</select></label>
-        <label class="field">Модерация<select class="field__input" name="status">${Object.entries({new:'На проверке',confirmed:'Одобрен',rejected:'Отклонён'}).map(([value,label])=>`<option value="${value}" ${(item.status||'new')===value?'selected':''}>${label}</option>`).join('')}</select></label>
-        <label class="field">Порядок (меньше — выше)<input class="field__input" type="number" name="index" min="0" step="1" required value="${Number(item.index||0)}"></label>
+        <label class="field">Проверка отзыва<select class="field__input" name="status">${Object.entries({new:'На проверке',confirmed:'Одобрен',rejected:'Отклонён'}).map(([value,label])=>`<option value="${value}" ${(item.status||'new')===value?'selected':''}>${label}</option>`).join('')}</select></label>
+        <label class="field">Место в списке (0 — первое)<input class="field__input" type="number" name="index" min="0" step="1" required value="${Number(item.index||0)}"></label>
       </div>
-      <label class="admin-toggle"><input type="checkbox" name="is_published" ${item.is_published?'checked':''}> <span>Опубликовать после одобрения</span></label>
+      <label class="admin-toggle"><input type="checkbox" name="is_published" ${item.is_published?'checked':''}> <span>Показывать на сайте</span></label>
       <p class="admin-review-publication" role="status" data-review-publication></p>
       <div class="admin-disclosures-group">
-        ${['rus','eng','ger'].map(locale=>`<details class="admin-disclosure" data-editor-disclosure="${locale}" open><summary>${{rus:'Русский',eng:'English',ger:'Deutsch'}[locale]}</summary><div class="admin-fields"><label class="field" style="grid-column: 1 / -1;">Текст ${locale.toUpperCase()}<textarea class="field__input" name="text_${locale}" rows="5">${esc(item.translations?.find(t=>t.locale===locale)?.text||'')}</textarea></label></div></details>`).join('')}
+        ${['rus','eng','ger'].map(locale=>`<details class="admin-disclosure" data-editor-disclosure="${locale}" open><summary>${{rus:'Русский',eng:'Английский',ger:'Немецкий'}[locale]}</summary><div class="admin-fields"><label class="field" style="grid-column: 1 / -1;">Текст ${{rus:'(рус.)',eng:'(англ.)',ger:'(нем.)'}[locale]}<textarea class="field__input" name="text_${locale}" rows="5">${esc(item.translations?.find(t=>t.locale===locale)?.text||'')}</textarea></label></div></details>`).join('')}
       </div>
       <div class="admin-form-actions">
         <button class="btn btn--primary" type="submit">Сохранить</button>

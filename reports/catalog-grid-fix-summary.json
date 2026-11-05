@@ -1,0 +1,59 @@
+﻿{
+  "task": "catalog page: remove 'N моделей' + fill category grid without empty cells",
+  "files": {
+    "CatalogView.js": "renderProducts groups branch + new groupColumnClasses(total)",
+    "style.css": "new modifiers .catalog__item--half/--third/--full, tablet odd-last rule, media lists updated",
+    "category.html": "style.css ?v=20261105.1 -> 20261105.2 (CSS edited)"
+  },
+  "layoutAlgorithm": {
+    "total1": "span 12",
+    "total2": "7 + 5",
+    "rest": "rest = total - 2; rows = ceil(rest / 4); rows distributed as evenly as possible (max 4 per row); per-row span = 12 / itemsInRow (2 -> 6, 3 -> 4, 4 -> 3)",
+    "examples": {
+      "4": [7, 5, 6, 6],
+      "5": [7, 5, 4, 4, 4],
+      "6": [7, 5, 3, 3, 3, 3],
+      "7": [7, 5, 4, 4, 4, 6, 6],
+      "9": [7, 5, 3, 3, 3, 3, 4, 4, 4],
+      "12": [7, 5, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4]
+    },
+    "tablet_768_1024": "all items span 6; last item spans 12 when total is odd",
+    "mobile_767": "all items span 1 / -1 (single column)"
+  },
+  "layoutVerification": {
+    "method": "headless Chrome CDP; rows grouped by item top; each row checked to cover list content width with gaps; no unfilled cells",
+    "real4_1440": { "rowSizes": [2, 2], "spans": [7, 5, 6, 6], "problems": 0 },
+    "fake5_1440": { "rowSizes": [2, 3], "problems": 0 },
+    "fake6_1440": { "rowSizes": [2, 4], "problems": 0 },
+    "fake7_1440": { "rowSizes": [2, 3, 2], "problems": 0 },
+    "fake3_9_12_1440": { "problems": 0 },
+    "fake4_5_6_7_1024": { "problems": 0 },
+    "real4_390": { "rowSizes": [1, 1, 1, 1], "problems": 0 },
+    "fake5_6_7_12_390": { "problems": 0 }
+  },
+  "removedSpecs": {
+    "renderedSpecsAfterLoad": 0,
+    "categorySpecsInJsHtml": 0,
+    "cssRuleLeftUnused": "frontend/css/style.css:3679 .category__specs (left in place, file is shared; class no longer used)"
+  },
+  "cls": {
+    "categoryMobile390": { "before": 0.2832, "after": 0.1932, "note": "from previous task; remaining 0.19 is async filter block, not skeleton" },
+    "catalogPage390": 0,
+    "catalogPage1440": 0.0011,
+    "catalogPageNote": "same as before grid change; shifts are header font-swap only (header__nav/header__actions)"
+  },
+  "checks": {
+    "nodeCheck": "pass",
+    "styleCssBraces": "916 / 916",
+    "http": { "/catalog/": 200, "/category/?group=1": 200, "/css/style.css?v=20261105.2": 200 },
+    "consoleErrors": "none on /catalog/ and /category/?group=1",
+    "skeletonsAfterLoad": 0,
+    "staticSkeletonCatalogPage": "unchanged (catalog.html not modified)"
+  },
+  "screenshots": [
+    "reports/design/catalog-grid-1440.png",
+    "reports/design/catalog-grid-390.png",
+    "reports/design/catalog-grid-5-1440.png",
+    "reports/design/catalog-grid-7-1440.png"
+  ]
+}

@@ -3491,7 +3491,8 @@ button {
 
 /* один скруглённый блок, разделы внутри разделены полосами:
    полосы — это фон блока, который виден в зазорах 1px между ячейками.
-   Сетка на 12 колонок: сверху два крупных раздела (7 + 5), ниже четыре по 3 */
+   Сетка на 12 колонок: сверху два крупных раздела (7 + 5), ниже — ряды
+   из 2–4 карточек, которые всегда заполняют все 12 колонок */
 .catalog__list {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -3516,6 +3517,18 @@ button {
 
 .catalog__item--medium {
   grid-column: span 5;
+}
+
+.catalog__item--half {
+  grid-column: span 6;
+}
+
+.catalog__item--third {
+  grid-column: span 4;
+}
+
+.catalog__item--full {
+  grid-column: span 12;
 }
 
 /* появление блока разделов */
@@ -4265,8 +4278,15 @@ button {
   /* планшет: все разделы по два в ряд */
   .catalog__item,
   .catalog__item--wide,
-  .catalog__item--medium {
+  .catalog__item--medium,
+  .catalog__item--third,
+  .catalog__item--half,
+  .catalog__item--full {
     grid-column: span 6;
+  }
+
+  .catalog__item:last-child:nth-child(odd) {
+    grid-column: span 12;
   }
 
   .footer__top {
@@ -4633,7 +4653,10 @@ button {
 
   .catalog__item,
   .catalog__item--wide,
-  .catalog__item--medium {
+  .catalog__item--medium,
+  .catalog__item--third,
+  .catalog__item--half,
+  .catalog__item--full {
     grid-column: 1 / -1;
   }
 

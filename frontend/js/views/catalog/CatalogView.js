@@ -146,6 +146,23 @@ export class CatalogView extends BaseView {
       </article>`).join('');
   }
 
+  groupColumnClasses(total) {
+    if (total <= 0) return [];
+    if (total === 1) return ['catalog__item--full'];
+    const classes = ['catalog__item--wide', 'catalog__item--medium'];
+    const rest = total - 2;
+    if (rest <= 0) return classes;
+    const rows = Math.ceil(rest / 4);
+    const base = Math.floor(rest / rows);
+    const extra = rest % rows;
+    for (let row = 0; row < rows; row += 1) {
+      const perRow = base + (row < extra ? 1 : 0);
+      const modifier = perRow === 4 ? '' : perRow === 3 ? 'catalog__item--third' : perRow === 2 ? 'catalog__item--half' : 'catalog__item--full';
+      for (let index = 0; index < perRow; index += 1) classes.push(modifier);
+    }
+    return classes;
+  }
+
   renderProducts(products, groups) {
     this.retry.hidden = true;
     this.controls.hidden = true;
@@ -159,15 +176,16 @@ export class CatalogView extends BaseView {
     if (this.groupsPage) {
       const populated = groups.filter(group => group.is_active !== false);
       if (!populated.length) { this.showStatus('Доступных товаров пока нет.', true, 'empty'); return; }
+      const columnClasses = this.groupColumnClasses(populated.length);
       this.container.innerHTML = `<ul class="catalog__list">${populated.map((group, index) => {
         const items = products.filter((p) => Number(p.material_group_id) === Number(group.id));
         const prices = items.flatMap((p) => p.variants).filter(v => v.price_per_meter != null).map((v) => Number(v.price_per_meter)).filter(Number.isFinite);
         const picture = mediaUrl(group.image_url);
-        return `<li class="catalog__item ${index === 0 ? 'catalog__item--wide' : index === 1 ? 'catalog__item--medium' : ''}">
+        const modifier = columnClasses[index] ? ` ${columnClasses[index]}` : '';
+        return `<li class="catalog__item${modifier}">
           <a class="catalog__card category category--text" href="/category/?group=${Number(group.id)}">
             ${picture ? `<span class="category__media"><img class="category__image" src="${esc(picture)}" alt="" width="960" height="640" loading="lazy" decoding="async"></span>` : ''}
             <span class="category__info"><span class="category__title">${esc(group.name || group.code)}</span>
-            <span class="category__specs">${items.length} моделей</span>
             <span class="category__price">${prices.length ? `от ${Math.min(...prices)} €/м` : items.length ? 'Нет доступных диаметров' : 'Товары пока не добавлены.'}</span></span>
           </a></li>`;
       }).join('')}</ul>`;

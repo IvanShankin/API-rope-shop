@@ -191,3 +191,25 @@ class TestsForFailure:
             json=RefreshTokenRequest(refresh_token=token.token).model_dump(),
         )
         assert response.status_code in (401, 404)
+
+    @pytest.mark.asyncio
+    async def test_refresh_tokens_inactive_user_fails(
+        self,
+        client_for_tests,
+        create_user_fixture,
+        create_refresh_token_fixture,
+    ):
+        """Проверка пункта 2.6: обновление токена для неактивного пользователя отклоняется."""
+        user, _ = await create_user_fixture(
+            new_user=CreateUserFixtureDTO(
+                is_active=False,
+            )
+        )
+        token = await create_refresh_token_fixture(
+            new_refresh_token=CreateRefreshTokenFixtureDTO(user_id=user.id)
+        )
+        response = await client_for_tests.post(
+            "/auth/refresh_tokens",
+            json=RefreshTokenRequest(refresh_token=token.token).model_dump(),
+        )
+        assert response.status_code in (400, 401, 403)

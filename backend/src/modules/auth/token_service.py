@@ -4,7 +4,7 @@ from typing import Dict
 from jose import jwt, JWTError
 
 from src.core.config import Config
-from src.modules.auth.exception import InvalidJWTToken
+from src.modules.auth.exception import InvalidJWTToken, UserInactive
 from src.modules.auth.models_dto import TokenResponse, LogoutResponse
 from src.modules.refresh_tokens.exception import RefreshTokenNotFound
 from src.modules.refresh_tokens.service import RefreshTokensService
@@ -55,10 +55,14 @@ class TokenService:
             )
 
             # Извлекаем ID пользователя
-            user_id: int = int(payload.get("sub"))
-
-            if user_id is None:
+            sub = payload.get("sub")
+            if sub is None:
                 raise InvalidJWTToken()
+
+            try:
+                user_id = int(sub)
+            except (ValueError, TypeError) as e:
+                raise InvalidJWTToken() from e
 
             return user_id
 
@@ -106,6 +110,9 @@ class TokenService:
 
         if not user:
             raise UserNotFound()
+
+        if not user.is_active:
+            raise UserInactive("User account is inactive.")
 
         await self.refresh_token_service.set_is_revoked(old_refresh_token)
 

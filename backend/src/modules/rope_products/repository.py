@@ -188,15 +188,23 @@ class ProductVariantRepository(BaseIndexedRepository):
     async def get_by_product_and_size(
         self,
         product_id: int,
-        size_value: float
+        size_value: float,
+        is_active: bool | None = None,
     ) -> ProductVariant | None:
         """Поиск варианта товара по размеру/диаметру."""
         stmt = select(ProductVariant).where(
             ProductVariant.product_id == product_id,
             ProductVariant.size_value == size_value,
         )
+        if is_active is not None:
+            stmt = stmt.where(ProductVariant.is_active == is_active)
+        stmt = stmt.order_by(
+            ProductVariant.is_active.desc(),
+            ProductVariant.index.asc(),
+            ProductVariant.id.asc(),
+        )
         result = await self.session.execute(stmt)
-        return result.scalar_one_or_none()
+        return result.scalars().first()
 
     async def get_by_product_and_name(
         self,

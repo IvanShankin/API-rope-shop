@@ -349,14 +349,19 @@ class QuoteRequestService:
         variant = await self.variant_repo.get_by_product_and_size(
             product_id=r_item.product_id,
             size_value=r_item.diameter_mm,
+            is_active=True,
         )
         if not variant:
+            inactive_variant = await self.variant_repo.get_by_product_and_size(
+                product_id=r_item.product_id,
+                size_value=r_item.diameter_mm,
+            )
+            if inactive_variant and not inactive_variant.is_active:
+                raise QuoteRequestValidationError(
+                    f"Variant with diameter {r_item.diameter_mm} mm is inactive."
+                )
             raise RopeVariantNotFoundForQuote(
                 f"Variant with diameter {r_item.diameter_mm} mm not found for product {r_item.product_id}."
-            )
-        if not variant.is_active:
-            raise QuoteRequestValidationError(
-                f"Variant with diameter {r_item.diameter_mm} mm is inactive."
             )
 
         color = await self.color_repo.get_by_id(r_item.color_id)

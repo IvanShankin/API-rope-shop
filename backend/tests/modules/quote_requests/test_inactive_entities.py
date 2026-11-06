@@ -98,3 +98,104 @@ async def test_quote_request_rejects_inactive_variant(
     response = await client_for_tests.post("/quote_requests", json=payload)
     assert response.status_code == 400
     assert "inactive" in response.json()["detail"].lower()
+
+
+
+@pytest.mark.asyncio
+async def test_quote_request_with_multiple_variants_same_diameter(
+    client_for_tests,
+    create_configurator_setting_fixture,
+    create_splice_material_fixture,
+    create_material_group_fixture,
+    create_color_fixture,
+    create_splice_type_fixture,
+    create_rope_product_fixture,
+    create_rope_variant_fixture,
+    create_rope_product_color_fixture,
+    create_rope_allowed_splice_fixture,
+    create_splice_price_rule_fixture,
+):
+    """Проверка пункта 1.4: два варианта с одинаковым диаметром не вызывают ошибку 500."""
+    await create_configurator_setting_fixture(CreateConfiguratorSettingFixtureDTO())
+    splice_mat = await create_splice_material_fixture(CreateSpliceMaterialFixtureDTO())
+    mat_group = await create_material_group_fixture(CreateMaterialGroupFixtureDTO())
+    color = await create_color_fixture(CreateColorFixtureDTO())
+    splice = await create_splice_type_fixture(CreateSpliceTypeFixtureDTO())
+
+    product = await create_rope_product_fixture(
+        CreateRopeProductFixtureDTO(
+            material_group_id=mat_group.id,
+            splice_material_id=splice_mat.id,
+            can_be_spliced=True,
+        )
+    )
+
+    # Variant 1: Inactive with diameter 12.0
+    await create_rope_variant_fixture(
+        CreateRopeVariantFixtureDTO(
+            product_id=product.product_id,
+            variant_name="12 мм (старый)",
+            size_value=12.0,
+            price=3.00,
+            is_active=False,
+            index=1,
+        )
+    )
+
+    # Variant 2: Active with diameter 12.0
+    await create_rope_variant_fixture(
+        CreateRopeVariantFixtureDTO(
+            product_id=product.product_id,
+            variant_name="12 мм (новый)",
+            size_value=12.0,
+            price=6.00,
+            is_active=True,
+            index=2,
+        )
+    )
+
+    await create_rope_product_color_fixture(
+        CreateRopeProductColorFixtureDTO(
+            product_id=product.product_id,
+            color_id=color.id,
+        )
+    )
+
+    await create_rope_allowed_splice_fixture(
+        CreateRopeAllowedSpliceFixtureDTO(
+            product_id=product.product_id,
+            splice_type_id=splice.id,
+        )
+    )
+
+    await create_splice_price_rule_fixture(
+        CreateSplicePriceRuleFixtureDTO(
+            splice_type_id=splice.id,
+            splice_material_id=splice_mat.id,
+            diameter_from_mm=8.0,
+            diameter_to_mm=14.0,
+            price=15.00,
+        )
+    )
+
+    payload = {
+        "configurator_type": "rope_with_splice",
+        "name": "Test Customer",
+        "email": "customer@example.com",
+        "locale": "ger",
+        "rope_items": [
+            {
+                "product_id": product.product_id,
+                "color_id": color.id,
+                "diameter_mm": 12.0,
+                "length_m": 10.0,
+                "quantity": 1,
+            }
+        ],
+    }
+
+    response = await client_for_tests.post("/quote_requests", json=payload)
+    assert response.status_code == 201
+    data = response.json()
+    # Length 10m * price 6.00 = 60.00
+    assert data["subtotal"] == 60.0

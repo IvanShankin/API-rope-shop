@@ -111,9 +111,13 @@ def _include_routers(app: FastAPI) -> FastAPI:
 def init_fastapi_app() -> FastAPI:
     config = create_config()
 
+    is_prod = config.env.mode.upper() in ("PROD", "PRODUCTION")
     app = FastAPI(
         title="Rope shop",
         lifespan=lifespan,
+        docs_url=None if is_prod else "/docs",
+        redoc_url=None if is_prod else "/redoc",
+        openapi_url=None if is_prod else "/openapi.json",
     )
 
     # Сохраняем единственный экземпляр конфигурации

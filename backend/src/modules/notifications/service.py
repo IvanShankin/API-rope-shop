@@ -301,8 +301,9 @@ class NotificationService:
         t = EMAIL_TRANSLATIONS.get(lang, EMAIL_TRANSLATIONS["ger"])
 
         currency_val = quote.currency.value if hasattr(quote.currency, "value") else str(quote.currency)
+        safe_name = " ".join(quote.name.split())[:100]
         lines = [
-            t["greeting"].format(name=quote.name),
+            t["greeting"].format(name=safe_name),
             t["intro"].format(company_name=settings.company_name),
             t["registered"].format(request_number=quote.request_number),
             t["total"].format(total_price=quote.total_price, currency=currency_val),
@@ -340,8 +341,6 @@ class NotificationService:
                     f"  {idx}. {extra.name_snapshot} x{extra.quantity} — {extra.total_cost:.2f} {currency_val}"
                 )
 
-        if quote.comment:
-            lines.append(t["comment_header"].format(comment=quote.comment))
 
         site_url = settings.site_url or "https://ropeshop.com"
         tracking_token = getattr(quote, "tracking_token", None)
@@ -625,14 +624,13 @@ class NotificationService:
         company_name = settings.company_name or "Rope Shop"
 
         subject = t["subject"].format(contact_id=contact.id, company_name=company_name)
+        safe_name = " ".join(contact.name.split())[:100]
         lines = [
-            t["greeting"].format(name=contact.name),
+            t["greeting"].format(name=safe_name),
             t["intro"].format(company_name=company_name),
             t["registered"].format(contact_id=contact.id),
             t["footer"],
         ]
-        if contact.message:
-            lines.append(f"\nВаше сообщение:\n{contact.message}")
         if settings.contact_phone:
             lines.append(t["phone"].format(phone=settings.contact_phone))
         if settings.contact_email:

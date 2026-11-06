@@ -21,7 +21,7 @@ router = APIRouter(prefix="/contact_requests", tags=["Contact Requests"])
     summary="Submit contact form request",
     description="Submit an incoming inquiry / contact form message (public access).",
 )
-@limiter.limit("5/minute")
+@limiter.limit("5/minute; 15/hour")
 async def create_contact_request(
     request: Request,
     data: ContactRequestCreateDTO,

@@ -341,6 +341,10 @@ class QuoteRequestService:
             raise RopeProductNotFoundForQuote(
                 f"Product with product_id {r_item.product_id} not found."
             )
+        if rope_product.product and not rope_product.product.is_active:
+            raise QuoteRequestValidationError(
+                f"Product with product_id {r_item.product_id} is inactive."
+            )
 
         variant = await self.variant_repo.get_by_product_and_size(
             product_id=r_item.product_id,
@@ -350,10 +354,18 @@ class QuoteRequestService:
             raise RopeVariantNotFoundForQuote(
                 f"Variant with diameter {r_item.diameter_mm} mm not found for product {r_item.product_id}."
             )
+        if not variant.is_active:
+            raise QuoteRequestValidationError(
+                f"Variant with diameter {r_item.diameter_mm} mm is inactive."
+            )
 
         color = await self.color_repo.get_by_id(r_item.color_id)
         if not color:
             raise ColorNotFoundForQuote(f"Color with id {r_item.color_id} not found.")
+        if not color.is_active:
+            raise QuoteRequestValidationError(
+                f"Color with id {r_item.color_id} is inactive."
+            )
 
         self._validate_product_color_compatibility(rope_product, r_item.color_id)
 
@@ -462,6 +474,10 @@ class QuoteRequestService:
         splice_type = await self.splice_type_repo.get_by_id(splice_type_id)
         if not splice_type:
             raise SpliceTypeNotFoundForQuote(f"SpliceType with id {splice_type_id} not found.")
+        if not splice_type.is_active:
+            raise QuoteRequestValidationError(
+                f"SpliceType with id {splice_type_id} is inactive."
+            )
 
         splices = rope_product.product.allowed_splices if rope_product.product and rope_product.product.allowed_splices else []
         allowed_ids = [s.splice_type_id for s in splices]
@@ -518,11 +534,19 @@ class QuoteRequestService:
             raise SpliceTypeNotFoundForQuote(
                 f"SpliceType with id {s_item.splice_type_id} not found."
             )
+        if not splice_type.is_active:
+            raise QuoteRequestValidationError(
+                f"SpliceType with id {s_item.splice_type_id} is inactive."
+            )
 
         splice_material = await self.splice_material_repo.get_by_id(s_item.splice_material_id)
         if not splice_material:
             raise SpliceMaterialNotFoundForQuote(
                 f"SpliceMaterial with id {s_item.splice_material_id} not found."
+            )
+        if not splice_material.is_active:
+            raise QuoteRequestValidationError(
+                f"SpliceMaterial with id {s_item.splice_material_id} is inactive."
             )
 
         unit_price = await self.splice_price_repo.get_price(

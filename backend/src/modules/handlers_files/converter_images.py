@@ -206,12 +206,7 @@ class HandlerImages:
             if total_size == 0:
                 raise InvalidImageFormat("Файл пуст.")
 
-            # Сохранение оригинала до конвертации (если запрошено)
-            if original_dest is not None:
-                original_dest.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copyfile(temp_file_path, original_dest)
-
-            # Выполняем тяжелую конвертацию Pillow в фоновом потоке
+            # Выполняем тяжелую конвертацию Pillow в фоновом потоке (одновременно валидируя изображение)
             await asyncio.to_thread(
                 _convert_image_sync,
                 temp_file_path,
@@ -219,6 +214,11 @@ class HandlerImages:
                 quality,
                 lossless,
             )
+
+            # Сохранение оригинала только ПОСЛЕ успешной проверки и конвертации
+            if original_dest is not None:
+                original_dest.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(temp_file_path, original_dest)
 
         finally:
             # Удаляем временный файл

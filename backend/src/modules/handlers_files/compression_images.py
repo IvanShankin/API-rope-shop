@@ -7,6 +7,9 @@ from typing import Tuple
 from fastapi import UploadFile
 from PIL import Image, ImageSequence, UnidentifiedImageError
 
+# Защита от декомпрессионных бомб (максимум 50 млн пикселей)
+Image.MAX_IMAGE_PIXELS = 50_000_000
+
 from src.core.config import Config
 from src.modules.handlers_files.exception import (
     InvalidImageFormat,
@@ -36,9 +39,13 @@ def _compress_image_sync(
             is_animated = getattr(img, "is_animated", False) and getattr(img, "n_frames", 1) > 1
 
             if is_animated:
+                if getattr(img, "n_frames", 1) > 100:
+                    raise InvalidImageFormat("Анимация содержит слишком много кадров (максимум 100).")
                 frames = []
                 durations = []
-                for frame in ImageSequence.Iterator(img):
+                for idx, frame in enumerate(ImageSequence.Iterator(img)):
+                    if idx >= 100:
+                        break
                     f = frame.copy()
                     if keep_aspect_ratio:
                         f.thumbnail(max_size, Image.Resampling.LANCZOS)

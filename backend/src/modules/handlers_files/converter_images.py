@@ -6,6 +6,9 @@ from typing import Optional, Set
 
 from fastapi import UploadFile
 from PIL import Image, ImageOps, ImageSequence, UnidentifiedImageError
+
+# Защита от декомпрессионных бомб (максимум 50 млн пикселей)
+Image.MAX_IMAGE_PIXELS = 50_000_000
 import pillow_heif
 
 from src.core.config import Config
@@ -38,9 +41,13 @@ def _convert_image_sync(
             )
 
             if is_animated:
+                if getattr(image, "n_frames", 1) > 100:
+                    raise InvalidImageFormat("Анимация содержит слишком много кадров (максимум 100).")
                 frames = []
                 durations = []
-                for frame in ImageSequence.Iterator(image):
+                for idx, frame in enumerate(ImageSequence.Iterator(image)):
+                    if idx >= 100:
+                        break
                     f = ImageOps.exif_transpose(frame) or frame
                     if f.mode in ("RGBA", "LA"):
                         f_conv = f.copy()

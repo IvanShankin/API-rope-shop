@@ -77,11 +77,10 @@ class ContactRequestService:
     async def get_contact(self) -> ContactRequestResponseDTO:
         """
         Получение контактных данных (доступно всем).
-        Если запись в таблице еще не создана, инициализирует дефолтную запись.
         """
         contact = await self.repo.get_first()
         if not contact:
-            contact = await self._initialize_default_contact()
+            raise ContactRequestNotFound("No contact requests found.")
 
         return ContactRequestResponseDTO.model_validate(contact)
 
@@ -110,7 +109,7 @@ class ContactRequestService:
 
         contact = await self.repo.get_first()
         if not contact:
-            contact = await self._initialize_default_contact()
+            raise ContactRequestNotFound("No contact requests found.")
 
         await self.repo.update_contact(contact.id, update_dict)
         await self.session.commit()

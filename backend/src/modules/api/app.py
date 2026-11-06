@@ -151,7 +151,6 @@ async def lifespan(app: FastAPI):
         config=config,
         cr_context=app.state.cr_context,
     )
-    await init_contact_request(config=config)
     await init_settings(config=config)
 
     yield

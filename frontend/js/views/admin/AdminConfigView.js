@@ -1,18 +1,18 @@
-import { captureDisclosures, restoreDisclosures } from './disclosureState.js?v=20261027.10';
-import { AdminNotificationView } from './AdminNotificationView.js?v=20261027.10';
-import { AdminTariffTable } from './AdminTariffTable.js?v=20261028.5';
-import { escapeHtml as esc, displayName } from '../../utils/text.js?v=20261027.10';
-import { configSections } from '../../models/AdminConfigModel.js?v=20261028.8';
-import { mediaUrl } from '../../utils/media.js?v=20261027.10';
-import { API_CONFIG } from '../../api/config.js?v=20261027.10';
+import { captureDisclosures, restoreDisclosures } from './disclosureState.js?v=20261106.1';
+import { AdminNotificationView } from './AdminNotificationView.js?v=20261106.1';
+import { AdminTariffTable } from './AdminTariffTable.js?v=20261106.1';
+import { escapeHtml as esc, displayName } from '../../utils/text.js?v=20261106.1';
+import { configSections } from '../../models/AdminConfigModel.js?v=20261106.1';
+import { mediaUrl } from '../../utils/media.js?v=20261106.1';
+import { langTabsMarkup, bindLangTabs } from './langTabs.js?v=20261106.1';
 function categorySlug(value) {
   const chars = {'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'h','ц':'ts','ч':'ch','ш':'sh','щ':'sch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya','ä':'ae','ö':'oe','ü':'ue','ß':'ss'};
   return [...String(value).toLowerCase()].map(char=>chars[char] ?? char).join('').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,100).replace(/-+$/,'');
 }
 const sectionMenu = {
-  splice_types: ['Заделки и виды работ', 'Какие работы доступны для канатов'],
-  splice_materials: ['Тарифные материалы', 'Группы материалов для расчёта работ'],
-  splice_prices: ['Тарифы работ', 'Цены по работе, материалу и диаметру'],
+  splice_types: ['Заделки', 'Какие концы можно заказать'],
+  splice_materials: ['Тарифные материалы', 'Из чего считается цена заделки'],
+  splice_prices: ['Тарифы работ', 'Цены по работе, группе троса и диаметру'],
   configurator_extras: ['Дополнительные опции', 'Доплаты и дополнительные услуги'],
   material_groups: ['Группы материалов каталога', 'Группы для характеристик каната'],
   materials: ['Материалы каталога', 'Материалы внутри групп'],
@@ -21,42 +21,42 @@ const sectionMenu = {
 const sectionOrder = ['material_groups', 'materials', 'splice_types', 'splice_materials', 'splice_prices', 'configurator_extras', 'configurator_settings'];
 const settingsGroups = [
   ['length', 'Длина каната', ['min_length_m','max_length_m']],
-  ['allowance', 'Запас на заделку', ['splice_allowance_until_mm','splice_allowance_until_m','splice_allowance_over_m']],
+  ['allowance', 'Запас на концы', ['splice_allowance_until_mm','splice_allowance_until_m','splice_allowance_over_m']],
   ['urgency', 'Сроки и срочность', ['standard_turnaround_hours','urgent_turnaround_hours','urgent_surcharge_per_splice','urgent_max_splices']],
   ['vat', 'НДС', ['vat_rate','vat_note']],
 ];
 const settingsHints = {
-  min_length_m:'Минимальная конечная длина одного изделия, которую можно указать.',
-  max_length_m:'Максимальная конечная длина одного изделия, которую можно указать.',
-  splice_allowance_until_mm:'При этом диаметре применяется запас из следующего поля.',
-  splice_allowance_until_m:'Запас на один обработанный конец при диаметре до границы включительно.',
-  splice_allowance_over_m:'Запас на один обработанный конец при диаметре больше границы.',
-  standard_turnaround_hours:'Срок для обычного заказа, в часах.',
-  urgent_turnaround_hours:'Срок для срочного заказа, в часах.',
-  urgent_surcharge_per_splice:'Доплата за каждую работу при выборе срочности.',
-  urgent_max_splices:'При превышении этого количества срочный заказ оформить нельзя. Учитывается количество изделий.',
-  vat_rate:'Ставка НДС сохраняется вместе с заявкой. Укажите значение по вашим условиям.',
-  vat_note:'Текстовая пометка о НДС. Проверьте, что она соответствует вашей ставке и условиям.',
+  min_length_m:'Самая короткая длина изделия.',
+  max_length_m:'Самая длинная длина изделия.',
+  splice_allowance_until_mm:'До какого диаметра действует запас ниже.',
+  splice_allowance_until_m:'Запас на каждый конец до этого диаметра.',
+  splice_allowance_over_m:'Запас на каждый конец больше этого диаметра.',
+  standard_turnaround_hours:'Срок обычного заказа, часов.',
+  urgent_turnaround_hours:'Срок срочного заказа, часов.',
+  urgent_surcharge_per_splice:'Доплата за работу при срочном заказе.',
+  urgent_max_splices:'Больше этого числа срочно заказать нельзя.',
+  vat_rate:'Ваша ставка НДС.',
+  vat_note:'Пометка о НДС.',
 };
 const sectionHints = {
-  categories:{slug:'Часть адреса раздела. Для нового раздела заполняется из названия автоматически.',index:'Чем меньше число, тем выше раздел в списке.'},
-  material_groups:{index:'Чем меньше число, тем выше группа в списке.'},
-  materials:{material_group_id:'Выберите группу материала. В текущей карточке товара отдельный материал не выбирается.',index:'Порядок материала внутри группы.'},
-  splice_types:{category:'Выберите группу, в которой покупатель будет искать работу.',visual_type:'Определяет изображение работы на схеме.',index:'Чем меньше число, тем выше работа в списке.'},
-  splice_materials:{name:'Материал или ценовая группа для расчёта стоимости заделки.'},
-  splice_prices:{splice_type_id:'Работа, для которой действует этот тариф.',splice_material_id:'Тарифный материал каната.',diameter_from_mm:'Нижняя граница включительно. Пустое поле — без нижней границы.',diameter_to_mm:'Верхняя граница включительно. Пустое поле — без верхней границы.',price:'Цена одной выбранной работы для этого материала и диапазона диаметра.'},
-  configurator_extras:{price:'Стоимость опции; итог зависит от выбранного способа начисления.',billing_type:'За заказ — один раз; за изделие / работу — по количеству; за метр — по длине каната. Начисление за метр доступно для заказа каната.',index:'Чем меньше число, тем выше опция в списке.'},
+  categories:{slug:'Заполнится из названия.',index:'Меньше — выше.'},
+  material_groups:{index:'Меньше — выше.'},
+  materials:{material_group_id:'Группа материала; в карточке товара выбирается она.',index:'Место материала в группе.'},
+  splice_types:{category:'Где покупатель ищет работу.',visual_type:'Вид на схеме в конфигураторе.',index:'Меньше — выше.'},
+  splice_materials:{name:'Из чего считается цена.'},
+  splice_prices:{splice_type_id:'Для какой работы цена.',splice_material_id:'Для какой группы троса.',diameter_from_mm:'С какого диаметра. Пусто — без ограничения.',diameter_to_mm:'До какого диаметра. Пусто — без ограничения.',price:'Цена работы для этой группы и диаметра.'},
+  configurator_extras:{price:'Стоимость опции; итог зависит от начисления.',billing_type:'За заказ, за изделие или за метр.',index:'Меньше — выше.'},
 };
 export class AdminConfigView {
-  constructor(root, { sections = sectionOrder.filter(key => API_CONFIG.CATALOG_V2 || !['material_groups', 'materials'].includes(key)), title = 'Конфигуратор' } = {}) {
+  constructor(root, { sections = sectionOrder, title = 'Конфигуратор и цены' } = {}) {
     this.root=root;this.events=new AbortController();this.baseline='';
     this.pendingImage = null; this.pendingImageUrl = '';
     this.sectionCards = root.id === 'panel-configurator' && sections.length > 1;
     root.removeAttribute('data-savable');
     root.innerHTML=`<header class="panel__head"><h1 class="panel__title">${esc(title)}</h1></header>
-      <p>${this.sectionCards ? 'Заполняйте разделы по порядку: сначала справочники, затем тарифы и настройки. После этого можно добавить товары и выбрать для них созданные данные. Цены указаны в евро.' : (sections.includes('material_groups') || sections.includes('categories')) ? 'Здесь находятся разделы, которые видны в каталоге сайта. Выберите запись, чтобы изменить название, переводы или порядок.' : 'Выберите вид настройки, затем запись. Цены указаны в евро. Каждая форма сохраняется отдельно.'}</p>
-      ${this.sectionCards ? `<nav class="config-section-menu" aria-label="Разделы настроек конфигуратора">${sections.map(key=>{const [name,description]=sectionMenu[key]||[configSections[key]?.title||key,''];return `<button type="button" class="config-section-card" data-config-section-choice="${esc(key)}" aria-pressed="false"><span class="config-section-card__name">${esc(name)}</span><span class="config-section-card__hint">${esc(description)}</span></button>`;}).join('')}</nav>` : ''}
-      <div class="config-admin-toolbar"><label class="field"${sections.length === 1 || this.sectionCards ? ' hidden' : ''}>Что редактируем<select class="field__input" data-config-section${this.sectionCards ? ' data-native-select' : ''}>${sections.map(key=>`<option value="${key}">${esc(key === 'material_groups' ? 'Разделы каталога' : configSections[key]?.title || 'Доступные заделки канатов')}</option>`).join('')}</select></label>
+      <p>${this.sectionCards ? 'Заполняйте разделы по порядку. Цены — в евро.' : (sections.includes('material_groups') || sections.includes('categories')) ? 'Разделы каталога. Выберите запись, чтобы изменить название, переводы или место.' : 'Выберите вид настройки, затем запись. Цены — в евро.'}</p>
+      ${this.sectionCards ? `<nav class="config-section-menu" aria-label="Разделы конфигуратора и цен">${sections.map(key=>{const [name,description]=sectionMenu[key]||[configSections[key]?.title||key,''];return `<button type="button" class="config-section-card" data-config-section-choice="${esc(key)}" aria-pressed="false"><span class="config-section-card__name">${esc(name)}</span><span class="config-section-card__hint">${esc(description)}</span></button>`;}).join('')}</nav>` : ''}
+      <div class="config-admin-toolbar"><label class="field"${sections.length === 1 || this.sectionCards ? ' hidden' : ''}>Что редактируем<select class="field__input" data-config-section${this.sectionCards ? ' data-native-select' : ''}>${sections.map(key=>`<option value="${key}">${esc(key === 'material_groups' ? 'Разделы каталога' : configSections[key]?.title || 'Заделки')}</option>`).join('')}</select></label>
       <button class="btn" data-config-new type="button">Добавить</button><button class="btn" data-config-refresh type="button">Обновить</button></div>
       <div data-config-record></div><p data-config-status role="status"></p><div data-config-editor></div>`;
     this.recordList = new AdminTariffTable(root.querySelector('[data-config-record]'), this.events.signal);
@@ -102,12 +102,13 @@ export class AdminConfigView {
       form.elements.slug.value = candidate;
     }, opts);
     window.addEventListener('beforeunload',e=>{if(this.dirty()){e.preventDefault();e.returnValue='';}},opts);
+    bindLangTabs(this.root, this.events.signal);
   }
   values(){return Object.fromEntries(Array.from(this.root.querySelector('form')?.elements || []).filter(e=>e.name).map(e=>[e.name,e.type==='checkbox'?e.checked:e.value]));}
   remember(){this.baseline=JSON.stringify(this.values());}
   editorDirty(){return Boolean(this.pendingImage || (this.baseline && this.baseline!==JSON.stringify(this.values())));}
   dirty(){return this.editorDirty() || Boolean(this.recordList.priceDrafts?.size);}
-  allowDiscard(includePrices=true){return !(includePrices ? this.dirty() : this.editorDirty()) || window.confirm('Отбросить несохранённые изменения справочника?');}
+  allowDiscard(includePrices=true){return !(includePrices ? this.dirty() : this.editorDirty()) || window.confirm('Отменить несохранённые изменения?');}
   message(text, type = 'info') { AdminNotificationView.message(this.root.querySelector('[data-config-status]'), text, type); }
   busy(value){this.root.querySelectorAll('input,select,button,textarea').forEach(e=>e.disabled=value);this.recordList.busy(value);}
   clear(){this.root.querySelector('[data-config-editor]').replaceChildren();this.baseline='';this.recordList.select(null);}
@@ -122,7 +123,7 @@ export class AdminConfigView {
       const material=sources.splice_materials?.find(type=>Number(type.id)===Number(item.splice_material_id));
       return {id:item.product_id??item.id,
         label:section==='splice_prices'?`${displayName(work)||`Работа #${item.splice_type_id}`} · ${displayName(material)||`Материал #${item.splice_material_id}`}`:displayName(item)||item.construction||`Запись #${item.id}`,
-        detail:[section==='splice_prices'?String(item.price)+' EUR · '+String(item.diameter_from_mm??'−∞')+'–'+String(item.diameter_to_mm??'∞')+' мм':'',item.is_active===false?'Неактивен':''].filter(Boolean).join(' · '),
+        detail:[section==='splice_prices'?String(item.price)+' € · '+String(item.diameter_from_mm??'−∞')+'–'+String(item.diameter_to_mm??'∞')+' мм':'',item.is_active===false?'Скрыт с сайта':''].filter(Boolean).join(' · '),
         search:(item.translations||[]).map(t=>t.name).join(' '), image:mediaUrl(item.image_url)};
     }));
     this.recordList.root.hidden=Boolean(configSections[section]?.singleton);
@@ -138,7 +139,7 @@ export class AdminConfigView {
     const value=name=>form.elements.namedItem(name)?.value.trim() || '';
     const [limit,under,over]=['splice_allowance_until_mm','splice_allowance_until_m','splice_allowance_over_m'].map(value);
     const allowance=form.querySelector('[data-settings-allowance-example]');
-    allowance.textContent=limit && under!=='' && over!=='' ? `На каждый обработанный конец: до ${limit} мм включительно — ${under} м; свыше ${limit} мм — ${over} м. Запас прибавляется к оплачиваемой длине каната.` : 'Заполните границу диаметра и оба значения запаса, чтобы увидеть правило.';
+    allowance.textContent=limit && under!=='' && over!=='' ? `На каждый конец: до ${limit} мм включительно — ${under} м; больше — ${over} м. Прибавляется к длине каната.` : 'Заполните границу и оба запаса, чтобы увидеть правило.';
     for(const name of ['standard_turnaround_hours','urgent_turnaround_hours']){
       const output=form.querySelector(`[data-settings-days="${name}"]`), raw=value(name), hours=Number(raw);
       output.textContent=raw!=='' && Number.isFinite(hours) && hours>=0 ? `Это ${new Intl.NumberFormat('ru-RU',{maximumFractionDigits:2}).format(hours/24)} суток (по 24 часа).` : '';
@@ -164,12 +165,17 @@ export class AdminConfigView {
     };
     const fields=schema.fields.map(renderField).join('');
     const settingsFields=section==='configurator_settings' ? settingsGroups.map(([key,title,names])=>`<details class="admin-disclosure" data-editor-disclosure="settings-${key}" open><summary>${title}</summary>${key==='allowance'?'<p class="admin-settings-example" data-settings-allowance-example></p>':''}<div class="admin-fields">${names.map(name=>renderField(schema.fields.find(field=>field.name===name))).join('')}</div></details>`).join('') : '';
-    const translations=schema.translated?['rus','eng','ger'].map(locale=>{const t=item.translations?.find(t=>t.locale===locale)||{};return `<div class="admin-language-heading">${{rus:'Русский',eng:'English',ger:'Deutsch'}[locale]}</div><label class="field">Название ${locale.toUpperCase()}<input class="field__input" name="name_${locale}" maxlength="255" value="${esc(t.name||'')}"></label>${schema.description?`<label class="field">Описание ${locale.toUpperCase()}<textarea class="field__input" name="description_${locale}" rows="3">${esc(t.description||'')}</textarea></label>`:''}`;}).join(''):'';
-    this.root.querySelector('[data-config-editor]').innerHTML=`<h2>${esc(schema.title)}${item.id?` #${item.id}`:''}</h2><form class="product-editor admin-card" ${section==='configurator_settings'?'data-settings-form':''}><div class="admin-disclosures-group">${section==='configurator_settings'?settingsFields:`<details class="admin-disclosure" data-editor-disclosure="parameters" open><summary>Основные параметры</summary><div class="admin-fields">${fields}</div></details>`}${translations ? `<details class="admin-disclosure" data-editor-disclosure="translations" open><summary>Названия и переводы</summary><p class="admin-editor-hint">Заполните название хотя бы на одном языке. Остальные переводы можно добавить позже.</p><div class="admin-fields">${translations}</div></details>` : ''}</div><div class="admin-form-actions"><button class="btn btn--primary" type="submit">Сохранить</button>${item.id&&!schema.singleton?'<button class="btn btn--danger" type="button" data-config-remove>Удалить запись</button>':''}</div></form>${((section==='categories') || (section==='splice_types'&&item.id))?`<div class="config-admin-upload admin-card">
+    const translation=locale=>item.translations?.find(t=>t.locale===locale)||{};
+    const translations=schema.translated?langTabsMarkup({
+      label:'Язык названия',
+      filled:Object.fromEntries(['rus','eng','ger'].map(locale=>[locale,Boolean(translation(locale).name||translation(locale).description)])),
+      panels:Object.fromEntries(['rus','eng','ger'].map(locale=>{const t=translation(locale);const short={rus:'(рус.)',eng:'(англ.)',ger:'(нем.)'}[locale];return [locale,`<div class="admin-fields"><label class="field">Название ${short}<input class="field__input" name="name_${locale}" maxlength="255" value="${esc(t.name||'')}"></label>${schema.description?`<label class="field">Описание ${short}<textarea class="field__input" name="description_${locale}" rows="3">${esc(t.description||'')}</textarea></label>`:''}</div>`];})),
+    }):'';
+    this.root.querySelector('[data-config-editor]').innerHTML=`<h2>${esc(schema.title)}${item.id?` #${item.id}`:''}</h2><form class="product-editor admin-card" ${section==='configurator_settings'?'data-settings-form':''}><div class="admin-disclosures-group">${section==='configurator_settings'?settingsFields:`<details class="admin-disclosure" data-editor-disclosure="parameters" open><summary>Основные параметры</summary><div class="admin-fields">${fields}</div></details>`}${translations ? `<details class="admin-disclosure" data-editor-disclosure="translations" open><summary>Названия и переводы</summary><p class="admin-editor-hint">Заполните название хотя бы на одном языке.</p>${translations}</details>` : ''}</div><div class="admin-form-actions"><button class="btn btn--primary" type="submit">Сохранить</button>${item.id&&!schema.singleton?'<button class="btn btn--danger" type="button" data-config-remove>Удалить запись</button>':''}</div></form>${((section==='categories') || (section==='splice_types'&&item.id))?`<div class="config-admin-upload admin-card">
       <span class="field__label">Изображение записи</span>
       <input type="file" accept=".jpg,.jpeg,.png,.webp,.heic,.heif" data-image-file hidden>
       <button class="btn btn--primary" type="button" data-image-choose aria-describedby="${this.root.id}-image-hint">Выбрать изображение</button>
-      <p class="field__hint" id="${this.root.id}-image-hint">${section==='categories'&&!item.id?'Будет загружено после сохранения категории.':'Загрузится сразу после выбора.'} JPG, PNG, WebP, HEIC или HEIF — до 10 МБ.</p>
+      <p class="field__hint" id="${this.root.id}-image-hint">${section==='categories'&&!item.id?'Будет загружено после сохранения категории.':'Загрузится сразу после выбора.'} JPG, PNG, WebP, HEIC/HEIF — до 10 МБ.</p>
       <p class="config-admin-upload__status" data-image-upload-status role="status"></p>
     </div>`:''}`;
     restoreDisclosures(this.root, disclosureState);
@@ -177,8 +183,8 @@ export class AdminConfigView {
     this.remember();
     if(section==='categories'||(section==='splice_types'&&item.id)){this.root.querySelector('.config-admin-upload').insertAdjacentHTML('beforebegin','<div data-image-preview></div>');if(this.pendingImage)this.showPendingImage(this.pendingImage);else this.image(item.image_url);}
     const known=(item.translations||[]).filter(t=>t.id&&!t.fallback);
-    if(schema.translated&&item.id&&known.length>1)this.root.querySelector('[data-config-editor]').insertAdjacentHTML('beforeend',`<h3>Удалить отдельный перевод</h3><p>Последний перевод удалить нельзя. После удаления сервер может показывать название на другом языке.</p><div class="config-admin-toolbar">${known.map(t=>`<button class="btn btn--danger" type="button" data-config-translation-remove="${Number(t.id)}">Удалить ${esc(t.locale.toUpperCase())}</button>`).join('')}</div>`);
-    if(['splice_types','categories'].includes(section)&&item.id&&!known.length)this.root.querySelector('[data-config-editor]').insertAdjacentHTML('beforeend','<p>Чтобы открыть удаление отдельных переводов, сначала сохраните запись: список заделок возвращает названия с подстановкой языка, а полный состав переводов приходит в ответе сохранения.</p>');
+    if(schema.translated&&item.id&&known.length>1)this.root.querySelector('[data-config-editor]').insertAdjacentHTML('beforeend',`<h3>Удалить перевод</h3><p>Один язык должен остаться, иначе покажется другой.</p><div class="config-admin-toolbar">${known.map(t=>`<button class="btn btn--danger" type="button" data-config-translation-remove="${Number(t.id)}">Удалить ${{rus:'(рус.)',eng:'(англ.)',ger:'(нем.)'}[t.locale] || t.locale.toUpperCase()}</button>`).join('')}</div>`);
+    if(['splice_types','categories'].includes(section)&&item.id&&!known.length)this.root.querySelector('[data-config-editor]').insertAdjacentHTML('beforeend','<p>Переводы появятся после сохранения записи.</p>');
   }
   setPendingImage(file){
     this.clearPendingImage(); this.pendingImage=file;
@@ -212,6 +218,6 @@ export class AdminConfigView {
       : state === 'error' ? `Не удалось загрузить: ${filename}. Для повтора выберите файл ещё раз.`
       : '';
   }
-  renderLinks(types,links){const ids=links.map(l=>Number(l.splice_type_id));this.root.querySelector('[data-config-editor]').innerHTML=`<p>Выберите разрешённые обработки. Пустой список в текущем API означает отсутствие ограничений.</p><form class="product-editor admin-card"><div class="admin-checkbox-grid">${types.map(t=>`<label class="admin-toggle"><input type="checkbox" name="splice_${Number(t.id)}" ${ids.includes(Number(t.id))?'checked':''}><span>${esc(displayName(t))}${t.is_active===false?' (неактивна)':''}</span></label>`).join('')}</div><div class="admin-form-actions"><button class="btn btn--primary" type="submit">Сохранить заделки каната</button></div></form>`;this.remember();}
+  renderLinks(types,links){const ids=links.map(l=>Number(l.splice_type_id));this.root.querySelector('[data-config-editor]').innerHTML=`<p>Отметьте доступные концы. Пусто — доступны все варианты.</p><form class="product-editor admin-card"><div class="admin-checkbox-grid">${types.map(t=>`<label class="admin-toggle"><input type="checkbox" name="splice_${Number(t.id)}" ${ids.includes(Number(t.id))?'checked':''}><span>${esc(displayName(t))}${t.is_active===false?' (отключена)':''}</span></label>`).join('')}</div><div class="admin-form-actions"><button class="btn btn--primary" type="submit">Сохранить заделки</button></div></form>`;this.remember();}
   destroy(){this.clearPendingImage();this.events.abort();}
 }

@@ -1,19 +1,18 @@
-import {AdminSettingsController} from './AdminSettingsController.js?v=20261028.16';
-import {AdminContactsController} from './AdminContactsController.js?v=20261027.10';
-import {AdminReviewsController} from './AdminReviewsController.js?v=20261028.16';
-import { BaseController } from './BaseController.js?v=20261027.10';
-import { AuthModel } from '../models/AuthModel.js?v=20261027.10';
-import { authApi } from '../api/authApi.js?v=20261027.10';
-import { AdminView } from '../views/admin/AdminView.js?v=20261027.10';
-import { quoteApi } from '../api/quoteApi.js?v=20261027.10';
-import { AdminNotificationView as NotificationView } from '../views/admin/AdminNotificationView.js?v=20261027.10';
-import { AdminProductsController } from './AdminProductsController.js?v=20261028.18';
-import { API_CONFIG } from '../api/config.js?v=20261027.10';
-import { AdminContentController } from './AdminContentController.js?v=20261028.16';
-import { AdminColorsController } from './AdminColorsController.js?v=20261028.16';
-import { AdminConfigController } from './AdminConfigController.js?v=20261028.16';
-import { AdminRequestModel } from '../models/AdminRequestModel.js?v=20261027.10';
-import { AdminNavigation } from '../core/AdminNavigation.js?v=20261028.13';
+import {AdminSettingsController} from './AdminSettingsController.js?v=20261106.1';
+import {AdminContactsController} from './AdminContactsController.js?v=20261106.1';
+import {AdminReviewsController} from './AdminReviewsController.js?v=20261106.1';
+import { BaseController } from './BaseController.js?v=20261106.1';
+import { AuthModel } from '../models/AuthModel.js?v=20261106.1';
+import { authApi } from '../api/authApi.js?v=20261106.1';
+import { AdminView } from '../views/admin/AdminView.js?v=20261106.1';
+import { quoteApi } from '../api/quoteApi.js?v=20261106.1';
+import { AdminNotificationView as NotificationView } from '../views/admin/AdminNotificationView.js?v=20261106.1';
+import { AdminProductsController } from './AdminProductsController.js?v=20261106.1';
+import { AdminContentController } from './AdminContentController.js?v=20261106.1';
+import { AdminColorsController } from './AdminColorsController.js?v=20261106.1';
+import { AdminConfigController } from './AdminConfigController.js?v=20261106.1';
+import { AdminRequestModel } from '../models/AdminRequestModel.js?v=20261106.1';
+import { AdminNavigation } from '../core/AdminNavigation.js?v=20261106.1';
 
 export class AdminController extends BaseController {
   constructor() {
@@ -60,15 +59,12 @@ export class AdminController extends BaseController {
     this.productsController = new AdminProductsController(this.view.$('#panel-catalog'));
     this.colorsController = new AdminColorsController(this.view.$('#panel-colors'));
     this.configController = new AdminConfigController(this.view.$('#panel-configurator'));
-    this.groupsController = new AdminConfigController(this.view.$('#panel-groups'), { sections: [API_CONFIG.CATALOG_V2 ? 'categories' : 'material_groups'], title: 'Разделы каталога', onCatalogChanged: () => this.productsController.refreshGroups() });
-    if(API_CONFIG.CATALOG_V2) {
-      this.contentController=new AdminContentController(this.view.$('#panel-content'));
-      this.settingsController=new AdminSettingsController(this.view.$('#panel-settings'));
-      this.contactsController=new AdminContactsController(this.view.$('#panel-contacts'));
-      this.reviewsController=new AdminReviewsController(this.view.$('#panel-reviews'));
-      this.galleryController=new AdminContentController(this.view.$('#panel-gallery'),true);
-      this.view.root.querySelectorAll('[data-next-content]').forEach(el=>el.hidden=false);
-    }
+    this.groupsController = new AdminConfigController(this.view.$('#panel-groups'), { sections: ['categories'], title: 'Разделы каталога', onCatalogChanged: () => this.productsController.refreshGroups() });
+    this.contentController=new AdminContentController(this.view.$('#panel-content'));
+    this.settingsController=new AdminSettingsController(this.view.$('#panel-settings'));
+    this.contactsController=new AdminContactsController(this.view.$('#panel-contacts'));
+    this.reviewsController=new AdminReviewsController(this.view.$('#panel-reviews'));
+    this.galleryController=new AdminContentController(this.view.$('#panel-gallery'),true);
     // Reveal invalid inputs in collapsed blocks before native form validation focuses them.
     let validationNoticePending = false;
     this.view.root.addEventListener('invalid', event => {
@@ -80,13 +76,12 @@ export class AdminController extends BaseController {
         queueMicrotask(() => { validationNoticePending = false; });
       }
     }, true);
-    this.view.showUnavailablePanels();
     this.view.setAdminUser(user);
     this.view.$('[data-requests-refresh]')?.addEventListener('click', () => this.loadRequests());
     this.requestOffset = 0;
     const controls=document.createElement('form');
     controls.className='config-admin-toolbar';
-    controls.innerHTML='<label class="field">Поиск заявки<input class="field__input" name="search" placeholder="Номер, имя, email"></label><button class="btn" type="submit">Найти</button><button class="btn" type="button" data-page-prev>Назад</button><button class="btn" type="button" data-page-next>Далее</button><span data-page-status></span>';
+    controls.innerHTML='<label class="field">Поиск заявки<input class="field__input" name="search" placeholder="Номер, имя или почта"></label><button class="btn" type="submit">Найти</button><button class="btn" type="button" data-page-prev>Назад</button><button class="btn" type="button" data-page-next>Далее</button><span data-page-status></span>';
     this.view.$('#admin-requests-list').before(controls);this.requestControls=controls;
     const filtersBlock = document.createElement('details');
     filtersBlock.className = 'admin-disclosure';
@@ -94,7 +89,7 @@ export class AdminController extends BaseController {
     filtersTitle.textContent = 'Поиск и фильтры заявок';
     controls.before(filtersBlock);
     filtersBlock.append(filtersTitle, controls);
-    controls.querySelector('[name=search]').closest('label').insertAdjacentHTML('afterend',`<label class="field">Вид заказа<select class="field__input" name="configurator_type"><option value="">Все</option><option value="rope_with_splice">Канат</option><option value="loop_only">Петли на своём канате</option><option value="splice_only">Сращивание и обработка</option></select></label><label class="field">Срочность<select class="field__input" name="is_urgent"><option value="">Все</option><option value="true">Срочные</option><option value="false">Обычные</option></select></label><label class="field">Сортировка<select class="field__input" name="sort_by"><option value="created_at">Дата создания</option><option value="updated_at">Дата изменения</option><option value="total_price">Сумма</option><option value="request_number">Номер заявки</option></select></label><label class="field">Порядок<select class="field__input" name="sort_order"><option value="desc">По убыванию</option><option value="asc">По возрастанию</option></select></label>`);
+    controls.querySelector('[name=search]').closest('label').insertAdjacentHTML('afterend',`<label class="field">Вид заказа<select class="field__input" name="configurator_type"><option value="">Все</option><option value="rope_with_splice">Канат</option><option value="loop_only">Только петли</option><option value="splice_only">Сращивание</option></select></label><label class="field">Срочность<select class="field__input" name="is_urgent"><option value="">Все</option><option value="true">Срочные</option><option value="false">Обычные</option></select></label><label class="field">Сортировать по<select class="field__input" name="sort_by"><option value="created_at">Дате создания</option><option value="updated_at">Дате изменения</option><option value="total_price">Сумме</option><option value="request_number">Номеру заявки</option></select></label><label class="field">Направление<select class="field__input" name="sort_order"><option value="desc">По убыванию</option><option value="asc">По возрастанию</option></select></label>`);
     controls.addEventListener('submit',e=>{e.preventDefault();this.loadRequests(false,0);});
     controls.querySelector('[data-page-prev]').addEventListener('click',()=>this.loadRequests(false,Math.max(0,this.requestOffset-50)));
     controls.querySelector('[data-page-next]').addEventListener('click',()=>this.loadRequests(false,this.requestOffset+50));
@@ -112,18 +107,6 @@ export class AdminController extends BaseController {
         catch (err) { console.warn('Не удалось завершить сессию на сервере:', err); }
         finally { window.location.replace('/login/'); }
       });
-    }
-
-    // Подгружаем заявки
-  }
-
-  async handleTabChange(tabName) {
-    if (tabName === 'groups' && !this.groupsController.ready) await this.groupsController.load();
-    if (tabName === 'configurator' && !this.configController.ready) await this.configController.load();
-    if (tabName === 'colors' && !this.colorsController.ready) await this.colorsController.load();
-    if (tabName === 'catalog' && !this.productsController.ready) await this.productsController.load();
-    if (tabName === 'requests') {
-      await this.loadRequests();
     }
   }
 
@@ -152,7 +135,7 @@ export class AdminController extends BaseController {
     try {
       const filters=Object.fromEntries(new FormData(this.requestControls));
       const requests = await quoteApi.listQuoteRequests({...filters,skip:this.requestOffset,limit:50});
-      if (!Array.isArray(requests)) throw new Error('Некорректный ответ сервера');
+      if (!Array.isArray(requests)) throw new Error('Сайт не ответил');
       this.requestControls.querySelector('[data-page-prev]').disabled=this.requestOffset===0;
       this.requestControls.querySelector('[data-page-next]').disabled=requests.length<50;
       this.requestControls.querySelector('[data-page-status]').textContent=`Страница ${this.requestOffset/50+1}`;
@@ -168,7 +151,7 @@ export class AdminController extends BaseController {
         reload:()=>this.loadRequests(true),
       });
     } catch (err) {
-      this.view.showRequestsStatus(`Не удалось загрузить заявки. ${err.message}. Нажмите «Обновить».`, 'error');
+      this.view.showRequestsStatus('Не удалось загрузить заявки. Нажмите «Обновить».', 'error');
     } finally {
       this.loadingRequests = false;
     }

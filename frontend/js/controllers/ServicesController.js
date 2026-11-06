@@ -1,17 +1,29 @@
-import { loadErrorMessage } from '../ui/load-state.js?v=20261027.10';
-import { configuratorApi } from '../api/configuratorApi.js?v=20261027.10';
-import { quoteApi } from '../api/quoteApi.js?v=20261027.10';
-import { ServiceConfiguratorModel } from '../models/ServiceConfiguratorModel.js?v=20261027.10';
-import { ServiceConfiguratorView } from '../views/configurator/ServiceConfiguratorView.js?v=20261027.10';
+import { loadErrorMessage } from '../ui/load-state.js?v=20261106.1';
+import { configuratorApi } from '../api/configuratorApi.js?v=20261106.1';
+import { quoteApi } from '../api/quoteApi.js?v=20261106.1';
+import { QuoteCalculator } from '../api/quoteCalculator.js?v=20261106.1';
+import { ServiceConfiguratorModel } from '../models/ServiceConfiguratorModel.js?v=20261106.1';
+import { ServiceConfiguratorView } from '../views/configurator/ServiceConfiguratorView.js?v=20261106.1';
 
 class ServiceController {
   constructor(root) {
     this.model = new ServiceConfiguratorModel(root.dataset.serviceMode === 'loops' ? 'loop_only' : 'splice_only');
     this.view = new ServiceConfiguratorView(root);
+    this.calculator = new QuoteCalculator({
+      onResult: (quote, key) => { this.model.setQuote(quote, key); this.render(); },
+      onError: (error, key) => { this.model.setPriceError(error, key); this.render(); },
+    });
     this.view.bind({ change: (name, value) => {
       if (this.busy || this.sent) return;
-      this.model.set(name, value); this.view.render(this.model.calculate());
-    }, submit: customer => this.submit(customer), retry: () => this.load() });
+      this.model.set(name, value); this.update();
+    }, submit: customer => this.submit(customer), retry: () => this.load(),
+    priceRetry: () => this.calculator.retry(this.model.calcPayload()) });
+  }
+  render() { this.view.render(this.model.summary()); }
+  // Перерисовать сразу и попросить у сервера цену для новых параметров.
+  update() {
+    this.render();
+    if (!this.sent) this.calculator.schedule(this.model.summary().status === 'loading' ? this.model.calcPayload() : null);
   }
   async load() {
     if (this.loading || this.busy || this.sent || this.destroyed) return;
@@ -28,6 +40,7 @@ class ServiceController {
       }
       this.view.populate(this.model);
       this.view.statusMessage('ready');
+      this.update();
     } catch (error) { if (!this.destroyed) this.view.statusMessage('error', loadErrorMessage(error)); }
     finally { this.loading = false; }
   }
@@ -47,7 +60,7 @@ class ServiceController {
       this.view.result(`${error.message}. При потере связи заявка могла сохраниться — уточните результат перед повторной отправкой.`);
     } finally { this.busy = false; this.view.setBusy(false, this.sent); }
   }
-  destroy() { this.destroyed = true; this.view.destroy(); }
+  destroy() { this.destroyed = true; this.calculator.cancel(); this.view.destroy(); }
 }
 
 export class ServicesController {

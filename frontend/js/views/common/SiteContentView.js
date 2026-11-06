@@ -1,9 +1,9 @@
-import {contentSlots} from '../../models/SiteContentModel.js?v=20261027.10';
-import {siteContentApi as api} from '../../api/siteContentApi.js?v=20261027.10';
-import {apiLocale} from '../../i18n/locale.js?v=20261027.10';
-import {escapeHtml as esc} from '../../utils/text.js?v=20261027.10';
-import {mediaUrl} from '../../utils/media.js?v=20261027.10';
-import {translate as t} from '../../i18n/translate.js?v=20261027.10';
+import {contentSlots} from '../../models/SiteContentModel.js?v=20261106.1';
+import {siteContentApi as api} from '../../api/siteContentApi.js?v=20261106.1';
+import {apiLocale} from '../../i18n/locale.js?v=20261106.1';
+import {escapeHtml as esc} from '../../utils/text.js?v=20261106.1';
+import {mediaUrl} from '../../utils/media.js?v=20261106.1';
+import {translate as t} from '../../i18n/translate.js?v=20261106.1';
 
 export function renderBlocks(page,blocks,root=document) {
   for(const slot of contentSlots.filter(s=>s.page===page)) {

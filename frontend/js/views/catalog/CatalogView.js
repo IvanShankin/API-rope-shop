@@ -1,9 +1,9 @@
-import { catalogLink, updateLoadState } from '../../ui/load-state.js?v=20261027.10';
-import { BaseView } from '../BaseView.js?v=20261027.10';
-import { escapeHtml as esc } from '../../utils/text.js?v=20261027.10';
-import { translate } from '../../i18n/translate.js?v=20261027.10';
-import { getLanguage } from '../../i18n/locale.js?v=20261027.10';
-import { mediaUrl } from '../../utils/media.js?v=20261027.10';
+import { catalogLink, updateLoadState } from '../../ui/load-state.js?v=20261106.1';
+import { BaseView } from '../BaseView.js?v=20261106.1';
+import { escapeHtml as esc } from '../../utils/text.js?v=20261106.1';
+import { translate } from '../../i18n/translate.js?v=20261106.1';
+import { getLanguage } from '../../i18n/locale.js?v=20261106.1';
+import { mediaUrl } from '../../utils/media.js?v=20261106.1';
 
 const filterLabels = {
   title: ['Фильтр', 'Filter', 'Filter'],
@@ -23,12 +23,17 @@ export class CatalogView extends BaseView {
     super(root);
     if (!this.root) return;
     this.groupsPage = this.root.dataset.catalog === 'groups';
+    const staticSkeleton = this.root.querySelector(this.groupsPage ? '.catalog__list--skeleton' : '[data-catalog-skeleton]');
+    this.initialSkeleton = staticSkeleton
+      ? this.groupsPage ? [staticSkeleton] : [...staticSkeleton.children]
+      : [];
     this.container = document.createElement('div');
     this.container.className = this.groupsPage ? 'catalog__inner' : 'products__items';
     this.root.replaceChildren(this.container);
+    this.container.append(...this.initialSkeleton);
     if (!this.groupsPage) {
       this.root.classList.add('products--filtered');
-      this.sidebar = document.createElement('aside');
+      this.sidebar = document.createElement('section');
       this.sidebar.className = 'catalog-filter';
       this.sidebar.hidden = true;
       this.sidebar.setAttribute('aria-label', label('title'));
@@ -48,7 +53,8 @@ export class CatalogView extends BaseView {
     if (!this.sidebar) return;
     const codes = [...new Set([...options.constructions, filters.construction].filter(Boolean))];
     const diameters = [...new Set([...options.diameters, filters.diameter].filter(Boolean).map(Number))].sort((a, b) => a - b);
-    this.sidebar.innerHTML = `<fieldset class="catalog-filter__fields">
+    this.sidebar.innerHTML = `<h2 class="catalog-filter__title">${label('title')}</h2>
+        <fieldset class="catalog-filter__fields">
         <label class="catalog-filter__field">${label('construction')}
           <select name="construction" class="catalog-filter__select"><option value="">${label('all')}</option>${codes.map(code => `<option value="${esc(code)}">${esc(constructions.find(c => c.code === code)?.name || code)}</option>`).join('')}</select>
         </label>
@@ -99,6 +105,13 @@ export class CatalogView extends BaseView {
     status.setAttribute('role', 'status');
     status.textContent = message;
     this.container.replaceChildren(status);
+    if (state === 'loading') {
+      if (this.initialSkeleton.length) this.container.append(...this.initialSkeleton);
+      else this.container.insertAdjacentHTML('beforeend', this.skeletonMarkup());
+      this.container.setAttribute('aria-busy', 'true');
+    } else {
+      this.container.setAttribute('aria-busy', 'false');
+    }
     updateLoadState(this.root, status, state);
     this.catalogLink.hidden = this.groupsPage || state === 'loading';
     if (this.retry) this.retry.hidden = !retry;
@@ -106,10 +119,56 @@ export class CatalogView extends BaseView {
     if (this.sidebar?.querySelector('fieldset')) this.sidebar.querySelector('fieldset').disabled = true;
   }
 
+  skeletonMarkup() {
+    if (this.groupsPage) {
+      const cards = Array.from({ length: 6 }, (_, index) => `<li class="catalog__item${index === 0 ? ' catalog__item--wide' : index === 1 ? ' catalog__item--medium' : ''}">
+        <div class="catalog__card catalog__card--skeleton">
+          <span class="skeleton skeleton--cover"></span>
+          <span class="skeleton-lines">
+            <span class="skeleton skeleton--title"></span>
+            <span class="skeleton skeleton--text"></span>
+            <span class="skeleton skeleton--price"></span>
+          </span>
+        </div>
+      </li>`);
+      return `<ul class="catalog__list catalog__list--skeleton" aria-hidden="true">${cards.join('')}</ul>`;
+    }
+    const table = `<span class="skeleton skeleton--cell skeleton--cell-head"></span>`.repeat(4) + `<span class="skeleton skeleton--cell"></span>`.repeat(12);
+    return Array.from({ length: 3 }, () => `<article class="product product--skeleton" aria-hidden="true">
+        <div class="product__gallery">
+          <div class="product__media"><span class="skeleton skeleton--fill"></span></div>
+        </div>
+        <div class="product__info">
+          <span class="skeleton skeleton--heading"></span>
+          <span class="skeleton skeleton--text"></span>
+          <span class="skeleton skeleton--text skeleton--text-short"></span>
+          <div class="skeleton-table">${table}</div>
+        </div>
+      </article>`).join('');
+  }
+
+  groupColumnClasses(total) {
+    if (total <= 0) return [];
+    if (total === 1) return ['catalog__item--full'];
+    const classes = ['catalog__item--wide', 'catalog__item--medium'];
+    const rest = total - 2;
+    if (rest <= 0) return classes;
+    const rows = Math.ceil(rest / 4);
+    const base = Math.floor(rest / rows);
+    const extra = rest % rows;
+    for (let row = 0; row < rows; row += 1) {
+      const perRow = base + (row < extra ? 1 : 0);
+      const modifier = perRow === 4 ? '' : perRow === 3 ? 'catalog__item--third' : perRow === 2 ? 'catalog__item--half' : 'catalog__item--full';
+      for (let index = 0; index < perRow; index += 1) classes.push(modifier);
+    }
+    return classes;
+  }
+
   renderProducts(products, groups) {
     this.retry.hidden = true;
     this.controls.hidden = true;
     this.root.setAttribute('aria-busy', 'false');
+    this.container.setAttribute('aria-busy', 'false');
     this.root.dataset.loadState = 'ready';
     if (!products.length && !this.groupsPage) {
       const message = document.createElement('p'); message.className = 'catalog-filter__empty'; message.textContent = label(this.emptyCategory?'emptyCategory':'empty'); this.container.replaceChildren(message);
@@ -118,15 +177,16 @@ export class CatalogView extends BaseView {
     if (this.groupsPage) {
       const populated = groups.filter(group => group.is_active !== false);
       if (!populated.length) { this.showStatus('Доступных товаров пока нет.', true, 'empty'); return; }
+      const columnClasses = this.groupColumnClasses(populated.length);
       this.container.innerHTML = `<ul class="catalog__list">${populated.map((group, index) => {
         const items = products.filter((p) => Number(p.material_group_id) === Number(group.id));
         const prices = items.flatMap((p) => p.variants).filter(v => v.price_per_meter != null).map((v) => Number(v.price_per_meter)).filter(Number.isFinite);
         const picture = mediaUrl(group.image_url);
-        return `<li class="catalog__item ${index === 0 ? 'catalog__item--wide' : index === 1 ? 'catalog__item--medium' : ''}">
+        const modifier = columnClasses[index] ? ` ${columnClasses[index]}` : '';
+        return `<li class="catalog__item${modifier}">
           <a class="catalog__card category category--text" href="/category/?group=${Number(group.id)}">
             ${picture ? `<span class="category__media"><img class="category__image" src="${esc(picture)}" alt="" width="960" height="640" loading="lazy" decoding="async"></span>` : ''}
             <span class="category__info"><span class="category__title">${esc(group.name || group.code)}</span>
-            <span class="category__specs">${items.length} моделей</span>
             <span class="category__price">${prices.length ? `от ${Math.min(...prices)} €/м` : items.length ? 'Нет доступных диаметров' : 'Товары пока не добавлены.'}</span></span>
           </a></li>`;
       }).join('')}</ul>`;

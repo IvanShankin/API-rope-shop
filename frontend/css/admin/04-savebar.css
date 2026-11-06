@@ -1,0 +1,76 @@
+/* Админка: Нижняя панель сохранения.
+   Часть бывшего css/admin.css (строки 1712–1786). Порядок подключения файлов важен. */
+/* кнопка сохранения внизу экрана */
+.savebar {
+  position: sticky;
+  bottom: 0;
+  z-index: 30;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 18px 24px calc(18px + env(safe-area-inset-bottom));
+  border-bottom: 0;
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: #14263a;
+  box-shadow: 0 -18px 40px rgb(3 9 16 / 55%);
+}
+
+.savebar--dirty {
+  border-top: 3px solid #e0a526;
+}
+
+.savebar__text {
+  display: flex;
+  flex: 1 1 360px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  min-width: 0;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--admin-muted);
+}
+
+.savebar>.btn {
+  flex: 0 0 auto;
+}
+
+.savebar__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #f5d18c;
+  font-weight: 700;
+}
+
+.savebar__status::before {
+  content: "";
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #e0a526;
+  box-shadow: 0 0 0 4px rgb(224 165 38 / 18%);
+}
+
+.savebar__hint {
+  color: var(--admin-muted);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.savebar__icon {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: #E0A526;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

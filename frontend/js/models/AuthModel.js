@@ -1,5 +1,5 @@
-import { BaseModel } from './BaseModel.js?v=20261027.10';
-import { authApi } from '../api/authApi.js?v=20261027.10';
+import { BaseModel } from './BaseModel.js?v=20261106.1';
+import { authApi } from '../api/authApi.js?v=20261106.1';
 
 /**
  * Модель сессии пользователя и администратора
@@ -13,10 +13,6 @@ export class AuthModel extends BaseModel {
 
   get isAuthenticated() {
     return Boolean(this.user && authApi.isAuthenticated());
-  }
-
-  get isAdmin() {
-    return this.user?.role === 'admin';
   }
 
   async checkSession() {

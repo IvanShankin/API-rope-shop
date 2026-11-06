@@ -1,13 +1,13 @@
-import { adminColorsApi as api } from '../api/adminColorsApi.js?v=20261027.10';
-import { AdminColorModel } from '../models/AdminColorModel.js?v=20261027.10';
-import { AdminColorsView } from '../views/admin/AdminColorsView.js?v=20261028.16';
-import { automaticConfigCode } from '../models/AdminConfigModel.js?v=20261028.8';
+import { adminColorsApi as api } from '../api/adminColorsApi.js?v=20261106.1';
+import { AdminColorModel } from '../models/AdminColorModel.js?v=20261106.1';
+import { AdminColorsView } from '../views/admin/AdminColorsView.js?v=20261106.1';
+import { automaticConfigCode } from '../models/AdminConfigModel.js?v=20261106.1';
 export class AdminColorsController {
   constructor(root) {
     this.view = new AdminColorsView(root); this.color = null; this.ready = false; this.busy = false;
     this.view.bind({ select: id => this.select(id), refresh: () => this.load(), save: () => this.save(), create: () => {
       if (this.busy || !this.ready || !this.view.allowDiscard()) return;
-      this.color = null; this.view.selection(null); this.view.render(); this.view.message('Создайте цвет и затем назначьте его канатам в «Каталоге».');
+      this.color = null; this.view.selection(null); this.view.render(); this.view.message('Создайте цвет, затем назначьте его канатам в карточке каната.');
     }, remove: () => this.remove(), removeTranslation:id=>this.removeTranslation(id) });
   }
   destroy() { this.view.destroy(); }
@@ -16,7 +16,7 @@ export class AdminColorsController {
     if (this.busy || !this.view.allowDiscard()) return;
     this.lock(true);
     try { this.colors = await api.list({refresh:true}); this.view.list(this.colors); this.view.clear(); this.color = null; this.ready = true; this.view.message('Выберите цвет или добавьте новый.'); }
-    catch (e) { this.view.message(`Не удалось загрузить цвета: ${e.message}`, 'error'); }
+    catch { this.view.message('Не удалось загрузить цвета. Обновите список.', 'error'); }
     finally { this.lock(false); }
   }
   async select(id) {
@@ -25,7 +25,7 @@ export class AdminColorsController {
     if (!id) { this.color = null; this.view.clear(); return; }
     this.lock(true);
     try { this.color = await api.detail(id); this.view.render(this.color); this.view.message('Изменения цвета действуют для всех связанных канатов.'); }
-    catch (e) { this.view.selection(this.color?.id); this.view.message(e.message, 'error'); }
+    catch { this.view.selection(this.color?.id); this.view.message('Не удалось открыть цвет. Выберите его ещё раз.', 'error'); }
     finally { this.lock(false); }
   }
   async save() {
@@ -56,24 +56,24 @@ export class AdminColorsController {
       }
       this.colors = await api.list(); this.color = await api.detail(this.color.id);
       this.view.list(this.colors); this.view.selection(this.color.id); this.view.render(this.color,{preserveDisclosures:true});
-      this.view.message('Цвет сохранён. В каталоге откройте канат, чтобы назначить ему этот цвет.', 'success');
+      this.view.message('Цвет сохранён. Откройте канат в карточке, чтобы назначить ему этот цвет.', 'success');
       if (creating) { this.color = null; this.view.selection(null); this.view.render(); }
-    } catch (e) { this.view.message(`Сохранение не завершено: ${e.message}. Часть изменений могла сохраниться; значения формы оставлены для проверки и повтора.`, 'error'); }
+    } catch { this.view.message('Не сохранилось. Проверьте поля и нажмите «Сохранить цвет» ещё раз.', 'error'); }
     finally { this.lock(false); }
   }
   async remove(){
     if(this.busy||!this.color||!this.view.allowDiscard()||!window.confirm(`Удалить цвет #${this.color.id}? Это действие нельзя отменить. Если он используется, можно отключить его.`))return;
     this.lock(true);let committed=false;
     try{await api.remove(this.color.id);committed=true;this.color=null;this.view.clear();this.colors=await api.list();this.view.list(this.colors);this.view.message('Цвет удалён.', 'success');}
-    catch(e){this.view.message(`${committed?'Удалено, но не удалось обновить список.':'Не удалось подтвердить удаление.'} ${e.message}. Обновите список перед повтором.`, 'error');}
+    catch { this.view.message(`${committed?'Удалено, но список обновить не удалось.':'Удалить не получилось.'} Обновите список.`, 'error'); }
     finally{this.lock(false);}
   }
   async removeTranslation(id){
     const translation=this.color?.translations?.find(t=>Number(t.id)===Number(id));
-    if(this.busy||!translation||this.color.translations.length<=1||!this.view.allowDiscard()||!window.confirm(`Удалить перевод цвета ${translation.locale.toUpperCase()}? Это действие нельзя отменить.`))return;
+    if(this.busy||!translation||this.color.translations.length<=1||!this.view.allowDiscard()||!window.confirm(`Удалить перевод ${({eng:'(англ.)',rus:'(рус.)',ger:'(нем.)'})[translation.locale] || translation.locale.toUpperCase()}? Отменить нельзя.`))return;
     this.lock(true);let committed=false;
     try{await api.removeTranslation(id);committed=true;this.color=await api.detail(this.color.id);this.colors=await api.list();this.view.list(this.colors);this.view.selection(this.color.id);this.view.render(this.color,{preserveDisclosures:true});this.view.message('Перевод удалён. Последний перевод цвета сохраняется.', 'success');}
-    catch(e){this.view.message(`${committed?'Перевод удалён, но не удалось обновить форму.':'Не удалось подтвердить удаление перевода.'} ${e.message}. Обновите цвет перед повтором.`, 'error');}
+    catch { this.view.message(`${committed?'Перевод удалён, но форму обновить не удалось.':'Удалить перевод не получилось.'} Обновите цвет.`, 'error'); }
     finally{this.lock(false);}
   }
 }

@@ -1,10 +1,9 @@
-import {initContacts} from '../views/common/ContactsView.js?v=20261027.10';
-import {initReviews} from '../views/common/ReviewsView.js?v=20261027.10';
-import { BaseController } from './BaseController.js?v=20261027.10';
-import { HeaderView } from '../views/common/HeaderView.js?v=20261027.10';
-import { WorkGalleryView } from '../views/common/WorkGalleryView.js?v=20261027.10';
-import { API_CONFIG } from '../api/config.js?v=20261027.10';
-import { initSiteContent } from '../views/common/SiteContentView.js?v=20261028.17';
+import {initContacts} from '../views/common/ContactsView.js?v=20261106.1';
+import {initReviews} from '../views/common/ReviewsView.js?v=20261106.1';
+import { BaseController } from './BaseController.js?v=20261106.1';
+import { HeaderView } from '../views/common/HeaderView.js?v=20261106.1';
+import { WorkGalleryView } from '../views/common/WorkGalleryView.js?v=20261106.1';
+import { initSiteContent } from '../views/common/SiteContentView.js?v=20261106.1';
 
 export class CommonController extends BaseController {
   async init() {
@@ -19,8 +18,11 @@ export class CommonController extends BaseController {
     // 3. Анимации появления при скролле
     this.initReveal();
 
+    // 3.1. Блок «Мои работы» с вкладками (showcase), например на B2B
+    document.querySelectorAll('.showcase').forEach(root => this.initShowcase(root));
+
     // 4. Галереи Swiper (если есть на странице)
-    if(API_CONFIG.CATALOG_V2 && !document.querySelector('.admin')) {
+    if(!document.querySelector('.admin')) {
       initContacts();
       initReviews();
       await initSiteContent({initWork:root=>new WorkGalleryView(root),initSwiper:root=>this.initSwipers(root)});
@@ -80,6 +82,45 @@ export class CommonController extends BaseController {
     }, { rootMargin: '0px 0px -15% 0px' });
 
     items.forEach((el) => observer.observe(el));
+  }
+
+  initShowcase(root) {
+    const tabs = Array.from(root.querySelectorAll('.showcase__tab'));
+    const media = root.querySelector('.showcase__media');
+    if (typeof window.Swiper !== 'function' || !tabs.length || !media) return;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const setActive = (index) => tabs.forEach((tab, i) => {
+      tab.classList.toggle('showcase__tab--active', i === index);
+      tab.setAttribute('aria-pressed', String(i === index));
+    });
+    const swiper = new window.Swiper(media, {
+      wrapperClass: 'showcase__track',
+      slideClass: 'showcase__slide',
+      slideActiveClass: 'showcase__slide--active',
+      slideNextClass: 'showcase__slide--next',
+      slidePrevClass: 'showcase__slide--prev',
+      slideVisibleClass: 'showcase__slide--visible',
+      slideFullyVisibleClass: 'showcase__slide--fully-visible',
+      containerModifierClass: 'showcase__media--',
+      effect: 'fade',
+      fadeEffect: { crossFade: true },
+      speed: reduceMotion ? 0 : 700,
+      rewind: true,
+      a11y: {
+        notificationClass: 'showcase__notification',
+        containerMessage: 'Мои работы',
+        containerRoleDescriptionMessage: 'карусель',
+        itemRoleDescriptionMessage: 'слайд',
+        slideLabelMessage: '{{index}} из {{slidesLength}}',
+      },
+      on: { slideChange: (sw) => setActive(sw.activeIndex) },
+    });
+    const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    tabs.forEach((tab, i) => {
+      tab.addEventListener('click', () => swiper.slideTo(i));
+      if (canHover) tab.addEventListener('mouseenter', () => swiper.slideTo(i));
+    });
+    setActive(swiper.activeIndex);
   }
 
   initSwipers(root = null) {

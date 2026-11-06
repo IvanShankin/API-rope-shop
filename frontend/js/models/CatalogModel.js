@@ -1,4 +1,4 @@
-import { BaseModel } from './BaseModel.js?v=20261027.10';
+import { BaseModel } from './BaseModel.js?v=20261106.1';
 
 /**
  * Модель каталога канатов

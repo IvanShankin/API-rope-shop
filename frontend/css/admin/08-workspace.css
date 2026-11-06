@@ -1,0 +1,407 @@
+/* Админка: Крупные элементы управления (слой «Simplified»).
+   Часть бывшего css/admin.css (строки 2389–2794). Порядок подключения файлов важен. */
+/* Simplified admin workspace: large controls, clear sections and native dropdowns. */
+.admin {
+  --sidebar-w: 300px;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.admin .sidebar {
+  background: #fff;
+  color: var(--admin-text);
+  border-right: 1px solid var(--admin-border);
+  padding: 24px;
+}
+
+.admin .sidebar__logo {
+  background: #0a1931;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.admin .sidebar__logo-image {
+  max-height: 100px;
+  object-fit: contain;
+}
+
+.admin .sidebar__logo-caption {
+  color: #d4e0ed;
+}
+
+.admin .sidebar__nav {
+  margin-top: 28px;
+}
+
+.admin-navigation-label {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.admin-navigation-help {
+  font-size: 16px;
+  color: var(--admin-muted);
+  margin: 20px 0;
+}
+
+.admin .sidebar__bottom {
+  margin-top: auto;
+  padding-top: 24px;
+}
+
+.admin .sidebar__site,
+.admin .sidebar__logout,
+.admin .sidebar__user-name {
+  color: var(--admin-text);
+  font-size: 17px;
+}
+
+.admin .admin__main {
+  min-width: 0;
+  margin: 10px;
+  padding: 0;
+}
+
+.admin .panel {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.admin .panel__title {
+  font-family: var(--font-text);
+  font-size: clamp(28px, 3vw, 38px);
+  line-height: 1.2;
+  letter-spacing: -.02em;
+}
+
+.admin h2 {
+  font-family: var(--font-text);
+  font-size: 26px;
+}
+
+.admin h3 {
+  font-family: var(--font-text);
+  font-size: 21px;
+}
+
+.admin .field,
+.admin .field__label {
+  font-size: 18px;
+}
+
+.admin .field__input,
+.admin select,
+.admin textarea {
+  font-size: 18px;
+  min-height: 54px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--admin-text);
+  max-width: 100%;
+}
+
+.admin select {
+  width: 100%;
+  cursor: pointer;
+}
+
+.admin textarea {
+  min-height: 120px;
+}
+
+.admin input[type=checkbox] {
+  width: 24px;
+  height: 24px;
+  vertical-align: middle;
+  margin-right: 8px;
+  accent-color: #245a8a;
+}
+
+.admin .btn {
+  font-size: 18px;
+  min-height: 52px;
+  padding: 12px 22px;
+  border-radius: 10px;
+}
+
+.admin button[type=submit] {
+  background: #174f7d;
+  color: #fff;
+  border-color: #174f7d;
+}
+
+.admin .product-toolbar {
+  border-radius: 16px;
+  padding: 5px;
+  gap: 20px;
+}
+
+.admin .config-admin-toolbar {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0;
+  border-radius: 0;
+  gap: 16px;
+}
+
+.admin .product-toolbar label {
+  display: grid;
+  gap: 8px;
+}
+
+.admin .product-editor {
+  background: #fff;
+  border-radius: 16px;
+}
+
+.admin .product-editor label {
+  min-width: 0;
+}
+
+.admin [role=status] {
+  color: #43566c;
+  font-size: 17px;
+}
+
+.admin .admin-disclosure {
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.admin-disclosure summary {
+  padding: 20px 24px;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.admin .admin-disclosure .product-editor {
+  border: 0;
+  margin: 0;
+  border-radius: 0;
+}
+
+.admin table {
+  font-size: 17px;
+}
+
+.admin th,
+.admin td {
+  padding: 14px;
+}
+
+.admin .requests-table {
+  overflow-x: auto;
+}
+
+@media (max-width: 1000px) {
+  .admin {
+    display: block;
+  }
+
+  .admin .sidebar {
+    position: static;
+    height: auto;
+    display: block;
+    border-right: 0;
+    border-bottom: 1px solid var(--admin-border);
+  }
+
+  .admin .sidebar__logo {
+    display: none;
+  }
+
+  .admin .sidebar__nav {
+    margin: 0;
+  }
+
+  .admin .sidebar__bottom {
+    margin: 0;
+    padding-top: 12px;
+  }
+
+  .admin-navigation-help {
+    margin: 12px 0;
+  }
+
+  .admin .sidebar__user {
+    margin-top: 8px;
+  }
+}
+
+@media (max-width: 700px) {
+  .admin .admin__main {
+    padding: 24px 3px 48px;
+  }
+
+  .admin .admin__main {
+    margin: 0
+  }
+
+  .product-editor {
+    padding: 0 !important;
+  }
+
+  .admin-disclosure {
+    margin-top: 10px;
+  }
+
+  .card--padded {
+    border-radius: 16px !important;
+    border: none !important;
+  }
+
+  .admin [data-product-form]>.admin-disclosure {
+    border: none !important;
+    border-radius: 16px !important;
+  }
+
+  .admin .admin-disclosure__body {
+    padding: 10px !important;
+  }
+
+  .admin .product-editor {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 18px;
+  }
+
+  .color-swatches-grid {
+    justify-content: center;
+  }
+
+  .admin .panel__head {
+    align-items: start;
+    flex-direction: column;
+    gap: 16px;
+  }
+}
+
+.admin .sidebar__tab {
+  width: 100%;
+  min-height: 54px;
+  font-size: 18px;
+  padding: 14px 16px;
+  color: #31465d;
+  border-radius: 10px;
+  margin-bottom: 6px;
+}
+
+.admin .sidebar__tab:hover {
+  background: #edf3f9;
+  color: #0a1931;
+}
+
+.admin .sidebar__tab--active {
+  background: #174f7d;
+  color: #fff;
+}
+
+.admin .sidebar__tab--active:hover {
+  background: #174f7d;
+  color: #fff;
+}
+
+.admin .admin-navigation-label {
+  margin: 24px 0 12px;
+  color: #61758a;
+  font-size: 15px;
+  letter-spacing: .04em;
+}
+
+.admin .admin-form-section {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.admin-product-photos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  gap: 24px;
+  padding: 0 24px;
+}
+
+.admin [data-product-photos]>.field {
+  display: grid;
+  gap: 12px;
+  margin: 24px;
+}
+
+.admin [data-product-photos]>.btn {
+  margin: 0 24px 24px;
+}
+
+.admin [data-product-file] {
+  max-width: 100%;
+  min-height: 44px;
+}
+
+.admin .config-admin-upload input[type="file"] {
+  width: 100%;
+  max-width: 100%;
+  min-height: 44px;
+}
+
+.admin [data-content-editor] input[type="file"] {
+  width: 100%;
+  max-width: 100%;
+  min-height: 44px;
+}
+
+.admin [data-next-content][hidden] {
+  display: none !important;
+}
+
+.admin .admin-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  padding: 24px;
+}
+
+.admin .admin-disclosure>p {
+  margin: 16px 24px;
+}
+
+.admin .admin-disclosure>.config-admin-toolbar {
+  border: 0;
+  margin: 0;
+}
+
+@media (max-width: 700px) {
+  .admin .admin-fields {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 18px;
+  }
+}
+
+.admin .sidebar__nav {
+  display: block;
+}
+
+.admin .sidebar__footer {
+  display: flex;
+  border-color: var(--admin-border);
+}
+
+.admin .sidebar__link,
+.admin .sidebar__logout:hover {
+  color: #174f7d;
+}
+
+.admin .sidebar__avatar {
+  color: #fff;
+}
+
+.admin .sidebar__tab {
+  white-space: normal;
+  text-align: left;
+}
+
+.admin .admin-disclosure .admin-disclosure {
+  margin: 12px 20px;
+}

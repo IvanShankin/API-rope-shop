@@ -1,11 +1,10 @@
-import { getLanguage, languages } from './locale.js?v=20261027.10';
-import { translate } from './translate.js?v=20261027.10';
-import '../seo/public.js?v=20261027.10';
+import { getLanguage, languages } from './locale.js?v=20261106.1';
+import { translate } from './translate.js?v=20261106.1';
+import '../seo/public.js?v=20261106.1';
 
 // Public pages only. Admin keeps its own Russian interface.
 export function initPublicLanguage() {
   const language = getLanguage();
-  try { localStorage.setItem('rope_lang', language); } catch { /* Storage may be unavailable. */ }
   document.documentElement.lang = language;
   const legalPages = {Impressum:'imprint',Datenschutz:'privacy',AGB:'terms',Widerrufsbelehrung:'withdrawal','Versand & Zahlung':'shipping'};
   document.querySelectorAll('a[href="#"]').forEach(link=>{
@@ -13,7 +12,7 @@ export function initPublicLanguage() {
     if(legalPages[text]) link.href=`/legal/?document=${legalPages[text]}`;
     else if(link.matches('[data-lang]')) return;
     else if(link.matches('.header__button,.mobile-menu__button')) link.href='/configurator/';
-    else {link.removeAttribute('href');link.setAttribute('aria-disabled','true');link.title='Ссылка появится после добавления контактов.';}
+    else {link.removeAttribute('href');link.setAttribute('role','link');link.setAttribute('aria-disabled','true');link.title='Ссылка появится после добавления контактов.';}
   });
   // Keep keyboard focus inside the expanded mobile menu.
   document.addEventListener('keydown',event=>{

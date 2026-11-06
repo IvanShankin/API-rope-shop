@@ -1,4 +1,4 @@
-import {getLanguage} from '../i18n/locale.js?v=20261027.10';
+import {getLanguage} from '../i18n/locale.js?v=20261106.1';
 
 export function trackingPath(quote) {
   if (!quote?.request_number || !quote?.tracking_token) return '';

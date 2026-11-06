@@ -1,0 +1,875 @@
+{
+  "screenshots": [
+    "before-1440.png",
+    "before-1440-full.png",
+    "before-hover-1440.png",
+    "before-select-open-1440.png",
+    "before-applied-1440.png",
+    "before-reset-1440.png",
+    "before-checked-1440.png",
+    "before-390.png",
+    "before-390-full.png",
+    "before-select-open-390.png",
+    "before-applied-390.png"
+  ],
+  "checks": {
+    "pickDiameter16": {
+      "clicked": true,
+      "url": "?group=1&diameter=16",
+      "products": 1,
+      "empty": false,
+      "resetDisabled": false,
+      "values": [
+        "",
+        "16"
+      ],
+      "ssValues": [
+        "Alle Varianten",
+        "16"
+      ],
+      "checked": false
+    },
+    "reset": {
+      "url": "?group=1",
+      "products": 2,
+      "empty": false,
+      "resetDisabled": true,
+      "values": [
+        "",
+        ""
+      ],
+      "ssValues": [
+        "Alle Varianten",
+        "Alle Varianten"
+      ],
+      "checked": false
+    },
+    "checkbox": {
+      "url": "?group=1&configurator=1",
+      "products": 2,
+      "empty": false,
+      "resetDisabled": false,
+      "values": [
+        "",
+        ""
+      ],
+      "ssValues": [
+        "Alle Varianten",
+        "Alle Varianten"
+      ],
+      "checked": true
+    },
+    "mobilePickDiameter16": {
+      "url": "?group=1&diameter=16",
+      "products": 1,
+      "empty": false,
+      "resetDisabled": false,
+      "values": [
+        "",
+        "16"
+      ],
+      "ssValues": [
+        "Alle Varianten",
+        "16"
+      ],
+      "checked": false
+    }
+  },
+  "desktop": {
+    "filtersTitleExists": false,
+    "fieldsetLegendExists": false,
+    "filterBox": {
+      "x": 15,
+      "y": 388,
+      "w": 230,
+      "h": 330.4
+    },
+    "fieldsetBox": {
+      "x": 15,
+      "y": 388,
+      "w": 230,
+      "h": 330.4
+    },
+    "fieldBox": {
+      "x": 15,
+      "y": 388,
+      "w": 230,
+      "h": 85.2
+    },
+    "ssBox": {
+      "x": 15,
+      "y": 420.4,
+      "w": 230,
+      "h": 52.8
+    },
+    "checkBox": {
+      "x": 15,
+      "y": 606.4,
+      "w": 230,
+      "h": 44
+    },
+    "inputBox": {
+      "x": 15,
+      "y": 609.4,
+      "w": 18,
+      "h": 18
+    },
+    "resetBox": {
+      "x": 15,
+      "y": 674.4,
+      "w": 122.9,
+      "h": 44
+    },
+    "options": [
+      {
+        "name": "construction",
+        "options": [
+          {
+            "value": "",
+            "text": "Alle Varianten"
+          },
+          {
+            "value": "polyester_core",
+            "text": "Kern Polyester + Mantel"
+          }
+        ]
+      },
+      {
+        "name": "diameter",
+        "options": [
+          {
+            "value": "",
+            "text": "Alle Varianten"
+          },
+          {
+            "value": "8",
+            "text": "8"
+          },
+          {
+            "value": "10",
+            "text": "10"
+          },
+          {
+            "value": "12",
+            "text": "12"
+          },
+          {
+            "value": "14",
+            "text": "14"
+          },
+          {
+            "value": "16",
+            "text": "16"
+          }
+        ]
+      }
+    ],
+    "styles": {
+      "filter": {
+        "color": "rgb(246, 250, 253)",
+        "background": "rgba(0, 0, 0, 0)",
+        "borderColor": "rgb(246, 250, 253)",
+        "borderWidth": "0px",
+        "radius": "0px",
+        "fontFamily": "Manrope, system-ui, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "lineHeight": "25.6px",
+        "padding": "0px",
+        "minHeight": "auto",
+        "opacity": "1",
+        "textDecoration": "none",
+        "width": 230,
+        "height": 330.4,
+        "gap": "normal"
+      },
+      "fields": {
+        "color": "rgb(246, 250, 253)",
+        "background": "rgba(0, 0, 0, 0)",
+        "borderColor": "rgb(246, 250, 253)",
+        "borderWidth": "0px",
+        "radius": "0px",
+        "fontFamily": "Manrope, system-ui, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "lineHeight": "25.6px",
+        "padding": "0px",
+        "minHeight": "0px",
+        "opacity": "1",
+        "textDecoration": "none",
+        "width": 230,
+        "height": 330.4,
+        "gap": "24px"
+      },
+      "field": {
+        "color": "rgb(246, 250, 253)",
+        "background": "rgba(0, 0, 0, 0)",
+        "borderColor": "rgb(246, 250, 253)",
+        "borderWidth": "0px",
+        "radius": "0px",
+        "fontFamily": "Manrope, system-ui, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "lineHeight": "22.4px",
+        "padding": "0px",
+        "minHeight": "auto",
+        "opacity": "1",
+        "textDecoration": "none",
+        "width": 230,
+        "height": 85.2,
+        "gap": "10px"
+      },
+      "ssMain": {
+        "color": "rgb(246, 250, 253)",
+        "background": "rgb(26, 61, 99)",
+        "borderColor": "rgba(179, 207, 229, 0.18)",
+        "borderWidth": "1px",
+        "radius": "10px",
+        "fontFamily": "Manrope, system-ui, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "lineHeight": "22.4px",
+        "padding": "12px",
+        "minHeight": "48px",
+        "opacity": "1",
+        "textDecoration": "none",
+        "width": 230,
+        "height": 52.8,
+        "gap": "12px"
+      },
+      "ssText": {
+        "color": "rgb(246, 250, 253)",
+        "background": "rgba(0, 0, 0, 0)",
+        "borderColor": "rgb(246, 250, 253)",
+        "borderWidth": "0px",
+        "radius": "0px",
+        "fontFamily": "Manrope, system-ui, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "lineHeight": "16.8px",
+        "padding": "0px 7px 0px 4px",
+        "minHeight": "auto",
+        "opacity": "1",
+        "textDecoration": "none",
+        "width": 166,
+        "height": 16.8,
+        "gap": "normal"
+      },
+      "check": {
+        "color": "rgb(246, 250, 253)",
+        "background": "rgba(0, 0, 0, 0)",
+        "borderColor": "rgb(246, 250, 253)",
+        "borderWidth": "0px",
+        "radius": "0px",
+        "fontFamily": "Manrope, system-ui, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "lineHeight": "22.4px",
+        "padding": "0px",
+        "minHeight": "44px",
+        "opacity": "1",
+        "textDecoration": "none",
+        "width": 230,
+        "height": 44,
+        "gap": "10px"
+      },
+      "input": {
+        "color": "rgb(255, 255, 255)",
+        "background": "rgba(0, 0, 0, 0)",
+        "borderColor": "rgb(255, 255, 255)",
+        "borderWidth": "0px",
+        "radius": "0px",
+        "fontFamily": "Arial",
+        "fontSize": "13.3333px",
+        "fontWeight": "400",
+        "lineHeight": "normal",
+        "padding": "0px",
+        "minHeight": "auto",
+        "opacity": "1",
+        "textDecoration": "none",
+        "width": 18,
+        "height": 18,
+        "gap": "normal"
+      },
+      "reset": {
+        "color": "rgb(246, 250, 253)",
+        "background": "rgba(0, 0, 0, 0)",
+        "borderColor": "rgb(246, 250, 253)",
+        "borderWidth": "0px",
+        "radius": "0px",
+        "fontFamily": "Manrope, system-ui, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "lineHeight": "22.4px",
+        "padding": "8px 0px",
+        "minHeight": "44px",
+        "opacity": "0.4",
+        "textDecoration": "underline",
+        "width": 122.9,
+        "height": 44,
+        "gap": "normal"
+      },
+      "pageTitle": {
+        "color": "rgb(246, 250, 253)",
+        "background": "rgba(0, 0, 0, 0)",
+        "borderColor": "rgb(246, 250, 253)",
+        "borderWidth": "0px",
+        "radius": "0px",
+        "fontFamily": "\"Inter Tight\", Arial, sans-serif",
+        "fontSize": "100.8px",
+        "fontWeight": "400",
+        "lineHeight": "90.72px",
+        "padding": "0px",
+        "minHeight": "auto",
+        "opacity": "1",
+        "textDecoration": "none",
+        "width": 1152.4,
+        "height": 90.7,
+        "gap": "normal"
+      },
+      "productTitle": {
+        "color": "rgb(246, 250, 253)",
+        "background": "rgba(0, 0, 0, 0)",
+        "borderColor": "rgb(246, 250, 253)",
+        "borderWidth": "0px",
+        "radius": "0px",
+        "fontFamily": "\"Inter Tight\", Arial, sans-serif",
+        "fontSize": "43.2px",
+        "fontWeight": "400",
+        "lineHeight": "47.52px",
+        "padding": "0px",
+        "minHeight": "0px",
+        "opacity": "1",
+        "textDecoration": "none",
+        "width": 461.7,
+        "height": 95,
+        "gap": "normal"
+      },
+      "productText": {
+        "color": "rgba(179, 207, 229, 0.78)",
+        "background": "rgba(0, 0, 0, 0)",
+        "borderColor": "rgba(179, 207, 229, 0.78)",
+        "borderWidth": "0px",
+        "radius": "0px",
+        "fontFamily": "Manrope, system-ui, sans-serif",
+        "fontSize": "15px",
+        "fontWeight": "400",
+        "lineHeight": "26.25px",
+        "padding": "0px",
+        "minHeight": "0px",
+        "opacity": "1",
+        "textDecoration": "none",
+        "width": 461.7,
+        "height": 78.8,
+        "gap": "normal"
+      },
+      "productTableHead": {
+        "color": "rgba(179, 207, 229, 0.78)",
+        "background": "rgba(0, 0, 0, 0)",
+        "borderColor": "rgba(179, 207, 229, 0.78)",
+        "borderWidth": "0px",
+        "radius": "0px",
+        "fontFamily": "Manrope, system-ui, sans-serif",
+        "fontSize": "12px",
+        "fontWeight": "600",
+        "lineHeight": "15.6px",
+        "padding": "6px 14px",
+        "minHeight": "0px",
+        "opacity": "1",
+        "textDecoration": "none",
+        "width": 139.6,
+        "height": 27.6,
+        "gap": "normal"
+      },
+      "productCellBody": {
+        "color": "rgb(246, 250, 253)",
+        "background": "rgb(20, 36, 60)",
+        "borderColor": "rgb(246, 250, 253)",
+        "borderWidth": "0px",
+        "radius": "10px",
+        "fontFamily": "Manrope, system-ui, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "500",
+        "lineHeight": "22.4px",
+        "padding": "10px 14px",
+        "minHeight": "0px",
+        "opacity": "1",
+        "textDecoration": "none",
+        "width": 139.6,
+        "height": 42.4,
+        "gap": "normal"
+      },
+      "productRowOdd": {
+        "color": "rgb(246, 250, 253)",
+        "background": "rgb(20, 36, 60)",
+        "borderColor": "rgb(246, 250, 253)",
+        "borderWidth": "0px",
+        "radius": "10px",
+        "fontFamily": "Manrope, system-ui, sans-serif",
+        "fontSize": "14px",
+        "fontWeight": "500",
+        "lineHeight": "22.4px",
+        "padding": "10px 14px",
+        "minHeight": "0px",
+        "opacity": "1",
+        "textDecoration": "none",
+        "width": 139.6,
+        "height": 42.4,
+        "gap": "normal"
+      },
+      "primaryButton": {
+        "color": "rgb(10, 25, 49)",
+        "background": "rgb(246, 250, 253)",
+        "borderColor": "rgba(0, 0, 0, 0)",
+        "borderWidth": "1px",
+        "radius": "999px",
+        "fontFamily": "Manrope, system-ui, sans-serif",
+        "fontSize": "15px",
+        "fontWeight": "600",
+        "lineHeight": "24px",
+        "padding": "0px 28px",
+        "minHeight": "0px",
+        "opacity": "1",
+        "textDecoration": "none",
+        "width": 186.7,
+        "height": 54,
+        "gap": "12px"
+      },
+      "body": {
+        "color": "rgb(246, 250, 253)",
+        "background": "rgb(10, 25, 49)",
+        "borderColor": "rgb(246, 250, 253)",
+        "borderWidth": "0px",
+        "radius": "0px",
+        "fontFamily": "Manrope, system-ui, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "lineHeight": "25.6px",
+        "padding": "0px",
+        "minHeight": "1000px",
+        "opacity": "1",
+        "textDecoration": "none",
+        "width": 1440,
+        "height": 2105.7,
+        "gap": "normal"
+      },
+      "header": {
+        "color": "rgb(246, 250, 253)",
+        "background": "rgba(0, 0, 0, 0)",
+        "borderColor": "rgb(246, 250, 253)",
+        "borderWidth": "0px",
+        "radius": "0px",
+        "fontFamily": "Manrope, system-ui, sans-serif",
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "lineHeight": "25.6px",
+        "padding": "0px",
+        "minHeight": "0px",
+        "opacity": "1",
+        "textDecoration": "none",
+        "width": 1440,
+        "height": 131.8,
+        "gap": "normal"
+      }
+    },
+    "htmlLang": "de"
+  },
+  "mobile": {
+    "viewport": {
+      "w": 390,
+      "h": 844,
+      "scrollWidth": 390
+    },
+    "filterBox": {
+      "x": 5,
+      "y": 300.8,
+      "w": 380,
+      "h": 209.2
+    },
+    "fieldsetBox": {
+      "x": 5,
+      "y": 300.8,
+      "w": 380,
+      "h": 209.2
+    },
+    "ssBox": {
+      "x": 5,
+      "y": 333.2,
+      "w": 183,
+      "h": 52.8
+    },
+    "checkBox": {
+      "x": 5,
+      "y": 404,
+      "w": 380,
+      "h": 44
+    },
+    "inputBox": {
+      "x": 5,
+      "y": 407,
+      "w": 18,
+      "h": 18
+    },
+    "resetBox": {
+      "x": 5,
+      "y": 466,
+      "w": 122.9,
+      "h": 44
+    },
+    "styles": {
+      "field": {
+        "font": "400 14px/22.4px",
+        "color": "rgb(246, 250, 253)",
+        "background": "rgba(0, 0, 0, 0)",
+        "padding": "0px",
+        "radius": "0px"
+      },
+      "ssMain": {
+        "font": "400 14px/22.4px",
+        "color": "rgb(246, 250, 253)",
+        "background": "rgb(26, 61, 99)",
+        "padding": "12px",
+        "radius": "10px"
+      },
+      "reset": {
+        "font": "400 14px/22.4px",
+        "color": "rgb(246, 250, 253)",
+        "background": "rgba(0, 0, 0, 0)",
+        "padding": "8px 0px",
+        "radius": "0px"
+      }
+    }
+  },
+  "pixels": {
+    "checkboxUnchecked": [
+      {
+        "rgba": [
+          59,
+          59,
+          59,
+          255
+        ],
+        "n": 2272
+      },
+      {
+        "rgba": [
+          133,
+          133,
+          133,
+          255
+        ],
+        "n": 548
+      },
+      {
+        "rgba": [
+          10,
+          25,
+          49,
+          255
+        ],
+        "n": 32
+      },
+      {
+        "rgba": [
+          94,
+          98,
+          104,
+          255
+        ],
+        "n": 4
+      },
+      {
+        "rgba": [
+          114,
+          116,
+          118,
+          255
+        ],
+        "n": 4
+      },
+      {
+        "rgba": [
+          122,
+          122,
+          123,
+          255
+        ],
+        "n": 4
+      },
+      {
+        "rgba": [
+          18,
+          31,
+          53,
+          255
+        ],
+        "n": 3
+      },
+      {
+        "rgba": [
+          92,
+          92,
+          92,
+          255
+        ],
+        "n": 3
+      }
+    ],
+    "select": [
+      {
+        "rgba": [
+          26,
+          61,
+          99,
+          255
+        ],
+        "n": 100431
+      },
+      {
+        "rgba": [
+          53,
+          87,
+          122,
+          255
+        ],
+        "n": 4712
+      },
+      {
+        "rgba": [
+          246,
+          250,
+          253,
+          255
+        ],
+        "n": 1343
+      },
+      {
+        "rgba": [
+          10,
+          25,
+          49,
+          255
+        ],
+        "n": 690
+      },
+      {
+        "rgba": [
+          106,
+          129,
+          155,
+          255
+        ],
+        "n": 162
+      },
+      {
+        "rgba": [
+          234,
+          240,
+          245,
+          255
+        ],
+        "n": 144
+      },
+      {
+        "rgba": [
+          209,
+          218,
+          227,
+          255
+        ],
+        "n": 115
+      },
+      {
+        "rgba": [
+          240,
+          245,
+          249,
+          255
+        ],
+        "n": 95
+      }
+    ],
+    "resetDisabled": [
+      {
+        "rgba": [
+          10,
+          25,
+          49,
+          255
+        ],
+        "n": 43445
+      },
+      {
+        "rgba": [
+          104,
+          115,
+          130,
+          255
+        ],
+        "n": 2726
+      },
+      {
+        "rgba": [
+          99,
+          110,
+          126,
+          255
+        ],
+        "n": 195
+      },
+      {
+        "rgba": [
+          44,
+          57,
+          78,
+          255
+        ],
+        "n": 189
+      },
+      {
+        "rgba": [
+          86,
+          98,
+          115,
+          255
+        ],
+        "n": 161
+      },
+      {
+        "rgba": [
+          88,
+          99,
+          116,
+          255
+        ],
+        "n": 157
+      },
+      {
+        "rgba": [
+          67,
+          79,
+          99,
+          255
+        ],
+        "n": 132
+      },
+      {
+        "rgba": [
+          102,
+          113,
+          128,
+          255
+        ],
+        "n": 121
+      }
+    ],
+    "checkboxChecked": [
+      {
+        "rgba": [
+          246,
+          250,
+          253,
+          255
+        ],
+        "n": 2350
+      },
+      {
+        "rgba": [
+          59,
+          59,
+          59,
+          255
+        ],
+        "n": 369
+      },
+      {
+        "rgba": [
+          10,
+          25,
+          49,
+          255
+        ],
+        "n": 20
+      },
+      {
+        "rgba": [
+          102,
+          103,
+          104,
+          255
+        ],
+        "n": 11
+      },
+      {
+        "rgba": [
+          243,
+          247,
+          250,
+          255
+        ],
+        "n": 10
+      },
+      {
+        "rgba": [
+          182,
+          185,
+          187,
+          255
+        ],
+        "n": 8
+      },
+      {
+        "rgba": [
+          210,
+          213,
+          215,
+          255
+        ],
+        "n": 7
+      },
+      {
+        "rgba": [
+          64,
+          64,
+          64,
+          255
+        ],
+        "n": 7
+      }
+    ]
+  },
+  "contrast": {
+    "labelText_on_page": {
+      "colors": "#F6FAFD on #0A1931",
+      "ratio": 16.73
+    },
+    "selectText_on_selectBg": {
+      "colors": "#F6FAFD on #1A3D63",
+      "ratio": 10.58
+    },
+    "selectBg_vs_pageBg": {
+      "colors": "#1A3D63 vs #0A1931",
+      "ratio": 1.58
+    },
+    "selectBorder_on_selectBg": {
+      "colors": "#36577A on #1A3D63",
+      "ratio": 1.48
+    },
+    "mutedText_on_page": {
+      "colors": "#8EA7BD on #0A1931",
+      "ratio": 7.03
+    },
+    "resetDisabledText_on_page": {
+      "colors": "#687383 on #0A1931",
+      "ratio": 3.65
+    },
+    "surfaceCard_on_page": {
+      "colors": "#0F2442 vs #0A1931",
+      "ratio": 1.13
+    },
+    "mist_on_page": {
+      "colors": "#B3CFE5 on #0A1931",
+      "ratio": 10.84
+    }
+  }
+}

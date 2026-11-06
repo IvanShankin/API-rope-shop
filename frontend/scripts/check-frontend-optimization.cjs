@@ -5,7 +5,7 @@ const mod=require('./frontend-module.cjs');
   global.window={location:{hostname:'example.test',port:'',href:'https://example.test/',search:''}};
   global.localStorage={getItem:()=>null};
   const {API_CONFIG}=await mod('api/config.js');
-  assert.equal(API_CONFIG.CATALOG_V2,true);assert.equal(API_CONFIG.SPLICE_DETAIL,true);assert.equal(API_CONFIG.BASE_URL,'/api');
+  assert.equal(API_CONFIG.BASE_URL,'/api');
   const {apiClient}=await mod('api/apiClient.js');
   const {configuratorApi}=await mod('api/configuratorApi.js');
   let gets=0;
@@ -20,8 +20,8 @@ const mod=require('./frontend-module.cjs');
   await configuratorApi.getData('rope_with_splice','rus');
 
   const {contactsApi}=await mod('api/contactsApi.js');
-  apiClient.get=async()=>assert.fail('Public contacts must not call protected routes');
-  assert.equal(await contactsApi.get(),null);
+  apiClient.get=async(endpoint,options={})=>{assert.equal(endpoint,'/settings/public');assert.ok(!options.requiresAuth,'Public contacts must not call protected routes');return {company_name:'Company',contact_email:'company@example.test',contact_phone:'+491234567',site_url:null};};
+  assert.deepEqual(await contactsApi.get(),{email:'company@example.test',phone:'+491234567'});
   apiClient.get=async endpoint=>{assert.equal(endpoint,'/settings');return {company_name:'Company',contact_email:'company@example.test',contact_phone:'+491234567'};};
   assert.equal((await contactsApi.getAdmin()).name,'Company');
   apiClient.patch=async(endpoint,data)=>{assert.equal(endpoint,'/settings');assert.deepEqual(Object.keys(data).sort(),['company_name','contact_email','contact_phone']);return data;};
@@ -32,7 +32,7 @@ const mod=require('./frontend-module.cjs');
   for(const [section,expected] of [['categories',['categories']],['splice_types',['splice_types']],['splice_prices',['splice_prices','splice_types','splice_materials']],['links',['rope_products','splice_types']]]){
     const requested=[];adminConfigApi.list=async name=>{requested.push(name);return [];};
     const controller=Object.create(AdminConfigController.prototype);
-    controller.section=section;controller.view={allowDiscard:()=>true,busy(){},message(){},clear(){},list(){},render(){}};
+    controller.section=section;controller.view={allowDiscard:()=>true,busy(){},message(){},clear(){},list(){},render(){},setSection(){},clearPendingImage(){},recordList:{clearPriceDrafts(){}}};
     await controller.load();assert.deepEqual(requested,expected);assert.equal(controller.busy,false);assert.equal(controller.ready,true);
   }
 

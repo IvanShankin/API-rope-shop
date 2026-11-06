@@ -1,7 +1,7 @@
-import {reviewsApi as api} from '../../api/reviewsApi.js?v=20261027.10';
-import {apiLocale} from '../../i18n/locale.js?v=20261027.10';
-import {translate as t} from '../../i18n/translate.js?v=20261027.10';
-import {escapeHtml as esc} from '../../utils/text.js?v=20261027.10';
+import {reviewsApi as api} from '../../api/reviewsApi.js?v=20261106.1';
+import {apiLocale} from '../../i18n/locale.js?v=20261106.1';
+import {translate as t} from '../../i18n/translate.js?v=20261106.1';
+import {escapeHtml as esc} from '../../utils/text.js?v=20261106.1';
 export function reviewMarkup(items){
   return items.filter(r=>(r.status===undefined||r.status==='confirmed')&&r.is_published!==false).sort((a,b)=>a.index-b.index||a.id-b.id).map(r=>`<article class="review-card" data-no-translate>
     ${r.rating?`<p class="review-card__rating" aria-label="${r.rating} / 5">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)} <span>${r.rating} / 5</span></p>`:''}

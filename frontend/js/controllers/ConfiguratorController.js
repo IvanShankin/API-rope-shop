@@ -1,9 +1,10 @@
-import { loadErrorMessage } from '../ui/load-state.js?v=20261027.10';
-import { BaseController } from './BaseController.js?v=20261027.10';
-import { ConfiguratorModel } from '../models/ConfiguratorModel.js?v=20261027.10';
-import { ConfiguratorView } from '../views/configurator/ConfiguratorView.js?v=20261027.10';
-import { configuratorApi } from '../api/configuratorApi.js?v=20261027.10';
-import { quoteApi } from '../api/quoteApi.js?v=20261027.10';
+import { loadErrorMessage } from '../ui/load-state.js?v=20261106.1';
+import { BaseController } from './BaseController.js?v=20261106.1';
+import { ConfiguratorModel } from '../models/ConfiguratorModel.js?v=20261106.1';
+import { ConfiguratorView } from '../views/configurator/ConfiguratorView.js?v=20261106.1';
+import { configuratorApi } from '../api/configuratorApi.js?v=20261106.1';
+import { quoteApi } from '../api/quoteApi.js?v=20261106.1';
+import { QuoteCalculator } from '../api/quoteCalculator.js?v=20261106.1';
 
 export class ConfiguratorController extends BaseController {
   constructor() {
@@ -12,20 +13,26 @@ export class ConfiguratorController extends BaseController {
     this.view = new ConfiguratorView('#configurator');
     this.submitting = false;
     this.sent = false;
+    this.calculator = new QuoteCalculator({
+      onResult: (quote, key) => this.model.setQuote(quote, key),
+      onError: (error, key) => this.model.setPriceError(error, key),
+    });
   }
 
   async init() {
     if (!this.view.form) return;
     await super.init();
     this.bindViewEvents();
-    const render = (snapshot) => this.view.render(snapshot);
+    // Любое изменение параметров: перерисовать сразу и попросить у сервера новую цену.
+    const update = (snapshot) => { this.view.render(snapshot); this.requestPrice(); };
     for (const event of ['data:loaded', 'change:product', 'change:variant', 'change:color', 'change:length',
-      'change:quantity', 'change:endA', 'change:endB', 'change:extras', 'change:urgent', 'change:prices']) {
-      this.model.on(event, render);
+      'change:quantity', 'change:endA', 'change:endB', 'change:extras', 'change:urgent']) {
+      this.model.on(event, update);
     }
+    this.model.on('change:prices', (snapshot) => this.view.render(snapshot));
     this.view.initListeners();
     this.view.onEvent('onRetry', () => this.loadData());
-    this.view.onEvent('onPriceRetry', () => this.loadData());
+    this.view.onEvent('onPriceRetry', () => this.calculator.retry(this.model.toCalculatePayload()));
     await this.loadData();
   }
 
@@ -35,8 +42,8 @@ export class ConfiguratorController extends BaseController {
       ['onUrgentChange', 'setUrgent'], ['onEndAChange', 'setEndA'], ['onEndBChange', 'setEndB']]) {
       this.view.onEvent(event, (...args) => this.model[method](...args));
     }
-    this.view.onEvent('onProductChange', (id) => { this.model.setProduct(id); this.loadPrices(); });
-    this.view.onEvent('onVariantChange', (id) => { this.model.setVariant(id); this.loadPrices(); });
+    this.view.onEvent('onProductChange', (id) => this.model.setProduct(id));
+    this.view.onEvent('onVariantChange', (id) => this.model.setVariant(id));
     this.view.onEvent('onSubmit', async (customer) => {
       this.model.setCustomerInfo(customer);
       await this.submitOrder();
@@ -51,18 +58,16 @@ export class ConfiguratorController extends BaseController {
       const refresh = Boolean(this.attempted);
       this.attempted = true;
       const data = await configuratorApi.getData('rope_with_splice', undefined, { refresh });
-      const { settings, rope_products: products, splice_types: spliceTypes, extras } = data;
+      const { settings, rope_products: products, splice_types: spliceTypes, extras, splice_price_rules: spliceRules } = data;
       if (!products.length) { this.view.setDataStatus('empty', 'Доступных товаров пока нет.'); return; }
       const colors = products.flatMap(p => (p.colors || []).map(link => link.color).filter(Boolean));
-      this.rules = data.splice_price_rules;
-      this.model.initData({ settings, products, colors, spliceTypes, extras });
+      this.model.initData({ settings, products, colors, spliceTypes, extras, spliceRules });
       const requested = new URLSearchParams(window.location.search).get('product');
       if (requested) {
         if (!this.model.getProductById(requested)) { this.view.setDataStatus('missing', 'Товар по этой ссылке недоступен. Выберите другой товар в каталоге.'); return; }
         this.model.setProduct(requested);
       }
-      this.view.setDataStatus('ready', products.length ? '' : 'Доступных товаров пока нет.');
-      await this.loadPrices();
+      this.view.setDataStatus('ready', '');
     } catch (error) {
       this.view.setDataStatus('error', loadErrorMessage(error));
     } finally {
@@ -70,8 +75,9 @@ export class ConfiguratorController extends BaseController {
     }
   }
 
-  async loadPrices() {
-    this.model.setPrices(this.rules || [], 'ready');
+  requestPrice() {
+    if (this.sent) return;
+    this.calculator.schedule(this.model.priceStatus === 'loading' ? this.model.toCalculatePayload() : null);
   }
 
   async submitOrder() {

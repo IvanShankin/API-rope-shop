@@ -1,0 +1,232 @@
+{
+  "mobile": {
+    "before+font": {
+      "runs": [
+        {
+          "cls": 0.1932,
+          "filterShownAt": 563.1,
+          "productsShownAt": 563.1,
+          "title": null,
+          "filterHeight": 209.2,
+          "firstProductTop": 542,
+          "shifts": [
+            {
+              "value": 0.19316,
+              "time": 561
+            }
+          ],
+          "fontFamily": "Manrope, system-ui, sans-serif"
+        },
+        {
+          "cls": 0.1932,
+          "filterShownAt": 289.8,
+          "productsShownAt": 289.8,
+          "title": null,
+          "filterHeight": 209.2,
+          "firstProductTop": 542,
+          "shifts": [
+            {
+              "value": 0.19316,
+              "time": 286
+            }
+          ],
+          "fontFamily": "Manrope, system-ui, sans-serif"
+        }
+      ],
+      "clsMedian": 0.1932
+    },
+    "after+font": {
+      "runs": [
+        {
+          "cls": 0.2107,
+          "filterShownAt": 337.7,
+          "productsShownAt": 337.7,
+          "title": "Filter",
+          "filterHeight": 232.2,
+          "firstProductTop": 565,
+          "shifts": [
+            {
+              "value": 0.21065,
+              "time": 335.9
+            }
+          ],
+          "fontFamily": "Manrope, system-ui, sans-serif"
+        },
+        {
+          "cls": 0.2107,
+          "filterShownAt": 383.4,
+          "productsShownAt": 383.4,
+          "title": "Filter",
+          "filterHeight": 232.2,
+          "firstProductTop": 565,
+          "shifts": [
+            {
+              "value": 0.21065,
+              "time": 380.9
+            }
+          ],
+          "fontFamily": "Manrope, system-ui, sans-serif"
+        }
+      ],
+      "clsMedian": 0.2107
+    },
+    "before+nofont": {
+      "runs": [
+        {
+          "cls": 0.1932,
+          "filterShownAt": 357.6,
+          "productsShownAt": 357.6,
+          "title": null,
+          "filterHeight": 209.2,
+          "firstProductTop": 542,
+          "shifts": [
+            {
+              "value": 0.19316,
+              "time": 351.2
+            }
+          ],
+          "fontFamily": "Manrope, system-ui, sans-serif"
+        },
+        {
+          "cls": 0.1932,
+          "filterShownAt": 464.8,
+          "productsShownAt": 464.8,
+          "title": null,
+          "filterHeight": 209.2,
+          "firstProductTop": 542,
+          "shifts": [
+            {
+              "value": 0.19316,
+              "time": 467
+            }
+          ],
+          "fontFamily": "Manrope, system-ui, sans-serif"
+        }
+      ],
+      "clsMedian": 0.1932
+    },
+    "after+nofont": {
+      "runs": [
+        {
+          "cls": 0.2107,
+          "filterShownAt": 392.8,
+          "productsShownAt": 392.8,
+          "title": "Filter",
+          "filterHeight": 232.2,
+          "firstProductTop": 565,
+          "shifts": [
+            {
+              "value": 0.21065,
+              "time": 390
+            }
+          ],
+          "fontFamily": "Manrope, system-ui, sans-serif"
+        },
+        {
+          "cls": 0.2107,
+          "filterShownAt": 322.1,
+          "productsShownAt": 322.1,
+          "title": "Filter",
+          "filterHeight": 232.2,
+          "firstProductTop": 565,
+          "shifts": [
+            {
+              "value": 0.21065,
+              "time": 320.2
+            }
+          ],
+          "fontFamily": "Manrope, system-ui, sans-serif"
+        }
+      ],
+      "clsMedian": 0.2107
+    }
+  },
+  "desktop": {
+    "before+font": {
+      "runs": [
+        {
+          "cls": 0.001,
+          "filterShownAt": 549.3,
+          "productsShownAt": 549.3,
+          "title": null,
+          "filterHeight": 330.4,
+          "firstProductTop": 388,
+          "shifts": [
+            {
+              "value": 0.00018,
+              "time": 274.7
+            },
+            {
+              "value": 0.00078,
+              "time": 307.4
+            }
+          ],
+          "fontFamily": "Manrope, system-ui, sans-serif"
+        },
+        {
+          "cls": 0.001,
+          "filterShownAt": 365,
+          "productsShownAt": 365.1,
+          "title": null,
+          "filterHeight": 330.4,
+          "firstProductTop": 388,
+          "shifts": [
+            {
+              "value": 0.00018,
+              "time": 157.2
+            },
+            {
+              "value": 0.00078,
+              "time": 194.6
+            }
+          ],
+          "fontFamily": "Manrope, system-ui, sans-serif"
+        }
+      ],
+      "clsMedian": 0.001
+    },
+    "after+font": {
+      "runs": [
+        {
+          "cls": 0.001,
+          "filterShownAt": 337,
+          "productsShownAt": 337.1,
+          "title": "Filter",
+          "filterHeight": 363,
+          "firstProductTop": 388,
+          "shifts": [
+            {
+              "value": 0.00018,
+              "time": 184.1
+            },
+            {
+              "value": 0.00078,
+              "time": 219.9
+            }
+          ],
+          "fontFamily": "Manrope, system-ui, sans-serif"
+        },
+        {
+          "cls": 0.001,
+          "filterShownAt": 517.2,
+          "productsShownAt": 517.3,
+          "title": "Filter",
+          "filterHeight": 363,
+          "firstProductTop": 388,
+          "shifts": [
+            {
+              "value": 0.00018,
+              "time": 221.4
+            },
+            {
+              "value": 0.00078,
+              "time": 253.8
+            }
+          ],
+          "fontFamily": "Manrope, system-ui, sans-serif"
+        }
+      ],
+      "clsMedian": 0.001
+    }
+  }
+}

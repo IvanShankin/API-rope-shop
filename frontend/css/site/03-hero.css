@@ -1,0 +1,499 @@
+/* первый экран */
+.hero {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100svh;
+  overflow: hidden;
+  background: var(--color-night);
+}
+
+/* лёгкое «зерно» поверх экрана для дорогой фактуры */
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0.08;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* спокойная студийная сцена: фон не конкурирует с фактурой верёвок */
+.hero__media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0;
+  scale: 1.04;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 76% 46% at 58% 100%, rgba(29, 84, 133, 0.32), transparent 72%),
+    radial-gradient(ellipse 56% 74% at 16% 34%, rgba(30, 63, 99, 0.18), transparent 76%),
+    linear-gradient(118deg, #050d18 0%, #09182a 52%, #040911 100%);
+  transition: opacity 1.6s ease, scale 2.8s var(--ease-out);
+}
+
+.hero__media::before {
+  content: "";
+  position: absolute;
+  right: -8%;
+  bottom: -4%;
+  left: -8%;
+  height: 45%;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 54% 42% at 57% 72%, rgba(76, 139, 192, 0.12), transparent 74%),
+    linear-gradient(180deg, transparent 0%, rgba(2, 8, 16, 0.24) 26%, rgba(2, 8, 16, 0.7) 100%);
+  border-top: 1px solid rgba(168, 207, 237, 0.05);
+}
+
+.hero__shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(3, 10, 20, 0.38) 0%, transparent 19%),
+    linear-gradient(0deg, rgba(3, 10, 20, 0.64) 0%, rgba(3, 10, 20, 0.18) 34%, transparent 62%),
+    linear-gradient(90deg, rgba(3, 10, 20, 0.22) 0%, transparent 50%);
+}
+
+/* контейнер первого экрана до 1920px: центрирован, удерживает все элементы сцены от разъезжания на больших мониторах */
+.hero__container {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  width: 100%;
+  max-width: 1920px;
+  min-height: 100vh;
+  min-height: 100svh;
+  margin: 0 auto;
+  pointer-events: none;
+}
+
+.hero__container>* {
+  pointer-events: auto;
+}
+
+/* эллипс не повторяет силуэт каната: выглядит как тень от предмета на матовой поверхности */
+.hero__shadows {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.hero__shadow {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  background: rgba(0, 2, 8, 0.82);
+  filter: blur(clamp(16px, 1.8vw, 34px));
+  transform: rotate(-2deg);
+}
+
+.hero__shadow--spiral {
+  bottom: clamp(60px, 12vh, 130px);
+  left: 28%;
+  width: min(43vw, 760px);
+  height: clamp(42px, 5.4vw, 92px);
+  opacity: 0.94;
+}
+
+@media (min-width: 721px) {
+  :root {
+    --header-h: clamp(80px, 9vh, 130px);
+  }
+
+  .header__inner {
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
+
+
+}
+
+/* левая висящая петля: опущена ниже шапки, целиком видна и масштабируется от ширины экрана (vw) */
+.hero__loops {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  user-select: none;
+}
+
+.hero__loop {
+  position: absolute;
+  max-width: none;
+  opacity: 0;
+  filter: brightness(0.88) saturate(0.95) drop-shadow(0 16px 24px rgba(0, 3, 10, 0.48));
+  transition: opacity 1.4s ease 0.65s;
+}
+
+.hero__loop--eye {
+  top: clamp(140px, 15vw, 240px);
+  left: clamp(16px, 2.5vw, 60px);
+  width: clamp(280px, 26vw, 500px);
+  height: auto;
+  rotate: -62deg;
+  -webkit-mask-image: linear-gradient(to top, transparent 0%, #000 8%, #000 100%);
+  mask-image: linear-gradient(to top, transparent 0%, #000 8%, #000 100%);
+}
+
+/* центральный закрученный канат: аккуратный размер от ширины экрана (vw), лежит на полу */
+.hero__spiral-wrap {
+  position: absolute;
+  bottom: clamp(-430px, -42vh, -330px);
+  left: 45%;
+  transform: translateX(-50%);
+  z-index: 3;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+  max-width: 43vw;
+}
+
+.hero__cutout {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 24px 13px rgba(0, 2, 8, 0.7));
+  -webkit-mask-image: linear-gradient(to right, #000 0%, #000 88%, transparent 100%);
+  mask-image: linear-gradient(to right, #000 0%, #000 88%, transparent 100%);
+  transform: scale(1.02);
+  will-change: transform;
+}
+
+/* правый блок: заголовок, слоган и веревка справа, которая ВСЕГДА находится ПОД текстом */
+.hero__brand {
+  position: absolute;
+  top: calc(var(--header-h) + clamp(8px, 2.5vh, 38px) + 50px);
+  right: clamp(16px, 4.5vw, 96px);
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  pointer-events: none;
+  isolation: isolate;
+  max-width: min(560px, 46vw);
+}
+
+.hero__title {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: var(--display-weight);
+  font-size: clamp(28px, 3.4vw, 66px);
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0;
+  filter: blur(14px);
+  transition: opacity 1.4s ease 0.35s, filter 1.4s ease 0.35s;
+}
+
+.hero__title-text {
+  display: inline-block;
+  background: linear-gradient(100deg,
+      #7B8C9E 0%,
+      #B2C2D2 22%,
+      #F4F8FB 48%,
+      #FFFFFF 52%,
+      #BAC9D7 76%,
+      #7A8B9D 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 4px 18px rgba(0, 0, 0, 0.45));
+}
+
+.hero__tagline {
+  position: relative;
+  z-index: 2;
+  margin: clamp(6px, 1.2vh, 16px) 0 0;
+  font-size: clamp(15px, 1.45vw, 28px);
+  line-height: 1.3;
+  color: var(--color-mist);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  opacity: 0;
+  filter: blur(10px);
+  transition: opacity 1.2s ease 0.5s, filter 1.2s ease 0.5s;
+}
+
+/* веревка справа: масштабируется от ширины экрана (vw) и находится строго ПОД слоганом */
+.hero__shackle-box {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: clamp(8px, 1.2vw, 22px);
+  transform: translateX(clamp(10px, 1.5vw, 30px));
+}
+
+.hero__shackle-box .hero__loop--shackle {
+  position: static;
+  display: block;
+  width: clamp(150px, 17vw, 320px);
+  height: auto;
+  object-fit: contain;
+  opacity: 0;
+  filter: brightness(0.88) saturate(0.95) drop-shadow(0 16px 24px rgba(0, 3, 10, 0.48));
+  transition: opacity 1.4s ease 0.65s, transform 1.4s var(--ease-out) 0.65s;
+}
+
+.hero__origin {
+  position: relative;
+  top: 0;
+  z-index: 1;
+  display: block;
+  align-self: center;
+  width: clamp(76px, 5.5vw, 92px);
+  height: clamp(76px, 5.5vw, 92px);
+  object-fit: contain;
+  opacity: 0;
+  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.55)) blur(8px);
+  transition: opacity 1.2s ease 0.65s, filter 1.2s ease 0.65s, transform 0.35s ease;
+  user-select: none;
+  cursor: default;
+}
+
+.hero__origin:hover {
+  transform: scale(1.06) rotate(-3deg);
+}
+
+.hero__bottom {
+  /* НАСТРОЙКИ ЗАТЕМНЕНИЯ: */
+  --bottom-shade-opacity: 0.95;
+  /* прозрачность затемнения от 0 (нет фона) до 1 (максимально тёмный) */
+  --bottom-shade-blur: 6px;
+  /* размытие каната под текстом (например: 0px, 6px, 12px) */
+
+  position: relative;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: clamp(16px, 3vw, 40px);
+  padding: clamp(28px, 4vh, 48px) var(--gutter) clamp(24px, 4.5vh, 56px);
+  width: 100%;
+}
+
+/* мягкий затемнённый фон для идеальной читаемости текста и кнопок на фоне верёвок */
+.hero__bottom::before {
+  content: "";
+  position: absolute;
+  inset: -40px -100vw 0 -100vw;
+  z-index: -1;
+  pointer-events: none;
+  opacity: var(--bottom-shade-opacity);
+  background: linear-gradient(0deg,
+      var(--color-night) 0%,
+      rgba(10, 25, 49, 0.96) 35%,
+      rgba(10, 25, 49, 0.8) 65%,
+      rgba(10, 25, 49, 0.35) 85%,
+      transparent 100%);
+  backdrop-filter: blur(var(--bottom-shade-blur));
+  -webkit-backdrop-filter: blur(var(--bottom-shade-blur));
+  -webkit-mask-image: linear-gradient(to top, #000 0%, #000 65%, transparent 100%);
+  mask-image: linear-gradient(to top, #000 0%, #000 65%, transparent 100%);
+}
+
+.hero__content {
+  flex-shrink: 0;
+  max-width: 540px;
+  margin-top: 100px;
+}
+
+/* правый блок: штамп Made in Germany по центру НАД блоком фактов/цифр */
+.hero__right-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(12px, 1.4vh, 18px);
+  flex-shrink: 0;
+}
+
+.hero__slogan {
+  margin: 0 0 18px;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(24px, 2.4vw, 36px);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.hero__text {
+  margin: 0 0 30px;
+  max-width: 460px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--color-text-muted);
+}
+
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.hero__facts {
+  justify-self: end;
+}
+
+/* появление первого экрана */
+.hero__content>*,
+.hero__facts {
+  opacity: 0;
+  translate: 0 24px;
+  transition: opacity 1s var(--ease-out), translate 1s var(--ease-out);
+}
+
+.hero--ready .hero__media {
+  opacity: 1;
+  scale: 1;
+}
+
+.hero--ready .hero__title {
+  opacity: 1;
+  filter: blur(0);
+}
+
+.hero--ready .hero__tagline {
+  opacity: 1;
+  filter: blur(0);
+}
+
+.hero--ready .hero__origin {
+  opacity: 1;
+  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.55)) blur(0);
+}
+
+.hero--ready .hero__loop {
+  opacity: 0.85;
+}
+
+.hero--ready .hero__content>*,
+.hero--ready .hero__facts {
+  opacity: 1;
+  translate: 0 0;
+}
+
+.hero--ready .hero__slogan {
+  transition-delay: 0.8s;
+}
+
+.hero--ready .hero__text {
+  transition-delay: 0.9s;
+}
+
+.hero--ready .hero__actions {
+  transition-delay: 1s;
+}
+
+.hero--ready .hero__facts {
+  transition-delay: 1.1s;
+}
+
+/* факты */
+.facts {
+  display: flex;
+  gap: clamp(24px, 3vw, 48px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.facts__item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: 18px;
+  border-left: 1px solid var(--color-line);
+}
+
+.facts__value {
+  font-family: var(--font-display);
+  font-weight: var(--display-weight);
+  font-size: clamp(20px, 1.8vw, 28px);
+  line-height: 1;
+  white-space: nowrap;
+  text-shadow: 0 2px 10px rgba(0, 3, 10, 0.7);
+}
+
+.facts__label {
+  max-width: 17ch;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+  text-shadow: 0 1px 6px rgba(0, 3, 10, 0.6);
+}
+
+/* декоративная верёвка с петлями */
+.specialist {
+  position: relative;
+  margin: var(--margin-block) 0;
+  overflow: hidden;
+}
+
+.specialist__rope {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: clamp(150px, 20.8vw, 300px);
+  margin-top: 0;
+}
+
+.specialist__tube,
+.specialist__shadow,
+.specialist__guide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.specialist__tube,
+.specialist__shadow {
+  opacity: 0;
+}
+
+.specialist__rope--ready .specialist__tube,
+.specialist__rope--ready .specialist__shadow {
+  opacity: 1;
+}
+
+.specialist__rope--ready .specialist__guide {
+  visibility: hidden;
+}
+
+/* маска запасного 3D-рендера раскрывается по тому же пути */
+.specialist__mask {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 56;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1 2;
+  stroke-dashoffset: 0;
+}
+
+/* верёвка уже отделяет блоки — большой отступ сверху не нужен */
+.specialist {}
+

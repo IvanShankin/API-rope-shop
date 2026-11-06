@@ -1,4 +1,4 @@
-import { seoConfig } from './config.js?v=20261027.10';
+import { seoConfig } from './config.js?v=20261106.1';
 
 // Texts describe existing services; no invented prices, ratings or company details.
 export const pages = {

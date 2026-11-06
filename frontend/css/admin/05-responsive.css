@@ -1,0 +1,229 @@
+/* Админка: Адаптив базовых стилей.
+   Часть бывшего css/admin.css (строки 1787–2014). Порядок подключения файлов важен. */
+/* адаптив */
+@media (max-width: 1100px) {
+  .guide {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+
+  /* боковая панель превращается в верхнюю полосу с прокруткой */
+  .admin {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sidebar {
+    position: sticky;
+    z-index: 10;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    height: auto;
+    padding: 10px 12px;
+    overflow-x: auto;
+  }
+
+  .sidebar__logo {
+    flex-shrink: 0;
+    padding: 0 8px 0 4px;
+  }
+
+  .sidebar__logo-image {
+    width: 70px;
+  }
+
+  .sidebar__logo-caption,
+  .sidebar__caption,
+  .sidebar__footer {
+    display: none;
+  }
+
+  .sidebar__nav {
+    display: flex;
+    gap: 4px;
+  }
+
+  .sidebar__list {
+    flex-direction: row;
+  }
+
+  .sidebar__tab {
+    width: auto;
+    white-space: nowrap;
+  }
+
+  .fields--two {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .items__row {
+    flex-wrap: wrap;
+  }
+
+  .items__controls {
+    flex-direction: row;
+    width: 100%;
+  }
+
+  .items__controls .btn {
+    flex: 1;
+  }
+
+  .extras__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .panel__title {
+    font-size: 28px;
+  }
+
+  .card__head {
+    padding: 20px;
+  }
+
+  .card__body {
+    padding: 0 20px 20px;
+  }
+
+  .fields--pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .image-slot {
+    flex-direction: column;
+  }
+
+  .image-slot__preview {
+    width: 100%;
+    height: 180px;
+  }
+
+  .review__head {
+    flex-wrap: wrap;
+  }
+
+  .formula {
+    padding: 20px;
+  }
+
+  .formula__sign {
+    display: none;
+  }
+
+  .rope-card {
+    padding: 16px;
+  }
+
+  /* таблица цен без шапки: у каждого поля своя подпись */
+  .prices__head {
+    display: none;
+  }
+
+  .prices__row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: end;
+    padding: 14px;
+    border-radius: 12px;
+    background: var(--admin-surface);
+  }
+
+  .prices--hardware .prices__row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .prices--work .prices__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .prices--specs .prices__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .product-card__head {
+    flex-wrap: wrap;
+  }
+
+  .product-card__thumb {
+    width: 72px;
+    height: 54px;
+  }
+
+  .product-card__status {
+    display: none;
+  }
+
+  .product-card__body {
+    padding: 20px 14px;
+  }
+
+  .prices__size {
+    grid-column: 1 / -1;
+    padding-left: 0;
+  }
+
+  .prices__label {
+    display: block;
+  }
+
+  .prices--hardware .field__affix .field__input {
+    padding-right: 34px;
+    padding-left: 12px;
+  }
+
+  .prices--hardware .field__suffix {
+    right: 12px;
+  }
+
+  .prices__remove {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .colors__row {
+    grid-template-columns: 56px minmax(0, 1fr) 48px;
+    gap: 10px 12px;
+  }
+
+  .colors__row .switch {
+    order: 1;
+    grid-column: 1 / -1;
+    min-height: 40px;
+  }
+
+  .colors__row .prices__remove {
+    grid-column: auto;
+    width: 48px;
+  }
+
+  /* на телефоне показываем только индикатор, пояснение скрываем */
+  .savebar {
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    gap: 8px;
+  }
+
+  .savebar__text {
+    display: flex;
+    font-size: 15px;
+  }
+
+  .savebar__hint {
+    display: none;
+  }
+
+  .savebar .btn {
+    width: 100%;
+  }
+}
+
+.requests-table {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.requests-table .admin-table {
+  min-width: 680px;
+}

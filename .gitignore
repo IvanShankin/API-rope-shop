@@ -11,3 +11,13 @@ __pycache__/
 *.test.env
 !.example.env
 !.example.test.env
+
+# ��������� ����� � �������-�����
+ADMIN_CREDENTIALS.txt
+media/
+
+# локальный инструментарий для скриншотов (puppeteer) — в репозиторий не нужен
+node_modules/
+npm-cache/
+package.json
+package-lock.json

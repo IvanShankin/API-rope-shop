@@ -1,0 +1,13 @@
+{
+  "resetHover": {
+    "background": "rgba(179, 207, 229, 0.1)",
+    "border": "rgba(179, 207, 229, 0.62)"
+  },
+  "checkboxHover": "rgb(179, 207, 229)",
+  "keyboardOpen": {
+    "open": true,
+    "focused": "ss-main catalog-filter__select ss-dir-below"
+  },
+  "keyboardClose": false,
+  "titleAfterKeyboard": "Filter"
+}

@@ -1,19 +1,19 @@
 const field = (name, label, type = 'text', extra = {}) => ({ name, label, type, ...extra });
-const active = field('is_active', 'Активен', 'checkbox');
+const active = field('is_active', 'Показывать на сайте', 'checkbox');
 const code = field('code', 'Код', 'text', { required: true, maxLength:100 });
-const order = field('index','Порядок','number',{min:0,integer:true,required:true,default:0});
-const price = field('price', 'Цена, EUR', 'number', { min: 0, required: true });
+const order = field('index','Место в списке','number',{min:0,integer:true,required:true,default:0});
+const price = field('price', 'Цена, €', 'number', { min: 0, required: true });
 export const configSections = {
-  categories: { title:'Категории каталога', translated:true, separateIndex:true, fields:[field('slug','Адрес категории (латиницей, без пробелов)','text',{required:true,maxLength:100}),order,active] },
-  splice_types: { title: 'Заделки и виды работ', translated: true, description: true, fields: [code,
-    field('category', 'Категория', 'select', { options: { loop: 'Петля', splice: 'Сращивание / обработка' } }),
+  categories: { title:'Категории каталога', translated:true, separateIndex:true, fields:[field('slug','Адрес страницы (латиницей)','text',{required:true,maxLength:100}),order,active] },
+  splice_types: { title: 'Заделки', translated: true, description: true, fields: [code,
+    field('category', 'Категория', 'select', { options: { loop: 'Петля', splice: 'Сращивание' } }),
     field('visual_type', 'Вид на схеме', 'select', { options: { aug_splice:'Петля', takling:'Обмотка', pilotauge:'Петля-проводник', endless_splice:'Замкнутое сращивание', shackle:'Скоба', kausche:'Коуш', exposed_eye:'Открытая петля', sewn_eye:'Прошитая петля', protection:'Защита', leather:'Кожа', friction_ring:'Кольцо', soft_shackle:'Мягкая скоба', generic:'Другое' } }),
-    field('index', 'Порядок', 'number', { min:0, integer:true, required:true, default:0 }), active] },
+    field('index', 'Место в списке', 'number', { min:0, integer:true, required:true, default:0 }), active] },
   splice_materials: { title: 'Тарифные материалы', fields: [code, field('name', 'Название', 'text', { required:true })] },
-  splice_prices: { title: 'Тарифы работ', fields: [field('splice_type_id','Вид работы','select',{source:'splice_types'}),
-    field('splice_material_id','Тарифный материал','select',{source:'splice_materials'}),
-    field('diameter_from_mm','Диаметр от, мм (пусто — без нижней границы)','number',{min:0,nullable:true}),
-    field('diameter_to_mm','Диаметр до, мм (пусто — без верхней границы)','number',{min:0,nullable:true}),price,active] },
+  splice_prices: { title: 'Тарифы работ', fields: [field('splice_type_id','Работа','select',{source:'splice_types'}),
+    field('splice_material_id','Группа троса','select',{source:'splice_materials'}),
+    field('diameter_from_mm','Диаметр от, мм','number',{min:0,nullable:true}),
+    field('diameter_to_mm','Диаметр до, мм','number',{min:0,nullable:true}),price,active] },
   configurator_extras: { title:'Дополнительные опции', translated:true, description:true, separateIndex:true, fields:[code,price,
     field('billing_type','Начисление','select',{options:{fixed:'За заказ',per_item:'За изделие / работу',per_meter:'За метр каната'}}),order,active] },
   material_groups: { title:'Группы каталога', translated:true, separateIndex:true, fields:[code,order,active] },
@@ -22,9 +22,9 @@ export const configSections = {
     field('min_length_m','Минимальная длина, м','number',{min:0.01,required:true}),
     field('max_length_m','Максимальная длина, м','number',{min:0.01,required:true}),
     field('splice_allowance_until_mm','Граница диаметра для запаса, мм','number',{min:0.01,required:true}),
-    field('splice_allowance_until_m','Запас до границы включительно, м','number',{min:0,required:true}),
-    field('splice_allowance_over_m','Запас выше границы, м','number',{min:0,required:true}),
-    field('urgent_surcharge_per_splice','Доплата за срочность одной работы, EUR','number',{min:0,required:true}),
+    field('splice_allowance_until_m','Запас до границы, м','number',{min:0,required:true}),
+    field('splice_allowance_over_m','Запас свыше границы, м','number',{min:0,required:true}),
+    field('urgent_surcharge_per_splice','Доплата за срочность работы, €','number',{min:0,required:true}),
     field('urgent_max_splices','Максимум срочных работ','number',{min:0,integer:true,required:true}),
     field('standard_turnaround_hours','Обычный срок, часов','number',{min:0,integer:true,required:true}),
     field('urgent_turnaround_hours','Срочный срок, часов','number',{min:0,integer:true,required:true}),
@@ -70,7 +70,7 @@ export function configPayload(section, values, rules = [], id = null) {
     if (data.is_active && rules.some(r => Number(r.id) !== Number(id) && r.is_active !== false
       && Number(r.splice_type_id) === data.splice_type_id && Number(r.splice_material_id) === data.splice_material_id
       && (r.diameter_from_mm == null ? -Infinity : Number(r.diameter_from_mm)) <= high
-      && (r.diameter_to_mm == null ? Infinity : Number(r.diameter_to_mm)) >= low)) throw new Error('Диапазон пересекается с активным тарифом этой работы и материала. Границы включаются в диапазон.');
+      && (r.diameter_to_mm == null ? Infinity : Number(r.diameter_to_mm)) >= low)) throw new Error('Для этого диаметра уже есть цена. Измените диапазон.');
   }
   return data;
 }

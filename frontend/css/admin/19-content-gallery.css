@@ -1,0 +1,179 @@
+/* Админка: Галереи и тексты страниц.
+   Часть бывшего css/admin.css (строки 5450–5626). Порядок подключения файлов важен. */
+/* ==========================================================================
+   Галереи и «Тексты страниц»: компактный редактор записи.
+   Стили ограничены контейнером редактора этих двух разделов, поэтому
+   другие панели админки не затрагиваются.
+   ========================================================================== */
+:is(#panel-gallery, #panel-content) .admin-content-editor {
+  display: grid;
+  gap: 16px;
+}
+
+:is(#panel-gallery, #panel-content) .admin-content-editor>h2 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.25;
+}
+
+:is(#panel-gallery, #panel-content) .admin-content-editor>.admin-image-preview {
+  justify-self: start;
+  width: auto;
+  max-width: 220px;
+  max-height: 150px;
+  margin: 0;
+  border-radius: 10px;
+}
+
+:is(#panel-gallery, #panel-content) .admin-content-editor>form.product-editor {
+  gap: 16px !important;
+  margin: 0 !important;
+  padding: 16px !important;
+}
+
+:is(#panel-gallery, #panel-content) .admin-content-editor .field {
+  gap: 6px;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+:is(#panel-gallery, #panel-content) .admin-content-editor .field__input {
+  font-size: 18px;
+  line-height: 1.45;
+}
+
+:is(#panel-gallery, #panel-content) .admin-content-editor .field__hint {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+/* «Показывать в галерее» и «Место в списке» — одной строкой. */
+:is(#panel-gallery, #panel-content) .admin-content-editor .admin-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+}
+
+:is(#panel-gallery, #panel-content) .admin-content-editor .admin-form-row>.admin-toggle {
+  flex: 0 0 auto;
+  min-height: 44px;
+  margin: 0;
+}
+
+:is(#panel-gallery, #panel-content) .admin-content-editor .admin-form-row>.field {
+  flex: 0 1 auto;
+  width: auto;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+:is(#panel-gallery, #panel-content) .admin-content-editor .admin-form-row>.field>.field__input {
+  width: 120px;
+}
+
+/* Загрузка фотографии: лейбл, кнопка и подсказка в одну строку. */
+:is(#panel-gallery, #panel-content) .admin-content-editor .admin-file-upload {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+:is(#panel-gallery, #panel-content) .admin-content-editor .admin-file-upload>.field__label {
+  flex: 0 0 auto;
+  width: auto;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+:is(#panel-gallery, #panel-content) .admin-content-editor .admin-file-upload>input[type="file"] {
+  flex: 1 1 240px;
+  width: auto;
+  min-width: 0;
+  min-height: 44px;
+  font-size: 15px;
+}
+
+:is(#panel-gallery, #panel-content) .admin-content-editor .admin-file-upload>.field__hint {
+  flex: 0 0 auto;
+}
+
+/* Языковые блоки: плоские, с ровным ритмом от 16 до 20 px. */
+:is(#panel-gallery, #panel-content) .admin-content-editor .admin-disclosures-group {
+  gap: 16px;
+}
+
+:is(#panel-gallery, #panel-content) .admin-content-editor details.admin-disclosure {
+  margin: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
+:is(#panel-gallery, #panel-content) .admin-content-editor details.admin-disclosure>summary {
+  min-height: 44px;
+  padding: 6px 44px 6px 0 !important;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+:is(#panel-gallery, #panel-content) .admin-content-editor details.admin-disclosure[open]>summary {
+  margin-bottom: 8px;
+}
+
+:is(#panel-gallery, #panel-content) .admin-content-editor details.admin-disclosure>.admin-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 20px;
+  padding: 0;
+}
+
+:is(#panel-gallery, #panel-content) .admin-content-editor .admin-form-actions {
+  gap: 12px;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+@media (max-width: 768px) {
+  :is(#panel-gallery, #panel-content) .admin-content-editor>form.product-editor {
+    padding: 12px !important;
+  }
+
+  :is(#panel-gallery, #panel-content) .admin-content-editor .admin-form-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  :is(#panel-gallery, #panel-content) .admin-content-editor .admin-form-row>.field {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  :is(#panel-gallery, #panel-content) .admin-content-editor .admin-form-row>.field>.field__input {
+    width: 100%;
+  }
+
+  :is(#panel-gallery, #panel-content) .admin-content-editor .admin-file-upload {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  :is(#panel-gallery, #panel-content) .admin-content-editor .admin-file-upload>input[type="file"] {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+
+  :is(#panel-gallery, #panel-content) .admin-content-editor details.admin-disclosure>.admin-fields {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+}

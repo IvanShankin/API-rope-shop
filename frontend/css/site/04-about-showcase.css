@@ -1,0 +1,290 @@
+/* обо мне */
+.about {
+  position: relative;
+  margin: var(--margin-block) 0;
+}
+
+.about__inner {
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+
+/* заголовок блока «о нас» */
+.about__head {
+  display: block;
+  margin-bottom: clamp(20px, 2.2vw, 32px);
+}
+
+.about__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(30px, 3.6vw, 56px);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.about__paragraph {
+  margin: 0 0 16px;
+  font-size: 16px;
+  line-height: 1.75;
+  color: var(--color-text-muted);
+}
+
+.about__paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.about__signature {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 28px 0 0;
+  padding-top: 20px;
+}
+
+.about__name {
+  font-family: var(--font-display);
+  font-size: 15px;
+  letter-spacing: 0;
+}
+
+.about__role {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+/* появление блока «о нас» */
+.about__head,
+.about__showcase {
+  opacity: 0;
+  translate: 0 32px;
+  transition: opacity 1s var(--ease-out), translate 1s var(--ease-out);
+}
+
+.about--visible .about__head,
+.about--visible .about__showcase {
+  opacity: 1;
+  translate: 0 0;
+}
+
+.about--visible .about__showcase {
+  transition-delay: 0.2s;
+}
+
+/* витрина: список слева, фото справа */
+.showcase {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: clamp(16px, 2vw, 28px);
+}
+
+.showcase__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.showcase__item {
+  display: flex;
+  flex: 1;
+}
+
+.showcase__tab {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "title title"
+    "text icon";
+  align-content: space-between;
+  gap: 20px 24px;
+  width: 100%;
+  min-height: 150px;
+  padding: 24px 26px;
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  border-radius: 18px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.5s var(--ease-out), border-color 0.5s var(--ease-out);
+}
+
+/* активный пункт заливается фоном слева направо, как кнопки */
+.showcase__tab::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--color-deep);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.6s var(--ease-out);
+}
+
+.showcase__tab:hover {
+  border-color: rgba(179, 207, 229, 0.4);
+}
+
+.showcase__tab--active {
+  border-color: rgba(179, 207, 229, 0.5);
+}
+
+.showcase__tab--active::before {
+  transform: scaleX(1);
+}
+
+.showcase__title {
+  grid-area: title;
+  justify-self: end;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(18px, 1.6vw, 24px);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  text-align: right;
+}
+
+.showcase__text {
+  grid-area: text;
+  align-self: end;
+  max-width: 40ch;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
+.showcase__icon {
+  grid-area: icon;
+  align-self: end;
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: var(--color-steel);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke 0.5s var(--ease-out), transform 0.4s var(--ease-out);
+}
+
+.showcase__tab:hover .showcase__icon {
+  transform: translate(2px, -2px);
+}
+
+.showcase__tab--active .showcase__icon {
+  stroke: var(--color-mist);
+}
+
+.showcase__tab:not(:has(.showcase__icon)) {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "title"
+    "text";
+}
+
+.showcase__tab:not(:has(.showcase__icon)) .showcase__text {
+  max-width: none;
+}
+
+/* фото — Swiper с плавной сменой кадров, классы переименованы в БЭМ */
+.showcase__media {
+  position: relative;
+  z-index: 1;
+  min-height: 420px;
+  overflow: hidden;
+  border-radius: 24px;
+  background: var(--color-deep);
+}
+
+.showcase__track {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  box-sizing: content-box;
+}
+
+.showcase__slide {
+  position: relative;
+  flex-shrink: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  transition-property: opacity;
+}
+
+.showcase__slide--active {
+  pointer-events: auto;
+}
+
+.showcase__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  scale: 1.06;
+  transition: scale 1.4s var(--ease-out);
+}
+
+.showcase__slide--active .showcase__image {
+  scale: 1;
+}
+
+/* служебный элемент Swiper для экранных дикторов */
+.showcase__notification {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* цвета верёвки: общие для образцов и схемы */
+.rope-color--blue {
+  --rope-base: #2F6DB0;
+  --rope-dark: #1B467A;
+  --rope-light: #9CC3EA;
+}
+
+.rope-color--red {
+  --rope-base: #C23A33;
+  --rope-dark: #7E1F1C;
+  --rope-light: #F09A8F;
+}
+
+.rope-color--orange {
+  --rope-base: #E07A2C;
+  --rope-dark: #9A4A12;
+  --rope-light: #FFC08A;
+}
+
+.rope-color--black {
+  --rope-base: #2A2E35;
+  --rope-dark: #121418;
+  --rope-light: #5B6270;
+}
+
+.rope-color--grey {
+  --rope-base: #8C98A5;
+  --rope-dark: #5A6572;
+  --rope-light: #D3DBE3;
+}
+
+.rope-color--white {
+  --rope-base: #E6ECF1;
+  --rope-dark: #AEB9C4;
+  --rope-light: #FFFFFF;
+}
+

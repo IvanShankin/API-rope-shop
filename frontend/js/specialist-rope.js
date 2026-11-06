@@ -86,8 +86,11 @@
   }
 
   function renderer(canvas, mesh, texture) {
-    const gl = canvas.getContext('webgl', { alpha: true, antialias: true, preserveDrawingBuffer: true });
+    const gl = canvas.getContext('webgl', { alpha: true, antialias: true });
     if (!gl) throw new Error('WebGL unavailable');
+    const info = gl.getExtension('WEBGL_debug_renderer_info');
+    const device = info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL) || '') : '';
+    if (/swiftshader|software|llvmpipe|basic render/i.test(device)) throw new Error('WebGL is software rendered');
     function shader(type, source) {
       const result = gl.createShader(type);
       gl.shaderSource(result, source);
@@ -255,21 +258,25 @@
     const path = section.querySelector('#specialist-path');
     const mask = section.querySelector('.specialist__mask');
     if (!rope || !canvas || !path || !shadow || !mask) return;
-    const mesh = await tube(path);
     const paint = shadow.getContext('2d');
     let scene = null;
+    let mesh = null;
     let raf = 0;
     let scale = 1;
     let x = 0;
     let y = 0;
     let ratio = 1;
+    let shadowRatio = 1;
+    let offset = 0;
     let last = -1;
+    let painted = null;
+    let inView = true;
 
     function drawShadow(end) {
       paint.setTransform(1, 0, 0, 1, 0, 0);
       paint.clearRect(0, 0, shadow.width, shadow.height);
       if (!end) return;
-      paint.setTransform(scale * ratio, 0, 0, scale * ratio, x * ratio, y * ratio);
+      paint.setTransform(scale * shadowRatio, 0, 0, scale * shadowRatio, x * shadowRatio, y * shadowRatio);
       paint.beginPath();
       mesh.centers.forEach((point, i) => {
         if (point.at <= end) {
@@ -282,38 +289,54 @@
       paint.lineCap = 'round';
       paint.strokeStyle = 'rgba(0, 4, 10, 0.5)';
       paint.shadowColor = 'rgba(0, 0, 0, 0.9)';
-      paint.shadowBlur = 8 * scale * ratio;
-      paint.shadowOffsetX = 3 * scale * ratio;
-      paint.shadowOffsetY = 8 * scale * ratio;
+      paint.shadowBlur = 8 * scale * shadowRatio;
+      paint.shadowOffsetX = 3 * scale * shadowRatio;
+      paint.shadowOffsetY = 8 * scale * shadowRatio;
       paint.stroke();
     }
 
     function draw() {
       raf = 0;
-      const top = rope.getBoundingClientRect().top;
+      if (!inView) return;
+      const top = offset - scrollY;
       const progress = motion.matches ? 1 : Math.min(1, Math.max(0,
         (innerHeight * 0.7 - top) / (innerHeight * 0.45)));
-      mask.style.strokeDashoffset = (1 - progress).toFixed(5);
+      if (!scene) {
+        const reveal = (1 - progress).toFixed(5);
+        if (reveal !== painted) {
+          painted = reveal;
+          mask.style.strokeDashoffset = reveal;
+        }
+        return;
+      }
       const end = progress * mesh.length;
-      if (!scene || Math.abs(last - end) < 0.1) return;
+      if (Math.abs(last - end) < 0.1) return;
       last = end;
       drawShadow(end);
       scene.draw(end);
     }
 
     function request() {
-      if (!raf) raf = requestAnimationFrame(draw);
+      if (!inView || raf) return;
+      raf = requestAnimationFrame(draw);
+    }
+
+    function measure() {
+      const bounds = rope.getBoundingClientRect();
+      offset = bounds.top + scrollY;
+      return bounds;
     }
 
     function resize() {
+      const bounds = measure();
       if (scene) {
-        const bounds = rope.getBoundingClientRect();
-        ratio = Math.min(devicePixelRatio || 1, 2);
+        ratio = Math.min(devicePixelRatio || 1, 1.5);
+        shadowRatio = Math.min(ratio, 1);
         scale = Math.max(bounds.width / 1440, bounds.height / 300);
         x = (bounds.width - 1440 * scale) / 2;
         y = (bounds.height - 300 * scale) / 2;
-        shadow.width = Math.round(bounds.width * ratio);
-        shadow.height = Math.round(bounds.height * ratio);
+        shadow.width = Math.round(bounds.width * shadowRatio);
+        shadow.height = Math.round(bounds.height * shadowRatio);
         scene.resize(bounds.width, bounds.height, scale, x, y, ratio);
         last = -1;
       }
@@ -322,6 +345,9 @@
 
     function fallback(reason) {
       scene = null;
+      mesh = null;
+      last = -1;
+      painted = null;
       rope.classList.remove('specialist__rope--ready');
       rope.dataset.renderer = 'image';
       if (reason) console.warn('Rope 3D uses its prerendered image:', reason.message || reason);
@@ -336,11 +362,37 @@
     addEventListener('resize', resize);
     motion.addEventListener('change', request);
     if ('ResizeObserver' in window) new ResizeObserver(resize).observe(rope);
-    if (document.fonts) document.fonts.ready.then(request);
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(entries => {
+        for (const entry of entries) {
+          inView = entry.isIntersecting;
+          if (inView) {
+            measure();
+            request();
+          } else if (raf) {
+            cancelAnimationFrame(raf);
+            raf = 0;
+          }
+        }
+      }, { rootMargin: '200px' }).observe(rope);
+    }
+    if (document.fonts) document.fonts.ready.then(() => {
+      if (inView) measure();
+      request();
+    });
+    measure();
     if (location.protocol === 'file:') {
       fallback();
       return;
     }
+    const gl = canvas.getContext('webgl', { alpha: true, antialias: true });
+    const info = gl && gl.getExtension('WEBGL_debug_renderer_info');
+    const device = info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL) || '') : '';
+    if (!gl || /swiftshader|software|llvmpipe|basic render/i.test(device)) {
+      fallback(gl ? new Error('WebGL is software rendered') : undefined);
+      return;
+    }
+    mesh = await tube(path);
     const photo = new Image();
     photo.addEventListener('load', () => {
       try {

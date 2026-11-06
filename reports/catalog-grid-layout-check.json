@@ -1,0 +1,554 @@
+[
+  {
+    "scenario": "real-4-categories-1440",
+    "itemCount": 4,
+    "rowCount": 2,
+    "rowSizes": [
+      2,
+      2
+    ],
+    "problems": [],
+    "classes": [
+      "catalog__item catalog__item--wide",
+      "catalog__item catalog__item--medium",
+      "catalog__item catalog__item--half",
+      "catalog__item catalog__item--half"
+    ],
+    "spans": [
+      "span 7",
+      "span 5",
+      "span 6",
+      "span 6"
+    ],
+    "specs": 0,
+    "titles": 4,
+    "prices": 4,
+    "listHeight": 683
+  },
+  {
+    "scenario": "fake-3-categories-1440",
+    "n": 3,
+    "itemCount": 3,
+    "rowCount": 2,
+    "rowSizes": [
+      2,
+      1
+    ],
+    "problems": [],
+    "classes": [
+      "catalog__item catalog__item--wide",
+      "catalog__item catalog__item--medium",
+      "catalog__item catalog__item--full"
+    ],
+    "spans": [
+      "span 7",
+      "span 5",
+      "span 12"
+    ],
+    "specs": 0,
+    "titles": 3,
+    "prices": 3,
+    "listHeight": 683,
+    "ok": true
+  },
+  {
+    "scenario": "fake-5-categories-1440",
+    "n": 5,
+    "itemCount": 5,
+    "rowCount": 2,
+    "rowSizes": [
+      2,
+      3
+    ],
+    "problems": [],
+    "classes": [
+      "catalog__item catalog__item--wide",
+      "catalog__item catalog__item--medium",
+      "catalog__item catalog__item--third",
+      "catalog__item catalog__item--third",
+      "catalog__item catalog__item--third"
+    ],
+    "spans": [
+      "span 7",
+      "span 5",
+      "span 4",
+      "span 4",
+      "span 4"
+    ],
+    "specs": 0,
+    "titles": 5,
+    "prices": 5,
+    "listHeight": 683,
+    "ok": true
+  },
+  {
+    "scenario": "fake-6-categories-1440",
+    "n": 6,
+    "itemCount": 6,
+    "rowCount": 2,
+    "rowSizes": [
+      2,
+      4
+    ],
+    "problems": [],
+    "classes": [
+      "catalog__item catalog__item--wide",
+      "catalog__item catalog__item--medium",
+      "catalog__item",
+      "catalog__item",
+      "catalog__item",
+      "catalog__item"
+    ],
+    "spans": [
+      "span 7",
+      "span 5",
+      "span 3",
+      "span 3",
+      "span 3",
+      "span 3"
+    ],
+    "specs": 0,
+    "titles": 6,
+    "prices": 6,
+    "listHeight": 683,
+    "ok": true
+  },
+  {
+    "scenario": "fake-7-categories-1440",
+    "n": 7,
+    "itemCount": 7,
+    "rowCount": 3,
+    "rowSizes": [
+      2,
+      3,
+      2
+    ],
+    "problems": [],
+    "classes": [
+      "catalog__item catalog__item--wide",
+      "catalog__item catalog__item--medium",
+      "catalog__item catalog__item--third",
+      "catalog__item catalog__item--third",
+      "catalog__item catalog__item--third",
+      "catalog__item catalog__item--half",
+      "catalog__item catalog__item--half"
+    ],
+    "spans": [
+      "span 7",
+      "span 5",
+      "span 4",
+      "span 4",
+      "span 4",
+      "span 6",
+      "span 6"
+    ],
+    "specs": 0,
+    "titles": 7,
+    "prices": 7,
+    "listHeight": 1024,
+    "ok": true
+  },
+  {
+    "scenario": "fake-9-categories-1440",
+    "n": 9,
+    "itemCount": 9,
+    "rowCount": 3,
+    "rowSizes": [
+      2,
+      4,
+      3
+    ],
+    "problems": [],
+    "classes": [
+      "catalog__item catalog__item--wide",
+      "catalog__item catalog__item--medium",
+      "catalog__item",
+      "catalog__item",
+      "catalog__item",
+      "catalog__item",
+      "catalog__item catalog__item--third",
+      "catalog__item catalog__item--third",
+      "catalog__item catalog__item--third"
+    ],
+    "spans": [
+      "span 7",
+      "span 5",
+      "span 3",
+      "span 3",
+      "span 3",
+      "span 3",
+      "span 4",
+      "span 4",
+      "span 4"
+    ],
+    "specs": 0,
+    "titles": 9,
+    "prices": 9,
+    "listHeight": 1024,
+    "ok": true
+  },
+  {
+    "scenario": "fake-12-categories-1440",
+    "n": 12,
+    "itemCount": 12,
+    "rowCount": 4,
+    "rowSizes": [
+      2,
+      4,
+      3,
+      3
+    ],
+    "problems": [],
+    "classes": [
+      "catalog__item catalog__item--wide",
+      "catalog__item catalog__item--medium",
+      "catalog__item",
+      "catalog__item",
+      "catalog__item",
+      "catalog__item",
+      "catalog__item catalog__item--third",
+      "catalog__item catalog__item--third",
+      "catalog__item catalog__item--third",
+      "catalog__item catalog__item--third",
+      "catalog__item catalog__item--third",
+      "catalog__item catalog__item--third"
+    ],
+    "spans": [
+      "span 7",
+      "span 5",
+      "span 3",
+      "span 3",
+      "span 3",
+      "span 3",
+      "span 4",
+      "span 4",
+      "span 4",
+      "span 4",
+      "span 4",
+      "span 4"
+    ],
+    "specs": 0,
+    "titles": 12,
+    "prices": 12,
+    "listHeight": 1365,
+    "ok": true
+  },
+  {
+    "scenario": "fake-4-categories-1024",
+    "n": 4,
+    "itemCount": 4,
+    "rowCount": 2,
+    "rowSizes": [
+      2,
+      2
+    ],
+    "problems": [],
+    "classes": [
+      "catalog__item catalog__item--wide",
+      "catalog__item catalog__item--medium",
+      "catalog__item catalog__item--half",
+      "catalog__item catalog__item--half"
+    ],
+    "spans": [
+      "span 6",
+      "span 6",
+      "span 6",
+      "span 6"
+    ],
+    "specs": 0,
+    "titles": 4,
+    "prices": 4,
+    "listHeight": 523,
+    "ok": true
+  },
+  {
+    "scenario": "fake-5-categories-1024",
+    "n": 5,
+    "itemCount": 5,
+    "rowCount": 3,
+    "rowSizes": [
+      2,
+      2,
+      1
+    ],
+    "problems": [],
+    "classes": [
+      "catalog__item catalog__item--wide",
+      "catalog__item catalog__item--medium",
+      "catalog__item catalog__item--third",
+      "catalog__item catalog__item--third",
+      "catalog__item catalog__item--third"
+    ],
+    "spans": [
+      "span 6",
+      "span 6",
+      "span 6",
+      "span 6",
+      "span 12"
+    ],
+    "specs": 0,
+    "titles": 5,
+    "prices": 5,
+    "listHeight": 784,
+    "ok": true
+  },
+  {
+    "scenario": "fake-6-categories-1024",
+    "n": 6,
+    "itemCount": 6,
+    "rowCount": 3,
+    "rowSizes": [
+      2,
+      2,
+      2
+    ],
+    "problems": [],
+    "classes": [
+      "catalog__item catalog__item--wide",
+      "catalog__item catalog__item--medium",
+      "catalog__item",
+      "catalog__item",
+      "catalog__item",
+      "catalog__item"
+    ],
+    "spans": [
+      "span 6",
+      "span 6",
+      "span 6",
+      "span 6",
+      "span 6",
+      "span 6"
+    ],
+    "specs": 0,
+    "titles": 6,
+    "prices": 6,
+    "listHeight": 784,
+    "ok": true
+  },
+  {
+    "scenario": "fake-7-categories-1024",
+    "n": 7,
+    "itemCount": 7,
+    "rowCount": 4,
+    "rowSizes": [
+      2,
+      2,
+      2,
+      1
+    ],
+    "problems": [],
+    "classes": [
+      "catalog__item catalog__item--wide",
+      "catalog__item catalog__item--medium",
+      "catalog__item catalog__item--third",
+      "catalog__item catalog__item--third",
+      "catalog__item catalog__item--third",
+      "catalog__item catalog__item--half",
+      "catalog__item catalog__item--half"
+    ],
+    "spans": [
+      "span 6",
+      "span 6",
+      "span 6",
+      "span 6",
+      "span 6",
+      "span 6",
+      "span 12"
+    ],
+    "specs": 0,
+    "titles": 7,
+    "prices": 7,
+    "listHeight": 1045,
+    "ok": true
+  },
+  {
+    "scenario": "real-4-categories-390",
+    "itemCount": 4,
+    "rowCount": 4,
+    "rowSizes": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "problems": [],
+    "classes": [
+      "catalog__item catalog__item--wide",
+      "catalog__item catalog__item--medium",
+      "catalog__item catalog__item--half",
+      "catalog__item catalog__item--half"
+    ],
+    "spans": [
+      "1 / -1",
+      "1 / -1",
+      "1 / -1",
+      "1 / -1"
+    ],
+    "specs": 0,
+    "titles": 4,
+    "prices": 4,
+    "listHeight": 885
+  },
+  {
+    "scenario": "fake-5-categories-390",
+    "n": 5,
+    "itemCount": 5,
+    "rowCount": 5,
+    "rowSizes": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "problems": [],
+    "classes": [
+      "catalog__item catalog__item--wide",
+      "catalog__item catalog__item--medium",
+      "catalog__item catalog__item--third",
+      "catalog__item catalog__item--third",
+      "catalog__item catalog__item--third"
+    ],
+    "spans": [
+      "1 / -1",
+      "1 / -1",
+      "1 / -1",
+      "1 / -1",
+      "span 12"
+    ],
+    "specs": 0,
+    "titles": 5,
+    "prices": 5,
+    "listHeight": 1106,
+    "ok": true
+  },
+  {
+    "scenario": "fake-6-categories-390",
+    "n": 6,
+    "itemCount": 6,
+    "rowCount": 6,
+    "rowSizes": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "problems": [],
+    "classes": [
+      "catalog__item catalog__item--wide",
+      "catalog__item catalog__item--medium",
+      "catalog__item",
+      "catalog__item",
+      "catalog__item",
+      "catalog__item"
+    ],
+    "spans": [
+      "1 / -1",
+      "1 / -1",
+      "1 / -1",
+      "1 / -1",
+      "1 / -1",
+      "1 / -1"
+    ],
+    "specs": 0,
+    "titles": 6,
+    "prices": 6,
+    "listHeight": 1327,
+    "ok": true
+  },
+  {
+    "scenario": "fake-7-categories-390",
+    "n": 7,
+    "itemCount": 7,
+    "rowCount": 7,
+    "rowSizes": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "problems": [],
+    "classes": [
+      "catalog__item catalog__item--wide",
+      "catalog__item catalog__item--medium",
+      "catalog__item catalog__item--third",
+      "catalog__item catalog__item--third",
+      "catalog__item catalog__item--third",
+      "catalog__item catalog__item--half",
+      "catalog__item catalog__item--half"
+    ],
+    "spans": [
+      "1 / -1",
+      "1 / -1",
+      "1 / -1",
+      "1 / -1",
+      "1 / -1",
+      "1 / -1",
+      "span 12"
+    ],
+    "specs": 0,
+    "titles": 7,
+    "prices": 7,
+    "listHeight": 1548,
+    "ok": true
+  },
+  {
+    "scenario": "fake-12-categories-390",
+    "n": 12,
+    "itemCount": 12,
+    "rowCount": 12,
+    "rowSizes": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "problems": [],
+    "classes": [
+      "catalog__item catalog__item--wide",
+      "catalog__item catalog__item--medium",
+      "catalog__item",
+      "catalog__item",
+      "catalog__item",
+      "catalog__item",
+      "catalog__item catalog__item--third",
+      "catalog__item catalog__item--third",
+      "catalog__item catalog__item--third",
+      "catalog__item catalog__item--third",
+      "catalog__item catalog__item--third",
+      "catalog__item catalog__item--third"
+    ],
+    "spans": [
+      "1 / -1",
+      "1 / -1",
+      "1 / -1",
+      "1 / -1",
+      "1 / -1",
+      "1 / -1",
+      "1 / -1",
+      "1 / -1",
+      "1 / -1",
+      "1 / -1",
+      "1 / -1",
+      "1 / -1"
+    ],
+    "specs": 0,
+    "titles": 12,
+    "prices": 12,
+    "listHeight": 2653,
+    "ok": true
+  }
+]

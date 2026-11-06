@@ -1,7 +1,7 @@
-import { BaseModel } from './BaseModel.js?v=20261027.10';
-import { displayName } from '../utils/text.js?v=20261027.10';
-import { apiLocale } from '../i18n/locale.js?v=20261027.10';
-import { normalizeProduct } from '../api/productAdapter.js?v=20261027.10';
+import { BaseModel } from './BaseModel.js?v=20261106.1';
+import { displayName } from '../utils/text.js?v=20261106.1';
+import { apiLocale } from '../i18n/locale.js?v=20261106.1';
+import { normalizeProduct } from '../api/productAdapter.js?v=20261106.1';
 
 /**
  * Модель данных и бизнес-логики интерактивного конфигуратора
@@ -17,7 +17,12 @@ export class ConfiguratorModel extends BaseModel {
     this.spliceTypes = [];
     this.extrasList = [];
     this.spliceRules = [];
+    // Цена с сервера: quote — ответ /quote_requests/calculate, quoteFor — для каких параметров.
+    this.quote = null;
+    this.quoteFor = null;
     this.priceStatus = 'loading';
+    this.priceError = '';
+    this.priceErrorFor = null;
 
     // Текущий выбор пользователя (Состояние конфигуратора)
     this.state = {
@@ -71,7 +76,7 @@ export class ConfiguratorModel extends BaseModel {
   /**
    * Инициализация данных из бэкенда
    */
-  initData({ settings, products, colors, spliceTypes, extras }) {
+  initData({ settings, products, colors, spliceTypes, extras, spliceRules = [] }) {
     const required = ['min_length_m', 'max_length_m', 'splice_allowance_until_mm', 'splice_allowance_until_m',
       'splice_allowance_over_m', 'urgent_surcharge_per_splice', 'urgent_max_splices'];
     if (!settings || required.some((key) => settings[key] == null || !Number.isFinite(Number(settings[key])) || Number(settings[key]) < 0)
@@ -80,6 +85,7 @@ export class ConfiguratorModel extends BaseModel {
     }
     if (![products, colors, spliceTypes, extras].every(Array.isArray)) throw new Error('Некорректные справочники конфигуратора.');
     this.settings = settings;
+    this.spliceRules = Array.isArray(spliceRules) ? spliceRules : [];
     this.products = (products || []).map(normalizeProduct).map((product) => ({
       ...product,
       product_id: Number(product.product_id ?? product.id),
@@ -123,8 +129,6 @@ export class ConfiguratorModel extends BaseModel {
     if (variant) {
       this.state.selectedVariantId = variant.id;
       this.state.diameterMm = Number(variant.diameter_mm);
-      this.priceStatus = 'loading';
-      this.spliceRules = [];
       this.recalculate();
       this.emit('change:variant', this.getDataSnapshot());
     }
@@ -137,6 +141,7 @@ export class ConfiguratorModel extends BaseModel {
     const color = this.getAvailableColors().find((item) => item.id === Number(colorId));
     if (!color) return;
     this.state.selectedColorId = color.id;
+    this.recalculate();
     this.emit('change:color', this.getDataSnapshot());
   }
 
@@ -147,8 +152,6 @@ export class ConfiguratorModel extends BaseModel {
     this.state.diameterMm = variant ? Number(variant.diameter_mm) : null;
     const colors = this.getAvailableColors();
     this.state.selectedColorId = colors.find((c) => c.id === this.state.selectedColorId)?.id ?? colors[0]?.id ?? null;
-    this.priceStatus = 'loading';
-    this.spliceRules = [];
     for (const key of ['endA', 'endB']) {
       if (!this.getAvailableEnds().some((end) => end.id === this.state[key].spliceTypeId)) {
         this.state[key] = { ...this.state[key], typeCode: 'cut', spliceTypeId: null };
@@ -167,26 +170,35 @@ export class ConfiguratorModel extends BaseModel {
       && visuals[type.visual_type]).map((type) => ({ id: Number(type.id), name: displayName(type), visual: visuals[type.visual_type] }))];
   }
 
-  setPrices(rules, status) {
-    this.spliceRules = Array.isArray(rules) ? rules : [];
-    this.priceStatus = Array.isArray(rules) ? status : 'error';
+  // Тарифы из GET /configurators — только подсказка цены у вариантов обработки.
+  // Итог и детализацию считает сервер (POST /quote_requests/calculate).
+  endPrice(end) {
+    if (end.spliceTypeId === null) return 0;
+    const product = this.getCurrentProduct();
+    const rule = this.spliceRules.filter((item) => Number(item.splice_type_id) === end.spliceTypeId
+      && Number(item.splice_material_id) === Number(product?.splice_material_id)
+      && item.is_active !== false
+      && (item.diameter_from_mm == null || Number(item.diameter_from_mm) <= this.state.diameterMm)
+      && (item.diameter_to_mm == null || Number(item.diameter_to_mm) >= this.state.diameterMm))
+      .sort((a, b) => (b.diameter_from_mm ?? -Infinity) - (a.diameter_from_mm ?? -Infinity) || Number(b.id) - Number(a.id))[0];
+    const price = Number(rule?.price);
+    return rule && rule.price != null && Number.isFinite(price) && price >= 0 ? price : null;
+  }
+
+  /** Ответ сервера на расчёт. key — параметры, для которых он получен. */
+  setQuote(quote, key) {
+    this.quote = quote;
+    this.quoteFor = key;
     this.recalculate();
     this.emit('change:prices', this.getDataSnapshot());
   }
 
-  endPrice(end) {
-    if (end.spliceTypeId === null) return 0;
-    if (this.priceStatus !== 'ready') return null;
-    const rules = this.spliceRules.filter((rule) => Number(rule.splice_type_id) === end.spliceTypeId
-      && Number(rule.splice_material_id) === Number(this.getCurrentProduct()?.splice_material_id)
-      && rule.is_active !== false
-      && (rule.diameter_from_mm == null || Number(rule.diameter_from_mm) <= this.state.diameterMm)
-      && (rule.diameter_to_mm == null || Number(rule.diameter_to_mm) >= this.state.diameterMm));
-    if (this.getCurrentProduct()?.apiVersion === 2) rules.sort((a,b) =>
-      (b.diameter_from_mm ?? -Infinity) - (a.diameter_from_mm ?? -Infinity) || Number(b.id) - Number(a.id));
-    if (!rules.length || (this.getCurrentProduct()?.apiVersion !== 2 && rules.length !== 1)
-      || rules[0].price == null || !Number.isFinite(Number(rules[0].price)) || Number(rules[0].price) < 0) return null;
-    return Number(rules[0].price);
+  setPriceError({ text, retry }, key) {
+    this.priceError = text;
+    this.priceRetry = retry;
+    this.priceErrorFor = key;
+    this.recalculate();
+    this.emit('change:prices', this.getDataSnapshot());
   }
 
   getAvailableColors() {
@@ -197,16 +209,30 @@ export class ConfiguratorModel extends BaseModel {
     }).filter((color) => color && color.is_active !== false && Number.isInteger(color.id) && color.id > 0);
   }
 
+  // Ошибка в параметрах, которую видно без сервера. Пустая строка — можно считать цену.
+  localError() {
+    const { state, settings } = this;
+    if (!this.getCurrentProduct() || !this.getCurrentVariant() || !settings) return 'Выберите канат и диаметр.';
+    if (!this.getAvailableColors().some((c) => c.id === state.selectedColorId)) return 'Выберите цвет.';
+    if (!Number.isInteger(state.quantity) || state.quantity < 1 || state.quantity > 999) return 'Укажите количество от 1 до 999.';
+    if (!Number.isFinite(state.lengthM) || state.lengthM < Number(settings.min_length_m) || state.lengthM > Number(settings.max_length_m)) {
+      return `Укажите длину от ${settings.min_length_m} до ${settings.max_length_m} м.`;
+    }
+    if ([state.endA, state.endB].some((end) => this.isLoopOrSplice(end.typeCode) && !(Number.isFinite(end.eyeSizeCm) && end.eyeSizeCm >= 0.1))) {
+      return 'Укажите размер петли.';
+    }
+    if (state.isUrgent && this.splicesCount() * state.quantity > Number(settings.urgent_max_splices)) {
+      return `Срочное изготовление: не более ${settings.urgent_max_splices} сращиваний в заказе.`;
+    }
+    return '';
+  }
+
+  splicesCount() {
+    return [this.state.endA, this.state.endB].filter((end) => end.spliceTypeId !== null).length;
+  }
+
   hasValidSelection() {
-    return Boolean(this.getCurrentProduct() && this.getCurrentVariant()
-      && this.getAvailableColors().some((c) => c.id === this.state.selectedColorId)
-      && Number.isInteger(this.state.quantity) && this.state.quantity >= 1 && this.state.quantity <= 999
-      && this.settings && Number.isFinite(this.state.lengthM)
-      && this.state.lengthM >= Number(this.settings.min_length_m) && this.state.lengthM <= Number(this.settings.max_length_m)
-      && this.priceStatus === 'ready' && this.calculation.totalPrice !== null
-      && (!this.state.isUrgent || [this.state.endA, this.state.endB].filter((end) => end.spliceTypeId !== null).length * this.state.quantity <= Number(this.settings.urgent_max_splices))
-      && [this.state.endA, this.state.endB].every((end) => !this.isLoopOrSplice(end.typeCode)
-        || (Number.isFinite(end.eyeSizeCm) && end.eyeSizeCm >= 0.1)));
+    return this.priceStatus === 'ready';
   }
 
   setQuantity(value) {
@@ -221,6 +247,7 @@ export class ConfiguratorModel extends BaseModel {
     const end = this.state[side === 'a' ? 'endA' : 'endB'];
     const size = Number(value);
     end.eyeSizeCm = Number.isFinite(size) && size >= 0.1 ? size : null;
+    this.recalculate();
     this.emit(side === 'a' ? 'change:endA' : 'change:endB', this.getDataSnapshot());
   }
 
@@ -289,76 +316,36 @@ export class ConfiguratorModel extends BaseModel {
   }
 
   /**
-   * Пересчет показателей стоимости и длин
+   * Длины и вес считаем на месте (для подсказок), деньги берём только из ответа сервера.
+   * Любое изменение параметров сбрасывает старый расчёт — контроллер запросит новый.
    */
   recalculate() {
-    const product = this.getCurrentProduct();
     const variant = this.getCurrentVariant();
-
-    // 1. Технологический запас на сплайс
-    const allowanceLimit = this.settings?.splice_allowance_until_mm;
-    const allowanceUnder = Number(this.settings?.splice_allowance_until_m ?? 0);
-    const allowanceOver = Number(this.settings?.splice_allowance_over_m ?? 0);
-
     const d = this.state.diameterMm;
-    const perSpliceAllowance = d <= allowanceLimit ? allowanceUnder : allowanceOver;
+    const perSpliceAllowance = d <= Number(this.settings?.splice_allowance_until_mm)
+      ? Number(this.settings?.splice_allowance_until_m ?? 0) : Number(this.settings?.splice_allowance_over_m ?? 0);
+    const ropeLengthAllowanceM = this.splicesCount() * perSpliceAllowance;
+    const totalLengthM = Math.round(((this.state.lengthM ?? 0) + ropeLengthAllowanceM) * 100) / 100;
 
-    const modern = product?.apiVersion === 2;
-    const money = value => Math.round((value + Number.EPSILON * Math.max(1, Math.abs(value))) * 100) / 100;
-    const hasSpliceA = modern ? this.state.endA.spliceTypeId !== null : this.isLoopOrSplice(this.state.endA.typeCode);
-    const hasSpliceB = modern ? this.state.endB.spliceTypeId !== null : this.isLoopOrSplice(this.state.endB.typeCode);
+    const key = this.quoteKey();
+    const quote = key && this.quoteFor === key ? this.quote : null;
+    this.priceStatus = !key ? 'invalid' : quote ? 'ready' : this.priceErrorFor === key ? 'error' : 'loading';
 
-    let splicesCount = (hasSpliceA ? 1 : 0) + (hasSpliceB ? 1 : 0);
-    const ropeLengthAllowanceM = splicesCount * perSpliceAllowance;
-    const totalLengthM = this.state.lengthM + ropeLengthAllowanceM;
-
-    // 2. Стоимость каната
-    const pricePerMeter = Number(variant?.price_per_meter || 0);
-    const ropeCost = totalLengthM * pricePerMeter;
-
-    // 3. Стоимость заделок (базовая оценка)
-    const endACost = this.endPrice(this.state.endA);
-    const endBCost = this.endPrice(this.state.endB);
-
-    // 4. Дополнительные опции
-    let extrasCost = 0;
-    this.extrasList.forEach((extra) => {
-      if (this.state.selectedExtraIds.has(extra.id)) {
-        const units = extra.billing_type === 'per_item' ? this.state.quantity
-          : extra.billing_type === 'per_meter' ? this.state.lengthM * this.state.quantity : 1;
-        extrasCost += modern ? money(Number(extra.price) * units) : Number(extra.price) * units;
-      }
-    });
-
-    // 5. Надбавка за срочность
-    let urgentCost = 0;
-    if (this.state.isUrgent) {
-      const surcharge = Number(this.settings?.urgent_surcharge_per_splice ?? 0);
-      urgentCost = [this.state.endA, this.state.endB].filter((end) => end.spliceTypeId !== null).length * surcharge * this.state.quantity;
-    }
-
-    const totalPrice = modern
-      ? money(ropeCost * this.state.quantity) + money(endACost * this.state.quantity)
-        + money(endBCost * this.state.quantity) + extrasCost + money(urgentCost)
-      : (ropeCost + endACost + endBCost) * this.state.quantity + extrasCost + urgentCost;
-
+    const rope = quote?.rope_items?.[0];
+    const sum = (items) => (items || []).reduce((total, item) => total + Number(item.total_cost || 0), 0);
     this.calculation = {
       ropeLengthAllowanceM,
       totalLengthM,
-      ropeCost,
-      endACost,
-      endBCost,
-      extrasCost,
-      urgentCost,
-      totalPrice: this.priceStatus === 'ready' && endACost !== null && endBCost !== null && Number.isFinite(totalPrice)
-        && Number.isInteger(this.state.quantity) && this.state.quantity >= 1 && this.state.quantity <= 999
-        && Number.isFinite(this.state.lengthM) && this.state.lengthM >= Number(this.settings?.min_length_m)
-        && this.state.lengthM <= Number(this.settings?.max_length_m)
-        && variant?.price_per_meter != null && Number.isFinite(Number(variant.price_per_meter))
-        && Number(variant.price_per_meter) >= 0 ? Math.round(totalPrice * 100) / 100 : null,
+      pricePerMeter: rope ? Number(rope.price_per_meter_snapshot) : null,
+      ropeCost: rope ? Number(rope.total_rope_cost) : null,
+      endACost: rope ? Number(rope.end_a_cost) : null,
+      endBCost: rope ? Number(rope.end_b_cost) : null,
+      extrasCost: quote ? sum(quote.extra_items) : null,
+      urgentCost: quote ? Number(quote.urgent_surcharge || 0) : null,
+      totalPrice: quote ? Number(quote.total_price) : null,
       breakingLoadDan: variant?.breaking_load_dan || 0,
       weightG: Math.round(totalLengthM * Number(variant?.weight_g_per_m || 0)),
-      currency: this.settings?.currency || 'EUR',
+      currency: quote?.currency || this.settings?.currency || 'EUR',
     };
   }
 
@@ -380,36 +367,54 @@ export class ConfiguratorModel extends BaseModel {
   }
 
   /**
+   * Тело для POST /quote_requests/calculate. Размер петли на цену не влияет,
+   * поэтому в расчёт не передаём: меньше лишних запросов при наборе.
+   */
+  toCalculatePayload() {
+    if (this.localError()) return null;
+    return {
+      configurator_type: 'rope_with_splice',
+      is_urgent: Boolean(this.state.isUrgent),
+      locale: apiLocale(),
+      rope_items: [{
+        product_id: Number(this.state.selectedProductId),
+        color_id: this.state.selectedColorId,
+        diameter_mm: Number(this.state.diameterMm),
+        length_m: Number(this.state.lengthM),
+        quantity: this.state.quantity,
+        end_a_type_id: this.state.endA.spliceTypeId,
+        end_b_type_id: this.state.endB.spliceTypeId,
+      }],
+      service_items: [],
+      extra_items: Array.from(this.state.selectedExtraIds).sort((a, b) => a - b).map((id) => ({ extra_id: Number(id) })),
+    };
+  }
+
+  quoteKey() {
+    const payload = this.toCalculatePayload();
+    return payload ? JSON.stringify(payload) : null;
+  }
+
+  /**
    * Сформировать DTO для отправки в POST /quote_requests
    */
   toQuoteRequestPayload() {
     if (!this.hasValidSelection()) {
       throw new Error('Проверьте выбор троса, диаметра, цвета, количество и размеры петель.');
     }
-
+    const payload = this.toCalculatePayload();
+    const [rope] = payload.rope_items;
     return {
-      configurator_type: 'rope_with_splice',
+      ...payload,
       name: this.state.customer.name || 'Клиент сайта',
       email: this.state.customer.email,
       phone: this.state.customer.phone || null,
       comment: this.state.customer.comment || null,
-      is_urgent: Boolean(this.state.isUrgent),
-      locale: apiLocale(),
-      rope_items: [
-        {
-          [this.getCurrentProduct()?.apiVersion === 2 ? 'product_id' : 'rope_product_id']: Number(this.state.selectedProductId),
-          color_id: this.state.selectedColorId,
-          diameter_mm: Number(this.state.diameterMm),
-          length_m: Number(this.state.lengthM),
-          quantity: this.state.quantity,
-          end_a_type_id: this.state.endA.spliceTypeId,
-          end_a_eye_size_cm: this.isLoopOrSplice(this.state.endA.typeCode) ? this.state.endA.eyeSizeCm : null,
-          end_b_type_id: this.state.endB.spliceTypeId,
-          end_b_eye_size_cm: this.isLoopOrSplice(this.state.endB.typeCode) ? this.state.endB.eyeSizeCm : null,
-        }
-      ],
-      service_items: [],
-      extra_items: Array.from(this.state.selectedExtraIds).map((id) => ({ extra_id: Number(id) })),
+      rope_items: [{
+        ...rope,
+        end_a_eye_size_cm: this.isLoopOrSplice(this.state.endA.typeCode) ? this.state.endA.eyeSizeCm : null,
+        end_b_eye_size_cm: this.isLoopOrSplice(this.state.endB.typeCode) ? this.state.endB.eyeSizeCm : null,
+      }],
     };
   }
 
@@ -423,6 +428,8 @@ export class ConfiguratorModel extends BaseModel {
       extras: this.extrasList,
       ends: this.getAvailableEnds().map((end) => ({ ...end, price: this.endPrice({ spliceTypeId: end.id }) })),
       priceStatus: this.priceStatus,
+      priceError: this.priceStatus === 'error' ? this.priceError : this.priceStatus === 'invalid' ? this.localError() : '',
+      priceRetry: this.priceStatus === 'error' && this.priceRetry,
       settings: this.settings,
       availableColors: this.getAvailableColors(),
       selectionValid: this.hasValidSelection(),

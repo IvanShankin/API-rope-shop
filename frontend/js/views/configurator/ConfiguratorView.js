@@ -1,8 +1,8 @@
-import {appendTrackingLink} from '../../utils/tracking.js?v=20261027.10';
-import { catalogLink, updateLoadState } from '../../ui/load-state.js?v=20261027.10';
-import { BaseView } from '../BaseView.js?v=20261027.10';
-import { RopeSvgRenderer } from './RopeSvgRenderer.js?v=20261027.10';
-import { escapeHtml, displayName } from '../../utils/text.js?v=20261027.10';
+import {appendTrackingLink} from '../../utils/tracking.js?v=20261106.1';
+import { catalogLink, updateLoadState } from '../../ui/load-state.js?v=20261106.1';
+import { BaseView } from '../BaseView.js?v=20261106.1';
+import { RopeSvgRenderer } from './RopeSvgRenderer.js?v=20261106.1';
+import { escapeHtml, displayName } from '../../utils/text.js?v=20261106.1';
 
 export class ConfiguratorView extends BaseView {
   constructor(root = '#configurator') {
@@ -48,7 +48,7 @@ export class ConfiguratorView extends BaseView {
       this.priceMessage.className = 'configurator__notice';
       this.priceMessage.setAttribute('role', 'status');
       this.priceRetry = this.retryButton.cloneNode(true);
-      this.priceRetry.textContent = 'Обновить цены';
+      this.priceRetry.textContent = 'Обновить цену';
       this.priceRetry.addEventListener('click', () => this.callbacks.onPriceRetry?.());
       this.$('.summary').prepend(this.priceMessage, this.priceRetry);
     }
@@ -146,46 +146,45 @@ export class ConfiguratorView extends BaseView {
     const { state, calculation, currentProduct, currentVariant } = snapshot;
     this.renderSelections(snapshot);
     this.renderConfiguration(snapshot);
-    this.priceMessage.textContent = snapshot.priceStatus === 'loading' ? 'Загружаем цены…'
-      : snapshot.priceStatus === 'error' ? 'Не удалось загрузить цены. Повторите запрос.'
-      : calculation.totalPrice === null ? 'Для выбранной обработки нет однозначного тарифа. Выберите другой вариант.'
-      : state.isUrgent && !snapshot.selectionValid ? 'Проверьте поля и ограничение на срочность: не более ' + snapshot.settings.urgent_max_splices + ' сращиваний в заказе.' : '';
-    this.priceRetry.hidden = snapshot.priceStatus !== 'error';
+    // Цену считает сервер; пока ждём ответ, показываем «Считаем…», а не старую сумму.
+    const status = snapshot.priceStatus;
+    const ready = status === 'ready';
+    const money = (value) => `${(Math.round(Number(value) * 100) / 100).toFixed(2)} ${calculation.currency}`;
+    this.priceMessage.textContent = status === 'loading' ? 'Считаем стоимость…' : snapshot.priceError || '';
+    this.priceMessage.dataset.state = status;
+    this.priceRetry.hidden = !snapshot.priceRetry;
     this.priceMessage.hidden = !this.priceMessage.textContent;
+    this.$('.summary')?.setAttribute('aria-busy', String(status === 'loading'));
 
     // 1. Текстовые выводы
     this.out('caption', `${currentProduct?.name || 'Канат'} · ${state.diameterMm ?? '—'} мм`);
     this.out('mbl', currentVariant?.breaking_load_dan != null ? `${currentVariant.breaking_load_dan} daN` : '—');
     this.out('weight', currentVariant?.weight_g_per_m != null ? `${calculation.weightG} г` : '—');
-    this.out('total', calculation.totalPrice === null ? 'Расчёт недоступен' : `${calculation.totalPrice} ${calculation.currency}`);
+    this.out('total', ready ? money(calculation.totalPrice) : status === 'loading' ? 'Считаем…' : 'Расчёт недоступен');
     this.out('material', currentProduct?.name || '—');
-    this.out('length', `${state.lengthM} м`);
+    this.out('length', `${state.lengthM ?? '—'} м`);
     this.out('charged-length', `${calculation.totalLengthM} м`);
     this.out('allowance', `${calculation.ropeLengthAllowanceM} м`);
     this.out('qty', state.quantity === null ? 'Укажите количество' : `${state.quantity} шт.`);
-    this.out('each', state.quantity > 1 && calculation.totalPrice !== null ? `${Math.round(calculation.totalPrice / state.quantity * 100) / 100} ${calculation.currency} за штуку в среднем` : '');
+    this.out('each', ready && state.quantity > 1 ? `${money(calculation.totalPrice / state.quantity)} за штуку в среднем` : '');
 
-    // 2. Детализация стоимости
+    // 2. Детализация стоимости — суммы из ответа сервера
     if (this.linesContainer) {
-      const rows = [
-        [`Канат: ${calculation.totalLengthM} м × ${currentVariant?.price_per_meter || 0} €/м × ${state.quantity ?? '—'} шт.`, calculation.ropeCost * state.quantity],
-        ['Конец A, все изделия', calculation.endACost === null ? null : calculation.endACost * state.quantity],
-        ['Конец B, все изделия', calculation.endBCost === null ? null : calculation.endBCost * state.quantity],
+      const rows = !ready ? [] : [
+        [`Канат: ${calculation.totalLengthM} м × ${calculation.pricePerMeter} €/м × ${state.quantity} шт.`, calculation.ropeCost],
+        ['Конец A, все изделия', calculation.endACost],
+        ['Конец B, все изделия', calculation.endBCost],
       ];
-      if (calculation.extrasCost > 0) {
-        rows.push(['Дополнительные опции', calculation.extrasCost]);
-      }
-      if (calculation.urgentCost > 0) {
-        rows.push(['Срочное изготовление', calculation.urgentCost]);
-      }
-      rows.push(['Предварительный итог', calculation.totalPrice, true]);
+      if (ready && calculation.extrasCost > 0) rows.push(['Дополнительные опции', calculation.extrasCost]);
+      if (ready && calculation.urgentCost > 0) rows.push(['Срочное изготовление', calculation.urgentCost]);
+      if (ready) rows.push(['Предварительный итог', calculation.totalPrice, true]);
 
-      this.linesContainer.innerHTML = rows.map(([label, sum, strong]) => (
+      this.linesContainer.innerHTML = rows.length ? rows.map(([label, sum, strong]) => (
         `<li class="summary__line${strong ? ' summary__line--strong' : ''}">
           <span>${escapeHtml(label)}</span>
-          <span class="summary__line-sum">${sum === null ? 'Нет тарифа' : escapeHtml(`${Math.round(sum * 100) / 100} ${calculation.currency}`)}</span>
+          <span class="summary__line-sum">${escapeHtml(money(sum))}</span>
         </li>`
-      )).join('');
+      )).join('') : `<li class="summary__line"><span>${status === 'loading' ? 'Считаем стоимость…' : 'Расчёт появится, когда параметры будут заполнены.'}</span></li>`;
     }
 
     // 3. Обновление векторной схемы
@@ -200,16 +199,10 @@ export class ConfiguratorView extends BaseView {
     });
   }
 
-  renderConfiguration({ state, extras, ends, settings, currentProduct }) {
+  renderConfiguration({ state, extras, ends, settings }) {
     this.out('min-length', `${settings.min_length_m} м`);
     this.out('max-length', `${settings.max_length_m} м`);
-    this.out('allowance-hint', `Укажите конечную длину изделия. Запас на каждую петлю: ${settings.splice_allowance_until_m} м до ${settings.splice_allowance_until_mm} мм включительно; ${settings.splice_allowance_over_m} м при большем диаметре.`);
-    if (currentProduct?.apiVersion === 2) {
-      this.out('intro', 'Выберите канат, цвет, конечную длину и обработку концов A и B. Запас на каждый обработанный конец добавится к оплачиваемой длине.');
-      this.out('allowance-label', 'Запас на обработку концов');
-      this.out('allowance-hint', `Запас на каждый обработанный конец: ${settings.splice_allowance_until_m} м до ${settings.splice_allowance_until_mm} мм включительно; ${settings.splice_allowance_over_m} м при большем диаметре.`);
-      this.out('price-note', 'Расчёт включает запас на обработку концов. После отправки покажем сумму сервера; окончательную стоимость подтвердит менеджер.');
-    }
+    this.out('allowance-hint', `Запас на каждый обработанный конец: ${settings.splice_allowance_until_m} м до ${settings.splice_allowance_until_mm} мм включительно; ${settings.splice_allowance_over_m} м при большем диаметре.`);
     if (this.lengthInput) {
       this.lengthInput.min = settings.min_length_m;
       this.lengthInput.max = settings.max_length_m;
@@ -371,11 +364,11 @@ export class ConfiguratorView extends BaseView {
   showSubmitSuccess(response) {
     if (this.submitStatus) {
       this.submitStatus.innerHTML = `
-        <div style="color: #4CAF50; font-weight: 600; margin-top: 12px; font-size: 15px;">
+        <span class="summary__result summary__result--ok">
           Заявка принята! Номер: <strong>${escapeHtml(response.request_number)}</strong>.<br>
           ${response.total_price != null ? `Сумма в ответе сервера: ${escapeHtml(response.total_price)} ${escapeHtml(response.currency || 'EUR')}.` : ''}
           Окончательную стоимость и срок подтвердит менеджер.
-        </div>
+        </span>
       `;
       appendTrackingLink(this.submitStatus, response);
     }
@@ -384,9 +377,9 @@ export class ConfiguratorView extends BaseView {
   showSubmitError(errorMessage) {
     if (this.submitStatus) {
       this.submitStatus.innerHTML = `
-        <div style="color: #FF5252; font-weight: 500; margin-top: 12px; font-size: 14px;">
+        <span class="summary__result summary__result--error">
           Ошибка отправки: ${escapeHtml(errorMessage)}
-        </div>
+        </span>
       `;
     }
   }

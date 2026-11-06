@@ -1,10 +1,9 @@
-import { apiClient as client } from './apiClient.js?v=20261027.10';
-import { API_CONFIG } from './config.js?v=20261027.10';
-import { adminCatalogApi } from './adminCatalogApi.js?v=20261027.10';
+import { apiClient as client } from './apiClient.js?v=20261106.1';
+import { adminCatalogApi } from './adminCatalogApi.js?v=20261106.1';
 const auth = { requiresAuth:true };
 export const adminConfigApi = {
   list: async (section,params) => {
-    if(API_CONFIG.CATALOG_V2 && section==='rope_products') return adminCatalogApi.list();
+    if(section==='rope_products') return adminCatalogApi.list();
     const result=await client.get(`/${section}`,{...auth,params});
     return section==='categories' ? result.items : result;
   },

@@ -1,0 +1,69 @@
+{
+  "initial": {
+    "url": "?group=2",
+    "lang": "de",
+    "products": 5,
+    "empty": false,
+    "resetDisabled": true,
+    "values": [
+      "",
+      ""
+    ],
+    "ssValues": [
+      "Alle Varianten",
+      "Alle Varianten"
+    ],
+    "checked": false,
+    "title": "Filter",
+    "fieldLabels": [
+      "Konstruktion",
+      "Durchmesser, mm"
+    ]
+  },
+  "pick": {
+    "value": "4",
+    "clicked": true
+  },
+  "applied": {
+    "url": "?group=2&diameter=4",
+    "lang": "de",
+    "products": 1,
+    "empty": false,
+    "resetDisabled": false,
+    "values": [
+      "",
+      "4"
+    ],
+    "ssValues": [
+      "Alle Varianten",
+      "4"
+    ],
+    "checked": false,
+    "title": "Filter",
+    "fieldLabels": [
+      "Konstruktion",
+      "Durchmesser, mm"
+    ]
+  },
+  "reset": {
+    "url": "?group=2",
+    "lang": "de",
+    "products": 5,
+    "empty": false,
+    "resetDisabled": true,
+    "values": [
+      "",
+      ""
+    ],
+    "ssValues": [
+      "Alle Varianten",
+      "Alle Varianten"
+    ],
+    "checked": false,
+    "title": "Filter",
+    "fieldLabels": [
+      "Konstruktion",
+      "Durchmesser, mm"
+    ]
+  }
+}

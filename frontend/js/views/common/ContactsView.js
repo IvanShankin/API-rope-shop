@@ -1,6 +1,6 @@
-import {contactsApi as api} from '../../api/contactsApi.js?v=20261027.10';
-import {contactLinks} from '../../models/ContactsModel.js?v=20261027.10';
-import {translate as t} from '../../i18n/translate.js?v=20261027.10';
+import {contactsApi as api} from '../../api/contactsApi.js?v=20261106.1';
+import {contactLinks} from '../../models/ContactsModel.js?v=20261106.1';
+import {translate as t} from '../../i18n/translate.js?v=20261106.1';
 export function renderContacts(data,root=document){
   const links=contactLinks(data);
   for(const kind of ['phone','email'])for(const el of root.querySelectorAll(`[data-site-contact="${kind}"]`)){

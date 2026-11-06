@@ -1,0 +1,146 @@
+/* Админка: Компактная раскладка карточек.
+   Часть бывшего css/admin.css (строки 4661–4806). Порядок подключения файлов важен. */
+/* Компактная админка: одна карточка на самостоятельный блок, вложенные секции плоские. */
+.admin .panel :is(.card, .product-editor, .admin-disclosure, .settings-card, .contacts-card, .requests-table, .variants-table-wrap) {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.admin .panel :is(.card, .product-editor, .settings-card, .contacts-card) {
+  padding: 0;
+  margin: 12px 0;
+}
+
+.admin .panel .product-editor {
+  gap: 12px;
+}
+
+.admin .panel :is(.card__body, .admin-disclosure__body, .admin-fields) {
+  padding: 0;
+  background: transparent;
+}
+
+.admin .panel :is(.admin-form-row, .admin-form-grid, .admin-card__row, .admin-card__grid, .admin-fields, .settings-card__grid, .contacts-card__grid, .fields, .card__body) {
+  gap: 12px;
+}
+
+.admin .panel :is(.admin-disclosure, .admin-disclosures-group) {
+  margin: 0;
+}
+
+.admin .panel .admin-disclosures-group {
+  gap: 8px;
+}
+
+.admin .panel :is(.admin-disclosure > summary, .card__head) {
+  min-height: 44px;
+  padding: 6px 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--admin-border);
+  border-radius: 0;
+  text-align: left;
+}
+
+.admin .panel .admin-disclosure__summary span {
+  text-align: left;
+}
+
+.admin .panel .admin-disclosure>summary:hover {
+  color: #a6d3f4;
+}
+
+.admin .panel .admin-disclosure[open]>summary {
+  margin-bottom: 8px;
+}
+
+.admin .panel :is(h2, h3) {
+  margin: 12px 0 8px;
+}
+
+.admin .panel .field {
+  gap: 6px;
+  margin-bottom: 0;
+}
+
+.admin .panel :is(.field__input, select, textarea) {
+  min-height: 44px;
+  padding: 8px 10px;
+  font-size: 16px;
+}
+
+.admin .panel textarea.field__input {
+  min-height: 80px;
+}
+
+.admin .panel :is(.panel__head, .product-header) {
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.admin .panel :is(.config-admin-toolbar, .product-toolbar, .product-lang-bar) {
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.admin .panel .product-lang-bar {
+  padding-bottom: 8px;
+}
+
+.admin .panel :is(.admin-form-actions, .settings-card__actions, .contacts-card__actions) {
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  justify-content: flex-start;
+}
+
+.admin .panel .admin-form-actions .btn {
+  min-height: 44px;
+  padding: 8px 12px;
+}
+
+.admin .panel :is(.variant-row, .variants-table-header, .variants-table-footer) {
+  padding: 8px 0;
+}
+
+.admin .panel .admin-disclosure>p {
+  margin: 8px 0;
+}
+
+.admin .panel .admin-checkboxes-row {
+  gap: 8px 12px;
+  margin-top: 8px;
+}
+
+.admin .panel .settings-card__flags {
+  gap: 8px 12px;
+  margin-top: 12px;
+}
+
+.admin .panel .settings-card__hint {
+  padding-top: 0;
+}
+
+.admin .panel .admin-record-list__empty {
+  padding: 8px 0;
+  border: 0;
+  background: transparent;
+}
+
+/* Обрамляем только внешний блок. Вложенные формы и details не становятся карточками. */
+.admin .admin__main .panel :is(.card, .admin-card, .product-editor, .admin-disclosure, .settings-card, .contacts-card, .requests-table):not(:is(.card, .admin-card, .product-editor, .admin-disclosure, .settings-card, .contacts-card, .requests-table) *) {
+  background: var(--admin-surface) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  padding: 12px !important;
+  margin: 12px 0 !important;
+  min-width: 0;
+}
+
+@media (max-width: 700px) {
+  .admin .admin__main .panel :is(.card, .admin-card, .product-editor, .admin-disclosure, .settings-card, .contacts-card, .requests-table):not(:is(.card, .admin-card, .product-editor, .admin-disclosure, .settings-card, .contacts-card, .requests-table) *) {
+    padding: 8px !important;
+  }
+}

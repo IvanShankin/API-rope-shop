@@ -1,0 +1,283 @@
+/* Админка: Плоские формы редакторов.
+   Часть бывшего css/admin.css (строки 3908–4189). Порядок подключения файлов важен. */
+/* ==========================================================================
+   Плоские формы редактора без вложенных карточек
+   (Галереи, Тексты страниц, Цвета, Конфигуратор, Отзывы, Заявки)
+   ========================================================================== */
+
+.admin-card,
+.admin .product-editor:not([data-product-form]):not([data-product-colors-form]):not([data-color-order-form]) {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  margin: 12px 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Строки с полями (2 колонки на ПК) */
+.admin-form-row,
+.admin-card__row,
+.admin-card .admin-form-row,
+.admin .product-editor:not([data-product-form]) .admin-form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+}
+
+/* Сетка полей ввода формы (2 колонки) */
+.admin-form-grid,
+.admin-card__grid,
+.admin-card>.admin-fields,
+.admin .product-editor:not([data-product-form])>.admin-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+  width: 100%;
+}
+
+/* Переключатели / чекбоксы */
+.admin-toggle,
+.admin-card label:not(.field),
+.admin .product-editor:not([data-product-form]) label:not(.field) {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  cursor: pointer;
+  color: var(--admin-text);
+  font-size: 16px;
+  font-weight: 500;
+  user-select: none;
+  margin: 0;
+}
+
+.admin-toggle input[type="checkbox"],
+.admin-card label:not(.field) input[type="checkbox"],
+.admin .product-editor:not([data-product-form]) label:not(.field) input[type="checkbox"] {
+  width: 24px;
+  height: 24px;
+  accent-color: #3b82f6;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+/* Поля ввода внутри карточек */
+.admin-card .field,
+.admin .product-editor:not([data-product-form]) .field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+
+.admin-card .field__label,
+.admin .product-editor:not([data-product-form]) .field__label {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--admin-text);
+}
+
+.admin-card .field__hint,
+.admin .product-editor:not([data-product-form]) .field__hint,
+.admin-form-hint {
+  font-size: 14px;
+  color: var(--admin-muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* Загрузка файлов */
+.admin-file-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.admin-file-upload input[type="file"],
+.admin-card input[type="file"],
+.admin .product-editor:not([data-product-form]) input[type="file"] {
+  width: 100%;
+  max-width: 100%;
+  min-height: 44px;
+  font-size: 15px;
+  color: var(--admin-text);
+}
+
+.admin-file-upload input[type="file"]::file-selector-button {
+  min-height: 48px;
+  margin-right: 12px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: #24394d;
+  color: #eef4fb;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-file-upload input[type="file"]:hover::file-selector-button {
+  background: #304b64;
+}
+
+.admin-file-upload input[type="file"]:disabled::file-selector-button {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+/* Группа аккордеонов / языковых блоков */
+.admin-disclosures-group {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.admin .admin-editor-hint {
+  margin: 12px 0;
+  color: var(--admin-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.admin .admin-fields .field__hint {
+  overflow-wrap: anywhere;
+}
+
+.admin .admin-settings-example {
+  color: var(--admin-text);
+  line-height: 1.5;
+  margin: 12px 0;
+  padding: 12px 14px;
+  border-left: 3px solid #649cd0;
+  background: #20344a;
+  border-radius: 4px;
+}
+
+/* Аккордеоны внутри карточек редактора */
+.admin-card details.admin-disclosure,
+.admin .product-editor:not([data-product-form]) details.admin-disclosure {
+  border: 0;
+  border-radius: 0 !important;
+  background: transparent;
+  overflow: hidden;
+  margin: 0;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease;
+}
+
+.admin-card details.admin-disclosure>summary,
+.admin .product-editor:not([data-product-form]) details.admin-disclosure>summary {
+  padding: 6px 0;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: var(--admin-text);
+  user-select: none;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.15s ease;
+}
+
+.admin-card details.admin-disclosure>summary:hover,
+.admin .product-editor:not([data-product-form]) details.admin-disclosure>summary:hover {
+  background: #20344a;
+}
+
+.admin-card details.admin-disclosure[open]>summary,
+.admin .product-editor:not([data-product-form]) details.admin-disclosure[open]>summary {
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.admin-card details.admin-disclosure>.admin-fields,
+.admin .product-editor:not([data-product-form]) details.admin-disclosure>.admin-fields {
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  background: transparent;
+  box-sizing: border-box;
+}
+
+/* Сетка чекбоксов заделок / связей */
+.admin-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px 20px;
+  width: 100%;
+}
+
+/* Кнопки действий формы */
+.admin-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  width: 100%;
+}
+
+.admin-form-actions .btn {
+  min-height: 48px;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Карточка деталей заявки */
+.admin-request-card {
+  padding: 24px clamp(16px, 3vw, 28px);
+}
+
+.admin-request-card ul {
+  padding-left: 20px;
+  margin: 12px 0;
+  line-height: 1.6;
+}
+
+/* Адаптивность для узких экранов */
+@media (max-width: 768px) {
+
+  .admin-card:not(.config-admin-upload):not(.admin-request-card),
+  .admin .product-editor:not([data-product-form]):not([data-product-colors-form]):not([data-color-order-form]) {
+    padding: 0 !important;
+    border: none !important;
+  }
+
+  .admin-form-row,
+  .admin-card__row,
+  .admin-card .admin-form-row,
+  .admin .product-editor:not([data-product-form]) .admin-form-row,
+  .admin-form-grid,
+  .admin-card__grid,
+  .admin-card>.admin-fields,
+  .admin .product-editor:not([data-product-form])>.admin-fields,
+  .admin-card details.admin-disclosure>.admin-fields,
+  .admin .product-editor:not([data-product-form]) details.admin-disclosure>.admin-fields {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .admin-card details.admin-disclosure>.admin-fields,
+  .admin .product-editor:not([data-product-form]) details.admin-disclosure>.admin-fields {
+    padding: 0;
+  }
+
+  .admin-form-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

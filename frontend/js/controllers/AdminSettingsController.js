@@ -1,25 +1,25 @@
-import { AdminNotificationView } from '../views/admin/AdminNotificationView.js?v=20261027.10';
-import {settingsApi} from '../api/settingsApi.js?v=20261027.10';
-import {authApi} from '../api/authApi.js?v=20261027.10';
-import {escapeHtml as esc} from '../utils/text.js?v=20261027.10';
+import { AdminNotificationView } from '../views/admin/AdminNotificationView.js?v=20261106.1';
+import {settingsApi} from '../api/settingsApi.js?v=20261106.1';
+import {authApi} from '../api/authApi.js?v=20261106.1';
+import {escapeHtml as esc} from '../utils/text.js?v=20261106.1';
 
 const textFields = {
   company_name: ['Название компании в письмах', 'text', 255],
-  contact_email: ['Email в письмах', 'email', 255],
+  contact_email: ['Почта для писем', 'email', 255],
   contact_phone: ['Телефон в письмах', 'tel', 100],
-  site_url: ['Адрес сайта для ссылок в письмах', 'url', 255],
-  telegram_chat_id: ['ID чата Telegram', 'text', 255],
-  manager_notification_email: ['Email менеджера', 'email', 255],
+  site_url: ['Адрес сайта для писем', 'url', 255],
+  telegram_chat_id: ['Номер чата в Telegram', 'text', 255],
+  manager_notification_email: ['Почта менеджера', 'email', 255],
 };
 const flags = {
-  email_notifications_enabled: 'Письмо клиенту после отправки заявки',
+  email_notifications_enabled: 'Письмо клиенту о заявке',
   telegram_notifications_enabled: 'Уведомление менеджеру в Telegram',
-  manager_email_notifications_enabled: 'Копия заявки на email менеджера',
+  manager_email_notifications_enabled: 'Копия заявки на почту менеджера',
 };
 const hints = {
-  site_url: 'Укажите полный адрес с https:// или http://.',
-  telegram_chat_id: 'Нужен для уведомлений менеджеру в Telegram.',
-  manager_notification_email: 'На этот адрес отправляется копия заявки при включённом уведомлении.',
+  site_url: 'Например: https://example.ru',
+  telegram_chat_id: 'Куда приходят уведомления. Номер подскажет техник.',
+  manager_notification_email: 'Сюда придёт копия каждой заявки.',
 };
 
 export class AdminSettingsController {
@@ -31,10 +31,9 @@ export class AdminSettingsController {
     this.baseline = '';
     this.events = new AbortController();
     window.addEventListener('company-settings-changed',event=>{if(event.detail!=='settings')this.ready=false;},{signal:this.events.signal});
-    this.view = {root, allowDiscard: () => !this.dirty() || window.confirm('Отбросить несохранённые настройки?')};
+    this.view = {root, allowDiscard: () => !this.dirty() || window.confirm('Выйти без сохранения?')};
     root.innerHTML = `<header class="panel__head"><h1 class="panel__title">Настройки и пароль</h1></header>
-      <p>Уведомления о новых заявках и данные компании в письмах. Эти же реквизиты доступны в разделе «Контакты». Их публичное отображение пока не подключено.</p>
-      <p>Для доставки писем и Telegram серверу нужны настроенные SMTP и бот. Включение переключателя само по себе не подтверждает доставку.</p>
+      <p>Данные компании и уведомления о заявках. Эти же данные есть в «Контактах»; почту и Telegram настраивает техник — галочка сама отправку не включает.</p>
       <button class="btn" type="button" data-settings-refresh>Обновить</button>
       <p role="status" data-settings-status></p><div data-settings-editor></div>
       <details class="admin-disclosure settings-card--disclosure"><summary>Сменить пароль</summary>
@@ -90,9 +89,9 @@ export class AdminSettingsController {
   }
   async load() {
     if (this.busy || !this.view.allowDiscard()) return;
-    this.lock(true); this.message('Загружаем настройки…');
-    try {this.render(await settingsApi.get()); this.ready = true; this.message('Настройки загружены.');}
-    catch (error) {this.message(`Не удалось загрузить настройки: ${error.message}. Нажмите «Обновить».`, 'error');}
+    this.lock(true);
+    try {this.render(await settingsApi.get()); this.ready = true;}
+    catch {this.message('Не удалось загрузить настройки. Нажмите «Обновить».', 'error');}
     finally {this.lock(false);}
   }
   async save() {
@@ -100,11 +99,11 @@ export class AdminSettingsController {
     const data = this.values();
     if (!data.company_name) {this.message('Укажите название компании.', 'warning'); return;}
     if (data.site_url && !/^https?:\/\//i.test(data.site_url)) {this.message('Укажите адрес сайта с http:// или https://.', 'warning'); return;}
-    if (data.telegram_notifications_enabled && !data.telegram_chat_id) {this.message('Укажите ID чата Telegram.', 'warning'); return;}
-    if (data.manager_email_notifications_enabled && !data.manager_notification_email) {this.message('Укажите email менеджера.', 'warning'); return;}
+    if (data.telegram_notifications_enabled && !data.telegram_chat_id) {this.message('Укажите номер чата в Telegram.', 'warning'); return;}
+    if (data.manager_email_notifications_enabled && !data.manager_notification_email) {this.message('Укажите почту менеджера.', 'warning'); return;}
     this.lock(true); this.message('Сохраняем…');
     try {this.render(await settingsApi.save(data));window.dispatchEvent(new CustomEvent('company-settings-changed',{detail:'settings'})); this.message('Настройки сохранены.', 'success');}
-    catch (error) {this.message(`Сохранение не подтверждено: ${error.message}. Проверьте настройки перед повтором.`, 'error');}
+    catch {this.message('Не сохранилось. Проверьте поля и нажмите «Сохранить настройки» ещё раз.', 'error');}
     finally {this.lock(false);}
   }
   async changePassword(form) {
@@ -118,7 +117,7 @@ export class AdminSettingsController {
       form.reset(); authApi.clearSession(); this.baseline = '';
       status.textContent = 'Пароль изменён. Войдите заново.';
       window.location.replace('/login/');
-    } catch (error) {form.reset(); AdminNotificationView.message(status, `Смена пароля не подтверждена: ${error.message}. При потере связи попробуйте войти с новым паролем.`, 'error');}
+    } catch {form.reset(); AdminNotificationView.message(status, 'Не удалось сменить пароль. Попробуйте ещё раз.', 'error');}
     finally {this.lock(false);}
   }
   async select() {}

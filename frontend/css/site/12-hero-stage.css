@@ -1,0 +1,377 @@
+/* --------------------------------------------------------------------------
+   First screen: isolated scene. Change only the variables below to reposition
+   the central rope; decorative images never participate in page layout.
+   -------------------------------------------------------------------------- */
+.hero--stage {
+  --coil-left: 25.5%;
+  --coil-top: 24%;
+  --coil-width: min(64vw, 120svh, 1300px);
+
+  height: 100svh;
+  min-height: 680px;
+  background: #061221;
+}
+
+.hero--stage .hero-stage__background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0;
+  background: #030a13 url("../../img/hero/studio-three-spots-lower-center-2026-10-06.optimized.webp") center / 100% 100% no-repeat;
+  transition: opacity 0.8s ease;
+}
+
+.hero--stage .hero-stage__scene,
+.hero--stage .hero-stage__container {
+  position: absolute;
+  inset: 0;
+  width: min(100%, 1920px);
+  height: 100%;
+  margin: 0 auto;
+}
+
+.hero--stage .hero-stage__scene {
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Blur only the foreground; the controls and text sit in the layer above. */
+.hero--stage .hero-stage__scene::after {
+  content: "";
+  position: absolute;
+  inset: 65% 0 0;
+  z-index: 3;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  background: linear-gradient(transparent, rgba(6, 18, 33, 0.65));
+  mask-image: linear-gradient(transparent, #000 65%);
+  -webkit-mask-image: linear-gradient(transparent, #000 65%);
+}
+
+.hero--stage .hero-stage__container {
+  z-index: 2;
+  pointer-events: none;
+}
+
+.hero--stage .hero-stage__rope {
+  position: absolute;
+  margin: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.8s ease 0.2s;
+}
+
+.hero--stage .hero-stage__rope img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.hero--stage .hero-stage__rope--eye {
+  top: 28%;
+  left: 3.5%;
+  width: min(24vw, 43svh, 460px);
+  rotate: -58deg;
+  filter: brightness(0.9) saturate(0.95) drop-shadow(0 16px 22px rgba(0, 3, 10, 0.5));
+}
+
+/* The source image includes a large transparent margin. The frame crops it
+   locally, so changing --coil-width never changes the first-screen height. */
+.hero--stage .hero-stage__rope--coil {
+  top: var(--coil-top);
+  left: var(--coil-left);
+  z-index: 1;
+  width: var(--coil-width);
+  aspect-ratio: 1.85 / 1;
+  overflow: hidden;
+  mask-image: linear-gradient(to right, #000 90%, transparent), linear-gradient(to bottom, #000 82%, transparent 99%);
+  mask-composite: intersect;
+  -webkit-mask-image: linear-gradient(to right, #000 90%, transparent), linear-gradient(to bottom, #000 82%, transparent 99%);
+  -webkit-mask-composite: source-in;
+}
+
+.hero--stage .hero-stage__rope--coil::before {
+  content: "";
+  position: absolute;
+  right: 8%;
+  bottom: 5%;
+  left: 4%;
+  z-index: 0;
+  height: 14%;
+  border-radius: 50%;
+  background: rgba(0, 2, 8, 0.88);
+  filter: blur(clamp(14px, 1.6vw, 28px));
+}
+
+.hero--stage .hero-stage__rope--coil img {
+  position: relative;
+  z-index: 1;
+  transform: translateY(-22%);
+  filter: drop-shadow(0 16px 12px rgba(0, 2, 8, 0.66));
+}
+
+.hero--stage .hero-stage__rope--shackle {
+  top: 35%;
+  right: 10%;
+  width: min(16vw, 29svh, 300px);
+  filter: brightness(0.9) saturate(0.95) drop-shadow(0 16px 22px rgba(0, 3, 10, 0.48));
+}
+
+.hero--stage .hero-stage__brand {
+  position: absolute;
+  top: clamp(128px, 18vh, 220px);
+  right: clamp(28px, 5vw, 96px);
+  width: min(560px, 44vw);
+  text-align: center;
+  pointer-events: none;
+}
+
+.hero--stage .hero-stage__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(34px, 3.4vw, 66px);
+  font-weight: var(--display-weight);
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  opacity: 0;
+  filter: blur(10px);
+  transition: opacity 0.7s ease, filter 0.7s ease;
+}
+
+.hero--stage .hero-stage__title span {
+  background: linear-gradient(100deg, #7b8c9e, #f4f8fb 48%, #fff 52%, #7a8b9d);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero--stage .hero-stage__tagline {
+  margin: clamp(6px, 1.2vh, 16px) 0 0;
+  color: var(--color-mist);
+  font-size: clamp(15px, 1.45vw, 28px);
+  line-height: 1.3;
+  white-space: nowrap;
+  opacity: 0;
+  filter: blur(8px);
+  transition: opacity 0.7s ease 0.1s, filter 0.7s ease 0.1s;
+}
+
+.hero--stage .hero-stage__bottom {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 32px;
+  padding: 36px var(--gutter) 42px;
+  background: linear-gradient(to top, rgba(3, 10, 20, 0.8), transparent);
+  pointer-events: auto;
+}
+
+.hero--stage .hero-stage__actions,
+.hero--stage .hero-stage__facts-wrap {
+  opacity: 0;
+  translate: 0 20px;
+  transition: opacity 0.7s ease 0.25s, translate 0.7s var(--ease-out) 0.25s;
+}
+
+.hero--stage .hero-stage__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.hero--stage .hero-stage__facts-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.hero--stage.hero--ready .hero-stage__background,
+.hero--stage.hero--ready .hero-stage__rope,
+.hero--stage.hero--ready .hero-stage__title,
+.hero--stage.hero--ready .hero-stage__tagline,
+.hero--stage.hero--ready .hero-stage__actions,
+.hero--stage.hero--ready .hero-stage__facts-wrap {
+  opacity: 1;
+}
+
+.hero--stage.hero--ready .hero-stage__title,
+.hero--stage.hero--ready .hero-stage__tagline {
+  filter: blur(0);
+}
+
+.hero--stage.hero--ready .hero-stage__actions,
+.hero--stage.hero--ready .hero-stage__facts-wrap {
+  translate: 0 0;
+}
+
+@media (max-width: 1024px) {
+  .hero--stage {
+    --coil-left: 50%;
+    --coil-top: 350px;
+    --coil-width: min(70vw, 660px);
+
+    display: grid;
+    grid-template-rows: minmax(calc(380px + min(37.84vw, 357px)), 1fr) auto;
+    height: auto;
+    min-height: 100svh;
+  }
+
+  /* The scene has its own row, so a shorter viewport cannot lift the coil
+     into the side ropes or place it behind the controls. */
+  .hero--stage .hero-stage__background {
+    background-image: url("../../img/hero/studio-three-spots-2026-10-05.optimized.webp");
+  }
+
+  .hero--stage .hero-stage__scene {
+    position: relative;
+    inset: auto;
+    grid-area: 1 / 1;
+  }
+
+  .hero--stage .hero-stage__scene::after {
+    top: 82%;
+    background: transparent;
+  }
+
+  .hero--stage .hero-stage__container {
+    display: contents;
+  }
+
+  .hero--stage .hero-stage__rope--coil {
+    transform: translateX(-50%);
+  }
+
+  .hero--stage .hero-stage__rope--eye {
+    top: 210px;
+    width: 24vw;
+  }
+
+  .hero--stage .hero-stage__bottom {
+    position: relative;
+    inset: auto;
+    z-index: 2;
+    grid-area: 2 / 1;
+    width: 100%;
+    padding-top: 0;
+    background: transparent;
+  }
+
+  .hero--stage .hero-stage__brand {
+    top: 152px;
+    right: 36px;
+    z-index: 2;
+  }
+
+  .hero--stage .hero-stage__rope--shackle {
+    top: 245px;
+    right: 42px;
+  }
+}
+
+@media (max-width: 767px) {
+  .hero--stage {
+    --coil-left: 50%;
+    --coil-top: 280px;
+    --coil-width: min(95vw, 400px);
+
+    grid-template-rows: minmax(520px, 1fr) auto;
+  }
+
+  .hero--stage .hero-stage__rope--eye {
+    top: 160px;
+    left: 10px;
+    width: min(36vw, 153px);
+    rotate: -42deg;
+  }
+
+
+  .hero--stage .hero-stage__rope--coil {
+    top: auto;
+    bottom: 0;
+    right: auto;
+    left: 0;
+    width: 77%;
+    transform: translateX(33%);
+  }
+
+  .hero--stage .hero-stage__rope--coil img {
+    transform: translateY(-22%);
+  }
+
+  .hero--stage .hero-stage__scene::after {
+    display: none;
+  }
+
+  .hero--stage .hero-stage__rope--shackle {
+    top: 150px;
+    right: 10px;
+    width: min(31vw, 150px);
+  }
+
+  .hero--stage .hero-stage__brand {
+    top: 124px;
+    right: 16px;
+    width: auto;
+  }
+
+  .hero--stage .hero-stage__title,
+  .hero--stage .hero-stage__tagline {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .hero--stage .hero-stage__bottom {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 20px;
+    padding: 24px var(--gutter) 28px;
+  }
+
+  .hero--stage .hero-stage__facts-wrap {
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+}
+
+@media (max-width: 550px) {
+  .hero--stage .hero-stage__rope--coil {
+    /*top: var(--coil-top);*/
+    /*bottom: auto;*/
+    /*left: auto;*/
+    /*right: 0;*/
+    /*transform: translateX(30%);*/
+    /*aspect-ratio: 1.85 / 1;*/
+  }
+}
+
+@media (max-width: 424px) {
+  .hero--stage .hero-stage__rope--eye {
+    top: 165px;
+    width: min(48vw, 204px);
+  }
+
+  .hero--stage .hero-stage__rope--shackle {
+    top: 160px;
+    width: min(42vw, 178px);
+  }
+
+  .hero--stage .hero-stage__rope--coil {
+    left: auto;
+    right: 0;
+    width: min(110vw, 466px);
+    transform: translateX(30%);
+  }
+}
+

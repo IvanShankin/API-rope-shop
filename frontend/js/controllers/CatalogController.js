@@ -1,8 +1,8 @@
-import { loadErrorMessage } from '../ui/load-state.js?v=20261027.10';
-import { BaseController } from './BaseController.js?v=20261027.10';
-import { CatalogModel } from '../models/CatalogModel.js?v=20261027.10';
-import { CatalogView } from '../views/catalog/CatalogView.js?v=20261027.10';
-import { productsApi } from '../api/productsApi.js?v=20261027.10';
+import { loadErrorMessage } from '../ui/load-state.js?v=20261106.1';
+import { BaseController } from './BaseController.js?v=20261106.1';
+import { CatalogModel } from '../models/CatalogModel.js?v=20261106.1';
+import { CatalogView } from '../views/catalog/CatalogView.js?v=20261106.1';
+import { productsApi } from '../api/productsApi.js?v=20261106.1';
 
 export class CatalogController extends BaseController {
   constructor() {

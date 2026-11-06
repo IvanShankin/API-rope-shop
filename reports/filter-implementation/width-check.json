@@ -1,0 +1,408 @@
+{
+  "tablet768": {
+    "measurements": {
+      "viewport": {
+        "w": 768,
+        "h": 900,
+        "scrollWidth": 768,
+        "scrollHeight": 2882
+      },
+      "headerBox": {
+        "x": 0,
+        "y": 0,
+        "w": 768,
+        "h": 131.7
+      },
+      "filterBox": {
+        "x": 15,
+        "y": 388,
+        "w": 230,
+        "h": 363
+      },
+      "fieldsetBox": {
+        "x": 15,
+        "y": 434.4,
+        "w": 230,
+        "h": 316.6
+      },
+      "titleBox": {
+        "x": 15,
+        "y": 388,
+        "w": 230,
+        "h": 26.4
+      },
+      "ssBox": {
+        "x": 15,
+        "y": 459.2,
+        "w": 230,
+        "h": 48
+      },
+      "checkBox": {
+        "x": 15,
+        "y": 635,
+        "w": 230,
+        "h": 54
+      },
+      "inputBox": {
+        "x": 15,
+        "y": 652.5,
+        "w": 20,
+        "h": 20
+      },
+      "resetBox": {
+        "x": 15,
+        "y": 707,
+        "w": 158.8,
+        "h": 44
+      },
+      "itemsBox": {
+        "x": 285,
+        "y": 388,
+        "w": 468,
+        "h": 1710.3
+      },
+      "firstProductBox": {
+        "x": 285,
+        "y": 388,
+        "w": 468,
+        "h": 857.5
+      },
+      "productsLeft": 285,
+      "styles": {
+        "filter": {
+          "font": "400 16px/25.6px Manrope, system-ui, sans-serif",
+          "color": "rgb(246, 250, 253)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgb(246, 250, 253)",
+          "radius": "0px",
+          "padding": "0px",
+          "gap": "normal",
+          "minHeight": "auto",
+          "opacity": "1",
+          "w": 230,
+          "h": 363
+        },
+        "title": {
+          "font": "400 24px/26.4px \"Inter Tight\", Arial, sans-serif",
+          "color": "rgb(246, 250, 253)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgb(246, 250, 253)",
+          "radius": "0px",
+          "padding": "0px",
+          "gap": "normal",
+          "minHeight": "0px",
+          "opacity": "1",
+          "w": 230,
+          "h": 26.4
+        },
+        "field": {
+          "font": "600 12px/16.8px Manrope, system-ui, sans-serif",
+          "color": "rgba(179, 207, 229, 0.7)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(179, 207, 229, 0.7)",
+          "radius": "0px",
+          "padding": "0px 0px 18px",
+          "gap": "8px",
+          "minHeight": "auto",
+          "opacity": "1",
+          "w": 230,
+          "h": 90.8
+        },
+        "ssMain": {
+          "font": "500 15px/19.5px Manrope, system-ui, sans-serif",
+          "color": "rgb(246, 250, 253)",
+          "background": "rgb(17, 40, 70)",
+          "border": "1px solid rgba(179, 207, 229, 0.38)",
+          "radius": "12px",
+          "padding": "0px 14px",
+          "gap": "12px",
+          "minHeight": "48px",
+          "opacity": "1",
+          "w": 230,
+          "h": 48
+        },
+        "ssText": {
+          "font": "500 15px/18px Manrope, system-ui, sans-serif",
+          "color": "rgb(246, 250, 253)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgb(246, 250, 253)",
+          "radius": "0px",
+          "padding": "0px 7px 0px 4px",
+          "gap": "normal",
+          "minHeight": "auto",
+          "opacity": "1",
+          "w": 171,
+          "h": 18
+        },
+        "check": {
+          "font": "400 14px/21px Manrope, system-ui, sans-serif",
+          "color": "rgb(246, 250, 253)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "1px solid rgba(179, 207, 229, 0.18)",
+          "radius": "0px",
+          "padding": "16px 0px",
+          "gap": "12px",
+          "minHeight": "44px",
+          "opacity": "1",
+          "w": 230,
+          "h": 54
+        },
+        "input": {
+          "font": "400 13.3333px/normal Arial",
+          "color": "rgb(255, 255, 255)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "1px solid rgba(179, 207, 229, 0.5)",
+          "radius": "6px",
+          "padding": "0px",
+          "gap": "normal",
+          "minHeight": "auto",
+          "opacity": "1",
+          "w": 20,
+          "h": 20
+        },
+        "reset": {
+          "font": "600 13px/13px Manrope, system-ui, sans-serif",
+          "color": "rgb(246, 250, 253)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "1px solid rgba(179, 207, 229, 0.16)",
+          "radius": "999px",
+          "padding": "0px 18px",
+          "gap": "normal",
+          "minHeight": "44px",
+          "opacity": "0.55",
+          "w": 158.8,
+          "h": 44
+        }
+      },
+      "titleExists": true,
+      "titleText": "Filter",
+      "htmlLang": "de"
+    },
+    "state": {
+      "url": "?group=1",
+      "lang": "de",
+      "products": 2,
+      "empty": false,
+      "resetDisabled": true,
+      "values": [
+        "",
+        ""
+      ],
+      "ssValues": [
+        "Alle Varianten",
+        "Alle Varianten"
+      ],
+      "checked": false,
+      "title": "Filter",
+      "fieldLabels": [
+        "Konstruktion",
+        "Durchmesser, mm"
+      ]
+    },
+    "foreign": 0,
+    "columns": "230px 468px"
+  },
+  "tablet1024": {
+    "measurements": {
+      "viewport": {
+        "w": 1024,
+        "h": 900,
+        "scrollWidth": 1024,
+        "scrollHeight": 3244
+      },
+      "headerBox": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 131.8
+      },
+      "filterBox": {
+        "x": 15,
+        "y": 388,
+        "w": 230,
+        "h": 363
+      },
+      "fieldsetBox": {
+        "x": 15,
+        "y": 434.4,
+        "w": 230,
+        "h": 316.6
+      },
+      "titleBox": {
+        "x": 15,
+        "y": 388,
+        "w": 230,
+        "h": 26.4
+      },
+      "ssBox": {
+        "x": 15,
+        "y": 459.2,
+        "w": 230,
+        "h": 48
+      },
+      "checkBox": {
+        "x": 15,
+        "y": 635,
+        "w": 230,
+        "h": 54
+      },
+      "inputBox": {
+        "x": 15,
+        "y": 652.5,
+        "w": 20,
+        "h": 20
+      },
+      "resetBox": {
+        "x": 15,
+        "y": 707,
+        "w": 158.8,
+        "h": 44
+      },
+      "itemsBox": {
+        "x": 285,
+        "y": 388,
+        "w": 724,
+        "h": 2099.6
+      },
+      "firstProductBox": {
+        "x": 285,
+        "y": 388,
+        "w": 724,
+        "h": 1039
+      },
+      "productsLeft": 285,
+      "styles": {
+        "filter": {
+          "font": "400 16px/25.6px Manrope, system-ui, sans-serif",
+          "color": "rgb(246, 250, 253)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgb(246, 250, 253)",
+          "radius": "0px",
+          "padding": "0px",
+          "gap": "normal",
+          "minHeight": "auto",
+          "opacity": "1",
+          "w": 230,
+          "h": 363
+        },
+        "title": {
+          "font": "400 24px/26.4px \"Inter Tight\", Arial, sans-serif",
+          "color": "rgb(246, 250, 253)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgb(246, 250, 253)",
+          "radius": "0px",
+          "padding": "0px",
+          "gap": "normal",
+          "minHeight": "0px",
+          "opacity": "1",
+          "w": 230,
+          "h": 26.4
+        },
+        "field": {
+          "font": "600 12px/16.8px Manrope, system-ui, sans-serif",
+          "color": "rgba(179, 207, 229, 0.7)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(179, 207, 229, 0.7)",
+          "radius": "0px",
+          "padding": "0px 0px 18px",
+          "gap": "8px",
+          "minHeight": "auto",
+          "opacity": "1",
+          "w": 230,
+          "h": 90.8
+        },
+        "ssMain": {
+          "font": "500 15px/19.5px Manrope, system-ui, sans-serif",
+          "color": "rgb(246, 250, 253)",
+          "background": "rgb(17, 40, 70)",
+          "border": "1px solid rgba(179, 207, 229, 0.38)",
+          "radius": "12px",
+          "padding": "0px 14px",
+          "gap": "12px",
+          "minHeight": "48px",
+          "opacity": "1",
+          "w": 230,
+          "h": 48
+        },
+        "ssText": {
+          "font": "500 15px/18px Manrope, system-ui, sans-serif",
+          "color": "rgb(246, 250, 253)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgb(246, 250, 253)",
+          "radius": "0px",
+          "padding": "0px 7px 0px 4px",
+          "gap": "normal",
+          "minHeight": "auto",
+          "opacity": "1",
+          "w": 171,
+          "h": 18
+        },
+        "check": {
+          "font": "400 14px/21px Manrope, system-ui, sans-serif",
+          "color": "rgb(246, 250, 253)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "1px solid rgba(179, 207, 229, 0.18)",
+          "radius": "0px",
+          "padding": "16px 0px",
+          "gap": "12px",
+          "minHeight": "44px",
+          "opacity": "1",
+          "w": 230,
+          "h": 54
+        },
+        "input": {
+          "font": "400 13.3333px/normal Arial",
+          "color": "rgb(255, 255, 255)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "1px solid rgba(179, 207, 229, 0.5)",
+          "radius": "6px",
+          "padding": "0px",
+          "gap": "normal",
+          "minHeight": "auto",
+          "opacity": "1",
+          "w": 20,
+          "h": 20
+        },
+        "reset": {
+          "font": "600 13px/13px Manrope, system-ui, sans-serif",
+          "color": "rgb(246, 250, 253)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "1px solid rgba(179, 207, 229, 0.16)",
+          "radius": "999px",
+          "padding": "0px 18px",
+          "gap": "normal",
+          "minHeight": "44px",
+          "opacity": "0.55",
+          "w": 158.8,
+          "h": 44
+        }
+      },
+      "titleExists": true,
+      "titleText": "Filter",
+      "htmlLang": "de"
+    },
+    "state": {
+      "url": "?group=1",
+      "lang": "de",
+      "products": 2,
+      "empty": false,
+      "resetDisabled": true,
+      "values": [
+        "",
+        ""
+      ],
+      "ssValues": [
+        "Alle Varianten",
+        "Alle Varianten"
+      ],
+      "checked": false,
+      "title": "Filter",
+      "fieldLabels": [
+        "Konstruktion",
+        "Durchmesser, mm"
+      ]
+    },
+    "foreign": 0,
+    "columns": "230px 724px"
+  }
+}

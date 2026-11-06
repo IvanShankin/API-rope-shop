@@ -4,7 +4,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const port = Number(process.env.PORT || 8080);
-const apiTarget = (process.env.API_TARGET ?? 'https://kgosew-31-29-142-236.a.2na.am').replace(/\/+$/, '');
+const apiTarget = (process.env.API_TARGET ?? 'http://localhost:8018').replace(/\/+$/, '');
 const blockAdmin = process.env.BLOCK_ADMIN === '1';
 const pages = new Set(['admin', 'b2b', 'b2c', 'catalog', 'category', 'configurator', 'legal', 'login']);
 const types = {

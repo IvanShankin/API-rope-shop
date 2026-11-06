@@ -1,5 +1,4 @@
-import { apiClient } from './apiClient.js?v=20261027.10';
-import { API_CONFIG } from './config.js?v=20261027.10';
+import { apiClient } from './apiClient.js?v=20261106.1';
 const auth = { requiresAuth: true };
 let listCache = null;
 export const adminColorsApi = {
@@ -21,7 +20,7 @@ export const adminColorsApi = {
   addTranslation: (id, data) => apiClient.post(`/colors/${Number(id)}/translations`, data, auth),
   updateTranslation: (id, data) => apiClient.patch(`/colors/translations/${Number(id)}`, data, auth),
   links: id => apiClient.get(`/rope_product_colors/by-product/${Number(id)}`,auth),
-  attach: (productId, colorId) => apiClient.post('/rope_product_colors', { [API_CONFIG.CATALOG_V2 ? 'product_id' : 'rope_product_id']: Number(productId), color_id: Number(colorId) }, auth),
+  attach: (productId, colorId) => apiClient.post('/rope_product_colors', { product_id: Number(productId), color_id: Number(colorId) }, auth),
   detach: id => apiClient.delete(`/rope_product_colors/${Number(id)}`, auth),
 };
 for(const key of ['create','update','remove','removeTranslation','order','addTranslation','updateTranslation']) {

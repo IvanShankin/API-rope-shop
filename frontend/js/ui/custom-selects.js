@@ -1,8 +1,15 @@
-import SlimSelect from '../vendor/slim-select/slimselect.es.js?v=20261027.10';
+import SlimSelect from '../vendor/slim-select/slimselect.es.js?v=20261106.1';
+import { getLanguage } from '../i18n/locale.js?v=20261106.1';
 
 const instances = new Map();
 const valueProperty = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
 let queued = false;
+// Тексты выпадающих списков: на публичных страницах (html.page) — язык сайта, в админке и входе — русский.
+const UI_TEXT = {
+  ru: { search: 'Найти…', empty: 'Ничего не найдено', searching: 'Поиск…', placeholder: 'Выберите вариант', results: 'Найдено вариантов: {count}' },
+  en: { search: 'Search…', empty: 'Nothing found', searching: 'Searching…', placeholder: 'Choose an option', results: 'Options found: {count}' },
+  de: { search: 'Suchen…', empty: 'Nichts gefunden', searching: 'Suche…', placeholder: 'Option wählen', results: 'Gefundene Optionen: {count}' },
+};
 const schedule = () => {
   if (queued) return;
   queued = true;
@@ -23,13 +30,14 @@ function refresh() {
   }
   for (const select of document.querySelectorAll('select:not([data-native-select])')) {
     if (instances.has(select) || !select.getClientRects().length) continue;
-    const label = select.getAttribute('aria-label') || [...(select.labels || [])].map(el => { const copy = el.cloneNode(true); copy.querySelectorAll('select, .ss-main').forEach(node => node.remove()); return copy.textContent.trim(); }).join(' ') || 'Выберите вариант';
+    const text = (document.documentElement.classList.contains('page') && UI_TEXT[getLanguage()]) || UI_TEXT.ru;
+    const label = select.getAttribute('aria-label') || [...(select.labels || [])].map(el => { const copy = el.cloneNode(true); copy.querySelectorAll('select, .ss-main').forEach(node => node.remove()); return copy.textContent.trim(); }).join(' ') || text.placeholder;
     const instance = new SlimSelect({ select, settings: {
       showSearch: select.options.length > 8,
       ariaLabel: label,
-      searchPlaceholder: 'Найти…', searchText: 'Ничего не найдено',
-      searchingText: 'Поиск…', placeholderText: 'Выберите вариант',
-      resultsText: 'Найдено вариантов: {count}',
+      searchPlaceholder: text.search, searchText: text.empty,
+      searchingText: text.searching, placeholderText: text.placeholder,
+      resultsText: text.results,
       contentLocation: document.body, modal: 'off',
     }});
     instances.set(select, { instance });

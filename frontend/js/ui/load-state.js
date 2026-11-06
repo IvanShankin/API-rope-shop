@@ -1,4 +1,4 @@
-import { getLanguage } from '../i18n/locale.js?v=20261027.10';
+import { getLanguage } from '../i18n/locale.js?v=20261106.1';
 
 // GET failures are recoverable; never use this helper to retry a submitted order.
 export function loadErrorMessage(error) {
@@ -16,9 +16,11 @@ export function catalogLink() {
 }
 
 export function updateLoadState(root, message, state) {
+  const loading = state === 'loading';
   root.dataset.loadState = state;
-  root.setAttribute('aria-busy', String(state === 'loading'));
+  root.setAttribute('aria-busy', String(loading));
   message.classList.add('load-state');
+  message.classList.toggle('visually-hidden', loading);
   message.dataset.state = state;
   message.setAttribute('role', 'status');
   message.setAttribute('aria-atomic', 'true');

@@ -1,6 +1,6 @@
-import {appendTrackingLink} from '../../utils/tracking.js?v=20261027.10';
-import { catalogLink, updateLoadState } from '../../ui/load-state.js?v=20261027.10';
-import { escapeHtml as esc, displayName } from '../../utils/text.js?v=20261027.10';
+import {appendTrackingLink} from '../../utils/tracking.js?v=20261106.1';
+import { catalogLink, updateLoadState } from '../../ui/load-state.js?v=20261106.1';
+import { escapeHtml as esc, displayName } from '../../utils/text.js?v=20261106.1';
 
 export class ServiceConfiguratorView {
   constructor(root) {
@@ -23,9 +23,9 @@ export class ServiceConfiguratorView {
         <fieldset class="configurator__step"><legend class="configurator__step-title">Дополнительные опции</legend><div data-extras></div></fieldset>
         <label class="check"><input class="check__input" name="urgent" type="checkbox"><span class="check__box"></span><span>Срочное изготовление</span></label>
       </fieldset>
-      <aside class="service-summary">
+      <div class="service-summary">
         <p class="service-summary__label">Предварительная стоимость</p>
-        <p class="service-summary__total" data-total>—</p><p data-breakdown></p>
+        <p class="service-summary__total" data-total aria-live="polite">—</p><p data-breakdown></p>
         <p class="service-summary__note">Канат предоставляете вы — его стоимость не включена. Исполнение и окончательную цену подтвердим перед работой.</p>
         <fieldset class="summary__contacts" data-contact-fields><legend>Как с вами связаться</legend>
           <label class="field">Имя<input class="field__input" name="name" autocomplete="name" maxlength="255" required></label>
@@ -35,9 +35,10 @@ export class ServiceConfiguratorView {
           <label class="check check--light"><input class="check__input" type="checkbox" name="consent" required><span class="check__box"></span><span>Согласен(-на) на обработку данных для ответа на заявку <a href="/legal/?document=privacy" lang="de">Datenschutz</a></span></label>
         </fieldset>
         <p data-validation role="status"></p>
+        <button class="button button--ghost button--small" type="button" data-price-retry hidden>Обновить цену</button>
         <button class="button button--dark" type="submit" disabled>Отправить на проверку</button>
         <p data-result role="status"></p>
-      </aside>`;
+      </div>`;
     this.status = document.createElement('p');
     this.status.setAttribute('role', 'status');
     this.retry = document.createElement('button');
@@ -49,7 +50,7 @@ export class ServiceConfiguratorView {
     this.retry.hidden = true;
   }
 
-  bind({ change, submit, retry }) {
+  bind({ change, submit, retry, priceRetry }) {
     const options = { signal: this.abort.signal };
     this.form.addEventListener('input', event => {
       const el = event.target;
@@ -61,6 +62,7 @@ export class ServiceConfiguratorView {
       submit(Object.fromEntries(new FormData(this.form)));
     }, options);
     this.retry.addEventListener('click', retry, options);
+    this.form.querySelector('[data-price-retry]').addEventListener('click', priceRetry, options);
   }
 
   statusMessage(state, message = '') {
@@ -76,17 +78,21 @@ export class ServiceConfiguratorView {
       this.form.elements[name].value = model.state[name];
     }
     this.form.querySelector('[data-extras]').innerHTML = model.extras.map(extra => `<label class="check"><input class="check__input" type="checkbox" name="extra" value="${esc(extra.id)}" ${model.state.extras.has(Number(extra.id)) ? 'checked' : ''}><span class="check__box"></span><span>${esc(displayName(extra))} · ${esc(extra.price)} ${esc(extra.currency || model.settings.currency)} ${extra.billing_type === 'fixed' ? 'за заказ' : 'за работу'}</span></label>`).join('') || '<p>Нет доступных опций.</p>';
-    this.render(model.calculate());
   }
 
+  // result — ServiceConfiguratorModel.summary(): суммы приходят с сервера.
   render(result) {
-    this.valid = !result.error;
+    const ready = result.status === 'ready';
+    this.valid = ready;
     this.form.querySelector('[data-eye]').hidden = !result.needsEye;
     this.form.elements.eye.disabled = !result.needsEye;
     this.form.elements.eye.required = result.needsEye;
-    this.form.querySelector('[data-total]').textContent = result.total == null ? '—' : `${result.total.toFixed(2)} ${result.currency}`;
-    this.form.querySelector('[data-breakdown]').textContent = result.error ? '' : `Работы: ${result.work.toFixed(2)} · Опции: ${result.extras.toFixed(2)} · Срочность: ${result.urgent.toFixed(2)} ${result.currency}`;
+    this.form.querySelector('.service-summary').setAttribute('aria-busy', String(result.status === 'loading'));
+    this.form.querySelector('[data-total]').textContent = ready ? `${result.total.toFixed(2)} ${result.currency}`
+      : result.status === 'loading' ? 'Считаем…' : '—';
+    this.form.querySelector('[data-breakdown]').textContent = ready ? `Работы: ${result.work.toFixed(2)} · Опции: ${result.extras.toFixed(2)} · Срочность: ${result.urgent.toFixed(2)} ${result.currency}` : '';
     this.form.querySelector('[data-validation]').textContent = result.error;
+    this.form.querySelector('[data-price-retry]').hidden = !result.retry;
     this.setBusy(this.busy, this.sent);
   }
 

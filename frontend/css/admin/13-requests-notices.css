@@ -1,0 +1,161 @@
+/* Админка: Заявки и уведомления.
+   Часть бывшего css/admin.css (строки 4190–4349). Порядок подключения файлов важен. */
+/* Заявки: компактные фильтры, список и сообщения без обрамления. */
+#panel-requests>.admin-disclosure {
+  margin-bottom: 12px;
+}
+
+#panel-requests .config-admin-toolbar {
+  margin: 0;
+  padding: 0 !important;
+}
+
+#panel-requests .requests-table {
+  padding: 0;
+}
+
+#panel-requests .requests-table [data-request-content] {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px 0 0;
+  border: 0;
+  border-top: 1px solid var(--admin-border);
+  border-radius: 0;
+}
+
+#panel-requests [data-request-content]> :is(h2, h3, p, ul) {
+  margin: 0;
+}
+
+#panel-requests [data-request-edit] {
+  margin: 0 !important;
+}
+
+#panel-requests .requests-table>p {
+  margin: 0;
+  padding: 0 !important;
+}
+
+#panel-requests .admin-request-card li+li {
+  margin-top: 6px;
+}
+
+@media (max-width: 700px) {
+  #panel-requests .admin-table {
+    min-width: 0;
+  }
+}
+
+/* Уведомления действий админки. На телефоне оставляем место кнопке меню. */
+
+.admin-notifications {
+  position: fixed;
+  z-index: 80;
+  top: max(20px, env(safe-area-inset-top));
+  right: max(24px, env(safe-area-inset-right));
+  width: min(600px, calc(100vw - 48px));
+  max-height: 45vh;
+  max-height: 45dvh;
+  display: grid;
+  gap: 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  pointer-events: none;
+}
+
+.admin-notification {
+  --notification-accent: #8ecbff;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  align-items: start;
+  gap: 8px;
+  padding: 12px 10px 12px 18px;
+  border: 1px solid var(--notification-accent);
+  border-left-width: 5px;
+  border-radius: 12px;
+  background: #17344d;
+  color: #fff;
+  box-shadow: 0 8px 28px rgb(0 0 0 / 30%);
+  pointer-events: auto;
+}
+
+.admin-notification--success {
+  --notification-accent: #8ce1b4;
+  background: #174332;
+}
+
+.admin-notification--error {
+  --notification-accent: #ffaaa4;
+  background: #652b30;
+}
+
+.admin-notification--warning {
+  --notification-accent: #f5d18c;
+  background: #594321;
+}
+
+.admin-notification__content {
+  min-width: 0;
+  align-self: center;
+  overflow-wrap: anywhere;
+}
+
+.admin-notification__title {
+  display: block;
+  color: var(--notification-accent);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.admin-notification__message {
+  margin: 4px 0 0;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.admin-notification__message:empty {
+  display: none;
+}
+
+.admin-notification__close {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  border: 0;
+  border-radius: 8px;
+  color: #fff;
+  background: transparent;
+  cursor: pointer;
+}
+
+.admin-notification__close:hover {
+  background: rgb(255 255 255 / 12%);
+}
+
+.admin-notification__close:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -3px;
+}
+
+.admin-notification__close svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+@media (max-width: 1000px) {
+  .admin-notifications {
+    top: calc(80px + env(safe-area-inset-top));
+    left: max(12px, env(safe-area-inset-left));
+    right: max(12px, env(safe-area-inset-right));
+    width: auto;
+  }
+}

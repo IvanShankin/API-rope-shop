@@ -1,4 +1,4 @@
-import { escapeHtml } from '../../utils/text.js?v=20261027.10';
+import { escapeHtml } from '../../utils/text.js?v=20261106.1';
 /**
  * Компонент всплывающих уведомлений (Toast)
  */

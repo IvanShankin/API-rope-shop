@@ -1,10 +1,9 @@
-import { adminProductsApi as api } from '../api/adminProductsApi.js?v=20261027.10';
-import { AdminProductsView } from '../views/admin/AdminProductsView.js?v=20261028.18';
-import { AdminProductModel } from '../models/AdminProductModel.js?v=20261027.10';
-import { adminColorsApi as colorsApi } from '../api/adminColorsApi.js?v=20261027.10';
-import { AdminColorModel } from '../models/AdminColorModel.js?v=20261027.10';
-import { API_CONFIG } from '../api/config.js?v=20261027.10';
-import { adminConfigApi as spliceApi } from '../api/adminConfigApi.js?v=20261027.10';
+import { adminProductsApi as api } from '../api/adminProductsApi.js?v=20261106.1';
+import { AdminProductsView } from '../views/admin/AdminProductsView.js?v=20261106.1';
+import { AdminProductModel } from '../models/AdminProductModel.js?v=20261106.1';
+import { adminColorsApi as colorsApi } from '../api/adminColorsApi.js?v=20261106.1';
+import { AdminColorModel } from '../models/AdminColorModel.js?v=20261106.1';
+import { adminConfigApi as spliceApi } from '../api/adminConfigApi.js?v=20261106.1';
 
 export class AdminProductsController {
   constructor(root) {
@@ -26,25 +25,23 @@ export class AdminProductsController {
           this.view.renderProduct(null, this.groups, this.materials);
           this.view.message('Заполните данные нового каната.');
           this.root.dispatchEvent(new CustomEvent('admin:product-new', { bubbles:true }));
-        } catch (error) { this.view.message(`Не удалось обновить справочники: ${error.message}`, 'error'); }
+        } catch { this.view.message('Не удалось загрузить материалы и цвета. Нажмите «Обновить».', 'error'); }
         finally { this.lock(false); }
       }, remove: id => this.remove(id), image: (action, id, file) => this.image(action, id, file)
     });
   }
   destroy() { this.view.destroy(); }
   async refreshReferences() {
-    const [groups, materials, colors, categories, splices] = await Promise.all([api.groups(), api.materials(), colorsApi.list({refresh:true}), API_CONFIG.CATALOG_V2 ? api.categories() : [], spliceApi.list('splice_types',{locale:'rus'})]);
-    if (![groups, materials, colors, categories, splices].every(Array.isArray)) throw new Error('Некорректные справочники');
+    const [groups, materials, colors, categories, splices] = await Promise.all([api.groups(), api.materials(), colorsApi.list({refresh:true}), api.categories(), spliceApi.list('splice_types',{locale:'rus'})]);
+    if (![groups, materials, colors, categories, splices].every(Array.isArray)) throw new Error('Не удалось загрузить материалы и цвета');
     this.groups = groups; this.materials = materials; this.view.colors = colors;
-    if (API_CONFIG.CATALOG_V2) this.view.categories = categories;
+    this.view.categories = categories;
     this.view.spliceTypes = splices;
   }
   async refreshGroups() {
-    if (API_CONFIG.CATALOG_V2) {
-      this.view.categories = await api.categories();
-      const select = this.root.querySelector('[name=category_id]');
-      if (select) { const value = select.value; select.replaceChildren(new Option('Выберите категорию', ''), ...this.view.categories.map(c => new Option(c.name || c.slug, String(c.id)))); select.value = value; }
-    }
+    this.view.categories = await api.categories();
+    const categorySelect = this.root.querySelector('[name=category_id]');
+    if (categorySelect) { const value = categorySelect.value; categorySelect.replaceChildren(new Option('Выберите категорию', ''), ...this.view.categories.map(c => new Option(c.name || c.slug, String(c.id)))); categorySelect.value = value; }
     const groups = await api.groups();
     if (!Array.isArray(groups)) throw new Error('Не удалось загрузить разделы');
     this.groups = groups;
@@ -65,12 +62,12 @@ export class AdminProductsController {
     this.lock(true);
     this.view.message('Загружаем каталог…');
     try {
-      const [products, groups, materials, colors, categories, splices] = await Promise.all([api.list(), api.groups(), api.materials(), colorsApi.list({refresh:true}), API_CONFIG.CATALOG_V2 ? api.categories() : [], spliceApi.list('splice_types',{locale:'rus'})]);
-      if(!Array.isArray(splices))throw new Error('Некорректный список заделок');
+      const [products, groups, materials, colors, categories, splices] = await Promise.all([api.list(), api.groups(), api.materials(), colorsApi.list({refresh:true}), api.categories(), spliceApi.list('splice_types',{locale:'rus'})]);
+      if(!Array.isArray(splices))throw new Error('Не удалось загрузить варианты заделки');
       this.view.spliceTypes = splices;this.view.spliceLinks = [];
-      if (![products, groups, materials, colors].every(Array.isArray)) throw new Error('Некорректные справочники');
+      if (![products, groups, materials, colors].every(Array.isArray)) throw new Error('Не удалось загрузить материалы и цвета');
       this.view.colors = colors;
-      if (API_CONFIG.CATALOG_V2) this.view.categories = categories;
+      this.view.categories = categories;
       this.groups = groups;
       this.materials = materials;
       this.ready = true;
@@ -79,7 +76,7 @@ export class AdminProductsController {
       this.view.renderList(products);
       this.view.clear();
       this.view.message(products.length ? 'Выберите канат или добавьте новый.' : 'Канатов пока нет. Добавьте первый.');
-    } catch (error) { this.view.message(`Ошибка загрузки: ${error.message}. Нажмите «Обновить».`, 'error'); }
+    } catch { this.view.message('Не удалось загрузить каталог. Нажмите «Обновить».', 'error'); }
     finally { this.lock(false); }
   }
   async select(id) {
@@ -89,21 +86,21 @@ export class AdminProductsController {
     this.lock(true);
     try {
       const [product, links] = await Promise.all([api.detail(id), spliceApi.links(id), this.refreshReferences()]);
-      if(!Array.isArray(links))throw new Error('Не удалось получить заделки каната');
+      if(!Array.isArray(links))throw new Error('Не удалось загрузить заделки');
       this.view.spliceLinks = links;
       this.product = product;
       this.uncertain = false;
       this.view.renderProduct(this.product, this.groups, this.materials);
-      this.view.message('Измените нужные поля и нажмите общую кнопку «Сохранить изменения».');
-    } catch (error) {
+      this.view.message('Измените поля и нажмите «Сохранить изменения».');
+    } catch {
       this.view.setSelection(this.product?.product_id);
-      this.view.message(`Не удалось открыть канат: ${error.message}`, 'error');
+      this.view.message('Не удалось открыть канат. Обновите список и попробуйте снова.', 'error');
     }
     finally { this.lock(false); }
   }
   async save() {
     if (this.busy) return;
-    if (this.uncertain) { this.view.message('Ответ на создание не получен. Обновите список и проверьте запись перед повторным сохранением.', 'warning'); return; }
+    if (this.uncertain) { this.view.message('Не понятно, сохранилось ли. Обновите список и проверьте канат.', 'warning'); return; }
     const forms = [...this.root.querySelectorAll('[data-product-editor] form')];
     const colorsForm = forms.find(form => form.matches('[data-product-colors-form]'));
     const selected = colorsForm ? Object.entries(this.view.readForm(colorsForm))
@@ -125,8 +122,8 @@ export class AdminProductsController {
           this.view.message('Проверьте заполнение полей. Изменения пока не сохранены.', 'warning');
           return;
         }
-        if (isProduct) plans.push({ form, type: 'product', payload: API_CONFIG.CATALOG_V2 ? AdminProductModel.catalogProduct(values) : AdminProductModel.product(values) });
-        else if (form.matches('[data-variant-form]')) plans.push({ form, type: 'variant', payload: API_CONFIG.CATALOG_V2 ? AdminProductModel.catalogVariant(values) : AdminProductModel.variant(values), index: form.dataset.id ? AdminProductModel.index(values) : undefined });
+        if (isProduct) plans.push({ form, type: 'product', payload: AdminProductModel.catalogProduct(values) });
+        else if (form.matches('[data-variant-form]')) plans.push({ form, type: 'variant', payload: AdminProductModel.catalogVariant(values), index: form.dataset.id ? AdminProductModel.index(values) : undefined });
         else if (form.matches('[data-color-order-form]')) plans.push({ form, type: 'order', index: AdminProductModel.index(values) });
         else if (form === colorsForm) plans.push({ form, type: 'colors' });
         else if (form.matches('[data-product-splices-form]')) plans.push({form,type:'splices',ids:Object.entries(values).filter(([key,value])=>key.startsWith('splice_')&&value).map(([key])=>Number(key.slice(7)))});
@@ -156,7 +153,7 @@ export class AdminProductsController {
           await colorsApi.orderLink(plan.form.dataset.linkId, plan.index);
         } else if(plan.type === 'splices') {
           const savedLinks=await spliceApi.saveLinks(this.product.product_id,plan.ids);
-          if(!Array.isArray(savedLinks))throw new Error('Сервер не подтвердил список заделок');
+          if(!Array.isArray(savedLinks))throw new Error('Не удалось сохранить заделки');
           this.view.spliceLinks=savedLinks;
         } else {
           const links = await colorsApi.links(this.product.product_id);
@@ -183,18 +180,18 @@ export class AdminProductsController {
       if (newProduct) {
         this.product = null; this.uncertain = false; this.view.spliceLinks = [];
         this.view.setSelection(null); this.view.renderProduct(null, this.groups, this.materials);
-        this.view.message('Канат сохранён. Можно добавить следующий; для фотографий и диаметров выберите сохранённый канат в списке.', 'success');
+        this.view.message('Канат сохранён. Откройте его в списке, чтобы добавить фото и диаметры.', 'success');
       }
     } catch (error) {
       if (creating && (!error.status || error.status >= 500)) this.uncertain = true;
-      this.view.message(`Сохранение не завершено: ${error.message}. Часть изменений могла сохраниться. Поля оставлены для проверки и повторного сохранения.`, 'error');
+      this.view.message('Не сохранилось. Проверьте поля и нажмите «Сохранить» ещё раз.', 'error');
     } finally { this.lock(false); }
   }
   async image(action, id, file) {
-    if (this.busy || !this.product || !API_CONFIG.CATALOG_V2) return;
+    if (this.busy || !this.product) return;
     if (this.view.hasChanges()) { this.view.message('Сначала сохраните изменения в полях, затем измените фотографии.', 'warning'); return; }
     if (action === 'upload' && (!file || file.size > 10 * 1024 * 1024)) { this.view.message('Выберите изображение размером до 10 МБ.', 'warning'); return; }
-    if (action === 'remove' && !window.confirm('Удалить фотографию товара?')) return;
+    if (action === 'remove' && !window.confirm('Удалить фотографию каната?')) return;
     this.lock(true);
     try {
       if (action === 'upload') await api.upload(this.product.product_id, file);
@@ -204,13 +201,13 @@ export class AdminProductsController {
       this.view.renderProduct(this.product, this.groups, this.materials);
       this.root.querySelector('[data-product-photos]').open = true;
       this.view.message('Фотографии сохранены. Обновите каталог, чтобы увидеть результат.', 'success');
-    } catch (e) { this.view.message(`Не удалось подтвердить изменение фотографии: ${e.message}. Обновите товар перед повтором.`, 'error'); }
+    } catch { this.view.message('Фото не изменилось. Обновите канат и попробуйте снова.', 'error'); }
     finally { this.lock(false); }
   }
   async remove(variantId) {
     if (this.busy || !this.product || !this.view.allowDiscard()) return;
     const productId = this.product.product_id;
-    if (!window.confirm(variantId ? `Удалить диаметр #${variantId}? Это действие нельзя отменить.` : `Удалить канат #${productId}? Это действие нельзя отменить. Связанные записи могут препятствовать удалению.`)) return;
+    if (!window.confirm(variantId ? `Удалить диаметр #${variantId}? Отменить нельзя.` : `Удалить канат #${productId}? Отменить нельзя — удалить не получится, если канат уже в заказах.`)) return;
     this.lock(true); let committed = false;
     try {
       if (variantId) await api.removeVariant(variantId); else await api.removeProduct(productId);
@@ -219,7 +216,7 @@ export class AdminProductsController {
       const products = await api.list(); this.view.renderList(products);
       if (variantId) { this.product = await api.detail(productId); this.view.renderProduct(this.product, this.groups, this.materials); this.view.setSelection(productId); }
       this.view.message(variantId ? 'Диаметр удалён.' : 'Канат удалён.', 'success');
-    } catch (e) { this.view.message(`${committed ? 'Удалено, но не удалось обновить форму.' : 'Не удалось подтвердить удаление.'} ${e.message}. Обновите список. Для используемых диаметров можно снять флажок «Активен».`, 'error'); }
+    } catch { this.view.message(`${committed ? 'Удалено, но форму обновить не удалось.' : 'Удалить не получилось.'} Обновите список. Если запись используется, отключите её: снимите «Показывать в каталоге».`, 'error'); }
     finally { this.lock(false); }
   }
 }

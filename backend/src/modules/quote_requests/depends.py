@@ -2,6 +2,8 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database.database import get_db
+from src.core.config import Config
+from src.modules.depends import get_config
 from src.modules.colors.repository import ColorRepository
 from src.modules.rope_products.repository import RopeProductRepository, ProductVariantRepository
 from src.modules.splice_materials.repository import SpliceMaterialRepository
@@ -44,6 +46,7 @@ def get_quote_extra_item_repository(
 
 def get_quote_request_service(
     session: AsyncSession = Depends(get_db),
+    config: Config = Depends(get_config),
 ) -> QuoteRequestService:
     return QuoteRequestService(
         quote_repo=QuoteRequestRepository(session=session),
@@ -59,4 +62,5 @@ def get_quote_request_service(
         extra_repo=ConfiguratorExtraRepository(session=session),
         configurator_setting_repo=ConfiguratorSettingRepository(session=session),
         session=session,
+        config=config,
     )

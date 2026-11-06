@@ -830,7 +830,7 @@ class QuoteRequestService:
 
     def _to_response_dto(self, item: QuoteRequest) -> QuoteRequestResponseDTO:
         dto = QuoteRequestResponseDTO.model_validate(item)
-        site_url = "https://ropeshop.com"
+        site_url = ""
         if hasattr(self.config, "default_site_settings") and self.config.default_site_settings.site_url:
             site_url = self.config.default_site_settings.site_url
         if hasattr(self.config, "order_tracking") and getattr(item, "tracking_token", None):

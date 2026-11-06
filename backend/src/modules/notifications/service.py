@@ -342,7 +342,7 @@ class NotificationService:
                 )
 
 
-        site_url = settings.site_url or "https://ropeshop.com"
+        site_url = settings.site_url or getattr(getattr(self.config, "default_site_settings", None), "site_url", "") or ""
         tracking_token = getattr(quote, "tracking_token", None)
         if tracking_token and hasattr(self.config, "order_tracking"):
             tracking_url = self.config.order_tracking.url_template.format(

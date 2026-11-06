@@ -28,9 +28,9 @@ class Settings(Base):
 
     # Общие данные магазина / контакты
     company_name: Mapped[str] = mapped_column(String(255), nullable=False, default="Rope Shop")
-    contact_email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, default="info@ropeshop.com")
-    contact_phone: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, default="+1 (555) 019-2834")
-    site_url: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, default="https://ropeshop.com")
+    contact_email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, default=None)
+    contact_phone: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, default=None)
+    site_url: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, default=None)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

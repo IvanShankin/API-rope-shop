@@ -163,14 +163,14 @@ class TokensConfig(BaseModel):
 
 
 class AllowedExtensions(BaseModel):
-    for_image: List[str] = ["webp", "jpg", ".jpeg", "gif", ".png", "heic", "heif"]
+    for_image: List[str] = ["webp", "jpg", "jpeg", "gif", "png", "heic", "heif"]
     max_image_size_mb: int = 15
 
     @classmethod
     def build(cls) -> "AllowedExtensions":
         max_size_mb = int(os.environ.get("MAX_IMAGE_SIZE_MB", 15))
         return cls(
-            for_image=["jpg", ".jpeg", "gif", ".png", "webp", "heic", "heif"],
+            for_image=["jpg", "jpeg", "gif", "png", "webp", "heic", "heif"],
             max_image_size_mb=max_size_mb,
         )
 
@@ -312,9 +312,9 @@ class SiteSettingsDefaultConfig(BaseModel):
     manager_notification_email: Optional[str] = None
     manager_email_notifications_enabled: bool = False
     company_name: str = "Rope Shop"
-    contact_email: Optional[str] = "info@ropeshop.com"
-    contact_phone: Optional[str] = "+1 (555) 019-2834"
-    site_url: Optional[str] = "https://ropeshop.com"
+    contact_email: Optional[str] = None
+    contact_phone: Optional[str] = None
+    site_url: Optional[str] = None
 
     def to_dict(self) -> dict:
         return self.model_dump()
@@ -328,9 +328,9 @@ class SiteSettingsDefaultConfig(BaseModel):
             manager_notification_email=os.getenv("MANAGER_NOTIFICATION_EMAIL"),
             manager_email_notifications_enabled=os.getenv("MANAGER_EMAIL_NOTIFICATIONS_ENABLED", "False").lower() in ("true", "1", "t"),
             company_name=os.getenv("COMPANY_NAME", "Rope Shop"),
-            contact_email=os.getenv("CONTACT_EMAIL", "info@ropeshop.com"),
-            contact_phone=os.getenv("CONTACT_PHONE", "+1 (555) 019-2834"),
-            site_url=os.getenv("SITE_URL", "https://ropeshop.com"),
+            contact_email=os.getenv("CONTACT_EMAIL"),
+            contact_phone=os.getenv("CONTACT_PHONE"),
+            site_url=os.getenv("SITE_URL"),
         )
 
 

@@ -235,7 +235,7 @@ class AdminConfig(BaseModel):
         password = os.environ.get("ADMIN_PASSWORD")
 
         if not password:
-            if env_mode == "TEST":
+            if env_mode in ("TEST", "DEV", "DEVELOPMENT", ""):
                 password = "admin12345"
             elif env_mode in ("PROD", "PRODUCTION"):
                 raise ValueError(

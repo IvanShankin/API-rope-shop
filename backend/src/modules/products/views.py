@@ -50,7 +50,7 @@ async def get_all_products(
     price_max: Optional[float] = Query(None, ge=0, description="Filter by maximum price"),
     is_active: Optional[bool] = Query(None, description="Filter by active status (admin only)"),
     skip: int = Query(0, ge=0, description="Pagination offset"),
-    limit: Optional[int] = Query(None, ge=1, description="Pagination limit"),
+    limit: Optional[int] = Query(None, ge=1, le=100, description="Pagination limit"),
     admin: Optional[UserDTO] = Depends(get_optional_admin),
     service: ProductService = Depends(get_product_service),
 ) -> ProductListResponseDTO:

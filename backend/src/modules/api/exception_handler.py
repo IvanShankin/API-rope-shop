@@ -207,15 +207,27 @@ def register_exception_handlers(app: FastAPI):
     async def data_already_exists_handler(request, exc):
         return JSONResponse(status_code=409, content={"detail": str(exc)})
 
-    # ==================== 409 RateLimit ====================
+    # ==================== 429 RateLimit ====================
     @app.exception_handler(RateLimitExceeded)
     async def rate_limit_handler(request, exc: RateLimitExceeded):
+        detail_str = str(exc.detail).lower() if exc.detail else ""
+        if "hour" in detail_str:
+            retry_seconds = "3600"
+        elif "minute" in detail_str:
+            retry_seconds = "60"
+        elif "second" in detail_str:
+            retry_seconds = "1"
+        elif "day" in detail_str:
+            retry_seconds = "86400"
+        else:
+            retry_seconds = "60"
+
         return JSONResponse(
             status_code=429,
             content={
                 "detail": f"Rate limit exceeded: {exc.detail}. Please try again later."
             },
-            headers={"Retry-After": str(exc.detail)}
+            headers={"Retry-After": retry_seconds}
         )
 
     # ==================== 422 Unprocessable Entity ====================

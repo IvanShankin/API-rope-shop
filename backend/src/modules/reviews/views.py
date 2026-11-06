@@ -58,7 +58,7 @@ async def get_all_reviews(
         None, description="Search by author name or review text"
     ),
     skip: int = Query(0, ge=0, description="Pagination offset"),
-    limit: Optional[int] = Query(None, ge=1, description="Pagination limit"),
+    limit: Optional[int] = Query(None, ge=1, le=100, description="Pagination limit"),
     service: ReviewService = Depends(get_review_service),
     admin: Optional[UserDTO] = Depends(get_optional_admin),
 ) -> ReviewListResponseDTO:

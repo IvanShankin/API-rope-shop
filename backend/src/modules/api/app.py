@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from slowapi.middleware import SlowAPIMiddleware
 from passlib.context import CryptContext
 
 from src.core.config import Config, create_config
@@ -63,6 +64,7 @@ from src.tools.init_settings import init_settings
 
 
 def _include_middlewares(app: FastAPI, config: Config) -> FastAPI:
+    app.add_middleware(SlowAPIMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=config.cors.allow_origins,

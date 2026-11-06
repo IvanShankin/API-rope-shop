@@ -13,11 +13,11 @@ from src.modules.reviews.models import ReviewsStatus
 
 class ReviewTranslationCreate(BaseModel):
     locale: Language = Field(..., description="Language code for the translation")
-    text: str = Field(..., min_length=1, description="Translated review text")
+    text: str = Field(..., min_length=1, max_length=5000, description="Translated review text")
 
 
 class ReviewTranslationUpdate(BaseModel):
-    text: str = Field(..., min_length=1, description="Updated review text")
+    text: str = Field(..., min_length=1, max_length=5000, description="Updated review text")
 
 
 class ReviewTranslationResponseDTO(ORMDTO):
@@ -48,7 +48,7 @@ class ReviewCreate(BaseModel):
     author_name: str = Field(..., min_length=1, max_length=255, description="Author name")
     rating: Optional[int] = Field(None, ge=1, le=5, description="Rating from 1 to 5")
     locale: Language = Field(..., description="Language in which the review is written")
-    text: str = Field(..., min_length=1, description="Review text")
+    text: str = Field(..., min_length=1, max_length=5000, description="Review text")
 
 
 class ReviewUpdate(BaseModel):

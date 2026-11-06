@@ -30,21 +30,21 @@ class SortOrder(str, Enum):
 class QuoteRopeItemCreate(BaseModel):
     product_id: int = Field(..., description="ID of the configured product")
     color_id: int = Field(..., description="ID of the selected color")
-    diameter_mm: float = Field(..., gt=0, description="Diameter in mm")
-    length_m: float = Field(..., gt=0, description="Rope length in meters")
-    quantity: int = Field(default=1, ge=1, description="Quantity of pieces")
+    diameter_mm: float = Field(..., gt=0, le=200, description="Diameter in mm")
+    length_m: float = Field(..., gt=0, le=10000, description="Rope length in meters")
+    quantity: int = Field(default=1, ge=1, le=10000, description="Quantity of pieces")
     end_a_type_id: Optional[int] = Field(None, description="Splice/termination type ID for End A")
-    end_a_eye_size_cm: Optional[float] = Field(None, ge=0, description="Eye size in cm for End A")
+    end_a_eye_size_cm: Optional[float] = Field(None, ge=0, le=1000, description="Eye size in cm for End A")
     end_b_type_id: Optional[int] = Field(None, description="Splice/termination type ID for End B")
-    end_b_eye_size_cm: Optional[float] = Field(None, ge=0, description="Eye size in cm for End B")
+    end_b_eye_size_cm: Optional[float] = Field(None, ge=0, le=1000, description="Eye size in cm for End B")
 
 
 class QuoteServiceItemCreate(BaseModel):
     splice_type_id: int = Field(..., description="ID of the splice / service type")
     splice_material_id: int = Field(..., description="Tariff / material group ID for splice")
-    diameter_mm: float = Field(..., gt=0, description="Rope diameter in mm")
-    eye_size_cm: Optional[float] = Field(None, ge=0, description="Eye size in cm")
-    quantity: int = Field(default=1, ge=1, description="Quantity")
+    diameter_mm: float = Field(..., gt=0, le=200, description="Rope diameter in mm")
+    eye_size_cm: Optional[float] = Field(None, ge=0, le=1000, description="Eye size in cm")
+    quantity: int = Field(default=1, ge=1, le=10000, description="Quantity")
 
 
 class QuoteExtraItemCreate(BaseModel):
@@ -58,20 +58,23 @@ class QuoteRequestCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255, description="Client full name")
     email: EmailStr = Field(..., description="Client email address")
     phone: Optional[str] = Field(None, max_length=100, description="Client phone number")
-    comment: Optional[str] = Field(None, description="Client notes / wishes")
+    comment: Optional[str] = Field(None, max_length=2000, description="Client notes / wishes")
     is_urgent: bool = Field(default=False, description="Urgent order flag")
     locale: Optional[Language] = Field(Language.GER, description="Language to use for item snapshots")
 
     rope_items: List[QuoteRopeItemCreate] = Field(
         default_factory=list,
+        max_length=50,
         description="List of configured ropes (for ROPE_WITH_SPLICE)"
     )
     service_items: List[QuoteServiceItemCreate] = Field(
         default_factory=list,
+        max_length=50,
         description="List of services / splices (for LOOP_ONLY or SPLICE_ONLY)"
     )
     extra_items: List[QuoteExtraItemCreate] = Field(
         default_factory=list,
+        max_length=50,
         description="List of configurator extras"
     )
 
@@ -84,7 +87,7 @@ class QuoteRequestUpdateDTO(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     email: Optional[EmailStr] = None
     phone: Optional[str] = Field(None, max_length=100)
-    comment: Optional[str] = None
+    comment: Optional[str] = Field(None, max_length=2000)
     status: Optional[QuoteRequestStatus] = None
     is_urgent: Optional[bool] = None
     subtotal: Optional[float] = Field(None, ge=0)
@@ -318,14 +321,17 @@ class QuoteRequestCalculateDTO(BaseModel):
     locale: Optional[Language] = Field(Language.GER, description="Language to use for item snapshots")
     rope_items: List[QuoteRopeItemCreate] = Field(
         default_factory=list,
+        max_length=50,
         description="List of configured ropes (for ROPE_WITH_SPLICE)"
     )
     service_items: List[QuoteServiceItemCreate] = Field(
         default_factory=list,
+        max_length=50,
         description="List of services / splices (for LOOP_ONLY or SPLICE_ONLY)"
     )
     extra_items: List[QuoteExtraItemCreate] = Field(
         default_factory=list,
+        max_length=50,
         description="List of configurator extras"
     )
 

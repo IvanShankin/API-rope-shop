@@ -47,9 +47,10 @@ class TelegramSenderService:
             raise TelegramSenderException("Telegram chat_id cannot be empty")
 
         url = f"https://api.telegram.org/bot{self.config.telegram.bot_token}/sendMessage"
+        trimmed_text = text if len(text) <= 4000 else text[:3990] + "..."
         payload = {
             "chat_id": str_chat_id,
-            "text": text,
+            "text": trimmed_text,
             "parse_mode": parse_mode,
         }
 

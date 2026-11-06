@@ -125,3 +125,24 @@ async def test_send_email_connect_error_raises_custom_exception(email_config):
                 subject="Subject",
                 body="Body",
             )
+
+
+@pytest.mark.asyncio
+async def test_send_email_port_465_uses_direct_tls(email_config):
+    """Проверка пункта 2.10: при порте 465 используется use_tls=True вместо start_tls."""
+    email_config.email.smtp_port = 465
+    email_config.email.use_tls = True
+    service = EmailSenderService(config=email_config)
+
+    with patch("aiosmtplib.send", new_callable=AsyncMock) as mock_send:
+        result = await service.send_email(
+            to_email="client@example.com",
+            subject="Test Port 465",
+            body="SSL direct test",
+        )
+        assert result is True
+        assert mock_send.call_count == 1
+        _, kwargs = mock_send.call_args
+        assert kwargs["port"] == 465
+        assert kwargs["use_tls"] is True
+        assert kwargs["start_tls"] is False

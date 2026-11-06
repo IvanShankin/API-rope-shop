@@ -63,6 +63,10 @@ class EmailSenderService:
         """
         self._validate_configuration()
 
+        use_direct_tls = (self.config.email.smtp_port == 465)
+        use_tls = self.config.email.use_tls if use_direct_tls else False
+        start_tls = self.config.email.use_tls if not use_direct_tls else False
+
         try:
             await aiosmtplib.send(
                 message,
@@ -70,7 +74,8 @@ class EmailSenderService:
                 port=self.config.email.smtp_port,
                 username=self.config.email.smtp_user,
                 password=self.config.email.smtp_password,
-                start_tls=self.config.email.use_tls,
+                use_tls=use_tls,
+                start_tls=start_tls,
             )
             logger.info("Email sent successfully to %s", message.get("To"))
             return True

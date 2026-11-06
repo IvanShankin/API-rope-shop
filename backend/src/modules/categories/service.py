@@ -237,8 +237,7 @@ class CategoryService:
         if not category:
             raise CategoryNotFound(f"Category with id {category_id} not found.")
 
-        if category.image_url:
-            self.image_manager.delete_image(category.image_url)
+        old_image_url = category.image_url
 
         dest = self.path_builder.get_category(category_id=category_id, file_name="image")
         file_ext = Path(file.filename or "").suffix.lstrip(".").lower() or "jpg"
@@ -254,6 +253,9 @@ class CategoryService:
 
         await self.category_repo.update_category(category_id, {"image_url": media_url})
         await self.session.commit()
+
+        if old_image_url and self.image_manager:
+            self.image_manager.delete_image(old_image_url)
 
         updated = await self.category_repo.get_by_id(category_id)
         dto = CategoryResponseDTO.model_validate(updated)

@@ -142,9 +142,7 @@ class SpliceTypeService:
         if not splice_type:
             raise SpliceTypeNotFound(f"SpliceType with id {type_id} not found.")
 
-        # Удаляем старое изображение, если оно было
-        if splice_type.image_url:
-            self.image_manager.delete_image(splice_type.image_url)
+        old_image_url = splice_type.image_url
 
         # Вычисляем целевой путь
         dest = self.path_builder.get_splice_type(splice_type_id=type_id, file_name="image")
@@ -164,6 +162,10 @@ class SpliceTypeService:
         # Обновляем запись в БД
         await self.type_repo.update_type(type_id, {"image_url": media_url})
         await self.session.commit()
+
+        # Удаляем старое изображение только после успешного сохранения и коммита нового
+        if old_image_url and self.image_manager:
+            self.image_manager.delete_image(old_image_url)
 
         updated_type = await self.type_repo.get_by_id(type_id)
         return SpliceTypeResponseDTO.model_validate(updated_type)

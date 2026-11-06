@@ -206,9 +206,7 @@ class CharityPhotoService:
         if not photo:
             raise CharityPhotoNotFound(f"CharityPhoto with id {photo_id} not found.")
 
-        if photo.image_url and self.image_manager:
-            self.image_manager.delete_image(photo.image_url)
-
+        old_image_url = photo.image_url
         file_name = f"img_{uuid.uuid4().hex[:10]}"
         dest = self.path_builder.get_charity_photo(
             charity_photo_id=photo_id, file_name=file_name
@@ -226,6 +224,9 @@ class CharityPhotoService:
 
         await self.repo.update_photo(photo_id, {"image_url": media_url})
         await self.session.commit()
+
+        if old_image_url and self.image_manager:
+            self.image_manager.delete_image(old_image_url)
 
         loaded = await self.repo.get_by_id(photo_id)
         return self._to_response_dto(loaded)

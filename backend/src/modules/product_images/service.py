@@ -149,9 +149,9 @@ class ProductImageService:
         if not update_dict and file is None:
             raise NoDataForUpdate("No data provided for update.")
 
+        old_image_url = None
         if file is not None:
-            if image.image_url and self.image_manager:
-                self.image_manager.delete_image(image.image_url)
+            old_image_url = image.image_url
             file_name = f"img_{uuid.uuid4().hex[:10]}"
             dest = self.path_builder.get_product(
                 product_id=image.product_id, file_name=file_name
@@ -177,6 +177,9 @@ class ProductImageService:
         if update_dict:
             await self.repo.update_image(image_id=image_id, update_data=update_dict)
             await self.session.commit()
+
+        if old_image_url and self.image_manager:
+            self.image_manager.delete_image(old_image_url)
 
         updated = await self.repo.get_by_id(image_id)
         return ProductImageResponseDTO.model_validate(updated)

@@ -128,7 +128,7 @@ class QuoteRequestService:
 
         # 3. Разрешение позиций в DTO снимков
         resolved_rope_items = await self._resolve_rope_items(data.rope_items, locale, setting)
-        resolved_service_items = await self._resolve_service_items(data.service_items, locale)
+        resolved_service_items = await self._resolve_service_items(data.service_items, locale, data.configurator_type)
         resolved_extra_items = await self._resolve_extra_items(
             data=data,
             rope_items=resolved_rope_items,
@@ -187,7 +187,7 @@ class QuoteRequestService:
 
         service_items: List[ResolvedServiceItemDTO] = []
         if data.configurator_type in (ConfiguratorType.LOOP_ONLY, ConfiguratorType.SPLICE_ONLY):
-            service_items = await self._resolve_service_items(data.service_items, locale)
+            service_items = await self._resolve_service_items(data.service_items, locale, data.configurator_type)
 
         extra_items = await self._resolve_extra_items(data, rope_items, service_items, locale)
 
@@ -520,11 +520,12 @@ class QuoteRequestService:
         self,
         items: List[QuoteServiceItemCreate],
         locale: Language,
+        configurator_type: Optional[ConfiguratorType] = None,
     ) -> List[ResolvedServiceItemDTO]:
         """Разрешение списка услуг в DTO снимков."""
         resolved: List[ResolvedServiceItemDTO] = []
         for s_item in items:
-            resolved_item = await self._resolve_single_service_item(s_item, locale)
+            resolved_item = await self._resolve_single_service_item(s_item, locale, configurator_type)
             resolved.append(resolved_item)
         return resolved
 
@@ -532,6 +533,7 @@ class QuoteRequestService:
         self,
         s_item: QuoteServiceItemCreate,
         locale: Language,
+        configurator_type: Optional[ConfiguratorType] = None,
     ) -> ResolvedServiceItemDTO:
         """Валидация и построение DTO-снимка для отдельной услуги (петля/сращивание)."""
         splice_type = await self.splice_type_repo.get_by_id(s_item.splice_type_id)
@@ -542,6 +544,11 @@ class QuoteRequestService:
         if not splice_type.is_active:
             raise QuoteRequestValidationError(
                 f"SpliceType with id {s_item.splice_type_id} is inactive."
+            )
+
+        if configurator_type == ConfiguratorType.LOOP_ONLY and splice_type.category != SpliceCategory.LOOP:
+            raise QuoteRequestValidationError(
+                f"Splice type '{splice_type.code}' is not a loop, but configurator type is LOOP_ONLY."
             )
 
         splice_material = await self.splice_material_repo.get_by_id(s_item.splice_material_id)

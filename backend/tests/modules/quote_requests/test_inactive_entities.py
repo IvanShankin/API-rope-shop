@@ -1,5 +1,6 @@
 import pytest
 from src.modules.base.database_model import Language
+from src.modules.splice_types.models import SpliceCategory
 from src.modules.quote_requests.models import ConfiguratorType
 from src.modules.quote_requests.models_dto import QuoteRequestCreate, QuoteRopeItemCreate
 from tests.modules.configurator_setting.fixtures.models_dto import CreateConfiguratorSettingFixtureDTO
@@ -199,3 +200,52 @@ async def test_quote_request_with_multiple_variants_same_diameter(
     data = response.json()
     # Length 10m * price 6.00 = 60.00
     assert data["subtotal"] == 60.0
+
+
+
+@pytest.mark.asyncio
+async def test_loop_only_rejects_non_loop_splice_category(
+    client_for_tests,
+    create_configurator_setting_fixture,
+    create_splice_material_fixture,
+    create_splice_type_fixture,
+    create_splice_price_rule_fixture,
+):
+    """Проверка пункта 2.7: для LOOP_ONLY отклоняются типы заделок с категорией, отличной от LOOP."""
+    await create_configurator_setting_fixture(CreateConfiguratorSettingFixtureDTO())
+    splice_mat = await create_splice_material_fixture(CreateSpliceMaterialFixtureDTO())
+    # Create splice type with category SPLICE (not LOOP)
+    splice = await create_splice_type_fixture(
+        CreateSpliceTypeFixtureDTO(
+            category=SpliceCategory.SPLICE,
+            code="straight_splice",
+        )
+    )
+    await create_splice_price_rule_fixture(
+        CreateSplicePriceRuleFixtureDTO(
+            splice_type_id=splice.id,
+            splice_material_id=splice_mat.id,
+            diameter_from_mm=8.0,
+            diameter_to_mm=14.0,
+            price=25.00,
+        )
+    )
+
+    payload = {
+        "configurator_type": "loop_only",
+        "name": "Test Customer",
+        "email": "customer@example.com",
+        "locale": "ger",
+        "service_items": [
+            {
+                "splice_type_id": splice.id,
+                "splice_material_id": splice_mat.id,
+                "diameter_mm": 10.0,
+                "quantity": 1,
+            }
+        ],
+    }
+
+    response = await client_for_tests.post("/quote_requests", json=payload)
+    assert response.status_code == 400
+    assert "not a loop" in response.json()["detail"].lower()

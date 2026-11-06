@@ -1,8 +1,9 @@
-import { captureDisclosures, restoreDisclosures } from './disclosureState.js?v=20261027.10';
-import { AdminNotificationView } from './AdminNotificationView.js?v=20261027.10';
-import { AdminRecordList } from './AdminRecordList.js?v=20261027.10';
-import {escapeHtml as esc} from '../../utils/text.js?v=20261027.10';
-import {mediaUrl} from '../../utils/media.js?v=20261027.10';
+import { captureDisclosures, restoreDisclosures } from './disclosureState.js?v=20261106.1';
+import { AdminNotificationView } from './AdminNotificationView.js?v=20261106.1';
+import { AdminRecordList } from './AdminRecordList.js?v=20261106.1';
+import {escapeHtml as esc} from '../../utils/text.js?v=20261106.1';
+import {mediaUrl} from '../../utils/media.js?v=20261106.1';
+import { langTabsMarkup, bindLangTabs } from './langTabs.js?v=20261106.1';
 export class AdminContentView {
   constructor(root,sections,gallery) {
     this.root=root;this.gallery=gallery;this.events=new AbortController();this.baseline='';
@@ -24,6 +25,7 @@ export class AdminContentView {
     this.root.addEventListener('submit',e=>{e.preventDefault();if(e.target.reportValidity())actions.save();},opts);
     this.root.addEventListener('click',e=>{const card=e.target.closest('[data-content-section-choice]');if(card&&!card.disabled){actions.load(card.dataset.contentSectionChoice);return;}if(e.target.closest('[data-content-remove]'))actions.remove();},opts);
     window.addEventListener('beforeunload',e=>{if(this.dirty()){e.preventDefault();e.returnValue='';}},opts);
+    bindLangTabs(this.root, this.events.signal);
   }
   setSection(section){this.root.querySelector('[data-config-section]').value=section;this.root.querySelectorAll('[data-content-section-choice]').forEach(card=>card.setAttribute('aria-pressed',String(card.dataset.contentSectionChoice===section)));}
   message(text, type = 'info') { AdminNotificationView.message(this.root.querySelector('[data-content-status]'), text, type); }
@@ -45,12 +47,14 @@ export class AdminContentView {
     const disclosureState = captureDisclosures(this.root, preserveDisclosures);
     this.recordList.select(item.id);
     const slot=item.slot;const titleEnabled=this.gallery||slot?.title;const textEnabled=this.gallery||slot?.content;
-    const translationFields=['rus','eng','ger'].map(locale=>{
-      const t=item.translations?.find(t=>t.locale===locale)||{};
-      return `<details class="admin-disclosure" data-editor-disclosure="${locale}" open><summary>${{rus:'Русский',eng:'Английский',ger:'Немецкий'}[locale]}</summary><div class="admin-fields">
+    const translation=locale=>item.translations?.find(t=>t.locale===locale)||{};
+    const translationFields=`<details class="admin-disclosure" data-editor-disclosure="translations" open><summary>${this.gallery?'Подписи на разных языках':'Тексты на разных языках'}</summary>${langTabsMarkup({
+      label: this.gallery ? 'Язык подписи' : 'Язык текста',
+      filled: Object.fromEntries(['rus','eng','ger'].map(locale=>{const t=translation(locale);return [locale,Boolean(t.title||t.content||t.description)];})),
+      panels: Object.fromEntries(['rus','eng','ger'].map(locale=>{const t=translation(locale);return [locale,`<div class="admin-fields">
         ${titleEnabled?`<label class="field">${this.gallery?'Подпись':'Заголовок'}<textarea class="field__input" name="title_${locale}" maxlength="${this.gallery?255:500}">${esc(t.title||'')}</textarea></label>`:''}
-        ${textEnabled?`<label class="field">Текст<textarea class="field__input" name="content_${locale}" rows="5">${esc(t.content??t.description??'')}</textarea></label>`:''}</div></details>`;
-    }).join('');
+        ${textEnabled?`<label class="field">Текст<textarea class="field__input" name="content_${locale}" rows="5">${esc(t.content??t.description??'')}</textarea></label>`:''}</div>`];})),
+    })}</details>`;
     this.root.querySelector('[data-content-editor]').innerHTML=`<h2>${esc(item.label||(item.id?`Фотография #${item.id}`:'Новая фотография'))}</h2>
       ${this.gallery&&item.image_url?`<img class="admin-image-preview" src="${esc(mediaUrl(item.image_url))}" alt="Фото галереи">`:''}
       <form class="product-editor admin-card">

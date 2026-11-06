@@ -1,4 +1,4 @@
-import { API_CONFIG } from './config.js?v=20261027.10';
+import { API_CONFIG } from './config.js?v=20261106.1';
 
 /**
  * Базовый HTTP-клиент для взаимодействия с бэкендом Rope-Pro-Line
@@ -109,12 +109,13 @@ export class ApiClient {
     if (requiresAuth && !retried && endpoint !== API_CONFIG.ENDPOINTS.AUTH_REFRESH && this.isAccessTokenExpired()) {
       await this.renewSession();
     }
-    // Автоматическая авторизация
-    const token = this.getAccessToken();
+    // Токен отправляем только в запросах, которым нужна авторизация.
+    // Публичные страницы ходят в API как гость, даже если в браузере есть сессия админа.
+    const token = requiresAuth ? this.getAccessToken() : null;
     if (token) {
       requestHeaders['Authorization'] = `Bearer ${token}`;
     } else if (requiresAuth) {
-      throw new Error('Требуется авторизация');
+      throw Object.assign(new Error('Требуется авторизация'), { status: 401 });
     }
 
     // Если отправляем JSON
@@ -157,9 +158,7 @@ export class ApiClient {
           await this.renewSession();
           return this.request(endpoint,{...options,retried:true});
         }
-        const errorMessage = (isJson && responseData.detail)
-          ? (typeof responseData.detail === 'string' ? responseData.detail : JSON.stringify(responseData.detail))
-          : `HTTP Error ${response.status}: ${response.statusText}`;
+        const errorMessage = this.errorMessage(response.status, isJson ? responseData : null);
 
         const error = new Error(errorMessage);
         error.status = response.status;
@@ -170,12 +169,35 @@ export class ApiClient {
       return responseData;
     } catch (err) {
       if (err.name === 'AbortError') {
-        throw new Error(`Превышено время ожидания ответа сервера (${timeout} мс)`);
+        throw Object.assign(new Error('Сервер не ответил вовремя, проверьте соединение'), { network: true });
+      }
+      if (err instanceof TypeError) {
+        // fetch() бросает TypeError с разным текстом в разных браузерах, когда сервер недоступен.
+        throw Object.assign(new Error('Нет связи с сервером, проверьте подключение к интернету'), { network: true, cause: err });
       }
       throw err;
     } finally {
       clearTimeout(timeoutId);
     }
+  }
+
+  /**
+   * Понятный текст ошибки для пользователя.
+   * FastAPI отдаёт detail строкой или массивом ошибок валидации (422).
+   */
+  errorMessage(status, body) {
+    const detail = body?.detail;
+    if (status === 422 && Array.isArray(detail)) {
+      const fields = detail.map(item => (Array.isArray(item?.loc) ? item.loc.filter(part => part !== 'body').join('.') : '')).filter(Boolean);
+      return fields.length ? `Проверьте поля: ${[...new Set(fields)].join(', ')}` : 'Проверьте заполнение полей';
+    }
+    if (status === 429) return 'Слишком много запросов, подождите немного';
+    if (status === 401) return 'Неверный логин или пароль, либо сессия истекла';
+    if (status === 403) return 'Недостаточно прав для этого действия';
+    if (status === 404) return 'Запись не найдена, обновите страницу';
+    if (status >= 500) return 'Ошибка на сервере, попробуйте позже';
+    if (typeof detail === 'string' && detail) return detail;
+    return `Ошибка запроса (${status})`;
   }
 
   get(endpoint, options = {}) {

@@ -1,0 +1,471 @@
+/* Админка: Тёмная тема.
+   Часть бывшего css/admin.css (строки 2795–3264). Порядок подключения файлов важен. */
+/* Dark admin theme; shared layout and control sizes stay unchanged. */
+.admin-page {
+  color-scheme: dark;
+  --admin-bg: #0d1520;
+  --admin-surface: #172331;
+  --admin-border: #3c5065;
+  --admin-text: #edf3fa;
+  --admin-muted: #b1c0d0;
+  --admin-success: #327b5c;
+  --admin-danger: #ffaaa6;
+}
+
+.admin .sidebar {
+  background: #111d2b;
+  border-color: var(--admin-border);
+}
+
+.admin .sidebar__logo {
+  background: #0a1931;
+}
+
+.admin .sidebar__tab {
+  color: #cfdae7;
+}
+
+.admin .sidebar__tab:hover {
+  background: #24394f;
+  color: #fff;
+}
+
+.admin .sidebar__tab--active,
+.admin .sidebar__tab--active:hover {
+  background: #285e89;
+  color: #fff;
+}
+
+.admin .admin-navigation-label,
+.admin [role=status] {
+  color: var(--admin-muted);
+}
+
+.admin .sidebar__link,
+.admin .sidebar__logout:hover {
+  color: #9bcfff;
+}
+
+.admin .product-editor,
+.admin .admin-disclosure {
+  background: var(--admin-surface);
+  border-color: var(--admin-border);
+}
+
+.admin .admin-disclosure>summary:hover {
+  background: #213246;
+}
+
+.admin .field__input,
+.admin select,
+.admin textarea {
+  background: #101b28;
+  color: var(--admin-text);
+  border-color: #597087;
+}
+
+.admin input::placeholder,
+.admin textarea::placeholder {
+  color: #9eafc1;
+  opacity: 1;
+}
+
+.admin .field__input:focus {
+  border-color: #85c5ff;
+  box-shadow: 0 0 0 3px rgb(133 197 255 / 15%);
+}
+
+.admin input[type=checkbox] {
+  accent-color: #70b7f4;
+}
+
+.admin .btn {
+  background: #24394f;
+  color: #edf3fa;
+  border: none !important;
+}
+
+.admin .btn:hover {
+  background: #304b67;
+  border-color: #89b9e2;
+}
+
+.admin .btn--primary,
+.admin button[type=submit] {
+  background: #28649a;
+  color: #fff;
+  border-color: #568cba;
+}
+
+.admin .btn--primary:hover,
+.admin button[type=submit]:hover {
+  background: #3279b6;
+}
+
+.admin .btn--danger {
+  background: #35252b;
+  border-color: #995b60;
+  color: #ffb5b0;
+}
+
+.admin .btn--danger:hover {
+  background: #4b2b34;
+  border-color: #e99c98;
+}
+
+.admin button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.admin :focus-visible,
+.admin-session :focus-visible {
+  outline-color: #94ceff;
+}
+
+.admin .requests-table {
+  background: var(--admin-surface);
+  border-radius: 14px;
+}
+
+.admin .requests-table [data-request-content] {
+  margin: 0;
+  padding: clamp(16px, 2vw, 24px);
+  border-top: 1px solid var(--admin-border);
+  overflow-wrap: anywhere;
+}
+
+.admin .requests-table [data-request-content]> :first-child {
+  margin-top: 0;
+}
+
+.admin .requests-table [data-request-content]> :last-child {
+  margin-bottom: 0;
+}
+
+.admin .requests-table th {
+  color: #b1c0d0;
+}
+
+.admin .requests-table small {
+  color: #b1c0d0 !important;
+}
+
+.admin .requests-table tbody tr:hover {
+  background: #203247;
+}
+
+.admin .sidebar,
+.admin-page {
+  scrollbar-color: #58718a #111d2b;
+}
+
+.admin-session {
+  color: var(--admin-text);
+}
+
+.admin-session .btn {
+  background: #24394f;
+  color: #edf3fa;
+}
+
+.admin .admin-color-control {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.admin .admin-color-control .field__input {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin .admin-color-picker {
+  flex: 0 0 56px;
+  width: 56px;
+  min-height: 56px;
+  padding: 5px;
+  border-radius: 10px;
+  background: #101b28;
+  cursor: pointer;
+}
+
+.admin .admin-color-picker::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.admin .admin-color-picker::-webkit-color-swatch {
+  border: 0;
+  border-radius: 5px;
+}
+
+.admin .admin-color-picker::-moz-color-swatch {
+  border: 0;
+  border-radius: 5px;
+}
+
+.admin .admin-color-picker:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.admin .admin-product-save {
+  position: sticky;
+  bottom: 16px;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+  margin-top: 20px;
+  background: transparent;
+  backdrop-filter: none;
+  border: none;
+  margin: 0;
+}
+
+.admin-record-list {
+  margin: 20px 0 28px;
+  min-width: 0;
+}
+
+.admin-record-list[hidden] {
+  display: none;
+}
+
+.admin-record-list>.field {
+  max-width: 560px;
+}
+
+.admin-record-list [data-record-count] {
+  color: var(--admin-muted);
+  font-size: 14px;
+  margin: 12px 0;
+}
+
+.admin-record-list__items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.admin-record-list__items>li {
+  min-width: 0;
+}
+
+.admin-record-list__row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  width: 100%;
+  min-height: 56px;
+  padding: 12px 16px;
+  border: none !important;
+  border-radius: 10px;
+  background: var(--admin-surface);
+  color: var(--admin-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.admin-record-list__row:hover {
+  border-color: #81b9df;
+}
+
+.admin-record-list__row[aria-pressed="true"] {
+  border-color: #91c7ed;
+  background: #254e70;
+  color: #fff;
+  box-shadow: inset 4px 0 #91c7ed;
+}
+
+.admin-record-list__row:focus-visible {
+  outline: 2px solid #91c7ed;
+  outline-offset: 2px;
+}
+
+.admin-record-list__name {
+  font-weight: 600;
+}
+
+.admin-record-list__detail {
+  color: #b1c0d0;
+  font-size: 14px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.admin-record-list__empty {
+  padding: 20px;
+  border: 1px dashed var(--admin-border);
+  border-radius: 10px;
+}
+
+.admin-record-list__pages {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.admin-record-list__pages .btn {
+  min-height: 44px;
+}
+
+.admin-record-list button:disabled {
+  opacity: .5;
+  cursor: default;
+}
+
+@media (max-width: 480px) {
+  .admin-record-list__row {
+    padding: 12px;
+  }
+
+  .admin-record-list__pages {
+    flex-wrap: wrap;
+  }
+
+  .admin-record-list__pages [data-record-page] {
+    order: -1;
+    width: 100%;
+    text-align: center;
+  }
+}
+
+.admin-review-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0 12px;
+}
+
+.admin-review-filters .btn {
+  min-height: 44px;
+  white-space: normal;
+}
+
+.admin-review-filters .btn[aria-pressed="true"] {
+  background: var(--color-deep);
+  color: var(--color-snow);
+  border-color: var(--color-steel);
+  box-shadow: inset 0 0 0 1px var(--color-steel);
+}
+
+.admin-review-filters [data-review-count] {
+  display: inline-block;
+  min-width: 1.6em;
+  margin-left: 6px;
+  font-weight: 700;
+}
+
+.admin-review-publication {
+  padding: 12px;
+  margin: 0;
+  border-left: 3px solid var(--color-steel);
+  background: var(--admin-surface);
+  color: var(--admin-text);
+}
+
+@media (max-width: 480px) {
+  .admin-review-filters {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-review-filters .btn {
+    padding: 10px;
+  }
+}
+
+.admin-tariffs {
+  max-height: 620px;
+  overflow: auto;
+}
+
+.admin-tariffs__table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 24px;
+  table-layout: fixed;
+}
+
+.admin-tariffs__table caption {
+  text-align: left;
+  font-weight: 700;
+  padding: 14px 10px;
+  background: var(--admin-surface);
+  color: var(--admin-text);
+}
+
+.admin-tariffs__table caption span {
+  font-weight: 400;
+}
+
+.admin-tariffs__table th,
+.admin-tariffs__table td {
+  text-align: left;
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--admin-border);
+  overflow-wrap: anywhere;
+}
+
+.admin-tariffs__table .btn {
+  min-height: 44px;
+  white-space: normal;
+}
+
+.admin-tariffs__conflict {
+  background: #49371e;
+  color: #ffe1a6;
+}
+
+.admin-tariffs__table tr[data-selected="true"] {
+  outline: 2px solid #326885;
+  outline-offset: -2px;
+}
+
+@media (max-width: 640px) {
+
+  .admin-tariffs__table,
+  .admin-tariffs__table tbody,
+  .admin-tariffs__table tr,
+  .admin-tariffs__table td {
+    display: block;
+    width: 100%;
+  }
+
+  .admin-tariffs__table caption {
+    display: block;
+  }
+
+  .admin-tariffs__table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .admin-tariffs__table tr {
+    padding: 10px;
+    border-bottom: 1px solid var(--admin-border);
+  }
+
+  .admin-tariffs__table td {
+    padding: 6px 0;
+    border: 0;
+  }
+
+  .admin-tariffs__table td[data-label]::before {
+    content: attr(data-label) ": ";
+    font-weight: 700;
+  }
+}

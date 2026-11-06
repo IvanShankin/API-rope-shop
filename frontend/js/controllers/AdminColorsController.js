@@ -1,7 +1,7 @@
-import { adminColorsApi as api } from '../api/adminColorsApi.js?v=20261027.10';
-import { AdminColorModel } from '../models/AdminColorModel.js?v=20261027.10';
-import { AdminColorsView } from '../views/admin/AdminColorsView.js?v=20261028.16';
-import { automaticConfigCode } from '../models/AdminConfigModel.js?v=20261028.8';
+import { adminColorsApi as api } from '../api/adminColorsApi.js?v=20261106.1';
+import { AdminColorModel } from '../models/AdminColorModel.js?v=20261106.1';
+import { AdminColorsView } from '../views/admin/AdminColorsView.js?v=20261106.1';
+import { automaticConfigCode } from '../models/AdminConfigModel.js?v=20261106.1';
 export class AdminColorsController {
   constructor(root) {
     this.view = new AdminColorsView(root); this.color = null; this.ready = false; this.busy = false;

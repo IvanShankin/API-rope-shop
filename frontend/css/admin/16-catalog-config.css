@@ -1,0 +1,223 @@
+/* Админка: Выбор категории и разделы конфигуратора.
+   Часть бывшего css/admin.css (строки 4807–5028). Порядок подключения файлов важен. */
+/* Выбор категории: карточки с изображениями, как в каталоге. */
+.admin-category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-category-grid>li {
+  min-width: 0;
+}
+
+.admin-category-grid>.admin-record-list__empty {
+  grid-column: 1 / -1;
+}
+
+.admin-category-card {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  min-height: 220px;
+  height: 100%;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  cursor: pointer;
+  color: #fff;
+  border: 1px solid #405873;
+  border-radius: 14px;
+  background: #14263a;
+  overflow: hidden;
+  font: inherit;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.admin-category-card:hover {
+  border-color: #83b8ea;
+}
+
+.admin-category-card:focus-visible {
+  outline: 3px solid #9dcfff;
+  outline-offset: 3px;
+}
+
+.admin-category-card[aria-pressed="true"] {
+  border-color: #62b6ff;
+  box-shadow: 0 0 0 2px #62b6ff;
+}
+
+.admin-category-card:disabled {
+  cursor: wait;
+  opacity: .7;
+}
+
+.admin-category-card__media {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #1d334a;
+}
+
+.admin-category-card__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(10, 25, 49, .95), rgba(10, 25, 49, .12));
+}
+
+.admin-category-card__placeholder {
+  color: #b7c7d8;
+  font-size: 14px;
+}
+
+.admin-category-card__media img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-category-card__media img[hidden] {
+  display: none;
+}
+
+.admin-category-card__info {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px 16px;
+  overflow-wrap: anywhere;
+}
+
+.admin-category-card__name {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.admin-category-card__status {
+  font-size: 13px;
+  color: #f2c77a;
+}
+
+@media (max-width: 1050px) {
+  .admin-category-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-category-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+.admin-tariffs__price {
+  width: 100%;
+  min-width: 88px;
+  max-width: 150px;
+  min-height: 44px;
+}
+
+.admin-tariffs__price[aria-invalid="true"] {
+  outline: 2px solid #ff7777;
+}
+
+.admin-tariffs__save {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.admin-tariffs__save[hidden] {
+  display: none;
+}
+
+.admin-tariffs__save .btn {
+  width: auto;
+  min-height: 44px;
+}
+
+@media (max-width: 640px) {
+  .admin-tariffs__price {
+    max-width: 100%;
+  }
+
+  .admin-tariffs__save .btn {
+    width: 100%;
+  }
+}
+
+
+/* Разделы настроек конфигуратора */
+.config-section-menu {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 20px 0 24px;
+}
+
+.config-section-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  width: 100%;
+  height: auto;
+  min-height: 90px;
+  padding: 15px;
+  text-align: left;
+  font: inherit;
+  color: var(--admin-text, #fff);
+  background: #14263a;
+  border: 1px solid #405873;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.config-section-card:hover {
+  border-color: #83b8ea;
+}
+
+.config-section-card:focus-visible {
+  outline: 3px solid #9dcfff;
+  outline-offset: 3px;
+}
+
+.config-section-card[aria-pressed="true"] {
+  border-color: #62b6ff;
+  background: #203e5c;
+  box-shadow: inset 0 0 0 1px #62b6ff;
+}
+
+.config-section-card:disabled {
+  opacity: .65;
+  cursor: wait;
+}
+
+.config-section-card__name {
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.config-section-card__hint {
+  color: #b7c7d8;
+  font-size: 13px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}

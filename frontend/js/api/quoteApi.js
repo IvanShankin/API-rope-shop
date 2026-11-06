@@ -1,5 +1,5 @@
-import { apiClient } from './apiClient.js?v=20261027.10';
-import { API_CONFIG } from './config.js?v=20261027.10';
+import { apiClient } from './apiClient.js?v=20261106.1';
+import { API_CONFIG } from './config.js?v=20261106.1';
 
 export const quoteApi = {
   /**
@@ -11,6 +11,14 @@ export const quoteApi = {
   },
 
   /**
+   * Предварительный расчёт стоимости без создания заявки (публичный эндпоинт).
+   * Тело как у заявки, но без контактов: configurator_type, is_urgent, locale, *_items.
+   */
+  calculate(data) {
+    return apiClient.post(API_CONFIG.ENDPOINTS.QUOTE_CALCULATE, data);
+  },
+
+  /**
    * Получить список заявок (для панели управления, требуется роль ADMIN)
    * @param {Object} [params] - фильтры (status, search, skip, limit и др.)
    */
@@ -19,7 +27,7 @@ export const quoteApi = {
       params,
       requiresAuth: true,
     });
-    return API_CONFIG.CATALOG_V2 ? result.items : result;
+    return result.items;
   },
 
   /**
@@ -32,16 +40,6 @@ export const quoteApi = {
     });
   },
 
-  /**
-   * Изменить статус заявки (admin)
-   * @param {number} id
-   * @param {string} status - 'new', 'in_progress', 'confirmed', 'completed', 'cancelled'
-   */
-  async updateStatus(id, status) {
-    return apiClient.patch(`${API_CONFIG.ENDPOINTS.QUOTE_REQUEST_DETAIL(id)}/status`, { status }, {
-      requiresAuth: true,
-    });
-  },
   update: (id, data) => apiClient.patch(API_CONFIG.ENDPOINTS.QUOTE_REQUEST_DETAIL(id), data, { requiresAuth: true }),
   remove: id => apiClient.delete(API_CONFIG.ENDPOINTS.QUOTE_REQUEST_DETAIL(id), { requiresAuth: true }),
 };

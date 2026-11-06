@@ -1,0 +1,157 @@
+/* Админка: Единая сетка и типографика, плитки записей.
+   Часть бывшего css/admin.css (строки 5029–5184). Порядок подключения файлов важен. */
+/* Единая сетка и типографика редакторов админки. */
+.admin .panel :is(h2, h3) {
+  line-height: 1.25;
+}
+
+.admin .panel h2 {
+  font-size: 27px;
+}
+
+.admin .panel h3 {
+  font-size: 20px;
+}
+
+.admin .panel .product-header__title {
+  font-family: var(--font-display);
+  font-size: 24px;
+}
+
+.admin .panel :is(.admin-disclosure > summary, .card__head) {
+  min-height: 48px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.admin .panel .admin-disclosures-group {
+  gap: 18px;
+}
+
+.admin .panel :is(.admin-fields, .admin-form-grid, .admin-card__grid, .fields--two) {
+  column-gap: 20px;
+  row-gap: 16px;
+  align-items: start;
+}
+
+.admin .panel .field {
+  min-width: 0;
+  line-height: 1.4;
+}
+
+.admin .panel :is(.product-editor, .settings-card, .contacts-card) :is(.field, .field__label) {
+  font-size: 16px;
+}
+
+.admin .panel .field>label:not(.field) {
+  display: block;
+  min-height: 0;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+}
+
+/* В сетке справочников чекбокс находится на уровне соседнего поля, а не его подписи. */
+.admin :is(#panel-configurator, #panel-groups) .admin-fields>label:not(.field) {
+  align-self: start;
+  min-height: 44px;
+  margin-top: 30px;
+}
+
+.admin .panel .field__input {
+  margin-top: 0;
+}
+
+.admin .panel .admin-color-control {
+  align-items: center;
+}
+
+.admin .panel .admin-color-picker {
+  flex-basis: 44px;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+}
+
+.admin .panel .admin-form-actions {
+  margin-top: 16px;
+  padding-top: 16px;
+}
+
+@media (max-width: 700px) {
+  .admin :is(#panel-configurator, #panel-groups) .admin-fields>label:not(.field) {
+    margin-top: 0;
+  }
+
+  .admin .panel :is(.admin-fields, .admin-form-grid, .admin-card__grid, .fields--two) {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 14px;
+  }
+}
+
+@media (max-width: 1050px) {
+  .config-section-menu {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .config-section-menu {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .config-section-card {
+    min-height: 72px;
+    padding: 12px;
+  }
+
+  .config-section-card__name {
+    font-size: 14px;
+    overflow-wrap: normal;
+  }
+
+  .config-section-card__hint {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  .config-section-menu {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Плитки выбора записей во всех общих списках админки. */
+.admin-record-list__items {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.admin-record-list__row {
+  height: 100%;
+  min-height: 76px;
+}
+
+.admin-record-list__items>.admin-record-list__empty {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 1050px) {
+  .admin-record-list__items {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 360px) {
+  .admin-record-list__items {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Названия страниц и галерей по центру карточек. */
+.config-section-card[data-content-section-choice] {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}

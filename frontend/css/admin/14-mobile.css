@@ -1,0 +1,312 @@
+/* Админка: Мобильное меню и мобильные правки.
+   Часть бывшего css/admin.css (строки 4350–4660). Порядок подключения файлов важен. */
+/* Мобильное меню: правила ящика включаются после .admin-nav-ready. */
+.admin-burger,
+.admin-nav-backdrop {
+  display: none;
+}
+
+.admin-burger {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 60;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 8px 18px 8px 14px;
+  border-radius: 12px;
+  background: var(--admin-surface);
+  color: var(--admin-text);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 45%);
+}
+
+.admin-burger:hover {
+  background: #24394f;
+  border-color: #89b9e2;
+}
+
+.admin-burger__icon {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.admin-burger__icon--close,
+.admin-burger__text--close {
+  display: none;
+}
+
+.admin.admin-nav-open .admin-burger__icon--open,
+.admin.admin-nav-open .admin-burger__text--open {
+  display: none;
+}
+
+.admin.admin-nav-open .admin-burger__icon--close {
+  display: block;
+}
+
+.admin.admin-nav-open .admin-burger__text--close {
+  display: inline;
+}
+
+.admin-nav-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgb(4 10 18 / 62%);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0s linear 0.25s;
+}
+
+.admin.admin-nav-open .admin-nav-backdrop {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.25s ease;
+}
+
+/* под открытым меню страница не прокручивается — прокручивается только сама панель */
+html.admin-nav-lock,
+body.admin-nav-lock {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+@media (max-width: 1000px) {
+  .admin.admin-nav-ready .admin-burger {
+    display: inline-flex;
+  }
+
+  .admin.admin-nav-ready .admin-nav-backdrop {
+    display: block;
+  }
+
+  /* меню на весь экран, выезжает справа; прокручивается только оно само */
+  .admin.admin-nav-ready .sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    width: auto;
+    max-width: none;
+    max-height: 100vh;
+    height: 100%;
+    padding: 84px clamp(18px, 5vw, 48px) 32px;
+    border: 0;
+    background: #111d2b;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    visibility: hidden;
+    transform: translateX(102%);
+    transition: transform 0.25s ease, visibility 0s linear 0.25s;
+  }
+
+  .admin.admin-nav-open .sidebar {
+    visibility: visible;
+    transform: none;
+    transition: transform 0.25s ease;
+  }
+
+  .admin.admin-nav-ready .sidebar__logo {
+    display: flex;
+  }
+
+  .admin.admin-nav-ready .sidebar__nav {
+    margin-top: 16px;
+  }
+
+  .admin.admin-nav-ready::before {
+    content: "";
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 35;
+    height: calc(64px + env(safe-area-inset-top));
+    background: var(--admin-bg);
+    border-bottom: 1px solid rgb(60 80 101 / 70%);
+    box-shadow: 0 8px 20px rgb(5 12 20 / 35%);
+    pointer-events: none;
+  }
+
+  /* место под закреплённую кнопку-гамбургер */
+  .admin.admin-nav-ready .admin__main {
+    padding-top: calc(64px + env(safe-area-inset-top));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .admin-nav-backdrop,
+  .admin.admin-nav-open .admin-nav-backdrop,
+  .admin.admin-nav-ready .sidebar,
+  .admin.admin-nav-open .sidebar {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+   Мобильная вёрстка админки: без горизонтальных вылетов (26.10.2026)
+   Заголовок товара и панель языков в редакторе каталога упирались в правый
+   край, из-за чего обрезались кнопки «Удалить канат» и «Скопировать…».
+   ========================================================================== */
+
+@media (max-width: 700px) {
+  .admin .product-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .admin .product-header__actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .admin .product-header__actions>.btn {
+    width: 100%;
+    min-width: 0;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .admin .product-lang-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .admin .product-lang-bar>.btn {
+    width: 100%;
+    min-width: 0;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .admin .product-lang-bar .lang-switch {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .admin .product-lang-bar .lang-switch__button {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 44px;
+    padding: 0 8px;
+    font-size: 14px;
+  }
+}
+
+/* Таблица диаметров в карточке товара: на мобильных прокручивается внутри
+   обёртки, а не растягивает страницу (grid/flex-детям нужен min-width: 0). */
+@media (max-width: 700px) {
+
+  .admin .product-editor,
+  .admin .product-editor>*,
+  .admin .admin-disclosures-group,
+  .admin .admin-disclosure__body {
+    min-width: 0;
+  }
+
+  .admin .variants-table-wrap {
+    max-width: 100%;
+  }
+}
+
+/* Таблица диаметров на узких экранах: строки перестраиваются в две колонки,
+   шапка таблицы скрыта, подписи полей выводятся над полями. Так 760-пиксельная
+   сетка не растягивает страницу. */
+@media (max-width: 700px) {
+  .admin .variants-table-wrap {
+    overflow-x: visible;
+  }
+
+  .admin .variants-table-header {
+    display: none;
+  }
+
+  .admin .variants-table-body,
+  .admin .variants-table-footer {
+    min-width: 0;
+  }
+
+  .admin .variants-table-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .admin .variants-table-footer>* {
+    min-width: 0;
+  }
+
+  .admin .variants-table-footer .btn {
+    white-space: normal;
+    text-align: center;
+  }
+
+  .admin .variant-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 10px;
+    min-width: 0;
+  }
+
+  .admin .variant-row>div[class^="col-"]::before {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--admin-muted);
+  }
+
+  .admin .variant-row .col-diam::before {
+    content: 'Диаметр, мм';
+  }
+
+  .admin .variant-row .col-price::before {
+    content: 'Цена/метр, €';
+  }
+
+  .admin .variant-row .col-load::before {
+    content: 'Разрывная нагрузка, кг';
+  }
+
+  .admin .variant-row .col-weight::before {
+    content: 'Вес, г/м';
+  }
+
+  .admin .variant-row .col-sku::before {
+    content: 'Артикул';
+  }
+
+  .admin .variant-row .col-active::before {
+    content: 'На сайте';
+  }
+
+  .admin .variant-row .col-action {
+    display: flex;
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+
+  .admin .variant-row .col-action::before {
+    content: none;
+  }
+}

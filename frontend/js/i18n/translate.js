@@ -1,5 +1,5 @@
-import { dictionary, patterns } from './dictionary.js?v=20261027.10';
-import { getLanguage } from './locale.js?v=20261027.10';
+import { dictionary, patterns } from './dictionary.js?v=20261106.1';
+import { getLanguage } from './locale.js?v=20261106.1';
 
 const normalize = text => String(text).replace(/\s+/g, ' ').trim();
 const entries = new Map(dictionary.map(row => [normalize(row[0]), row]));

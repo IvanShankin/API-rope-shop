@@ -1,19 +1,18 @@
-import {AdminSettingsController} from './AdminSettingsController.js?v=20261105.7';
-import {AdminContactsController} from './AdminContactsController.js?v=20261105.7';
-import {AdminReviewsController} from './AdminReviewsController.js?v=20261105.7';
-import { BaseController } from './BaseController.js?v=20261105.7';
-import { AuthModel } from '../models/AuthModel.js?v=20261105.7';
-import { authApi } from '../api/authApi.js?v=20261105.7';
-import { AdminView } from '../views/admin/AdminView.js?v=20261105.7';
-import { quoteApi } from '../api/quoteApi.js?v=20261105.7';
-import { AdminNotificationView as NotificationView } from '../views/admin/AdminNotificationView.js?v=20261105.7';
-import { AdminProductsController } from './AdminProductsController.js?v=20261105.7';
-import { API_CONFIG } from '../api/config.js?v=20261105.7';
-import { AdminContentController } from './AdminContentController.js?v=20261105.7';
-import { AdminColorsController } from './AdminColorsController.js?v=20261105.7';
-import { AdminConfigController } from './AdminConfigController.js?v=20261105.7';
-import { AdminRequestModel } from '../models/AdminRequestModel.js?v=20261105.7';
-import { AdminNavigation } from '../core/AdminNavigation.js?v=20261105.7';
+import {AdminSettingsController} from './AdminSettingsController.js?v=20261106.1';
+import {AdminContactsController} from './AdminContactsController.js?v=20261106.1';
+import {AdminReviewsController} from './AdminReviewsController.js?v=20261106.1';
+import { BaseController } from './BaseController.js?v=20261106.1';
+import { AuthModel } from '../models/AuthModel.js?v=20261106.1';
+import { authApi } from '../api/authApi.js?v=20261106.1';
+import { AdminView } from '../views/admin/AdminView.js?v=20261106.1';
+import { quoteApi } from '../api/quoteApi.js?v=20261106.1';
+import { AdminNotificationView as NotificationView } from '../views/admin/AdminNotificationView.js?v=20261106.1';
+import { AdminProductsController } from './AdminProductsController.js?v=20261106.1';
+import { AdminContentController } from './AdminContentController.js?v=20261106.1';
+import { AdminColorsController } from './AdminColorsController.js?v=20261106.1';
+import { AdminConfigController } from './AdminConfigController.js?v=20261106.1';
+import { AdminRequestModel } from '../models/AdminRequestModel.js?v=20261106.1';
+import { AdminNavigation } from '../core/AdminNavigation.js?v=20261106.1';
 
 export class AdminController extends BaseController {
   constructor() {
@@ -60,15 +59,12 @@ export class AdminController extends BaseController {
     this.productsController = new AdminProductsController(this.view.$('#panel-catalog'));
     this.colorsController = new AdminColorsController(this.view.$('#panel-colors'));
     this.configController = new AdminConfigController(this.view.$('#panel-configurator'));
-    this.groupsController = new AdminConfigController(this.view.$('#panel-groups'), { sections: [API_CONFIG.CATALOG_V2 ? 'categories' : 'material_groups'], title: 'Разделы каталога', onCatalogChanged: () => this.productsController.refreshGroups() });
-    if(API_CONFIG.CATALOG_V2) {
-      this.contentController=new AdminContentController(this.view.$('#panel-content'));
-      this.settingsController=new AdminSettingsController(this.view.$('#panel-settings'));
-      this.contactsController=new AdminContactsController(this.view.$('#panel-contacts'));
-      this.reviewsController=new AdminReviewsController(this.view.$('#panel-reviews'));
-      this.galleryController=new AdminContentController(this.view.$('#panel-gallery'),true);
-      this.view.root.querySelectorAll('[data-next-content]').forEach(el=>el.hidden=false);
-    }
+    this.groupsController = new AdminConfigController(this.view.$('#panel-groups'), { sections: ['categories'], title: 'Разделы каталога', onCatalogChanged: () => this.productsController.refreshGroups() });
+    this.contentController=new AdminContentController(this.view.$('#panel-content'));
+    this.settingsController=new AdminSettingsController(this.view.$('#panel-settings'));
+    this.contactsController=new AdminContactsController(this.view.$('#panel-contacts'));
+    this.reviewsController=new AdminReviewsController(this.view.$('#panel-reviews'));
+    this.galleryController=new AdminContentController(this.view.$('#panel-gallery'),true);
     // Reveal invalid inputs in collapsed blocks before native form validation focuses them.
     let validationNoticePending = false;
     this.view.root.addEventListener('invalid', event => {
@@ -111,18 +107,6 @@ export class AdminController extends BaseController {
         catch (err) { console.warn('Не удалось завершить сессию на сервере:', err); }
         finally { window.location.replace('/login/'); }
       });
-    }
-
-    // Подгружаем заявки
-  }
-
-  async handleTabChange(tabName) {
-    if (tabName === 'groups' && !this.groupsController.ready) await this.groupsController.load();
-    if (tabName === 'configurator' && !this.configController.ready) await this.configController.load();
-    if (tabName === 'colors' && !this.colorsController.ready) await this.colorsController.load();
-    if (tabName === 'catalog' && !this.productsController.ready) await this.productsController.load();
-    if (tabName === 'requests') {
-      await this.loadRequests();
     }
   }
 

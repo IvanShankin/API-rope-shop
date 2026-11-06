@@ -1,0 +1,231 @@
+/* Морские акценты главной: собственное место вне текста и полей. */
+.marine-scene {
+  pointer-events: none;
+  user-select: none;
+}
+
+.marine-scene__image {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: saturate(0.72) brightness(0.9);
+}
+
+.marine-scene--sail {
+  width: clamp(180px, 19vw, 270px);
+  margin: -48px 0 36px clamp(12px, 4vw, 64px);
+}
+
+.marine-scene--edge {
+  position: relative;
+  height: clamp(180px, 23vw, 340px);
+  overflow: hidden;
+  overflow: clip;
+  margin-bottom: clamp(-64px, -4vw, -24px);
+}
+
+.marine-scene--edge .marine-scene__image {
+  position: absolute;
+  right: clamp(-200px, -12vw, -60px);
+  bottom: 0;
+  width: clamp(460px, 61vw, 880px);
+}
+
+.marine-scene--overhead {
+  width: clamp(155px, 17vw, 235px);
+  margin: -40px clamp(24px, 8vw, 120px) 30px auto;
+  /* Мягко растворяем фон исходника в поверхности блока. */
+  mask-image: radial-gradient(ellipse 64% 52% at 51% 52%, #000 48%, transparent 100%);
+}
+
+@media (max-width: 767px) {
+  .marine-scene--sail {
+    width: 170px;
+    margin: -24px auto 28px;
+  }
+
+  .marine-scene--edge {
+    height: 185px;
+    margin-bottom: 0;
+  }
+
+  .marine-scene--edge .marine-scene__image {
+    width: 440px;
+    right: -130px;
+  }
+
+  .marine-scene--overhead {
+    width: 160px;
+    margin: -20px 16px 24px auto;
+  }
+}
+
+/* Remote-data feedback shares the public forms' spacing and remains readable on mobile. */
+.load-state {
+  width: 100%;
+  padding: 20px;
+  margin: 0 0 16px;
+  border: 1px solid rgba(133, 197, 255, .3);
+  border-radius: 14px;
+  background: rgba(133, 197, 255, .06);
+  color: inherit;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.load-state[data-state="loading"]::before {
+  content: "";
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 10px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  vertical-align: -.15em;
+  animation: load-state-spin .8s linear infinite;
+}
+@keyframes load-state-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .load-state[data-state="loading"]::before { animation: none; }
+}
+.catalog-controls { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+.catalog-controls[hidden], .load-state[hidden] { display: none; }
+
+
+/* API reviews and moderated submission */
+.review-card__text { white-space: pre-line; overflow-wrap: anywhere; }
+.review-card__meta { overflow-wrap: anywhere; }
+.review-card__rating { color: #B3CFE5; font-size: 22px; letter-spacing: 2px; }
+.review-card__rating span { font-size: 14px; letter-spacing: 0; }
+.review-form { margin-top: clamp(24px, 4vw, 48px); width: 100%; box-sizing: border-box; padding: clamp(24px, 5vw, 64px) clamp(16px, 4vw, 48px); border-radius: 24px; background: #0F2442; }
+.review-form__title { max-width: 680px; margin: 0 auto 28px; text-align: center; font-family: var(--font-display); font-weight: 400; font-size: clamp(28px, 3vw, 42px); line-height: 1.15; }
+.review-form form { display: grid; gap: 20px; max-width: 680px; margin: 0 auto; }
+.review-form label { display: grid; gap: 8px; min-width: 0; }
+.review-form input:not([type=checkbox]):not([type=radio]), .review-form textarea { width: 100%; min-width: 0; min-height: 48px; box-sizing: border-box; border: 1px solid #4A7FA7; border-radius: 8px; background: #0B1C33; color: #F6FAFD; font: inherit; padding: 12px; }
+.review-form input:not([type=checkbox]):not([type=radio]):focus, .review-form textarea:focus { outline: none; box-shadow: none; border-color: #B3CFE5; }
+.review-form textarea { resize: vertical; }
+.review-form .review-form__consent { display: flex; align-items: flex-start; }
+.review-form input[type=checkbox] { appearance: none; -webkit-appearance: none; display: grid; place-items: center; flex: 0 0 22px; width: 22px; height: 22px; margin: 2px 0; padding: 0; border: 1px solid #4A7FA7; border-radius: 4px; background: #0B1C33; cursor: pointer; }
+.review-form input[type=checkbox]:checked::after { content: ''; width: 6px; height: 11px; border: solid #F6FAFD; border-width: 0 2px 2px 0; transform: translateY(-1px) rotate(45deg); }
+.review-form input[type=checkbox]:focus-visible { outline: 2px solid #B3CFE5; outline-offset: 3px; }
+.review-form a { text-decoration: underline; }
+.review-form button { min-height: 48px; justify-self: center; }
+.review-form [role=status] { overflow-wrap: anywhere; }
+.review-form [data-review-status][data-state=success] { margin: 8px 0 0; text-align: center; font-size: clamp(20px, 2vw, 24px); line-height: 1.5; }
+.review-form [role=status]:empty { display: none; }
+.review-rating { min-width: 0; margin: 0; padding: 0; border: 0; }
+.review-rating legend { padding: 0; margin-bottom: 8px; }
+.review-rating__stars { display: flex; width: fit-content; }
+.review-form .review-rating__star { position: relative; display: grid; place-items: center; width: 48px; height: 48px; cursor: pointer; }
+.review-rating__star input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.review-rating__star span { color: #55718D; font-size: 38px; line-height: 1; transition: color .15s ease; }
+.review-rating__star:has(input:checked) span, .review-rating__star:has(~ .review-rating__star input:checked) span { color: #B3CFE5; }
+.review-rating__star:has(input:focus-visible) { outline: 2px solid #B3CFE5; outline-offset: 2px; border-radius: 8px; }
+.review-rating__star:has(input:disabled) { cursor: default; }
+@media (hover: hover) {
+  .review-rating__stars:has(.review-rating__star:hover) .review-rating__star span { color: #55718D; }
+  .review-rating__stars:has(.review-rating__star:hover) .review-rating__star:hover span, .review-rating__stars .review-rating__star:has(~ .review-rating__star:hover) span { color: #E4F1FC; }
+}
+
+.site-contact-text { white-space: pre-line; overflow-wrap: anywhere; margin-top: 16px; }
+.site-contact-status { font-size: 14px; margin-top: 12px; }
+[data-site-contact] { overflow-wrap: anywhere; }
+[data-site-contact][hidden] { display: none !important; }
+.audience-contact__channels a[data-site-contact] { display: inline-flex; align-items: center; min-height: 48px; max-width: 100%; padding: 8px 0; text-decoration: underline; }
+
+/* Скелетоны загрузки каталога, товаров и галереи работ.
+   Базовый тон на 1–2 шага светлее фона страницы (--color-night: #0A1931). */
+.skeleton {
+  display: block;
+  border-radius: 12px;
+  background-color: #12294A;
+  background-image: linear-gradient(100deg,
+      rgba(179, 207, 229, 0) 25%,
+      rgba(179, 207, 229, 0.09) 50%,
+      rgba(179, 207, 229, 0) 75%);
+  background-repeat: no-repeat;
+  background-size: 200% 100%;
+  background-position: 150% 0;
+  animation: skeleton-sweep 1.6s linear infinite;
+}
+
+@keyframes skeleton-sweep {
+  from { background-position: 150% 0; }
+  to { background-position: -50% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background-image: none;
+  }
+}
+
+.skeleton--fill { width: 100%; height: 100%; border-radius: inherit; }
+.skeleton--cover { flex: 1 1 auto; min-height: 96px; border-radius: 16px; }
+.skeleton--heading { width: min(64%, 420px); height: clamp(24px, 2.6vw, 34px); border-radius: 10px; }
+.skeleton--title { width: 58%; height: 16px; border-radius: 8px; }
+.skeleton--text { width: 92%; height: 10px; border-radius: 999px; }
+.skeleton--text-short { width: 62%; }
+.skeleton--price { width: 34%; height: 12px; border-radius: 999px; }
+.skeleton--cell { height: 12px; border-radius: 6px; }
+.skeleton--cell-head { height: 8px; }
+
+/* карточка раздела: та же сетка, высота и отступы, что у .category */
+.catalog__list--skeleton { opacity: 1; translate: 0 0; transition: none; }
+.catalog__card--skeleton {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: clamp(18px, 2vw, 28px);
+  width: 100%;
+  min-height: clamp(260px, 24vw, 340px);
+  padding: clamp(20px, 2vw, 32px);
+  overflow: hidden;
+  background: var(--color-night);
+}
+.catalog__card--skeleton .skeleton-lines { display: grid; gap: 10px; }
+
+/* карточка-паспорт товара: фото 5 / 4, строки текста и строки таблицы */
+.product--skeleton { opacity: 1; translate: 0 0; }
+.product--skeleton .product__info { display: grid; justify-items: start; gap: 14px; min-width: 0; }
+.skeleton-table {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px 24px;
+  margin-top: 12px;
+}
+
+/* галерея работ: плитки повторяют .work-gallery__photo, прячутся после загрузки */
+.work-gallery__photo--skeleton { cursor: default; }
+.work-gallery__grid:has(> .work-gallery__photo) + .work-gallery__skeleton { display: none; }
+.work-gallery:has(.content-load-status .button) .work-gallery__skeleton { display: none; }
+.work-gallery .content-load-status:not(:has(.button)) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+}
+
+@media (max-width: 767px) {
+  .catalog__card--skeleton { min-height: 220px; }
+  .skeleton--heading { width: 72%; height: 24px; }
+  .skeleton-table { gap: 14px 16px; }
+}

@@ -1,4 +1,4 @@
-import { escapeHtml as esc } from '../../utils/text.js?v=20261027.10';
+import { escapeHtml as esc } from '../../utils/text.js?v=20261106.1';
 
 // Shared record picker. Editing and unsaved-change checks stay in the controllers.
 export class AdminRecordList {

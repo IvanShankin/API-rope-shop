@@ -1,25 +1,11 @@
-import { AdminNotificationView } from './AdminNotificationView.js?v=20261027.10';
-import { AdminRecordList } from './AdminRecordList.js?v=20261027.10';
-import { escapeHtml as esc, displayName } from '../../utils/text.js?v=20261027.10';
-import { API_CONFIG } from '../../api/config.js?v=20261027.10';
-import { mediaUrl } from '../../utils/media.js?v=20261027.10';
+import { AdminNotificationView } from './AdminNotificationView.js?v=20261106.1';
+import { AdminRecordList } from './AdminRecordList.js?v=20261106.1';
+import { escapeHtml as esc, displayName } from '../../utils/text.js?v=20261106.1';
+import { mediaUrl } from '../../utils/media.js?v=20261106.1';
+import { langTabsMarkup, bindLangTabs, refreshLangIndicators } from './langTabs.js?v=20261106.1';
+import { transliterate, variantRowMarkup } from './adminProductParts.js?v=20261106.1';
 
-export function transliterate(text) {
-  const map = {
-    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo', 'ж': 'zh', 'з': 'z', 'и': 'i',
-    'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't',
-    'у': 'u', 'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'shch', 'ъ': '', 'ы': 'y',
-    'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya'
-  };
-  return String(text || '')
-    .toLowerCase()
-    .split('')
-    .map(ch => map[ch] !== undefined ? map[ch] : ch)
-    .join('')
-    .replace(/[^a-z0-9_-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 100);
-}
+export { transliterate };
 
 export class AdminProductsView {
   constructor(root) {
@@ -57,18 +43,8 @@ export class AdminProductsView {
       if (button) image(button.dataset.productImage, Number(button.dataset.imageId), this.root.querySelector('[data-product-file]')?.files[0]);
     }, options);
 
-    // Вкладки языков
-    this.root.addEventListener('click', e => {
-      const tab = e.target.closest('[data-lang-tab]');
-      if (!tab) return;
-      const lang = tab.dataset.langTab;
-      this.root.querySelectorAll('[data-lang-tab]').forEach(btn => {
-        btn.classList.toggle('lang-switch__button--active', btn === tab);
-      });
-      this.root.querySelectorAll('[data-lang-panel]').forEach(panel => {
-        panel.hidden = panel.dataset.langPanel !== lang;
-      });
-    }, options);
+    // Вкладки языков (общие для всей админки)
+    bindLangTabs(this.root, this.events.signal);
 
     // Копирование русского описания в EN и DE
     this.root.addEventListener('click', e => {
@@ -90,7 +66,7 @@ export class AdminProductsView {
         if (subEl && !subEl.value.trim()) subEl.value = subRu;
         if (descEl && !descEl.value.trim()) descEl.value = descRu;
       });
-      this.updateLangIndicators();
+      refreshLangIndicators(form);
       this.message('Текст скопирован на все языки.', 'success');
     }, options);
 
@@ -134,13 +110,10 @@ export class AdminProductsView {
       if (e.target.matches('[name=slug]')) {
         this.slugTouched = true;
       } else if (e.target.matches('[name=name_rus]')) {
-        this.updateLangIndicators();
         if (!this.slugTouched && !this.currentProduct?.product_id) {
           const slugInput = this.root.querySelector('[name=slug]');
           if (slugInput) slugInput.value = transliterate(e.target.value);
         }
-      } else if (e.target.matches('[name^="name_"]')) {
-        this.updateLangIndicators();
       }
     }, options);
 
@@ -233,17 +206,6 @@ export class AdminProductsView {
   hasChanges() { return this.drafts().length > 0; }
   allowDiscard() { return !this.hasChanges() || window.confirm('Есть несохранённые изменения. Отбросить их?'); }
 
-  restoreDrafts(drafts) {
-    for (const form of this.root.querySelectorAll('form')) {
-      const draft = drafts.find(item => item.key === this.formKey(form));
-      if (!draft) continue;
-      for (const el of form.elements) if (el.name in draft.values) {
-        if (el.type === 'checkbox') el.checked = draft.values[el.name];
-        else el.value = draft.values[el.name];
-      }
-    }
-  }
-
   markSaved(form, id) {
     const oldKey = this.formKey(form);
     if (form.matches('[data-variant-form]')) form.dataset.id = id;
@@ -262,16 +224,6 @@ export class AdminProductsView {
     })));
   }
 
-  updateLangIndicators() {
-    const form = this.root.querySelector('[data-product-form]');
-    if (!form) return;
-    ['rus', 'eng', 'ger'].forEach(locale => {
-      const val = form.querySelector(`[name=name_${locale}]`)?.value || '';
-      const dot = this.root.querySelector(`[data-lang-indicator="${locale}"]`);
-      if (dot) dot.classList.toggle('lang-tab__indicator--filled', Boolean(val.trim()));
-    });
-  }
-
   renderProduct(product, groups, materials) {
     this.currentProduct = product;
     this.slugTouched = Boolean(product?.slug);
@@ -287,7 +239,6 @@ export class AdminProductsView {
       </label>`;
 
     const p = product || {};
-    const hasV2 = Boolean(API_CONFIG.CATALOG_V2);
 
     const translations = ['rus', 'eng', 'ger'].map(locale => {
       const t = p.translations?.find(item => item.locale === locale) || {};
@@ -327,53 +278,35 @@ export class AdminProductsView {
         <div class="card card--static card--padded product-text-card">
           <h3 class="product-text-card__title">Название и описание</h3>
           <p class="product-text-card__hint">Текст на трёх языках.</p>
-          <div class="product-lang-bar">
-            <div class="lang-switch" role="tablist" aria-label="Язык текста товара">
-              <button class="lang-switch__button lang-switch__button--active" type="button" data-lang-tab="rus" role="tab">
-                <span class="lang-tab__indicator ${translations.find(t => t.locale === 'rus')?.name ? 'lang-tab__indicator--filled' : ''}" data-lang-indicator="rus"></span> Русский
-              </button>
-              <button class="lang-switch__button" type="button" data-lang-tab="eng" role="tab">
-                <span class="lang-tab__indicator ${translations.find(t => t.locale === 'eng')?.name ? 'lang-tab__indicator--filled' : ''}" data-lang-indicator="eng"></span> Английский
-              </button>
-              <button class="lang-switch__button" type="button" data-lang-tab="ger" role="tab">
-                <span class="lang-tab__indicator ${translations.find(t => t.locale === 'ger')?.name ? 'lang-tab__indicator--filled' : ''}" data-lang-indicator="ger"></span> Немецкий
-              </button>
-            </div>
-            <button class="btn btn--ghost btn--small" type="button" data-copy-translations title="Скопировать русский текст на все языки">
-               Скопировать текст на все языки
-            </button>
-          </div>
-
-          <!-- Вкладка RUS -->
-          <div class="lang-tab-panel" data-lang-panel="rus">
+          ${langTabsMarkup({
+            label: 'Язык текста товара',
+            filled: Object.fromEntries(translations.map(t => [t.locale, Boolean(t.name || t.subtitle || t.description)])),
+            extra: `<button class="btn btn--ghost btn--small" type="button" data-copy-translations title="Скопировать русский текст на все языки">Скопировать текст на все языки</button>`,
+            panels: {
+              rus: `
             ${input('name_rus', 'Название (рус.) *', translations.find(t => t.locale === 'rus')?.name, 'required maxlength="255"', 'Например: LIROS Control-XTR')}
             ${input('subtitle_rus', 'Подзаголовок (рус.)', translations.find(t => t.locale === 'rus')?.subtitle, 'maxlength="255"', 'Например: Для яхт и лебёдок')}
             <label class="field">
               <span class="field__label">Описание (рус.)</span>
               <textarea class="field__input field__textarea" name="description_rus" rows="3">${esc(translations.find(t => t.locale === 'rus')?.description || '')}</textarea>
               <span class="field__hint">Свойства и назначение</span>
-            </label>
-          </div>
-
-          <!-- Вкладка ENG -->
-          <div class="lang-tab-panel" data-lang-panel="eng" hidden>
+            </label>`,
+              eng: `
             ${input('name_eng', 'Название (англ.)', translations.find(t => t.locale === 'eng')?.name, 'maxlength="255"')}
             ${input('subtitle_eng', 'Подзаголовок (англ.)', translations.find(t => t.locale === 'eng')?.subtitle, 'maxlength="255"')}
             <label class="field">
               <span class="field__label">Описание (англ.)</span>
               <textarea class="field__input field__textarea" name="description_eng" rows="3">${esc(translations.find(t => t.locale === 'eng')?.description || '')}</textarea>
-            </label>
-          </div>
-
-          <!-- Вкладка GER -->
-          <div class="lang-tab-panel" data-lang-panel="ger" hidden>
+            </label>`,
+              ger: `
             ${input('name_ger', 'Название (нем.)', translations.find(t => t.locale === 'ger')?.name, 'maxlength="255"')}
             ${input('subtitle_ger', 'Подзаголовок (нем.)', translations.find(t => t.locale === 'ger')?.subtitle, 'maxlength="255"')}
             <label class="field">
               <span class="field__label">Описание (нем.)</span>
               <textarea class="field__input field__textarea" name="description_ger" rows="3">${esc(translations.find(t => t.locale === 'ger')?.description || '')}</textarea>
-            </label>
-          </div>
+            </label>`,
+            },
+          })}
         </div>
 
         <!-- Параметры и разделы каталога -->
@@ -383,7 +316,7 @@ export class AdminProductsView {
           </summary>
           <div class="admin-disclosure__body">
             <div class="fields fields--two">
-              ${hasV2 ? `
+              
                 <label class="field">
                   <span class="field__label">Категория в каталоге *</span>
                   <select class="field__input" name="category_id" required>
@@ -392,7 +325,7 @@ export class AdminProductsView {
                   </select>
                   <span class="field__hint">Раздел каталога</span>
                 </label>
-              ` : ''}
+              
 
               <label class="field">
                 <span class="field__label">Группа материала *</span>
@@ -429,8 +362,8 @@ export class AdminProductsView {
             </div>
 
             <div class="fields fields--two">
-              ${hasV2 ? input('slug', 'Адрес страницы *', p.slug, 'required maxlength="150" pattern="[a-zA-Z0-9_-]+"', 'Заполнится сам из названия — можно не трогать.') : ''}
-              ${hasV2 ? input('index', 'Место в каталоге (меньше — выше)', p.index ?? 0, 'type="number" min="0" step="1" required') : ''}
+              ${input('slug', 'Адрес страницы *', p.slug, 'required maxlength="150" pattern="[a-zA-Z0-9_-]+"', 'Заполнится сам из названия — можно не трогать.')}
+              ${input('index', 'Место в каталоге (меньше — выше)', p.index ?? 0, 'type="number" min="0" step="1" required')}
             </div>
 
             <!-- Дополнительные свойства -->
@@ -545,7 +478,7 @@ export class AdminProductsView {
       </details>
 
       <!-- Фотографии товара -->
-      ${hasV2 ? `
+      
         <details class="admin-disclosure" data-product-photos open>
           <summary class="admin-disclosure__summary">
             <span>Фотографии каната</span>
@@ -588,10 +521,11 @@ export class AdminProductsView {
             `}
           </div>
         </details>
-      ` : ''}
+      
 
-      <!-- Кнопка сохранения -->
-      <div class="admin-product-save">
+      <!-- Кнопка скрыта: сохраняет нижняя панель «Сохранить изменения»,
+           она нажимает эту кнопку (AdminNavigation.saveCurrent). -->
+      <div class="admin-product-save" hidden>
         <button class="btn btn--primary btn--large" type="button" data-products-save>
           ${product ? 'Сохранить все изменения' : 'Создать канат'}
         </button>
@@ -602,58 +536,6 @@ export class AdminProductsView {
   }
 
   variantRow(variant, index = 0) {
-    const v = variant || {};
-    const tempId = v.id ? '' : `temp_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-    const diam = v.diameter_mm != null ? v.diameter_mm : '';
-    const name = v.variant_name || (diam ? `${diam} мм` : '');
-
-    return `
-      <form data-variant-form ${v.id ? `data-id="${Number(v.id)}"` : `data-temp-id="${tempId}"`} class="variant-row">
-        <input type="hidden" name="variant_name" value="${esc(name)}">
-        <input type="hidden" name="index" value="${v.index ?? index}">
-        <div class="col-diam">
-          <input class="field__input field__input--compact" name="diameter_mm" type="number" min="0.01" max="9999.99" step="0.01" required value="${esc(diam)}" placeholder="8">
-        </div>
-        <div class="col-price">
-          <div class="field__affix">
-            <input class="field__input field__input--compact" name="price_per_meter" type="number" min="0" max="99999999.99" step="0.01" required value="${esc(v.price_per_meter ?? '')}" placeholder="4.50">
-            <span class="field__suffix">€</span>
-          </div>
-        </div>
-        <div class="col-load">
-          <div class="field__affix">
-            <input class="field__input field__input--compact" name="breaking_load_dan" type="number" min="0" max="99999999.99" step="0.01" value="${esc(v.breaking_load_dan ?? '')}" placeholder="3500">
-            <span class="field__suffix">кг</span>
-          </div>
-        </div>
-        <div class="col-weight">
-          <div class="field__affix">
-            <input class="field__input field__input--compact" name="weight_g_per_m" type="number" min="0" max="99999999.99" step="0.01" value="${esc(v.weight_g_per_m ?? '')}" placeholder="45">
-            <span class="field__suffix">г</span>
-          </div>
-        </div>
-        <div class="col-sku">
-          <input class="field__input field__input--compact" name="sku" type="text" maxlength="100" value="${esc(v.sku ?? '')}" placeholder="—">
-        </div>
-        <div class="col-active">
-          <label class="tick tick--compact" title="Показывать этот диаметр покупателям">
-            <input class="tick__input" name="is_active" type="checkbox" ${v.is_active !== false ? 'checked' : ''}>
-            <span class="tick__box" aria-hidden="true"></span>
-          </label>
-        </div>
-        <div class="col-action">
-          ${v.id ? `
-            <button class="btn-icon btn-icon--danger" type="button" data-variant-remove="${Number(v.id)}" title="Удалить диаметр">✕</button>
-          ` : `
-            <button class="btn-icon btn-icon--muted" type="button" data-remove-new-row title="Убрать строку">✕</button>
-          `}
-        </div>
-      </form>
-    `;
-  }
-
-  // Для обратной совместимости с тестами
-  variantForm(variant, input) {
-    return this.variantRow(variant);
+    return variantRowMarkup(variant, index);
   }
 }

@@ -1,5 +1,5 @@
-import {contactsApi} from './api/contactsApi.js?v=20261027.10';
-import {translate as t} from './i18n/translate.js?v=20261027.10';
+import {contactsApi} from './api/contactsApi.js?v=20261106.1';
+import {translate as t} from './i18n/translate.js?v=20261106.1';
 /* Public inquiries use the existing contact_requests contract. */
 (() => {
   'use strict';

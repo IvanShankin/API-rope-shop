@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8">
-  <script src="/js/api/remote-api.js?v=20261029.1"></script>
+  <script src="/js/api/remote-api.js?v=20261106.1"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Панель управления — Rope-Pro-Line</title>
   <meta name="robots" content="noindex, nofollow">
@@ -22,17 +22,37 @@
     .admin-session__card { width: 100%; max-width: 480px; text-align: center; }
     .admin-session__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 24px; }
   </style>
-  <link rel="stylesheet" href="/css/admin.css?v=20261105.1">
+  <!-- стили админки разнесены по файлам в css/admin/; порядок подключения важен -->
+  <link rel="stylesheet" href="/css/admin/01-base.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/admin/02-components.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/admin/03-editors.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/admin/04-savebar.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/admin/05-responsive.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/admin/06-login.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/admin/07-toolbars.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/admin/08-workspace.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/admin/09-dark-theme.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/admin/10-settings-contacts.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/admin/11-product-editor.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/admin/12-flat-forms.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/admin/13-requests-notices.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/admin/14-mobile.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/admin/15-compact.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/admin/16-catalog-config.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/admin/17-grid.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/admin/18-product-card.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/admin/19-content-gallery.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/admin/20-lang-tabs.css?v=20261106.1">
   <script>
     // Мгновенная проверка наличия сессии до построения DOM
     if (!localStorage.getItem('rope_access_token')) {
       window.location.replace('/login/');
     }
   </script>
-  <script type="module" src="/js/app.js?v=20261105.1"></script>
-  <link rel="stylesheet" href="/css/custom-selects.css?v=20261027.10">
-  <script type="module" src="/js/ui/custom-selects.js?v=20261027.10"></script>
-  <script type="module" src="/js/ui/admin-mobile-nav.js?v=20261027.10"></script>
+  <script type="module" src="/js/app.js?v=20261106.1"></script>
+  <link rel="stylesheet" href="/css/custom-selects.css?v=20261106.1">
+  <script type="module" src="/js/ui/custom-selects.js?v=20261106.1"></script>
+  <script type="module" src="/js/ui/admin-mobile-nav.js?v=20261106.1"></script>
 </head>
 
 <body class="admin-page__body">
@@ -66,19 +86,19 @@
       </a>
 
       <nav class="sidebar__nav" aria-label="Управление сайтом">
-        <p class="admin-navigation-label">Подготовка каталога</p>
+        <p class="admin-navigation-label">Заказы</p>
+        <button class="sidebar__tab sidebar__tab--active" type="button" data-panel="requests">Заявки покупателей</button>
+        <p class="admin-navigation-label">Каталог</p>
+        <button class="sidebar__tab" type="button" data-panel="catalog">Канаты</button>
         <button class="sidebar__tab" type="button" data-panel="groups">Разделы каталога</button>
         <button class="sidebar__tab" type="button" data-panel="colors">Цвета канатов</button>
         <button class="sidebar__tab" type="button" data-panel="configurator">Конфигуратор и цены</button>
-        <button class="sidebar__tab sidebar__tab--active" type="button" data-panel="catalog">Канаты</button>
-        <p class="admin-navigation-label">Заказы</p>
-        <button class="sidebar__tab" type="button" data-panel="requests">Заявки покупателей</button>
-        <p class="admin-navigation-label" data-next-content hidden>Содержимое сайта</p>
-        <button class="sidebar__tab" type="button" data-panel="content" data-next-content hidden>Тексты страниц</button>
-        <button class="sidebar__tab" type="button" data-panel="gallery" data-next-content hidden>Галереи</button>
-        <button class="sidebar__tab" type="button" data-panel="reviews" data-next-content hidden>Отзывы</button>
-        <button class="sidebar__tab" type="button" data-panel="contacts" data-next-content hidden>Контакты</button>
-        <button class="sidebar__tab" type="button" data-panel="settings" data-next-content hidden>Настройки и пароль</button>
+        <p class="admin-navigation-label">Содержимое сайта</p>
+        <button class="sidebar__tab" type="button" data-panel="content">Тексты страниц</button>
+        <button class="sidebar__tab" type="button" data-panel="gallery">Галереи</button>
+        <button class="sidebar__tab" type="button" data-panel="reviews">Отзывы</button>
+        <button class="sidebar__tab" type="button" data-panel="contacts">Контакты</button>
+        <button class="sidebar__tab" type="button" data-panel="settings">Настройки и пароль</button>
       </nav>
 
       <div class="sidebar__footer">
@@ -141,7 +161,7 @@
       <div class="savebar">
         <p class="savebar__text">
           <svg class="savebar__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8v5M12 16.5v.5M12 3l9.5 17h-19z" /></svg>
-          Кнопка сохраняет изменения всех блоков сразу, а на сайте они появятся после нажатия
+          На сайте изменения появятся после сохранения
         </p>
         <button class="btn btn--primary btn--large" type="button">Сохранить изменения</button>
       </div>

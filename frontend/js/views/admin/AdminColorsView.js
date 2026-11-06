@@ -1,7 +1,8 @@
-import { captureDisclosures, restoreDisclosures } from './disclosureState.js?v=20261027.10';
-import { AdminNotificationView } from './AdminNotificationView.js?v=20261027.10';
-import { AdminRecordList } from './AdminRecordList.js?v=20261027.10';
-import { escapeHtml as esc, displayName } from '../../utils/text.js?v=20261027.10';
+import { captureDisclosures, restoreDisclosures } from './disclosureState.js?v=20261106.1';
+import { AdminNotificationView } from './AdminNotificationView.js?v=20261106.1';
+import { AdminRecordList } from './AdminRecordList.js?v=20261106.1';
+import { escapeHtml as esc, displayName } from '../../utils/text.js?v=20261106.1';
+import { langTabsMarkup, bindLangTabs } from './langTabs.js?v=20261106.1';
 export class AdminColorsView {
   constructor(root) { this.root = root; this.events = new AbortController(); this.baseline = ''; this.recordList = new AdminRecordList(root.querySelector("[data-color-select]"), this.events.signal, { search: 'Найти цвет', placeholder: 'Название или номер', empty: 'Цветов пока нет. Нажмите «Добавить цвет».' }); }
   bind(actions) {
@@ -22,6 +23,7 @@ export class AdminColorsView {
       }
     };
     this.root.addEventListener('input', syncColor, options);
+    bindLangTabs(this.root, this.events.signal);
     this.root.addEventListener('change', syncColor, options);
     window.addEventListener('beforeunload', e => { if (this.dirty()) { e.preventDefault(); e.returnValue = ''; } }, options);
   }
@@ -45,11 +47,12 @@ export class AdminColorsView {
             <div class="field"><label for="admin-color-hex">Код цвета (например, #FF0000)</label><div class="admin-color-control"><input class="admin-color-picker" type="color" data-color-picker aria-label="Выбрать цвет в палитре" title="Выбрать цвет в палитре" value="${/^#[0-9a-f]{6}$/i.test(color.hex || '') ? esc(color.hex) : '#000000'}"><input class="field__input" id="admin-color-hex" name="hex" pattern="#[0-9a-fA-F]{6}" placeholder="#FF0000" value="${esc(color.hex || '')}" aria-describedby="admin-color-hint"></div><small class="field__hint" id="admin-color-hint">Нажмите на квадрат — код подставится сам.</small></div>
             <label class="field">Место в списке (0 — первое)<input class="field__input" name="index" type="number" min="0" step="1" required value="${Number(color.index??0)}"></label>
           </div></details>
-          <details class="admin-disclosure" data-editor-disclosure="translations" open><summary>Названия на разных языках</summary><p class="admin-editor-hint">Заполните название хотя бы на одном языке.</p><div class="admin-fields">
-            <label class="field">Название (англ.)<input class="field__input" name="eng" maxlength="255" value="${esc(name('eng'))}"></label>
-            <label class="field">Название (рус.)<input class="field__input" name="rus" maxlength="255" value="${esc(name('rus'))}"></label>
-            <label class="field">Название (нем.)<input class="field__input" name="ger" maxlength="255" value="${esc(name('ger'))}"></label>
-          </div></details>
+          <details class="admin-disclosure" data-editor-disclosure="translations" open><summary>Названия на разных языках</summary><p class="admin-editor-hint">Заполните название хотя бы на одном языке.</p>${langTabsMarkup({
+            label: 'Язык названия цвета',
+            filled: { rus: Boolean(name('rus')), eng: Boolean(name('eng')), ger: Boolean(name('ger')) },
+            panels: Object.fromEntries([['rus', 'рус.'], ['eng', 'англ.'], ['ger', 'нем.']].map(([locale, short]) => [locale,
+              `<div class="admin-fields"><label class="field">Название (${short})<input class="field__input" name="${locale}" maxlength="255" value="${esc(name(locale))}"></label></div>`])),
+          })}</details>
         </div>
         <label class="admin-toggle"><input type="checkbox" name="is_active" ${color.is_active !== false ? 'checked' : ''}> <span>Показывать на сайте</span></label>
         <div class="admin-form-actions">

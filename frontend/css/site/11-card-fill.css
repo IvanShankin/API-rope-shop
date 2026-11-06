@@ -1,0 +1,70 @@
+/* Общая заливка карточек от левого края, как у карточек услуг. */
+:is(.configurator-entry__card, .configurator-nav__link, .review-card, .work-gallery__photo,
+  .audience-service, .audience-choice, .audience-details figure) {
+  position: relative;
+  isolation: isolate;
+}
+
+:is(.configurator-entry__card, .configurator-nav__link, .review-card, .work-gallery__photo,
+  .audience-service, .audience-details figure) {
+  overflow: hidden;
+}
+
+:is(.configurator-entry__card, .configurator-nav__link, .review-card, .work-gallery__photo,
+  .audience-service, .audience-choice, .audience-details figure, .category)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background: var(--color-deep);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform .6s var(--ease-out);
+}
+
+/* На фотокарточках полупрозрачная заливка лежит над изображением. */
+:is(.category, .audience-choice, .work-gallery__photo)::before {
+  z-index: 0;
+  background: rgba(26, 60, 94, .65);
+}
+
+.category> :not(.category__media) {
+  position: relative;
+  z-index: 1;
+}
+
+.audience-choice img {
+  z-index: -1;
+}
+
+:is(.configurator-entry__card, .configurator-nav__link, .review-card, .work-gallery__photo,
+  .audience-service, .audience-choice, .audience-details figure, .category):focus-visible::before,
+.showcase__tab:focus-visible::before,
+.option__input:focus-visible+.option__body::before,
+.audience-service--active::before {
+  transform: scaleX(1);
+}
+
+@media (hover: hover) {
+
+  :is(.configurator-entry__card, .configurator-nav__link, .review-card, .work-gallery__photo,
+    .audience-service, .audience-choice, .audience-details figure, .category):hover::before,
+  .showcase__tab:hover::before,
+  .option:not(:has(.option__input:disabled)):hover .option__body::before {
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+

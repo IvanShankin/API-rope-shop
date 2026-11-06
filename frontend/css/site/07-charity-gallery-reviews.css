@@ -1,0 +1,360 @@
+/* благотворительность */
+.charity {
+  position: relative;
+  margin: var(--margin-block) 0;
+  padding: 0;
+}
+
+/* раздел на своей подложке — меняет фактуру длинной тёмной страницы */
+.charity__inner {
+  border-radius: 32px;
+  background: var(--color-surface);
+}
+
+.charity__formula {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 0.22em;
+  margin: 0;
+  padding: 60px 60px 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(40px, 6vw, 96px);
+  line-height: 1;
+  letter-spacing: -0.025em;
+}
+
+.charity__part {
+  white-space: nowrap;
+}
+
+.charity__part--accent {
+  color: var(--color-mist);
+}
+
+/* знак «=» из двух прядей верёвки */
+.charity__equals {
+  flex-shrink: 0;
+  width: 0.78em;
+  height: 0.42em;
+}
+
+.charity__strand-core,
+.charity__strand {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.charity__strand-core {
+  stroke: #06101f;
+  stroke-width: 15;
+}
+
+.charity__strand {
+  stroke: url(#charity-rope);
+  stroke-width: 12;
+}
+
+.charity__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 40px;
+  padding: 60px 60px 0 60px;
+}
+
+.charity__about {
+  max-width: 540px;
+}
+
+.charity__lead {
+  margin: 0 0 14px;
+  font-family: var(--font-display);
+  font-size: clamp(20px, 1.8vw, 26px);
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+.charity__text {
+  margin: 0 0 14px;
+  font-size: 16px;
+  line-height: 1.75;
+  color: var(--color-text-muted);
+}
+
+.charity__button {
+  margin-top: 14px;
+}
+
+.charity__gallery {
+  margin-top: 30px;
+}
+
+/* появление блока благотворительности */
+.charity__formula,
+.charity__row,
+.charity__gallery {
+  opacity: 0;
+  translate: 0 32px;
+  transition: opacity 1s var(--ease-out), translate 1s var(--ease-out);
+}
+
+.charity--visible .charity__formula,
+.charity--visible .charity__row,
+.charity--visible .charity__gallery {
+  opacity: 1;
+  translate: 0 0;
+}
+
+.charity--visible .charity__row {
+  transition-delay: 0.12s;
+}
+
+.charity--visible .charity__gallery {
+  transition-delay: 0.24s;
+}
+
+/* галерея: слайд во всю ширину контейнера (Swiper, классы переименованы в БЭМ) */
+.gallery {
+  position: relative;
+}
+
+/* фото + стрелки: стрелки наполовину заходят на фото */
+.gallery__stage {
+  position: relative;
+}
+
+.gallery__viewport {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  border-radius: 28px;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.gallery__track {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  box-sizing: content-box;
+  transition-property: transform;
+  transition-timing-function: var(--ease-out);
+}
+
+.gallery__slide {
+  position: relative;
+  flex-shrink: 0;
+  width: 100%;
+  height: clamp(320px, 42vw, 640px);
+  margin: 0;
+  overflow: hidden;
+  border-radius: 28px;
+  background: var(--color-deep);
+}
+
+.gallery__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 45%;
+  pointer-events: none;
+}
+
+.gallery__caption {
+  position: absolute;
+  inset: auto 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 120px clamp(24px, 3vw, 40px) clamp(24px, 3vw, 36px);
+  background: linear-gradient(0deg, rgba(6, 16, 31, 0.9), rgba(6, 16, 31, 0));
+}
+
+/* подпись проявляется у активного слайда */
+.gallery__caption-title,
+.gallery__caption-meta {
+  opacity: 0;
+  translate: 0 16px;
+  transition: opacity 0.6s var(--ease-out), translate 0.6s var(--ease-out);
+}
+
+.gallery__slide--active .gallery__caption-title,
+.gallery__slide--active .gallery__caption-meta {
+  opacity: 1;
+  translate: 0 0;
+  transition-duration: 0.9s;
+  transition-delay: 0.35s;
+}
+
+.gallery__slide--active .gallery__caption-meta {
+  transition-delay: 0.45s;
+}
+
+.gallery__caption-title {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 2vw, 30px);
+  line-height: 1.15;
+  letter-spacing: 0;
+}
+
+.gallery__caption-meta {
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: var(--color-mist);
+}
+
+/* заглушка вместо фото — пока нет отчётов */
+.gallery__slide--placeholder {
+  display: grid;
+  place-items: center;
+  background:
+    repeating-linear-gradient(135deg, rgba(179, 207, 229, 0.06) 0 1px, transparent 1px 16px),
+    var(--color-deep);
+}
+
+.gallery__placeholder {
+  padding: 0 24px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.gallery__button {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  width: 58px;
+  height: 58px;
+  padding: 0;
+  border-color: var(--color-line);
+  background: var(--color-night);
+}
+
+.gallery__button .button__icon {
+  width: 26px;
+  height: 26px;
+  stroke-width: 1.5;
+}
+
+.gallery__button--prev {
+  left: 58px;
+  translate: -50% -50%;
+}
+
+.gallery__button--next {
+  right: 58px;
+  translate: 50% -50%;
+}
+
+.gallery__button--prev:hover .button__icon {
+  transform: translateX(-3px);
+}
+
+.gallery__button--disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* служебный элемент Swiper для экранных дикторов */
+.gallery__notification {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* отзывы */
+.reviews {
+  margin: var(--margin-block) 0;
+  padding: 0;
+}
+
+.reviews__inner {
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.reviews__head {
+  display: block;
+}
+
+.reviews__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(36px, 5vw, 76px);
+  line-height: 0.95;
+  letter-spacing: -0.025em;
+}
+
+.reviews__intro {
+  max-width: 38ch;
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.75;
+  color: var(--color-text-muted);
+}
+
+.reviews__list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(12px, 2vw, 28px);
+  margin-top: clamp(32px, 4vw, 56px);
+}
+
+.review-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 280px;
+  padding: clamp(24px, 3vw, 40px);
+  border: 1px dashed rgba(179, 207, 229, 0.3);
+  border-radius: 24px;
+  background: rgba(15, 36, 66, 0.42);
+}
+
+.review-card__quote {
+  width: 30px;
+  height: auto;
+  fill: var(--color-steel);
+  opacity: 0.72;
+}
+
+.review-card__text {
+  max-width: 28ch;
+  margin: auto 0 28px;
+  font-family: var(--font-display);
+  font-size: clamp(19px, 1.7vw, 24px);
+  line-height: 1.28;
+  letter-spacing: -0.01em;
+}
+
+.review-card__meta {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.reviews__head,
+.reviews__list {
+  opacity: 0;
+  translate: 0 32px;
+  transition: opacity 1s var(--ease-out), translate 1s var(--ease-out);
+}
+
+.reviews--visible .reviews__head,
+.reviews--visible .reviews__list {
+  opacity: 1;
+  translate: 0 0;
+}
+
+.reviews--visible .reviews__list {
+  transition-delay: 0.12s;
+}
+

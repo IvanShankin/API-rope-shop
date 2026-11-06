@@ -1,4 +1,4 @@
-import {apiClient as client} from './apiClient.js?v=20261027.10';
+import {apiClient as client} from './apiClient.js?v=20261106.1';
 const auth={requiresAuth:true};
 export const siteContentApi = {
   blocks:(page,locale,admin=false)=>client.get(`/content_blocks/page/${encodeURIComponent(page)}`,{requiresAuth:admin,params:{locale,...(!admin?{is_active:true}:{})}}),

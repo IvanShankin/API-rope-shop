@@ -1,5 +1,5 @@
-import {reviewsApi as api} from '../api/reviewsApi.js?v=20261027.10';
-import {AdminReviewsView} from '../views/admin/AdminReviewsView.js?v=20261028.16';
+import {reviewsApi as api} from '../api/reviewsApi.js?v=20261106.1';
+import {AdminReviewsView} from '../views/admin/AdminReviewsView.js?v=20261106.1';
 export class AdminReviewsController {
   constructor(root){
     this.view=new AdminReviewsView(root);this.section='all';this.ready=false;this.busy=false;this.item=null;

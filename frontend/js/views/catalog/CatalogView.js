@@ -1,9 +1,9 @@
-import { catalogLink, updateLoadState } from '../../ui/load-state.js?v=20261105.7';
-import { BaseView } from '../BaseView.js?v=20261105.7';
-import { escapeHtml as esc } from '../../utils/text.js?v=20261105.7';
-import { translate } from '../../i18n/translate.js?v=20261105.7';
-import { getLanguage } from '../../i18n/locale.js?v=20261105.7';
-import { mediaUrl } from '../../utils/media.js?v=20261105.7';
+import { catalogLink, updateLoadState } from '../../ui/load-state.js?v=20261106.1';
+import { BaseView } from '../BaseView.js?v=20261106.1';
+import { escapeHtml as esc } from '../../utils/text.js?v=20261106.1';
+import { translate } from '../../i18n/translate.js?v=20261106.1';
+import { getLanguage } from '../../i18n/locale.js?v=20261106.1';
+import { mediaUrl } from '../../utils/media.js?v=20261106.1';
 
 const filterLabels = {
   title: ['Фильтр', 'Filter', 'Filter'],
@@ -33,7 +33,7 @@ export class CatalogView extends BaseView {
     this.container.append(...this.initialSkeleton);
     if (!this.groupsPage) {
       this.root.classList.add('products--filtered');
-      this.sidebar = document.createElement('aside');
+      this.sidebar = document.createElement('section');
       this.sidebar.className = 'catalog-filter';
       this.sidebar.hidden = true;
       this.sidebar.setAttribute('aria-label', label('title'));

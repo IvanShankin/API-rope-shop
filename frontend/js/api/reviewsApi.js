@@ -1,4 +1,4 @@
-import {apiClient as client} from './apiClient.js?v=20261027.10';
+import {apiClient as client} from './apiClient.js?v=20261106.1';
 const auth={requiresAuth:true};
 export const reviewsApi={
   async list(locale,admin=false) {

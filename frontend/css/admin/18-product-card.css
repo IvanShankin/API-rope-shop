@@ -1,0 +1,299 @@
+/* Админка: Карточка каната по разделам.
+   Часть бывшего css/admin.css (строки 5185–5449). Порядок подключения файлов важен. */
+/* Карточка каната: последовательные разделы вместо тесных половин формы. */
+.admin #panel-catalog [data-product-form] {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+/* Сама форма каната — не карточка: её разделы стоят прямо на фоне страницы
+   наравне с «Заделками», «Диаметрами», «Цветами» и «Фото».
+   Иначе получается карточка в карточке. */
+.admin #panel-catalog [data-product-form] {
+  margin: 0 0 16px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+
+/* Все разделы каната выглядят одинаково: один фон, одно скругление, одни отступы. */
+.admin #panel-catalog .product-text-card,
+.admin #panel-catalog [data-product-form]>.admin-disclosure,
+.admin #panel-catalog [data-product-editor]>.admin-disclosure {
+  border-radius: 12px !important;
+  background: var(--admin-surface) !important;
+  margin: 0 !important;
+}
+
+.admin #panel-catalog [data-product-editor]>.admin-disclosure {
+  margin: 0 0 16px !important;
+  padding: 0 !important;
+}
+
+.admin #panel-catalog .product-text-card {
+  padding: 20px 24px !important;
+}
+
+.admin #panel-catalog .product-text-card__title {
+  margin: 0 0 6px;
+}
+
+.admin #panel-catalog .product-text-card__hint {
+  margin: 0 0 16px;
+  color: var(--admin-muted);
+  line-height: 1.5;
+}
+
+.admin #panel-catalog .lang-tab-panel:not([hidden]) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 20px;
+  margin-top: 18px;
+}
+
+.admin #panel-catalog .lang-tab-panel>label:last-child {
+  grid-column: 1 / -1;
+}
+
+.admin #panel-catalog [data-product-form] .field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin #panel-catalog [data-product-form] .field__hint {
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.admin #panel-catalog [data-product-form] .admin-disclosure__summary,
+.admin #panel-catalog [data-product-editor]>.admin-disclosure>.admin-disclosure__summary {
+  margin: 0;
+  padding: 16px 24px;
+}
+
+.admin #panel-catalog [data-product-form] .admin-disclosure__summary span {
+  text-align: left;
+}
+
+.admin #panel-catalog [data-product-form] .admin-disclosure__body,
+.admin #panel-catalog [data-product-editor]>.admin-disclosure>.admin-disclosure__body {
+  padding: 20px 24px;
+}
+
+.admin #panel-catalog [data-product-form] .fields--two+.fields--two {
+  margin-top: 20px;
+}
+
+.admin #panel-catalog .admin-product-save[hidden] {
+  display: none !important;
+}
+
+.admin #panel-catalog .admin-product-save {
+  position: static;
+  justify-content: flex-start;
+  padding: 16px 0 24px;
+}
+
+@media (max-width: 700px) {
+  .admin #panel-catalog .product-text-card {
+    padding: 16px !important;
+  }
+
+  .admin #panel-catalog [data-product-form] .admin-disclosure__summary,
+  .admin #panel-catalog [data-product-editor]>.admin-disclosure>.admin-disclosure__summary {
+    padding: 14px 16px;
+  }
+
+  .admin #panel-catalog [data-product-form] .admin-disclosure__body,
+  .admin #panel-catalog [data-product-editor]>.admin-disclosure>.admin-disclosure__body {
+    padding: 16px !important;
+  }
+
+  .admin #panel-catalog .lang-tab-panel:not([hidden]) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin #panel-catalog .admin-product-save .btn {
+    width: 100%;
+  }
+}
+
+.admin summary {
+  list-style: none;
+}
+
+.admin summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin .panel details.admin-disclosure>summary,
+.admin .panel .product-editor:not([data-product-form]) details.admin-disclosure>summary,
+.admin .panel .admin-disclosure__summary {
+  position: relative;
+  padding-right: 48px !important;
+}
+
+.admin .panel details.admin-disclosure>summary::after,
+.admin .panel .product-editor:not([data-product-form]) details.admin-disclosure>summary::after,
+.admin .panel .admin-disclosure__summary::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 20px;
+  width: 10px;
+  height: 10px;
+  border-right: 2.5px solid currentColor;
+  border-bottom: 2.5px solid currentColor;
+  transform: translateY(-50%) rotate(45deg);
+  transition: transform 0.2s ease;
+  pointer-events: none;
+}
+
+.admin .panel details.admin-disclosure[open]>summary::after,
+.admin .panel .product-editor:not([data-product-form]) details.admin-disclosure[open]>summary::after,
+.admin .panel details.admin-disclosure[open]>.admin-disclosure__summary::after {
+  transform: translateY(-50%) rotate(225deg);
+}
+
+.admin #panel-catalog [data-product-form] .admin-disclosure__summary,
+.admin #panel-catalog [data-product-editor]>.admin-disclosure>.admin-disclosure__summary {
+  padding-right: 56px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .admin .panel details.admin-disclosure>summary::after,
+  .admin .panel .product-editor:not([data-product-form]) details.admin-disclosure>summary::after,
+  .admin .panel .admin-disclosure__summary::after {
+    transition: none;
+  }
+}
+
+@media (max-width: 1000px) {
+  .admin .admin-request-card {
+    scroll-margin-top: 80px;
+  }
+
+  .admin .savebar__hint {
+    display: none;
+  }
+}
+
+.admin .admin-request-card time {
+  white-space: nowrap;
+}
+
+.admin .admin__main .panel details.admin-disclosure[data-inquiries] {
+  padding: 16px 18px !important;
+  margin: 16px 0 !important;
+  overflow: visible;
+}
+
+.admin .admin__main .panel details.admin-disclosure[data-inquiries]>summary {
+  min-height: 44px;
+  padding: 6px 40px 10px 0 !important;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.admin .admin__main .panel details.admin-disclosure[data-inquiries][open]>summary {
+  margin-bottom: 14px;
+}
+
+.admin .panel [data-inquiries] [data-inquiries-list] {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.admin .panel [data-inquiries] [data-inquiries-list]>p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--admin-muted);
+}
+
+.admin .panel [data-inquiries] [data-inquiries-list]>.admin-card {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0 !important;
+  padding: 14px 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--admin-border) !important;
+  border-radius: 0 !important;
+  box-sizing: border-box;
+}
+
+/* обращения — строки списка с разделителем, а не карточки внутри карточки */
+.admin .panel [data-inquiries] [data-inquiries-list]>.admin-card:last-child {
+  border-bottom: 0 !important;
+}
+
+.admin .panel [data-inquiries] [data-inquiries-list]>.admin-card>h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--admin-text);
+  overflow-wrap: anywhere;
+}
+
+.admin .panel [data-inquiries] [data-inquiries-list]>.admin-card>p {
+  margin: 0;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--admin-text);
+  overflow-wrap: anywhere;
+}
+
+.admin .panel [data-inquiries] [data-inquiries-list]>.admin-card>p:first-of-type {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--admin-muted);
+}
+
+.admin .panel [data-inquiries] [data-inquiries-list]>.admin-card>p+p {
+  margin-top: 4px;
+}
+
+.admin .panel [data-inquiries]>.admin-form-actions {
+  gap: 8px;
+  margin-top: 14px !important;
+  padding-top: 14px !important;
+  border-top: 1px solid var(--admin-border);
+}
+
+.admin .panel [data-inquiries]>.admin-form-actions .btn {
+  min-height: 44px;
+  padding: 10px 16px;
+  font-size: 15px;
+}
+
+.admin .panel [data-inquiries]>[data-inquiries-status] {
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--admin-muted);
+}
+
+@media (max-width: 700px) {
+  .admin .admin__main .panel details.admin-disclosure[data-inquiries] {
+    padding: 12px !important;
+  }
+
+  .admin .panel [data-inquiries] [data-inquiries-list]>.admin-card {
+    padding: 12px 0 !important;
+  }
+}

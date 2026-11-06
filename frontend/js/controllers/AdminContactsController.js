@@ -1,12 +1,12 @@
-import {contactsApi as api} from '../api/contactsApi.js?v=20261027.10';
-import {contactPayload} from '../models/ContactsModel.js?v=20261027.10';
-import {AdminContentView} from '../views/admin/AdminContentView.js?v=20261027.10';
-import {escapeHtml as esc} from '../utils/text.js?v=20261027.10';
+import {contactsApi as api} from '../api/contactsApi.js?v=20261106.1';
+import {contactPayload} from '../models/ContactsModel.js?v=20261106.1';
+import {AdminContentView} from '../views/admin/AdminContentView.js?v=20261106.1';
+import {escapeHtml as esc} from '../utils/text.js?v=20261106.1';
 class ContactsView extends AdminContentView {
   constructor(root){
     super(root,{all:'Контакты'},false);
     root.querySelector('h1').textContent='Контакты';
-    root.querySelector('header + p').textContent='Данные компании для писем. На сайте они пока не показываются. Входящие обращения — отдельно.';
+    root.querySelector('header + p').textContent='Данные компании для писем и для сайта (телефон и почта в шапке и подвале). Входящие обращения — отдельно.';
     root.querySelectorAll('.config-admin-toolbar label').forEach(el=>el.hidden=true);
     this.recordList.root.hidden=true;
   }
@@ -69,7 +69,7 @@ export class AdminContactsController {
     if(this.busy||!this.ready)return;let data;
     try{data=contactPayload(this.view.values());}catch(e){this.view.message(e.message, 'error');return;}
     this.lock(true);this.view.message('Сохраняем…');
-    try{this.contact=await api.save(data);window.dispatchEvent(new CustomEvent('company-settings-changed',{detail:'contacts'}));this.view.render(this.contact);this.view.message('Данные компании сохранены. На сайте они пока не показываются.', 'success');}
+    try{this.contact=await api.save(data);window.dispatchEvent(new CustomEvent('company-settings-changed',{detail:'contacts'}));this.view.render(this.contact);this.view.message('Данные компании сохранены. На сайте они обновятся при следующей загрузке страницы.', 'success');}
     catch {this.view.message('Не сохранилось. Проверьте поля и нажмите «Сохранить» ещё раз.', 'error');}finally{this.lock(false);}
   }
   async select(){} // Singleton: no record selector or deletion.

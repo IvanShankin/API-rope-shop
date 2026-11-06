@@ -1,10 +1,10 @@
-import { captureDisclosures, restoreDisclosures } from './disclosureState.js?v=20261027.10';
-import { AdminNotificationView } from './AdminNotificationView.js?v=20261027.10';
-import { AdminTariffTable } from './AdminTariffTable.js?v=20261028.5';
-import { escapeHtml as esc, displayName } from '../../utils/text.js?v=20261027.10';
-import { configSections } from '../../models/AdminConfigModel.js?v=20261105.1';
-import { mediaUrl } from '../../utils/media.js?v=20261027.10';
-import { API_CONFIG } from '../../api/config.js?v=20261027.10';
+import { captureDisclosures, restoreDisclosures } from './disclosureState.js?v=20261106.1';
+import { AdminNotificationView } from './AdminNotificationView.js?v=20261106.1';
+import { AdminTariffTable } from './AdminTariffTable.js?v=20261106.1';
+import { escapeHtml as esc, displayName } from '../../utils/text.js?v=20261106.1';
+import { configSections } from '../../models/AdminConfigModel.js?v=20261106.1';
+import { mediaUrl } from '../../utils/media.js?v=20261106.1';
+import { langTabsMarkup, bindLangTabs } from './langTabs.js?v=20261106.1';
 function categorySlug(value) {
   const chars = {'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'h','ц':'ts','ч':'ch','ш':'sh','щ':'sch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya','ä':'ae','ö':'oe','ü':'ue','ß':'ss'};
   return [...String(value).toLowerCase()].map(char=>chars[char] ?? char).join('').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,100).replace(/-+$/,'');
@@ -48,7 +48,7 @@ const sectionHints = {
   configurator_extras:{price:'Стоимость опции; итог зависит от начисления.',billing_type:'За заказ, за изделие или за метр.',index:'Меньше — выше.'},
 };
 export class AdminConfigView {
-  constructor(root, { sections = sectionOrder.filter(key => API_CONFIG.CATALOG_V2 || !['material_groups', 'materials'].includes(key)), title = 'Конфигуратор и цены' } = {}) {
+  constructor(root, { sections = sectionOrder, title = 'Конфигуратор и цены' } = {}) {
     this.root=root;this.events=new AbortController();this.baseline='';
     this.pendingImage = null; this.pendingImageUrl = '';
     this.sectionCards = root.id === 'panel-configurator' && sections.length > 1;
@@ -102,6 +102,7 @@ export class AdminConfigView {
       form.elements.slug.value = candidate;
     }, opts);
     window.addEventListener('beforeunload',e=>{if(this.dirty()){e.preventDefault();e.returnValue='';}},opts);
+    bindLangTabs(this.root, this.events.signal);
   }
   values(){return Object.fromEntries(Array.from(this.root.querySelector('form')?.elements || []).filter(e=>e.name).map(e=>[e.name,e.type==='checkbox'?e.checked:e.value]));}
   remember(){this.baseline=JSON.stringify(this.values());}
@@ -164,8 +165,13 @@ export class AdminConfigView {
     };
     const fields=schema.fields.map(renderField).join('');
     const settingsFields=section==='configurator_settings' ? settingsGroups.map(([key,title,names])=>`<details class="admin-disclosure" data-editor-disclosure="settings-${key}" open><summary>${title}</summary>${key==='allowance'?'<p class="admin-settings-example" data-settings-allowance-example></p>':''}<div class="admin-fields">${names.map(name=>renderField(schema.fields.find(field=>field.name===name))).join('')}</div></details>`).join('') : '';
-    const translations=schema.translated?['rus','eng','ger'].map(locale=>{const t=item.translations?.find(t=>t.locale===locale)||{};return `<label class="field">Название ${{rus:'(рус.)',eng:'(англ.)',ger:'(нем.)'}[locale]}<input class="field__input" name="name_${locale}" maxlength="255" value="${esc(t.name||'')}"></label>${schema.description?`<label class="field">Описание ${{rus:'(рус.)',eng:'(англ.)',ger:'(нем.)'}[locale]}<textarea class="field__input" name="description_${locale}" rows="3">${esc(t.description||'')}</textarea></label>`:''}`;}).join(''):'';
-    this.root.querySelector('[data-config-editor]').innerHTML=`<h2>${esc(schema.title)}${item.id?` #${item.id}`:''}</h2><form class="product-editor admin-card" ${section==='configurator_settings'?'data-settings-form':''}><div class="admin-disclosures-group">${section==='configurator_settings'?settingsFields:`<details class="admin-disclosure" data-editor-disclosure="parameters" open><summary>Основные параметры</summary><div class="admin-fields">${fields}</div></details>`}${translations ? `<details class="admin-disclosure" data-editor-disclosure="translations" open><summary>Названия и переводы</summary><p class="admin-editor-hint">Заполните название хотя бы на одном языке.</p><div class="admin-fields">${translations}</div></details>` : ''}</div><div class="admin-form-actions"><button class="btn btn--primary" type="submit">Сохранить</button>${item.id&&!schema.singleton?'<button class="btn btn--danger" type="button" data-config-remove>Удалить запись</button>':''}</div></form>${((section==='categories') || (section==='splice_types'&&item.id))?`<div class="config-admin-upload admin-card">
+    const translation=locale=>item.translations?.find(t=>t.locale===locale)||{};
+    const translations=schema.translated?langTabsMarkup({
+      label:'Язык названия',
+      filled:Object.fromEntries(['rus','eng','ger'].map(locale=>[locale,Boolean(translation(locale).name||translation(locale).description)])),
+      panels:Object.fromEntries(['rus','eng','ger'].map(locale=>{const t=translation(locale);const short={rus:'(рус.)',eng:'(англ.)',ger:'(нем.)'}[locale];return [locale,`<div class="admin-fields"><label class="field">Название ${short}<input class="field__input" name="name_${locale}" maxlength="255" value="${esc(t.name||'')}"></label>${schema.description?`<label class="field">Описание ${short}<textarea class="field__input" name="description_${locale}" rows="3">${esc(t.description||'')}</textarea></label>`:''}</div>`];})),
+    }):'';
+    this.root.querySelector('[data-config-editor]').innerHTML=`<h2>${esc(schema.title)}${item.id?` #${item.id}`:''}</h2><form class="product-editor admin-card" ${section==='configurator_settings'?'data-settings-form':''}><div class="admin-disclosures-group">${section==='configurator_settings'?settingsFields:`<details class="admin-disclosure" data-editor-disclosure="parameters" open><summary>Основные параметры</summary><div class="admin-fields">${fields}</div></details>`}${translations ? `<details class="admin-disclosure" data-editor-disclosure="translations" open><summary>Названия и переводы</summary><p class="admin-editor-hint">Заполните название хотя бы на одном языке.</p>${translations}</details>` : ''}</div><div class="admin-form-actions"><button class="btn btn--primary" type="submit">Сохранить</button>${item.id&&!schema.singleton?'<button class="btn btn--danger" type="button" data-config-remove>Удалить запись</button>':''}</div></form>${((section==='categories') || (section==='splice_types'&&item.id))?`<div class="config-admin-upload admin-card">
       <span class="field__label">Изображение записи</span>
       <input type="file" accept=".jpg,.jpeg,.png,.webp,.heic,.heif" data-image-file hidden>
       <button class="btn btn--primary" type="button" data-image-choose aria-describedby="${this.root.id}-image-hint">Выбрать изображение</button>

@@ -1,4 +1,4 @@
-import { getLanguage } from '../i18n/locale.js?v=20261027.10';
+import { getLanguage } from '../i18n/locale.js?v=20261106.1';
 
 // GET failures are recoverable; never use this helper to retry a submitted order.
 export function loadErrorMessage(error) {

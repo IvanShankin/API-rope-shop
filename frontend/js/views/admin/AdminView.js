@@ -1,6 +1,6 @@
-import { BaseView } from '../BaseView.js?v=20261105.7';
-import { escapeHtml } from '../../utils/text.js?v=20261105.7';
-import { AdminNotificationView } from './AdminNotificationView.js?v=20261105.7';
+import { BaseView } from '../BaseView.js?v=20261106.1';
+import { escapeHtml } from '../../utils/text.js?v=20261106.1';
+import { AdminNotificationView } from './AdminNotificationView.js?v=20261106.1';
 
 const requestDateText = value => {
   const raw = String(value ?? '').trim();

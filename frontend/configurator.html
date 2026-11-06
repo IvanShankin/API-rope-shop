@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8">
-  <script src="/js/api/remote-api.js?v=20261029.1"></script>
+  <script src="/js/api/remote-api.js?v=20261106.1"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Конфигураторы — Rope-Pro-Line</title>
   <meta name="description"
@@ -18,12 +18,25 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&family=Inter+Tight:wght@400;500;600&display=swap">
-  <link rel="stylesheet" href="/css/style.css?v=20261027.10">
-  <link rel="stylesheet" href="/css/marine-pages.css?v=20261027.10">
-  <script type="module" src="/js/app.js?v=20261028.17"></script>
-  <script type="module" src="/js/i18n/public.js?v=20261027.10"></script>
-  <link rel="stylesheet" href="/css/custom-selects.css?v=20261027.10">
-  <script type="module" src="/js/ui/custom-selects.js?v=20261027.10"></script>
+  <!-- общие стили сайта разнесены по файлам в css/site/; порядок подключения важен -->
+  <link rel="stylesheet" href="/css/site/01-base.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/site/02-header.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/site/03-hero.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/site/04-about-showcase.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/site/05-configurator.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/site/06-service-forms.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/site/07-charity-gallery-reviews.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/site/08-catalog.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/site/09-footer.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/site/10-responsive.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/site/11-card-fill.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/site/12-hero-stage.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/site/13-accents-remote.css?v=20261106.1">
+  <link rel="stylesheet" href="/css/marine-pages.css?v=20261106.1">
+  <script type="module" src="/js/app.js?v=20261106.1"></script>
+  <script type="module" src="/js/i18n/public.js?v=20261106.1"></script>
+  <link rel="stylesheet" href="/css/custom-selects.css?v=20261106.1">
+  <script type="module" src="/js/ui/custom-selects.js?v=20261106.1"></script>
 </head>
 
 <body class="page__body">
@@ -103,8 +116,8 @@
         <div class="configurator__head">
           <h2 class="configurator__title" id="configurator-title">Канат с петлями или без</h2>
           <div class="configurator__intro">
-            <p class="configurator__text" data-cfg-out="intro">Выберите канат, цвет, конечную длину и обработку концов A и B. Запас на петли
-              добавится к оплачиваемой длине. Тарифы загружаются из каталога; окончательную стоимость подтвердим после проверки заявки.</p>
+            <p class="configurator__text" data-cfg-out="intro">Выберите канат, цвет, конечную длину и обработку концов A и B. Запас на каждый
+              обработанный конец добавится к оплачиваемой длине. Окончательную стоимость подтвердим после проверки заявки.</p>
           </div>
         </div>
 
@@ -274,7 +287,7 @@
                   <dd class="summary__value" data-cfg-out="end-b">—</dd>
                 </div>
                 <div class="summary__row">
-                  <dt class="summary__term" data-cfg-out="allowance-label">Запас на петли</dt>
+                  <dt class="summary__term" data-cfg-out="allowance-label">Запас на обработку концов</dt>
                   <dd class="summary__value" data-cfg-out="allowance">—</dd>
                 </div>
                 <div class="summary__row">
@@ -335,17 +348,17 @@
                   сами</a>
               </div>
               <p class="summary__note" data-cfg-submit-status role="status"></p>
-              <p class="summary__note" data-cfg-out="price-note">Предварительный расчёт включает технологический запас на петли. После отправки покажем сумму, которую вернул сервер; окончательную стоимость и детали подтвердим после проверки заявки.</p>
+              <p class="summary__note" data-cfg-out="price-note">Стоимость считает сервер по действующим тарифам с учётом запаса на обработку концов. Окончательную цену и детали подтвердим после проверки заявки.</p>
 
             </section>
           </div>
         </form>
 
-        <aside class="configurator-request" aria-label="Индивидуальный заказ">
+        <div class="configurator-request">
           <strong class="configurator-request__title">Не&nbsp;нашли нужный вариант?</strong>
           <p class="configurator-request__text">Индивидуальные исполнения и&nbsp;специальные решения&nbsp;—
             по&nbsp;запросу.</p>
-        </aside>
+        </div>
       </div>
     </section>
 

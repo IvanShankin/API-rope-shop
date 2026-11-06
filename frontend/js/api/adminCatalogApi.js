@@ -1,4 +1,4 @@
-import { apiClient as client } from './apiClient.js?v=20261027.10';
+import { apiClient as client } from './apiClient.js?v=20261106.1';
 const auth = { requiresAuth: true };
 const normalize = p => ({ ...p, product_id: p.id, construction: p.name || p.translations?.[0]?.name,
   variants: (p.variants || []).map(v => ({ ...v, diameter_mm: v.size_value, price_per_meter: v.price, weight_g_per_m: v.weight_g })) });

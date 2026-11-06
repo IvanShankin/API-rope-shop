@@ -1,5 +1,5 @@
-import { AdminRecordList } from './AdminRecordList.js?v=20261027.10';
-import { escapeHtml as esc, displayName } from '../../utils/text.js?v=20261027.10';
+import { AdminRecordList } from './AdminRecordList.js?v=20261106.1';
+import { escapeHtml as esc, displayName } from '../../utils/text.js?v=20261106.1';
 
 export function tariffRows(items, sources = {}) {
   const groups = new Map();

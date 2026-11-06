@@ -1,9 +1,11 @@
-const sections = ['catalog', 'groups', 'colors', 'configurator', 'requests', 'content', 'gallery', 'reviews', 'contacts', 'settings'];
+const sections = ['requests', 'catalog', 'groups', 'colors', 'configurator', 'content', 'gallery', 'reviews', 'contacts', 'settings'];
+// Раздел по умолчанию: админка открывается на заявках покупателей.
+const DEFAULT_SECTION = 'requests';
 const idValue = value => /^\d+$/.test(String(value || '')) && Number(value) > 0 ? String(value) : '';
 
 export function readAdminRoute(url) {
   const params = new URL(url).searchParams;
-  const section = sections.includes(params.get('section')) ? params.get('section') : 'catalog';
+  const section = sections.includes(params.get('section')) ? params.get('section') : DEFAULT_SECTION;
   if (section === 'configurator' && params.get('type') === 'links') {
     return { section: 'catalog', type: '', record: idValue(params.get('record')) };
   }
@@ -147,7 +149,7 @@ export class AdminNavigation {
   refreshSavebar() { this.admin.view.refreshSavebar?.(); }
   routeFor(section = this.section) {
     const controller = this.controllers[section];
-    if(!controller&&section!=='requests')return this.routeFor('catalog');
+    if(!controller&&section!=='requests')return this.routeFor(DEFAULT_SECTION);
     if (section === 'catalog') return { section, record: idValue(controller.product?.product_id) };
     if (section === 'colors') return { section, record: idValue(controller.color?.id) };
     if (section === 'requests') return { section, record: idValue(this.admin.view.requestId) };
@@ -229,7 +231,7 @@ export class AdminNavigation {
     this.capture();
     this.restoring = true;
     try {
-      this.section = sections.includes(route.section) && (route.section==='requests'||this.controllers[route.section]) ? route.section : 'catalog';
+      this.section = sections.includes(route.section) && (route.section==='requests'||this.controllers[route.section]) ? route.section : DEFAULT_SECTION;
       this.admin.view.showPanel(this.section);
       const controller = this.controllers[this.section];
       if (controller) {

@@ -1,6 +1,6 @@
-import {siteContentApi as api} from '../api/siteContentApi.js?v=20261027.10';
-import {contentPages,contentSlots,gallerySections,contentPayload,galleryPayload} from '../models/SiteContentModel.js?v=20261027.10';
-import {AdminContentView} from '../views/admin/AdminContentView.js?v=20261028.16';
+import {siteContentApi as api} from '../api/siteContentApi.js?v=20261106.1';
+import {contentPages,contentSlots,gallerySections,contentPayload,galleryPayload} from '../models/SiteContentModel.js?v=20261106.1';
+import {AdminContentView} from '../views/admin/AdminContentView.js?v=20261106.1';
 export class AdminContentController {
   constructor(root,gallery=false) {
     this.gallery=gallery;this.section=gallery?'work_photos':'home';this.ready=false;this.busy=false;this.item=null;

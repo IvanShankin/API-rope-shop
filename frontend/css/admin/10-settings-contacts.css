@@ -1,0 +1,237 @@
+/* Админка: Настройки, пароль, контакты.
+   Часть бывшего css/admin.css (строки 3265–3500). Порядок подключения файлов важен. */
+/* ==========================================================================
+   Раздел настроек и смены пароля (Settings & Password Block)
+   ========================================================================== */
+
+.settings-card {
+  background: var(--admin-surface);
+  border-radius: var(--radius);
+  padding: 24px clamp(16px, 3vw, 28px);
+  margin: 20px 0 28px;
+}
+
+/* Блок смены пароля внутри раскрывающегося details */
+.admin .admin-disclosure.settings-card--disclosure,
+.admin .admin-disclosure:has(.settings-card--password) {
+  margin-bottom: 28px;
+}
+
+.admin .admin-disclosure .settings-card--password {
+  border: 0;
+  border-top: 1px solid var(--admin-border);
+  border-radius: 0;
+  margin: 0;
+  padding: 24px clamp(16px, 3vw, 28px);
+  background: var(--admin-surface);
+}
+
+.settings-card__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 20px;
+}
+
+.settings-card__grid .field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.settings-card__flags {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 20px;
+  margin-top: 20px;
+}
+
+.settings-card__flag,
+.settings-card label:not(.field),
+#panel-settings [data-settings-form] label:not(.field) {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  cursor: pointer;
+  color: var(--admin-text);
+  font-size: 16px;
+  user-select: none;
+}
+
+.settings-card__flag input[type="checkbox"],
+.settings-card label:not(.field) input[type="checkbox"] {
+  width: 24px;
+  height: 24px;
+  accent-color: #3b82f6;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.settings-card__hint {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  color: var(--admin-muted);
+  font-size: 15px;
+  line-height: 1.45;
+  padding-top: 28px;
+}
+
+.settings-card__actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 28px;
+  width: 100%;
+}
+
+.settings-card__actions .btn {
+  min-width: 260px;
+  min-height: 48px;
+  font-size: 16px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-card__status {
+  text-align: center;
+  margin: 14px 0 0;
+  font-size: 15px;
+  color: var(--admin-muted);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 768px) {
+  .settings-card {
+    padding: 20px 16px;
+  }
+
+  .settings-card__grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .settings-card__flags {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .settings-card__hint {
+    padding-top: 0;
+    margin-top: -4px;
+    margin-bottom: 8px;
+  }
+
+  .settings-card__actions .btn {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* ==========================================================================
+   Карточка формы контактов (Админка — Rope-Pro-Line)
+   ========================================================================== */
+
+.contacts-card,
+#panel-contacts .product-editor {
+  display: block;
+  background: var(--admin-surface);
+  border-radius: var(--radius);
+  padding: 24px clamp(16px, 3vw, 28px);
+  margin: 20px 0 28px;
+  box-sizing: border-box;
+}
+
+.contacts-card__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 24px;
+  align-items: start;
+}
+
+.contacts-card .field,
+#panel-contacts .field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  align-self: start;
+}
+
+.contacts-card .field__label,
+#panel-contacts .field__label {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--admin-text);
+}
+
+.contacts-card .field__hint,
+.contacts-card .field>span:not(.field__label),
+#panel-contacts .field>span:not(.field__label) {
+  font-size: 14px;
+  color: var(--admin-muted);
+  line-height: 1.45;
+  margin-top: 2px;
+}
+
+.contacts-card textarea.field__input,
+#panel-contacts textarea.field__input {
+  min-height: 130px;
+  resize: vertical;
+}
+
+.contacts-card__actions {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-top: 24px;
+  width: 100%;
+}
+
+.contacts-card__actions .btn {
+  min-width: 220px;
+  min-height: 48px;
+  font-size: 16px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Fallback для разметки без .contacts-card__grid */
+#panel-contacts .product-editor:not(.contacts-card) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 24px;
+  align-items: start;
+}
+
+#panel-contacts .product-editor:not(.contacts-card) button[type="submit"] {
+  grid-column: 1 / -1;
+  justify-self: start;
+  min-width: 220px;
+  min-height: 48px;
+  margin-top: 12px;
+}
+
+@media (max-width: 768px) {
+
+  .contacts-card,
+  #panel-contacts .product-editor {
+    padding: 20px 16px;
+  }
+
+  .contacts-card__grid,
+  #panel-contacts .product-editor:not(.contacts-card) {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .contacts-card__actions .btn,
+  #panel-contacts .product-editor:not(.contacts-card) button[type="submit"] {
+    width: 100%;
+    min-width: 0;
+  }
+}

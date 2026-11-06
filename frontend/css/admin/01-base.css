@@ -1,0 +1,228 @@
+/* Админка: Токены, база, раскладка, боковая панель.
+   Часть бывшего css/admin.css (строки 1–227). Порядок подключения файлов важен. */
+/* SPLICE — панель управления, БЭМ.
+   Всё крупное и с пояснениями: админкой пользуется человек, далёкий от компьютеров */
+
+/* токены */
+:root {
+  --color-night: #0A1931;
+  --color-deep: #1A3D63;
+  --color-steel: #4A7FA7;
+  --color-mist: #B3CFE5;
+  --color-snow: #F6FAFD;
+
+  --admin-bg: #EDF2F7;
+  --admin-surface: #FFFFFF;
+  --admin-border: #CFDAE6;
+  --admin-text: #0A1931;
+  --admin-muted: #506177;
+  --admin-success: #1F8A5B;
+  --admin-danger: #C0392B;
+
+  --font-text: "Manrope", system-ui, sans-serif;
+  --font-display: "Unbounded", "Arial", sans-serif;
+  --radius: 16px;
+  --sidebar-w: 300px;
+}
+
+/* база */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.admin-page {
+  background: var(--admin-bg);
+}
+
+.admin-page__body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--admin-bg);
+  color: var(--admin-text);
+  font-family: var(--font-text);
+  font-size: 17px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-steel);
+  outline-offset: 2px;
+}
+
+/* раскладка */
+.admin {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.admin__main {
+  padding: 40px clamp(20px, 3vw, 56px) 0;
+}
+
+/* боковая панель */
+.sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 28px 18px;
+  background: var(--color-night);
+  color: var(--color-snow);
+  overflow-y: auto;
+}
+
+.sidebar__logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 28px;
+}
+
+/* логотип компании целиком */
+.sidebar__logo-image {
+  width: 150px;
+  height: auto;
+}
+
+.sidebar__logo-caption {
+  font-size: 13px;
+  color: rgba(179, 207, 229, 0.75);
+}
+
+.sidebar__nav {
+  flex: 1;
+}
+
+.sidebar__caption {
+  margin: 24px 14px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(179, 207, 229, 0.6);
+}
+
+.sidebar__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sidebar__tab,
+.sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 54px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  font-size: 17px;
+  font-weight: 600;
+  color: rgba(246, 250, 253, 0.85);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.sidebar__tab:hover,
+.sidebar__link:hover {
+  background: rgba(246, 250, 253, 0.08);
+  color: var(--color-snow);
+}
+
+.sidebar__tab--active,
+.sidebar__tab--active:hover {
+  background: var(--color-snow);
+  color: var(--color-night);
+}
+
+.sidebar__icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sidebar__badge {
+  margin-left: auto;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #E0A526;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+  color: var(--color-night);
+}
+
+.sidebar__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(179, 207, 229, 0.16);
+}
+
+.sidebar__user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 14px;
+}
+
+.sidebar__avatar {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--color-deep);
+  font-weight: 700;
+}
+
+.sidebar__user-name {
+  flex: 1;
+  font-size: 15px;
+}
+
+.sidebar__logout {
+  font-size: 15px;
+  color: rgba(179, 207, 229, 0.8);
+}
+
+.sidebar__logout:hover {
+  color: var(--color-snow);
+}

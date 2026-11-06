@@ -1,7 +1,6 @@
-import { apiClient } from './apiClient.js?v=20261027.10';
-import { apiLocale } from '../i18n/locale.js?v=20261027.10';
-import { API_CONFIG } from './config.js?v=20261027.10';
-import { normalizeProduct } from './productAdapter.js?v=20261027.10';
+import { apiClient } from './apiClient.js?v=20261106.1';
+import { apiLocale } from '../i18n/locale.js?v=20261106.1';
+import { normalizeProduct } from './productAdapter.js?v=20261106.1';
 
 let sharedData = null;
 export const configuratorApi = {
@@ -22,7 +21,6 @@ export const configuratorApi = {
       data.extras = data.extras?.filter(item => item.billing_type !== 'per_meter');
       data.rope_products = null;
     }
-    data.apiVersion = API_CONFIG.CATALOG_V2 ? 2 : 1;
     if (!data?.settings || !['extras', 'splice_materials', 'splice_types', 'splice_price_rules'].every(key => Array.isArray(data[key]))
       || (type === 'rope_with_splice' && !Array.isArray(data.rope_products))) {
       throw new Error('Сервер вернул неполные данные конфигуратора.');
@@ -32,43 +30,5 @@ export const configuratorApi = {
       description: [product.core_description,product.cover_description].filter(Boolean).join(' · '),
     }));
     return data;
-  },
-  /**
-   * Получить глобальные настройки конфигуратора
-   */
-  async getSettings() {
-    return apiClient.get(API_CONFIG.ENDPOINTS.CONFIGURATOR_SETTINGS);
-  },
-
-  /**
-   * Получить дополнительные платные опции (чехлы, бирки)
-   * @param {Object} [params] - { locale, is_active, billing_type }
-   */
-  async getExtras(params = {}) {
-    return apiClient.get(API_CONFIG.ENDPOINTS.CONFIGURATOR_EXTRAS, { params });
-  },
-
-  /**
-   * Получить список всех типов заделок / сплайсов
-   * @param {Object} [params] - { locale, is_active, category }
-   */
-  async getSpliceTypes(params = {}) {
-    return apiClient.get(API_CONFIG.ENDPOINTS.SPLICE_TYPES, { params });
-  },
-
-  /**
-   * Получить применимые правила цен на сплайс
-   * @param {Object} params - { material_id, diameter, splice_type_ids }
-   */
-  async getApplicableSplicePrices(params) {
-    return apiClient.get(API_CONFIG.ENDPOINTS.SPLICE_PRICES_APPLICABLE, { params });
-  },
-
-  /**
-   * Получить цвета с локализацией
-   * @param {Object} [params] - { locale, is_active }
-   */
-  async getColors(params = {}) {
-    return apiClient.get(API_CONFIG.ENDPOINTS.COLORS, { params });
   },
 };

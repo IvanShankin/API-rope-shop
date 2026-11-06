@@ -1,7 +1,6 @@
-import { adminConfigApi as api } from '../api/adminConfigApi.js?v=20261027.10';
-import { configSections, configPayload, automaticConfigCode } from '../models/AdminConfigModel.js?v=20261028.8';
-import { AdminConfigView } from '../views/admin/AdminConfigView.js?v=20261028.16';
-import { API_CONFIG } from '../api/config.js?v=20261027.10';
+import { adminConfigApi as api } from '../api/adminConfigApi.js?v=20261106.1';
+import { configSections, configPayload, automaticConfigCode } from '../models/AdminConfigModel.js?v=20261106.1';
+import { AdminConfigView } from '../views/admin/AdminConfigView.js?v=20261106.1';
 export class AdminConfigController {
   constructor(root, options = {}){
     this.onCatalogChanged = options.onCatalogChanged;
@@ -38,10 +37,6 @@ export class AdminConfigController {
       let item;
       if(this.section==='links'){
         const links=await api.links(id);item=this.items.find(i=>Number(i.product_id)===Number(id));this.view.renderLinks(this.sources.splice_types,links);
-      }else if(this.section==='splice_types' && !API_CONFIG.SPLICE_DETAIL){
-        const lists=await Promise.all(['rus','eng','ger'].map(locale=>api.list('splice_types',{locale})));
-        item={...this.items.find(i=>Number(i.id)===Number(id)),translations:lists.map((list,index)=>{const localized=list.find(i=>Number(i.id)===Number(id));return {name:localized?.name,description:localized?.description,locale:['rus','eng','ger'][index],fallback:true};})};
-        this.view.render(this.section,item,this.sources);
       }else{item=await api.detail(this.section,id);this.view.render(this.section,item,this.sources);}
       this.item=item;this.originalTranslations=structuredClone(item?.translations || []);this.uncertain=false;this.view.message('Измените поля и нажмите «Сохранить».');
     }catch {this.view.select(this.item?.product_id??this.item?.id);this.view.message('Не удалось открыть запись. Выберите её ещё раз.', 'error');}

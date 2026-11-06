@@ -1,6 +1,6 @@
-import { BaseController } from './BaseController.js?v=20261027.10';
-import { AuthModel } from '../models/AuthModel.js?v=20261027.10';
-import { NotificationView } from '../views/common/NotificationView.js?v=20261027.10';
+import { BaseController } from './BaseController.js?v=20261106.1';
+import { AuthModel } from '../models/AuthModel.js?v=20261106.1';
+import { NotificationView } from '../views/common/NotificationView.js?v=20261106.1';
 
 export class LoginController extends BaseController {
   constructor() {
@@ -63,14 +63,11 @@ export class LoginController extends BaseController {
           submitBtn.innerHTML = '<span class="btn-text">Войти в панель</span>';
         }
 
-        let message = 'Неверный логин или пароль';
-        if (err.message && err.message !== 'Failed to fetch') {
-          message = err.message;
-        } else if (err.status === 401 || err.status === 400) {
-          message = 'Неверный логин или пароль';
-        } else if (err.message === 'Failed to fetch') {
-          message = 'Сервер бэкенда недоступен (проверьте подключение)';
-        }
+        let message;
+        if (err.status === 401 || err.status === 400) message = 'Неверный логин или пароль';
+        else if (err.network) message = 'Сервер недоступен, проверьте подключение';
+        else if (err.status === 429) message = 'Слишком много попыток входа, подождите немного';
+        else message = err.message || 'Не удалось войти, попробуйте ещё раз';
 
         if (errorEl) {
           errorEl.textContent = message;

@@ -1,10 +1,9 @@
-import { adminProductsApi as api } from '../api/adminProductsApi.js?v=20261027.10';
-import { AdminProductsView } from '../views/admin/AdminProductsView.js?v=20261105.1';
-import { AdminProductModel } from '../models/AdminProductModel.js?v=20261027.10';
-import { adminColorsApi as colorsApi } from '../api/adminColorsApi.js?v=20261027.10';
-import { AdminColorModel } from '../models/AdminColorModel.js?v=20261027.10';
-import { API_CONFIG } from '../api/config.js?v=20261027.10';
-import { adminConfigApi as spliceApi } from '../api/adminConfigApi.js?v=20261027.10';
+import { adminProductsApi as api } from '../api/adminProductsApi.js?v=20261106.1';
+import { AdminProductsView } from '../views/admin/AdminProductsView.js?v=20261106.1';
+import { AdminProductModel } from '../models/AdminProductModel.js?v=20261106.1';
+import { adminColorsApi as colorsApi } from '../api/adminColorsApi.js?v=20261106.1';
+import { AdminColorModel } from '../models/AdminColorModel.js?v=20261106.1';
+import { adminConfigApi as spliceApi } from '../api/adminConfigApi.js?v=20261106.1';
 
 export class AdminProductsController {
   constructor(root) {
@@ -33,18 +32,16 @@ export class AdminProductsController {
   }
   destroy() { this.view.destroy(); }
   async refreshReferences() {
-    const [groups, materials, colors, categories, splices] = await Promise.all([api.groups(), api.materials(), colorsApi.list({refresh:true}), API_CONFIG.CATALOG_V2 ? api.categories() : [], spliceApi.list('splice_types',{locale:'rus'})]);
+    const [groups, materials, colors, categories, splices] = await Promise.all([api.groups(), api.materials(), colorsApi.list({refresh:true}), api.categories(), spliceApi.list('splice_types',{locale:'rus'})]);
     if (![groups, materials, colors, categories, splices].every(Array.isArray)) throw new Error('Не удалось загрузить материалы и цвета');
     this.groups = groups; this.materials = materials; this.view.colors = colors;
-    if (API_CONFIG.CATALOG_V2) this.view.categories = categories;
+    this.view.categories = categories;
     this.view.spliceTypes = splices;
   }
   async refreshGroups() {
-    if (API_CONFIG.CATALOG_V2) {
-      this.view.categories = await api.categories();
-      const select = this.root.querySelector('[name=category_id]');
-      if (select) { const value = select.value; select.replaceChildren(new Option('Выберите категорию', ''), ...this.view.categories.map(c => new Option(c.name || c.slug, String(c.id)))); select.value = value; }
-    }
+    this.view.categories = await api.categories();
+    const categorySelect = this.root.querySelector('[name=category_id]');
+    if (categorySelect) { const value = categorySelect.value; categorySelect.replaceChildren(new Option('Выберите категорию', ''), ...this.view.categories.map(c => new Option(c.name || c.slug, String(c.id)))); categorySelect.value = value; }
     const groups = await api.groups();
     if (!Array.isArray(groups)) throw new Error('Не удалось загрузить разделы');
     this.groups = groups;
@@ -65,12 +62,12 @@ export class AdminProductsController {
     this.lock(true);
     this.view.message('Загружаем каталог…');
     try {
-      const [products, groups, materials, colors, categories, splices] = await Promise.all([api.list(), api.groups(), api.materials(), colorsApi.list({refresh:true}), API_CONFIG.CATALOG_V2 ? api.categories() : [], spliceApi.list('splice_types',{locale:'rus'})]);
+      const [products, groups, materials, colors, categories, splices] = await Promise.all([api.list(), api.groups(), api.materials(), colorsApi.list({refresh:true}), api.categories(), spliceApi.list('splice_types',{locale:'rus'})]);
       if(!Array.isArray(splices))throw new Error('Не удалось загрузить варианты заделки');
       this.view.spliceTypes = splices;this.view.spliceLinks = [];
       if (![products, groups, materials, colors].every(Array.isArray)) throw new Error('Не удалось загрузить материалы и цвета');
       this.view.colors = colors;
-      if (API_CONFIG.CATALOG_V2) this.view.categories = categories;
+      this.view.categories = categories;
       this.groups = groups;
       this.materials = materials;
       this.ready = true;
@@ -125,8 +122,8 @@ export class AdminProductsController {
           this.view.message('Проверьте заполнение полей. Изменения пока не сохранены.', 'warning');
           return;
         }
-        if (isProduct) plans.push({ form, type: 'product', payload: API_CONFIG.CATALOG_V2 ? AdminProductModel.catalogProduct(values) : AdminProductModel.product(values) });
-        else if (form.matches('[data-variant-form]')) plans.push({ form, type: 'variant', payload: API_CONFIG.CATALOG_V2 ? AdminProductModel.catalogVariant(values) : AdminProductModel.variant(values), index: form.dataset.id ? AdminProductModel.index(values) : undefined });
+        if (isProduct) plans.push({ form, type: 'product', payload: AdminProductModel.catalogProduct(values) });
+        else if (form.matches('[data-variant-form]')) plans.push({ form, type: 'variant', payload: AdminProductModel.catalogVariant(values), index: form.dataset.id ? AdminProductModel.index(values) : undefined });
         else if (form.matches('[data-color-order-form]')) plans.push({ form, type: 'order', index: AdminProductModel.index(values) });
         else if (form === colorsForm) plans.push({ form, type: 'colors' });
         else if (form.matches('[data-product-splices-form]')) plans.push({form,type:'splices',ids:Object.entries(values).filter(([key,value])=>key.startsWith('splice_')&&value).map(([key])=>Number(key.slice(7)))});
@@ -191,7 +188,7 @@ export class AdminProductsController {
     } finally { this.lock(false); }
   }
   async image(action, id, file) {
-    if (this.busy || !this.product || !API_CONFIG.CATALOG_V2) return;
+    if (this.busy || !this.product) return;
     if (this.view.hasChanges()) { this.view.message('Сначала сохраните изменения в полях, затем измените фотографии.', 'warning'); return; }
     if (action === 'upload' && (!file || file.size > 10 * 1024 * 1024)) { this.view.message('Выберите изображение размером до 10 МБ.', 'warning'); return; }
     if (action === 'remove' && !window.confirm('Удалить фотографию каната?')) return;

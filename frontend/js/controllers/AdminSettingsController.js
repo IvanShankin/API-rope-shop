@@ -1,7 +1,7 @@
-import { AdminNotificationView } from '../views/admin/AdminNotificationView.js?v=20261027.10';
-import {settingsApi} from '../api/settingsApi.js?v=20261027.10';
-import {authApi} from '../api/authApi.js?v=20261027.10';
-import {escapeHtml as esc} from '../utils/text.js?v=20261027.10';
+import { AdminNotificationView } from '../views/admin/AdminNotificationView.js?v=20261106.1';
+import {settingsApi} from '../api/settingsApi.js?v=20261106.1';
+import {authApi} from '../api/authApi.js?v=20261106.1';
+import {escapeHtml as esc} from '../utils/text.js?v=20261106.1';
 
 const textFields = {
   company_name: ['Название компании в письмах', 'text', 255],

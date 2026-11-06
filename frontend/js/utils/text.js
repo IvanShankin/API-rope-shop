@@ -1,5 +1,5 @@
 // Only for text and quoted HTML attributes; URLs are built from validated IDs.
-import { apiLocale } from '../i18n/locale.js?v=20261027.10';
+import { apiLocale } from '../i18n/locale.js?v=20261106.1';
 export const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
 }[char]));

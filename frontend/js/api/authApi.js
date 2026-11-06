@@ -1,5 +1,5 @@
-import { apiClient } from './apiClient.js?v=20261027.10';
-import { API_CONFIG } from './config.js?v=20261027.10';
+import { apiClient } from './apiClient.js?v=20261106.1';
+import { API_CONFIG } from './config.js?v=20261106.1';
 
 export const authApi = {
   clearSession() { apiClient.clearTokens(); },
@@ -24,37 +24,8 @@ export const authApi = {
    * Получить профиль текущего пользователя
    */
   async getMe() {
-    const user = await apiClient.get(API_CONFIG.ENDPOINTS.USERS_ME, { requiresAuth: true });
-    // Temporary compatibility for the local backend whose profile DTO omits role.
-    // The protected endpoint checks ADMIN on the server; a token alone is not proof.
-    if (user && user.role == null
-      && ['localhost', '127.0.0.1'].includes(window.location.hostname)) {
-      try {
-        const requests = await apiClient.get(API_CONFIG.ENDPOINTS.QUOTE_REQUESTS, {
-          params: { limit: 1 }, requiresAuth: true,
-        });
-        if (!Array.isArray(requests)) throw new Error('Некорректный ответ проверки прав администратора');
-        return { ...user, role: 'admin' };
-      } catch (error) {
-        if (error.status === 403) return { ...user, role: 'user' };
-        throw error;
-      }
-    }
-    return user;
-  },
-
-  /**
-   * Обновить токен
-   * @param {string} refreshToken
-   */
-  async refreshTokens(refreshToken) {
-    const result = await apiClient.post(API_CONFIG.ENDPOINTS.AUTH_REFRESH, {
-      refresh_token: refreshToken,
-    });
-    if (result && result.access_token) {
-      apiClient.setTokens(result.access_token, result.refresh_token);
-    }
-    return result;
+    // /users/me returns role; admin rights are still checked by the server on every admin request.
+    return apiClient.get(API_CONFIG.ENDPOINTS.USERS_ME, { requiresAuth: true });
   },
 
   /**

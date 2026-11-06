@@ -1,7 +1,8 @@
-import { captureDisclosures, restoreDisclosures } from './disclosureState.js?v=20261027.10';
-import {AdminContentView} from './AdminContentView.js?v=20261028.16';
-import {escapeHtml as esc} from '../../utils/text.js?v=20261027.10';
-import {reviewFilters, reviewCounts, reviewRecords, reviewPublication} from '../../models/AdminReviewModel.js?v=20261027.10';
+import { captureDisclosures, restoreDisclosures } from './disclosureState.js?v=20261106.1';
+import {AdminContentView} from './AdminContentView.js?v=20261106.1';
+import {escapeHtml as esc} from '../../utils/text.js?v=20261106.1';
+import { langTabsMarkup } from './langTabs.js?v=20261106.1';
+import {reviewFilters, reviewCounts, reviewRecords, reviewPublication} from '../../models/AdminReviewModel.js?v=20261106.1';
 export class AdminReviewsView extends AdminContentView {
   constructor(root){
     super(root,{all:'Все отзывы'},true);
@@ -58,7 +59,11 @@ export class AdminReviewsView extends AdminContentView {
       <label class="admin-toggle"><input type="checkbox" name="is_published" ${item.is_published?'checked':''}> <span>Показывать на сайте</span></label>
       <p class="admin-review-publication" role="status" data-review-publication></p>
       <div class="admin-disclosures-group">
-        ${['rus','eng','ger'].map(locale=>`<details class="admin-disclosure" data-editor-disclosure="${locale}" open><summary>${{rus:'Русский',eng:'Английский',ger:'Немецкий'}[locale]}</summary><div class="admin-fields"><label class="field" style="grid-column: 1 / -1;">Текст ${{rus:'(рус.)',eng:'(англ.)',ger:'(нем.)'}[locale]}<textarea class="field__input" name="text_${locale}" rows="5">${esc(item.translations?.find(t=>t.locale===locale)?.text||'')}</textarea></label></div></details>`).join('')}
+        <details class="admin-disclosure" data-editor-disclosure="translations" open><summary>Текст отзыва на разных языках</summary>${langTabsMarkup({
+          label: 'Язык текста отзыва',
+          filled: Object.fromEntries(['rus','eng','ger'].map(locale=>[locale,Boolean(item.translations?.find(t=>t.locale===locale)?.text)])),
+          panels: Object.fromEntries(['rus','eng','ger'].map(locale=>[locale,`<div class="admin-fields"><label class="field admin-field--wide">Текст ${{rus:'(рус.)',eng:'(англ.)',ger:'(нем.)'}[locale]}<textarea class="field__input" name="text_${locale}" rows="5">${esc(item.translations?.find(t=>t.locale===locale)?.text||'')}</textarea></label></div>`])),
+        })}</details>
       </div>
       <div class="admin-form-actions">
         <button class="btn btn--primary" type="submit">Сохранить</button>

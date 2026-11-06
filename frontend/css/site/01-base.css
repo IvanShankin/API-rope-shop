@@ -1,0 +1,186 @@
+/* SPLICE — макет, БЭМ */
+
+/* токены */
+:root {
+  --color-night: #0A1931;
+  --color-deep: #1A3D63;
+  --color-steel: #4A7FA7;
+  --color-mist: #B3CFE5;
+  --color-snow: #F6FAFD;
+
+  --color-text: var(--color-snow);
+  --color-text-muted: rgba(179, 207, 229, 0.78);
+  --color-line: rgba(179, 207, 229, 0.18);
+  --color-surface: #0F2442;
+
+  --font-text: "Manrope", system-ui, sans-serif;
+  --font-display: "Inter Tight", "Arial", sans-serif;
+  --display-weight: 500;
+  --margin-block: 150px;
+  --gutter: clamp(16px, 4vw, 56px);
+  --header-h: 84px;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* база */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+section {
+  margin: var(--margin-block) 0;
+  padding: 0;
+  display: block;
+}
+
+.hero {
+  margin-top: 0;
+}
+
+.page {
+  background: var(--color-night);
+  color-scheme: dark;
+  -webkit-text-size-adjust: 100%;
+}
+
+.page__body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--color-night);
+  color: var(--color-text);
+  font-family: var(--font-text);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+.page__body--locked {
+  overflow: hidden;
+}
+
+.page__main {
+  display: block;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img,
+svg {
+  display: block;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-mist);
+  outline-offset: 3px;
+}
+
+/* кнопки */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 54px;
+  padding: 0 28px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-family: var(--font-text);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  transition: border-color 0.5s var(--ease-out), color 0.5s var(--ease-out), transform 0.3s var(--ease-out);
+}
+
+/* заливка при наведении: растёт слева направо */
+.button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--button-fill);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.5s var(--ease-out);
+}
+
+.button:hover::before,
+.button:focus-visible::before {
+  transform: scaleX(1);
+}
+
+.button:active {
+  transform: scale(0.98);
+}
+
+.button--primary {
+  --button-fill: var(--color-mist);
+  background: var(--color-snow);
+  color: var(--color-night);
+}
+
+.button--ghost {
+  --button-fill: var(--color-snow);
+  border-color: rgba(246, 250, 253, 0.28);
+  background: transparent;
+}
+
+.button--ghost:hover,
+.button--ghost:focus-visible {
+  border-color: var(--color-snow);
+  color: var(--color-night);
+}
+
+/* тёмная — для светлых карточек */
+.button--dark {
+  --button-fill: var(--color-deep);
+  background: var(--color-night);
+  color: var(--color-snow);
+}
+
+.button--small {
+  height: 42px;
+  padding: 0 20px;
+  font-size: 14px;
+}
+
+.button__icon {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.3s var(--ease-out);
+}
+
+.button:hover .button__icon {
+  transform: translateX(3px);
+}
+

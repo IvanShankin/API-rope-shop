@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -51,15 +52,17 @@ class ContactRequestService:
         await self.session.refresh(contact)
         response_dto = ContactRequestResponseDTO.model_validate(contact)
 
-        # Отправка уведомлений в ТГ и на почту о новой заявке
+        # Асинхронная отправка уведомлений в ТГ и на почту без блокировки ответа клиенту
         try:
             settings = await self.notification_service.get_settings()
-            await self.notification_service.notify_new_contact_request(
-                contact=response_dto,
-                settings=settings,
+            asyncio.create_task(
+                self.notification_service.notify_new_contact_request(
+                    contact=response_dto,
+                    settings=settings,
+                )
             )
         except Exception as e:
-            logger.error("Failed to send contact request notifications: %s", e, exc_info=True)
+            logger.error("Failed to schedule contact request notifications: %s", e, exc_info=True)
 
         return response_dto
 

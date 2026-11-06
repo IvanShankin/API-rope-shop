@@ -177,17 +177,17 @@ class HandlerImages:
 
         # Определяем итоговый путь сохранения файла
         if dest.is_dir() or not dest.suffix:
-            filename_stem = (
-                Path(photo.filename).stem if photo.filename else uuid.uuid4().hex
-            )
-            target_path = (dest / f"{filename_stem}.webp").resolve()
+            raw_stem = Path(photo.filename).name if photo.filename else uuid.uuid4().hex
+            safe_stem = Path(raw_stem).stem or uuid.uuid4().hex
+            target_path = (dest / f"{safe_stem}.webp").resolve()
         else:
             target_path = dest.with_suffix(".webp").resolve()
 
         target_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Временный файл в директории temp из конфига
-        temp_filename = f"temp_{uuid.uuid4().hex}_{photo.filename or 'upload'}"
+        # Временный файл в директории temp из конфига (безопасное имя без photo.filename)
+        ext = Path(photo.filename or "").suffix.lower() or ".tmp"
+        temp_filename = f"temp_{uuid.uuid4().hex}{ext}"
         temp_file_path = (self.config.paths.temp / temp_filename).resolve()
 
         try:

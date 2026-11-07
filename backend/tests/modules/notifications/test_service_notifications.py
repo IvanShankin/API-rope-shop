@@ -185,6 +185,16 @@ async def test_notify_new_quote_request_english_and_russian_email():
         assert "Здравствуйте, Иван Иванов!" in msg_ru.get_content()
         assert "Благодарим вас за обращение" in msg_ru.get_content()
 
+    # 3. Czech
+    quote_cs = _create_sample_quote_dto(locale="cs")
+    quote_cs.name = "Jan Novak"
+    with patch("aiosmtplib.send", new_callable=AsyncMock) as mock_send:
+        await service.send_customer_email(quote=quote_cs, settings=settings)
+        msg_cs = mock_send.call_args[0][0]
+        assert "Potvrzení poptávky" in msg_cs["Subject"]
+        assert "Dobrý den, Jan Novak!" in msg_cs.get_content()
+        assert "Děkujeme za vaši poptávku" in msg_cs.get_content()
+
 
 @pytest.mark.asyncio
 async def test_telegram_error_handling_chat_not_found():

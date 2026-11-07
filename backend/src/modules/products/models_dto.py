@@ -212,21 +212,25 @@ CONSTRUCTION_NAMES = {
         Language.GER: "Hohlgeflecht",
         Language.ENG: "Hollow braid",
         Language.RUS: "Полое плетение (Hohlgeflecht)",
+        Language.CES: "Duté pletení (Hohlgeflecht)",
     },
     "hm_core": {
         Language.GER: "Kern Dyneema/Vectran + Mantel",
         Language.ENG: "Dyneema/Vectran core + cover",
         Language.RUS: "Сердечник Dyneema/Vectran + оплётка",
+        Language.CES: "Jádro Dyneema/Vectran + oplet",
     },
     "polyester_core": {
         Language.GER: "Kern Polyester + Mantel",
         Language.ENG: "Polyester core + cover",
         Language.RUS: "Сердечник полиэстер + оплётка",
+        Language.CES: "Jádro polyester + oplet",
     },
     "none": {
         Language.GER: "Beschläge & Zubehör",
         Language.ENG: "Hardware & Rigging",
         Language.RUS: "Фурнитура и такелаж",
+        Language.CES: "Kování a takeláž",
     },
 }
 

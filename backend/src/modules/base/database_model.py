@@ -17,6 +17,7 @@ class Language(str, enum.Enum):
     RUS = "rus"
     ENG = "eng"
     GER = "ger"
+    CES = "ces"
 
     @classmethod
     def _missing_(cls, value: object):
@@ -28,6 +29,8 @@ class Language(str, enum.Enum):
                 "eng": cls.ENG,
                 "de": cls.GER,
                 "ger": cls.GER,
+                "cs": cls.CES,
+                "ces": cls.CES,
             }
             norm = value.lower()
             if norm in mapping:
@@ -67,6 +70,7 @@ class BaseModelWithRelationshipTranslation(Base):
             "ru": "ru", "rus": "ru",
             "en": "en", "eng": "en",
             "de": "de", "ger": "de",
+            "cs": "cs", "ces": "cs",
         }
         return mapping.get(s.lower(), s.lower())
 

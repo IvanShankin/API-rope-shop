@@ -78,6 +78,24 @@ EMAIL_TRANSLATIONS = {
         "phone": "Телефон для справок: {phone}",
         "email": "Email поддержки: {email}",
     },
+    "ces": {
+        "subject": "Potvrzení poptávky {request_number} — {company_name}",
+        "greeting": "Dobrý den, {name}!\n",
+        "intro": "Děkujeme za vaši poptávku u společnosti {company_name}.",
+        "registered": "Vaše poptávka byla úspěšně zaregistrována pod číslem: {request_number}",
+        "total": "Celková částka: {total_price:.2f} {currency}",
+        "urgent": "⚡ Stav: Spěšná objednávka (přednostní výroba)",
+        "ropes_header": "\nPřehled objednávky (lana):",
+        "end_a": "Konec A",
+        "end_b": "Konec B",
+        "services_header": "\nSlužby a zapletení:",
+        "extras_header": "\nDoplňkové možnosti:",
+        "comment_header": "\nVáš komentář k poptávce:\n{comment}",
+        "tracking_link": "\nAktuální stav vaší objednávky můžete sledovat online zde:\n{tracking_url}\n",
+        "footer": "\nNáš specialista vás bude brzy kontaktovat pro upřesnění detailů.",
+        "phone": "Telefon: {phone}",
+        "email": "E-mail: {email}",
+    },
 }
 
 CONTACT_EMAIL_TRANSLATIONS = {
@@ -107,6 +125,15 @@ CONTACT_EMAIL_TRANSLATIONS = {
         "footer": "\nНаш специалист свяжется с вами в ближайшее время.",
         "phone": "Телефон для справок: {phone}",
         "email": "Email поддержки: {email}",
+    },
+    "ces": {
+        "subject": "Vaše zpráva #{contact_id} — {company_name}",
+        "greeting": "Dobrý den, {name}!\n",
+        "intro": "Děkujeme za kontaktování společnosti {company_name}.",
+        "registered": "Vaše zpráva byla úspěšně přijata (číslo zprávy: #{contact_id}).",
+        "footer": "\nNáš tým vás bude brzy kontaktovat.",
+        "phone": "Telefon pro dotazy: {phone}",
+        "email": "E-mail podpory: {email}",
     },
 }
 
@@ -225,6 +252,8 @@ class NotificationService:
             return "rus"
         if normalized in ("en", "eng"):
             return "eng"
+        if normalized in ("cs", "ces"):
+            return "ces"
         return "ger"
 
     async def notify_new_quote_request(
@@ -619,7 +648,8 @@ class NotificationService:
         ):
             return False
 
-        lang = "rus"
+        contact_locale = getattr(contact, "locale", None)
+        lang = self._normalize_locale(contact_locale) if contact_locale else "rus"
         t = CONTACT_EMAIL_TRANSLATIONS.get(lang, CONTACT_EMAIL_TRANSLATIONS["rus"])
         company_name = settings.company_name or "Rope Shop"
 

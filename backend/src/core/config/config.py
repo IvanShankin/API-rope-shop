@@ -24,6 +24,7 @@ class Config:
         self.telegram: TelegramConfig = TelegramConfig.build()
         self.default_site_settings: SiteSettingsDefaultConfig = SiteSettingsDefaultConfig.build()
         self.order_tracking: OrderTrackingConfig = OrderTrackingConfig.build()
+        self.rate_limit: RateLimitConfig = RateLimitConfig.build()
 
 
 class EnvConfig(BaseModel):
@@ -345,3 +346,21 @@ class OrderTrackingConfig(BaseModel):
                 "{site_url}/order-tracking/{request_number}?token={token}",
             )
         )
+
+
+class RateLimitConfig(BaseModel):
+    trusted_proxies: List[str] = [
+        "127.0.0.1",
+        "::1",
+        "10.0.0.0/8",
+        "172.16.0.0/12",
+        "192.168.0.0/16",
+    ]
+
+    @classmethod
+    def build(cls) -> "RateLimitConfig":
+        raw = os.getenv("TRUSTED_PROXIES")
+        if raw:
+            proxies = [p.strip() for p in raw.split(",") if p.strip()]
+            return cls(trusted_proxies=proxies)
+        return cls()

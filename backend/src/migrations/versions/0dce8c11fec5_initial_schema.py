@@ -118,6 +118,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('code')
     )
+    op.execute(sa.text("CREATE SEQUENCE IF NOT EXISTS quote_request_number_seq START WITH 1 INCREMENT BY 1;"))
     op.create_table('quote_requests',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('request_number', sa.String(length=50), nullable=False),
@@ -644,6 +645,7 @@ def downgrade() -> None:
     op.drop_table('reviews')
     op.drop_index(op.f('ix_quote_requests_tracking_token'), table_name='quote_requests')
     op.drop_table('quote_requests')
+    op.execute(sa.text("DROP SEQUENCE IF EXISTS quote_request_number_seq;"))
     op.drop_table('product_applications')
     op.drop_table('material_groups')
     op.drop_index(op.f('ix_content_blocks_page_code'), table_name='content_blocks')

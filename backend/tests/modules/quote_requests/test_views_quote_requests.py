@@ -1,5 +1,6 @@
 import pytest
-from sqlalchemy import select
+from sqlalchemy import select, text
+from src.modules.quote_requests.repository import QuoteRequestRepository
 
 from src.modules.base.database_model import Language
 from src.modules.users.models import UserRole
@@ -1186,3 +1187,18 @@ class TestsForFailures:
         }
         resp = await client_for_tests.post("/quote_requests/calculate", json=payload)
         assert resp.status_code == 400
+
+    @pytest.mark.asyncio
+    async def test_get_next_request_number_seq_recovers_if_sequence_dropped(
+        self,
+        not_open_session_db,
+    ):
+        """Если последовательность quote_request_number_seq отсутствует в БД, репозиторий создает её на лету."""
+        async with not_open_session_db() as s:
+            await s.execute(text("DROP SEQUENCE IF EXISTS quote_request_number_seq CASCADE;"))
+            await s.commit()
+
+            repo = QuoteRequestRepository(session=s)
+            val = await repo.get_next_request_number_seq()
+            assert val >= 1
+            await s.commit()

@@ -1,7 +1,7 @@
 from typing import Optional, Sequence
 from datetime import datetime
 
-from sqlalchemy import select, update, delete, func, or_, desc, asc
+from sqlalchemy import select, update, delete, func, or_, desc, asc, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -65,9 +65,18 @@ class QuoteRequestRepository(BaseRepository):
 
     async def get_next_request_number_seq(self) -> int:
         """Получение следующего атомарного значения из последовательности PostgreSQL для номера заявки."""
-        stmt = select(func.nextval("quote_request_number_seq"))
-        result = await self.session.execute(stmt)
-        return int(result.scalar_one())
+        try:
+            async with self.session.begin_nested():
+                stmt = select(func.nextval("quote_request_number_seq"))
+                result = await self.session.execute(stmt)
+                return int(result.scalar_one())
+        except Exception:
+            await self.session.execute(
+                text("CREATE SEQUENCE IF NOT EXISTS quote_request_number_seq START WITH 1 INCREMENT BY 1;")
+            )
+            stmt = select(func.nextval("quote_request_number_seq"))
+            result = await self.session.execute(stmt)
+            return int(result.scalar_one())
 
     async def count_requests_by_year(self, year: int) -> int:
         """Подсчет количества заявок с префиксом текущего года (для генератора номера)."""

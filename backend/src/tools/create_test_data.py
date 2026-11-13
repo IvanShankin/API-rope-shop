@@ -14,7 +14,6 @@ for _p in (_current.parent.parent.parent, _current.parent.parent.parent.parent):
 if not os.getenv("CONFIG_NAME_ENV"):
     os.environ["CONFIG_NAME_ENV"] = ".env"
 
-from passlib.context import CryptContext
 from sqlalchemy import delete, text
 
 from src.core.config.config import Config
@@ -52,7 +51,6 @@ from src.modules.db_models import (
     QuoteRequest,
     QuoteRopeItem,
     QuoteServiceItem,
-    RefreshToken,
     Review,
     ReviewTranslation,
     RopeAllowedSplice,
@@ -62,14 +60,12 @@ from src.modules.db_models import (
     SplicePriceRule,
     SpliceType,
     SpliceTypeTranslation,
-    User,
     WorkPhoto,
     WorkPhotoTranslation,
 )
 from src.modules.quote_requests.models import ConfiguratorType, QuoteRequestStatus
 from src.modules.reviews.models import ReviewsStatus
 from src.modules.splice_types.models import SpliceCategory, SpliceVisualType
-from src.modules.users.models import UserRole
 
 # Import test factories and fixture DTOs
 from tests.modules.categories.fixtures.factory import (
@@ -227,12 +223,6 @@ from tests.modules.splice_types.fixtures.models_dto import (
     CreateSpliceTypeFixtureDTO,
     CreateSpliceTypeTranslationFixtureDTO,
 )
-from tests.modules.users.fixtures.factory import (
-    create_user_factory,
-)
-from tests.modules.users.fixtures.models_dto import (
-    CreateUserFixtureDTO,
-)
 from tests.modules.work_photos.fixtures.factory import (
     create_work_photo_factory,
 )
@@ -281,8 +271,6 @@ async def clear_database(conf: Config):
         await session.execute(delete(Material))
         await session.execute(delete(MaterialGroupTranslation))
         await session.execute(delete(MaterialGroup))
-        await session.execute(delete(RefreshToken))
-        await session.execute(delete(User))
         await session.execute(delete(SplicePriceRule))
         await session.execute(delete(SpliceMaterial))
         await session.execute(delete(SpliceTypeTranslation))
@@ -296,7 +284,6 @@ async def clear_database(conf: Config):
 async def fill_data(conf: Config):
     """Заполнение базы тестовыми данными с помощью фабрик."""
     print("Starting database population with test factories...")
-    crypto_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
     async with conf.db_connection.session_local() as session:
         # ==========================================
@@ -318,62 +305,7 @@ async def fill_data(conf: Config):
         await session.commit()
 
         # ==========================================
-        # 2. Пользователи (Users)
-        # ==========================================
-        print("  -> Creating Users...")
-        await create_user_factory(
-            session,
-            crypto_context,
-            CreateUserFixtureDTO(
-                email="admin@rope-expert.com",
-                username="admin",
-                password="adminpassword123",
-                role=UserRole.ADMIN,
-            ),
-        )
-        await create_user_factory(
-            session,
-            crypto_context,
-            CreateUserFixtureDTO(
-                email="rigging.master@rope-expert.com",
-                username="master_klaus",
-                password="masterpassword123",
-                role=UserRole.ADMIN,
-            ),
-        )
-        await create_user_factory(
-            session,
-            crypto_context,
-            CreateUserFixtureDTO(
-                email="client@yacht-club.de",
-                username="client_yacht",
-                password="clientpassword123",
-                role=UserRole.USER,
-            ),
-        )
-        await create_user_factory(
-            session,
-            crypto_context,
-            CreateUserFixtureDTO(
-                email="skipper.alex@baltic-sail.org",
-                username="skipper_alex",
-                password="skipperpassword123",
-                role=UserRole.USER,
-            ),
-        )
-        await create_user_factory(
-            session,
-            crypto_context,
-            CreateUserFixtureDTO(
-                email="anna.berg@hamburg-rigging.de",
-                username="anna_berg",
-                password="annapassword123",
-                role=UserRole.USER,
-            ),
-        )
-
-        # ==========================================
-        # 3. Цвета канатов (Colors + Translations)
+        # 2. Цвета канатов (Colors + Translations)
         # ==========================================
         print("  -> Creating Colors...")
         colors_meta = [

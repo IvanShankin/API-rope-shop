@@ -1,4 +1,4 @@
-"""empty message
+"""Add social contacts to site_settings and French (fra) language support
 
 Revision ID: eb13b68ffe12
 Revises: 0dce8c11fec5

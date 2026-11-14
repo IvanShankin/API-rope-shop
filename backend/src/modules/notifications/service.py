@@ -96,6 +96,24 @@ EMAIL_TRANSLATIONS = {
         "phone": "Telefon: {phone}",
         "email": "E-mail: {email}",
     },
+    "fra": {
+        "subject": "Confirmation de votre demande {request_number} — {company_name}",
+        "greeting": "Bonjour {name} !\n",
+        "intro": "Merci pour votre demande auprès de {company_name}.",
+        "registered": "Votre demande a bien été enregistrée sous le numéro : {request_number}",
+        "total": "Montant total : {total_price:.2f} {currency}",
+        "urgent": "⚡ Statut : Commande urgente (fabrication prioritaire)",
+        "ropes_header": "\nRécapitulatif de la commande (cordages) :",
+        "end_a": "Extrémité A",
+        "end_b": "Extrémité B",
+        "services_header": "\nPrestations & épissures :",
+        "extras_header": "\nOptions supplémentaires :",
+        "comment_header": "\nVotre commentaire sur la demande :\n{comment}",
+        "tracking_link": "\nVous pouvez suivre l\'état de votre commande en ligne à l\'adresse suivante :\n{tracking_url}\n",
+        "footer": "\nNotre spécialiste vous contactera très prochainement pour préciser les détails.",
+        "phone": "Téléphone : {phone}",
+        "email": "E-mail : {email}",
+    },
 }
 
 CONTACT_EMAIL_TRANSLATIONS = {
@@ -134,6 +152,15 @@ CONTACT_EMAIL_TRANSLATIONS = {
         "footer": "\nNáš tým vás bude brzy kontaktovat.",
         "phone": "Telefon pro dotazy: {phone}",
         "email": "E-mail podpory: {email}",
+    },
+    "fra": {
+        "subject": "Votre message #{contact_id} — {company_name}",
+        "greeting": "Bonjour {name} !\n",
+        "intro": "Merci d\'avoir contacté {company_name}.",
+        "registered": "Votre message a bien été reçu (numéro de dossier : #{contact_id}).",
+        "footer": "\nNotre équipe vous répondra dans les plus brefs délais.",
+        "phone": "Téléphone pour renseignements : {phone}",
+        "email": "E-mail d\'assistance : {email}",
     },
 }
 
@@ -254,6 +281,8 @@ class NotificationService:
             return "eng"
         if normalized in ("cs", "ces"):
             return "ces"
+        if normalized in ("fr", "fra", "fre"):
+            return "fra"
         return "ger"
 
     async def notify_new_quote_request(

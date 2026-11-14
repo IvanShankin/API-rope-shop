@@ -30,6 +30,11 @@ class Settings(Base):
     company_name: Mapped[str] = mapped_column(String(255), nullable=False, default="Rope Shop")
     contact_email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, default=None)
     contact_phone: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, default=None)
+    contact_telegram: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, default=None)
+    contact_whatsapp: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, default=None)
+    contact_instagram: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, default=None)
+    contact_facebook: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, default=None)
+    contact_youtube: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, default=None)
     site_url: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, default=None)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

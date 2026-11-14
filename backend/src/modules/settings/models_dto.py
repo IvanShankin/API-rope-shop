@@ -16,6 +16,11 @@ class SettingsResponseDTO(ORMDTO):
     company_name: str = "Rope Shop"
     contact_email: Optional[str] = None
     contact_phone: Optional[str] = None
+    contact_telegram: Optional[str] = None
+    contact_whatsapp: Optional[str] = None
+    contact_instagram: Optional[str] = None
+    contact_facebook: Optional[str] = None
+    contact_youtube: Optional[str] = None
     site_url: Optional[str] = None
     created_at: datetime
     updated_at: datetime
@@ -25,6 +30,11 @@ class SettingsPublicResponseDTO(ORMDTO):
     company_name: str = "Rope Shop"
     contact_email: Optional[str] = None
     contact_phone: Optional[str] = None
+    contact_telegram: Optional[str] = None
+    contact_whatsapp: Optional[str] = None
+    contact_instagram: Optional[str] = None
+    contact_facebook: Optional[str] = None
+    contact_youtube: Optional[str] = None
     site_url: Optional[str] = None
 
 
@@ -37,6 +47,11 @@ class SettingsUpdateDTO(BaseModel):
     company_name: Optional[str] = Field(None, min_length=1, max_length=255)
     contact_email: Optional[str] = None
     contact_phone: Optional[str] = None
+    contact_telegram: Optional[str] = None
+    contact_whatsapp: Optional[str] = None
+    contact_instagram: Optional[str] = None
+    contact_facebook: Optional[str] = None
+    contact_youtube: Optional[str] = None
     site_url: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)

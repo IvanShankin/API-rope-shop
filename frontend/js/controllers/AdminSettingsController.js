@@ -58,6 +58,10 @@ export class AdminSettingsController {
       if (event.target.matches('[data-password-form]')) this.changePassword(event.target);
       else this.save();
     }, options);
+    root.addEventListener('click', event => {
+      const button = event.target.closest('[data-settings-test]');
+      if (button) this.testSend(button.dataset.settingsTest);
+    }, options);
     window.addEventListener('beforeunload', event => {
       if (this.dirty()) {event.preventDefault(); event.returnValue = '';}
     }, options);
@@ -84,7 +88,10 @@ export class AdminSettingsController {
       </div>
       <div class="settings-card__actions">
         <button class="btn btn--primary" type="submit">Сохранить настройки</button>
-      </div></form>`;
+        <button class="btn" type="button" data-settings-test="telegram">Проверить Telegram</button>
+        <button class="btn" type="button" data-settings-test="email">Проверить почту</button>
+      </div>
+      <p class="settings-card__hint">Проверка отправляет тестовое сообщение на номер чата и почту менеджера из полей выше (если почта менеджера пуста — на «Почту для писем»). Галочки и сохранение для проверки не нужны.</p></form>`;
     this.baseline = JSON.stringify(this.values());
   }
   async load() {
@@ -105,6 +112,19 @@ export class AdminSettingsController {
     try {this.render(await settingsApi.save(data));window.dispatchEvent(new CustomEvent('company-settings-changed',{detail:'settings'})); this.message('Настройки сохранены.', 'success');}
     catch {this.message('Не сохранилось. Проверьте поля и нажмите «Сохранить настройки» ещё раз.', 'error');}
     finally {this.lock(false);}
+  }
+  async testSend(channel) {
+    if (this.busy || !this.ready) return;
+    const data = this.values();
+    const target = channel === 'telegram' ? data.telegram_chat_id : (data.manager_notification_email || data.contact_email);
+    if (!target) {this.message(channel === 'telegram' ? 'Укажите номер чата в Telegram.' : 'Укажите почту менеджера или почту для писем.', 'warning'); return;}
+    this.lock(true); this.message(channel === 'telegram' ? `Отправляем тест в Telegram (${target})…` : `Отправляем тестовое письмо на ${target}…`);
+    try {
+      const result = channel === 'telegram' ? await settingsApi.testTelegram(target) : await settingsApi.testEmail(target);
+      this.message(result?.message || (result?.success ? 'Тест отправлен.' : 'Тест не отправлен.'), result?.success ? 'success' : 'error');
+    } catch (error) {
+      this.message(error?.message || 'Не удалось выполнить проверку. Попробуйте ещё раз.', 'error');
+    } finally {this.lock(false);}
   }
   async changePassword(form) {
     if (this.busy) return;

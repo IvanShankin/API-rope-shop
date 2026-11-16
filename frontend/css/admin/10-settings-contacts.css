@@ -235,3 +235,9 @@
     min-width: 0;
   }
 }
+
+/* рядом с «Сохранить» — кнопки тестовой отправки в Telegram и на почту */
+.settings-card__actions {
+  flex-wrap: wrap;
+  gap: 12px;
+}

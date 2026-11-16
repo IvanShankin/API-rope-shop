@@ -1,5 +1,5 @@
-import { AdminRecordList } from './AdminRecordList.js?v=20261106.1';
-import { escapeHtml as esc, displayName } from '../../utils/text.js?v=20261106.1';
+import { AdminRecordList } from './AdminRecordList.js?v=20261116.1';
+import { escapeHtml as esc, displayName } from '../../utils/text.js?v=20261116.1';
 
 export function tariffRows(items, sources = {}) {
   const groups = new Map();
@@ -23,7 +23,7 @@ export function tariffRows(items, sources = {}) {
         : high === Infinity ? `От ${low} мм` : `${low}–${high} мм`;
       const price = new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'EUR' }).format(Number(item.price));
       const status = item.is_active === false ? 'Отключён' : conflicts.length ? `Пересекается с ${conflicts.map(id => `#${id}`).join(', ')}` : 'Действует';
-      rows.push({ id: item.id, group, work, material, low, high, range, price, priceValue: Number(item.price), conflicts,
+      rows.push({ id: item.id, group, work, material, typeId: first.splice_type_id, materialId: first.splice_material_id, low, high, range, price, priceValue: Number(item.price), conflicts,
         label: `${work} · ${material}`, detail: `${range} · ${price} · ${status}`, status });
     }
   }
@@ -47,6 +47,11 @@ export class AdminTariffTable extends AdminRecordList {
       else this.priceDrafts.set(row.id,raw);
       input.removeAttribute('aria-invalid');
       this.updatePriceControls();
+    },{signal});
+    root.addEventListener('click',event=>{
+      if(this.disabled)return;
+      const add=event.target.closest('[data-tariff-add]');
+      if(add){this.onAddPrice?.({splice_type_id:add.dataset.tariffAdd,splice_material_id:add.dataset.tariffAddMaterial},`${add.dataset.tariffAddLabel||''}`);return;}
     },{signal});
     root.addEventListener('click',event=>{if(this.disabled)return;if(event.target.closest('[data-tariff-save]'))this.onSavePrices?.();if(event.target.closest('[data-tariff-cancel]')&&this.priceDrafts.size&&window.confirm('Отменить изменения цен?')){this.clearPriceDrafts();this.render();}},{signal});
   }
@@ -108,7 +113,7 @@ export class AdminTariffTable extends AdminRecordList {
     }
     const activeId = this.root.ownerDocument.activeElement?.dataset?.recordId;
     this.root.querySelector('[data-record-items]').innerHTML = [...groups.values()].map(rows => `<table class="admin-tariffs__table">
-      <caption>${esc(rows[0].work)} <span>· ${esc(rows[0].material)}</span></caption>
+      <caption><div class="admin-tariffs__head"><span class="admin-tariffs__title">${esc(rows[0].work)} <span>· ${esc(rows[0].material)}</span></span><button type="button" class="btn btn--small" data-tariff-add="${esc(rows[0].typeId)}" data-tariff-add-material="${esc(rows[0].materialId)}" data-tariff-add-label="${esc(rows[0].label)}" aria-label="Добавить диаметр: ${esc(rows[0].label)}">+ Добавить диаметр</button></div></caption>
       <thead><tr><th scope="col">Диаметр</th><th scope="col">Цена, €</th><th scope="col">Состояние</th><th scope="col">Запись</th></tr></thead>
       <tbody>${rows.map(row => `<tr class="${row.conflicts.length ? 'admin-tariffs__conflict' : ''}" data-selected="${row.id === this.selected}">
         <td data-label="Диаметр">${esc(row.range)}</td><td data-label="Цена, €"><input class="field__input admin-tariffs__price" type="text" inputmode="decimal" autocomplete="off" data-tariff-price="${esc(row.id)}" aria-label="Цена, €: ${esc(row.work)}, ${esc(row.material)}, ${esc(row.range)}" value="${esc(this.priceDrafts.get(row.id) ?? row.priceValue)}"></td><td data-label="Состояние">${esc(row.status)}</td>

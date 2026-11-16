@@ -358,3 +358,30 @@
   transition-delay: 0.12s;
 }
 
+
+/* блок без карусели (анонс на главной и страница /charity/): отступ до низа подложки */
+.charity__inner > .charity__row:last-child {
+  padding-bottom: 60px;
+}
+
+/* страница /charity/: блок «1 заказ = 1 €» сразу под заголовком страницы */
+.charity--page {
+  margin-top: 0;
+}
+
+/* сетка фото благотворительности: фото обрезается по рамке плитки, а не растягивается */
+.charity-photos .work-gallery__photo img {
+  object-fit: cover;
+}
+
+@media (max-width: 767px) {
+  .charity__inner > .charity__row:last-child {
+    padding-bottom: 28px;
+  }
+
+  /* длинное слово «Благотворительность» помещается в строку и не рвётся посередине */
+  .page-head--charity .page-head__title {
+    font-size: clamp(24px, 7.2vw, 44px);
+    overflow-wrap: normal;
+  }
+}

@@ -1,0 +1,1084 @@
+/* ==========================================================================
+   Админка — общие элементы: шапка раздела, кнопки, поля, галочки,
+   раскрывающиеся блоки, языковые вкладки, списки записей, таблицы.
+   ========================================================================== */
+
+/* --- раздел и его шапка --------------------------------------------------- */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  padding-bottom: var(--sp-6);
+}
+
+.panel > p,
+.panel__head + p {
+  margin: 0;
+  color: var(--muted);
+  max-width: 72ch;
+}
+
+.panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--sp-3) var(--sp-4);
+  min-height: var(--control-h);
+}
+
+.panel__heading {
+  min-width: 0;
+}
+
+.panel__head h1,
+.panel__title {
+  margin: 0;
+  font-size: var(--fs-h1);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.panel h2,
+.product-header__title {
+  margin: 0;
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.panel h3 {
+  margin: 0;
+  font-size: var(--fs-lead);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.panel p {
+  margin: 0;
+}
+
+/* --- кнопки ---------------------------------------------------------------
+   .btn            — обычная (вторичная) кнопка
+   .btn--primary   — главное действие, одна на экран
+   .btn--ghost     — то же, что обычная
+   .btn--danger    — удаление: тихая, красный текст
+   .btn--small     — компактная
+   ------------------------------------------------------------------------ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: var(--control-h);
+  padding: 0 var(--sp-4);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color .15s, border-color .15s, color .15s;
+}
+
+.btn:hover {
+  background: var(--surface-3);
+  border-color: var(--faint);
+}
+
+.btn--ghost {
+  background: transparent;
+}
+
+.btn--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn--primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.btn--danger {
+  background: transparent;
+  border-color: transparent;
+  color: var(--danger);
+}
+
+.btn--danger:hover {
+  background: var(--danger-soft);
+  border-color: transparent;
+}
+
+.btn--small {
+  min-height: var(--control-h-sm);
+  padding: 0 var(--sp-3);
+  font-size: var(--fs-small);
+}
+
+.btn--large {
+  min-height: 48px;
+  padding: 0 var(--sp-5);
+}
+
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.btn[aria-pressed="true"] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+/* круглая кнопка-крестик */
+.btn-icon {
+  display: inline-grid;
+  place-items: center;
+  width: var(--control-h-sm);
+  height: var(--control-h-sm);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--faint);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.btn-icon:hover { background: var(--surface-3); color: var(--text); }
+.btn-icon--danger:hover { background: var(--danger-soft); color: var(--danger); }
+
+/* ряд кнопок над списком */
+.product-toolbar,
+.config-admin-toolbar {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.config-admin-toolbar > .field {
+  flex: 1 1 220px;
+}
+
+/* --- поля ввода ----------------------------------------------------------- */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.field > label,
+.field__label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.field__input,
+.admin-page .ss-main.field__input {
+  width: 100%;
+  min-height: var(--control-h);
+  padding: 10px var(--sp-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-size: var(--fs-body);
+  font-weight: 400;
+  line-height: 1.4;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.field__input::placeholder {
+  color: var(--faint);
+}
+
+.field__input:hover {
+  border-color: var(--faint);
+}
+
+.field__input:focus,
+.admin-page .ss-main.field__input.ss-open-below,
+.admin-page .ss-main.field__input.ss-open-above {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--focus);
+}
+
+textarea.field__input {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.field__input[aria-invalid="true"],
+.field__input:user-invalid {
+  border-color: var(--danger);
+}
+
+.field__input:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+select.field__input {
+  cursor: pointer;
+}
+
+.field__input--compact {
+  min-height: 40px;
+  padding: 8px 10px;
+}
+
+.field__hint,
+.admin-editor-hint,
+.admin-form-hint,
+.settings-card__hint {
+  margin: 0;
+  font-size: var(--fs-small);
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--faint);
+}
+
+.field__hint:empty {
+  display: none;
+}
+
+/* поле с единицей измерения справа (€, кг, г) */
+.field__affix {
+  position: relative;
+}
+
+.field__affix .field__input {
+  padding-right: 34px;
+}
+
+.field__suffix {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  color: var(--faint);
+  font-size: var(--fs-small);
+  pointer-events: none;
+}
+
+/* сетки полей */
+.admin-fields,
+.fields--two,
+.settings-card__grid,
+.contacts-card__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: var(--sp-4) var(--sp-5);
+}
+
+.fields {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.admin-fields > .admin-field--wide,
+.admin-fields > .field:has(textarea[name^="content_"]),
+.admin-fields > .field:has(textarea[name^="description_"]) {
+  grid-column: 1 / -1;
+}
+
+/* --- галочки --------------------------------------------------------------- */
+.admin-page input[type="checkbox"]:not(.tick__input) {
+  appearance: none;
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  margin: 0;
+  border: 2px solid var(--faint);
+  border-radius: 6px;
+  background: var(--bg);
+  cursor: pointer;
+  transition: background-color .15s, border-color .15s;
+}
+
+.admin-page input[type="checkbox"]:not(.tick__input)::after {
+  content: "";
+  width: 6px;
+  height: 11px;
+  margin-top: -2px;
+  border: solid #fff;
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg) scale(0);
+  transition: transform .12s;
+}
+
+.admin-page input[type="checkbox"]:not(.tick__input):checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.admin-page input[type="checkbox"]:not(.tick__input):checked::after {
+  transform: rotate(45deg) scale(1);
+}
+
+/* подпись рядом с галочкой */
+.admin-toggle,
+.settings-card__flag,
+.tick,
+.admin-fields > label:not(.field) {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: var(--control-h);
+  font-size: var(--fs-body);
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.tick {
+  position: relative;
+}
+
+.tick__input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.tick__box {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border: 2px solid var(--faint);
+  border-radius: 6px;
+  background: var(--bg);
+  transition: background-color .15s, border-color .15s;
+}
+
+.tick__box::after {
+  content: "";
+  width: 6px;
+  height: 11px;
+  margin-top: -2px;
+  border: solid #fff;
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg) scale(0);
+  transition: transform .12s;
+}
+
+.tick__input:checked + .tick__box {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.tick__input:checked + .tick__box::after {
+  transform: rotate(45deg) scale(1);
+}
+
+.tick__input:focus-visible + .tick__box {
+  box-shadow: var(--focus);
+}
+
+.tick--compact {
+  min-height: 0;
+}
+
+.admin-checkboxes-row,
+.settings-card__flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--sp-5);
+}
+
+.admin-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0 var(--sp-4);
+}
+
+/* --- карточка и раскрывающийся блок ----------------------------------------
+   Карточка — одна рамка вокруг самостоятельного блока. Внутри карточки
+   вложенные блоки плоские: только линия-разделитель, без своей рамки.
+   ------------------------------------------------------------------------ */
+.admin-card,
+.card,
+.settings-card,
+.contacts-card,
+.admin > .admin__main .panel > .admin-disclosure,
+.product-editor ~ .admin-disclosure,
+[data-product-editor] > .admin-disclosure,
+[data-product-form] > .admin-disclosure,
+[data-settings-editor] + .admin-disclosure {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.admin-card,
+.card--padded,
+.settings-card,
+.contacts-card {
+  padding: var(--sp-5);
+}
+
+.admin-disclosure {
+  margin: 0;
+}
+
+.admin-disclosure > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1) var(--sp-3);
+  flex-wrap: wrap;
+  min-height: 56px;
+  padding: var(--sp-3) 56px var(--sp-3) var(--sp-5);
+  position: relative;
+  list-style: none;
+  font-size: var(--fs-lead);
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+}
+
+.admin-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin-disclosure > summary::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: var(--sp-5);
+  width: 9px;
+  height: 9px;
+  margin-top: -6px;
+  border: solid var(--muted);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  transition: transform .15s;
+}
+
+.admin-disclosure[open] > summary::after {
+  margin-top: -2px;
+  transform: rotate(-135deg);
+}
+
+.admin-disclosure > summary:hover::after {
+  border-color: var(--text);
+}
+
+.admin-disclosure__summary > span:first-child {
+  flex: 0 1 auto;
+}
+
+.admin-disclosure__hint {
+  flex-basis: 100%;
+  font-size: var(--fs-small);
+  font-weight: 400;
+  color: var(--faint);
+}
+
+.admin-disclosure[open] > summary {
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-disclosure > :not(summary) {
+  margin: var(--sp-5);
+}
+
+.admin-disclosure > .admin-disclosure__body {
+  margin: 0;
+  padding: var(--sp-5);
+  display: grid;
+  gap: var(--sp-4);
+}
+
+/* раскрывашки внутри карточки-формы: плоские секции */
+.admin-card .admin-disclosure,
+.admin-disclosure .admin-disclosure,
+.settings-card .admin-disclosure {
+  background: none;
+  border: 0;
+  border-radius: 0;
+}
+
+.admin-card .admin-disclosure > summary,
+.admin-disclosure .admin-disclosure > summary {
+  min-height: 48px;
+  padding: var(--sp-2) 40px var(--sp-2) 0;
+  font-size: var(--fs-body);
+}
+
+.admin-card .admin-disclosure > summary::after,
+.admin-disclosure .admin-disclosure > summary::after {
+  right: 6px;
+}
+
+.admin-card .admin-disclosure[open] > summary,
+.admin-disclosure .admin-disclosure[open] > summary {
+  border-bottom: 0;
+}
+
+.admin-card .admin-disclosure > :not(summary),
+.admin-disclosure .admin-disclosure > :not(summary) {
+  margin: 0 0 var(--sp-4);
+}
+
+.admin-disclosures-group {
+  display: grid;
+}
+
+.admin-disclosures-group > .admin-disclosure + .admin-disclosure {
+  border-top: 1px solid var(--line);
+  padding-top: var(--sp-2);
+}
+
+/* кнопки под формой: «Удалить» слева, тихо */
+.admin-form-actions,
+.settings-card__actions,
+.contacts-card__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-4);
+}
+
+.admin-form-actions:not(:has(> :not([hidden]):not([type="submit"]))) {
+  display: none;
+}
+
+/* Сохраняет нижняя панель «Сохранить изменения», поэтому дублирующие
+   кнопки «Сохранить …» внутри форм скрыты. Смена пароля — своя кнопка. */
+.admin .panel form:not([data-password-form]) :is(.admin-form-actions, .settings-card__actions, .contacts-card__actions) > [type="submit"] {
+  display: none;
+}
+
+.settings-card__actions:not(:has(> :not([type="submit"]))):not([data-password-form] *),
+.contacts-card__actions:not(:has(> :not([type="submit"]))) {
+  display: none;
+}
+
+/* убрать перевод — маленькие тихие кнопки */
+.admin-translation-remove {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-2);
+  color: var(--faint);
+  font-size: var(--fs-small);
+}
+
+/* --- языковые вкладки ------------------------------------------------------ */
+.lang-tabs {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.product-lang-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-4);
+}
+
+.lang-switch {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  border: 1px solid var(--line);
+}
+
+.lang-switch__button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 36px;
+  padding: 0 var(--sp-3);
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lang-switch__button:hover {
+  color: var(--text);
+}
+
+.lang-switch__button--active,
+.lang-switch__button--active:hover {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+.lang-tab__indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--faint);
+}
+
+.lang-tab__indicator--filled {
+  background: var(--success);
+  border-color: var(--success);
+}
+
+.lang-tab-panel {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+/* --- выбор подраздела (Главная / Бизнесу… ; Заделки / Цены…) ------------
+   Это вкладки, поэтому выглядят как вкладки, а не как ещё одни карточки. */
+.config-section-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  padding-bottom: var(--sp-1);
+}
+
+.config-section-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: var(--control-h);
+  max-width: 260px;
+  padding: var(--sp-2) var(--sp-4);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--fs-body);
+  text-align: left;
+  cursor: pointer;
+  justify-content: center;
+}
+
+.config-section-card:has(.config-section-card__hint) {
+  border-radius: var(--radius-sm);
+}
+
+.config-section-card:hover {
+  border-color: var(--faint);
+  color: var(--text);
+}
+
+.config-section-card[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.config-section-card__name {
+  font-weight: 700;
+}
+
+.config-section-card__hint {
+  font-size: 12px;
+  line-height: 1.35;
+  opacity: .8;
+}
+
+/* --- список записей (канаты, цвета, тексты…) --------------------------- */
+.admin-record-list {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.admin-record-list > .field {
+  max-width: 420px;
+}
+
+.admin-record-list > [data-record-count] {
+  font-size: var(--fs-small);
+  color: var(--faint);
+}
+
+.admin-record-list__items,
+.admin-category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-record-list__row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  height: 100%;
+  min-height: 64px;
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color .15s, border-color .15s;
+}
+
+.admin-record-list__row:hover {
+  background: var(--surface-2);
+  border-color: var(--line-strong);
+}
+
+.admin-record-list__row[aria-pressed="true"] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.admin-record-list__thumb,
+.admin-record-list__swatch {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  background: var(--surface-3);
+  object-fit: cover;
+}
+
+.admin-record-list__swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid rgb(255 255 255 / 25%);
+}
+
+.admin-record-list__text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.admin-record-list__name {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.admin-record-list__detail {
+  font-size: var(--fs-small);
+  line-height: 1.4;
+  color: var(--faint);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.admin-record-list__detail:empty {
+  display: none;
+}
+
+.admin-record-list__empty {
+  grid-column: 1 / -1;
+  padding: var(--sp-5);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  text-align: center;
+}
+
+.admin-record-list__pages {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--sp-3);
+  color: var(--faint);
+  font-size: var(--fs-small);
+}
+
+/* листалка не нужна, если страница одна */
+.admin-record-list__pages:has([data-record-prev]:disabled):has([data-record-next]:disabled) {
+  display: none;
+}
+
+/* разделы каталога — плитки с картинкой */
+.admin-category-grid {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--sp-3);
+}
+
+.admin-category-card {
+  display: grid;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-category-card:hover {
+  border-color: var(--line-strong);
+}
+
+.admin-category-card[aria-pressed="true"] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.admin-category-card__media {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  background: var(--surface-2);
+}
+
+.admin-category-card__media img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-category-card__placeholder {
+  font-size: var(--fs-small);
+  color: var(--faint);
+}
+
+.admin-category-card__info {
+  display: grid;
+  gap: 2px;
+  padding: var(--sp-3) var(--sp-4);
+}
+
+.admin-category-card__name {
+  font-weight: 600;
+}
+
+.admin-category-card__status {
+  font-size: var(--fs-small);
+  color: var(--faint);
+}
+
+/* --- таблицы --------------------------------------------------------------- */
+.admin-table,
+.admin-tariffs__table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.admin-table :is(th, td),
+.admin-tariffs__table :is(th, td) {
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.admin-table tbody tr:last-child td,
+.admin-tariffs__table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.admin-table th,
+.admin-tariffs__table th {
+  background: var(--surface-2);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.admin-table tbody tr:hover td {
+  background: var(--surface-2);
+}
+
+/* --- сообщения о состоянии ------------------------------------------------- */
+.panel [role="status"]:empty,
+.panel [data-product-status]:empty {
+  display: none;
+}
+
+[data-product-status],
+[data-color-status],
+[data-config-status],
+[data-content-status],
+[data-settings-status] {
+  color: var(--muted);
+  font-size: var(--fs-small);
+}
+
+.admin-image-preview {
+  display: block;
+  max-width: 280px;
+  max-height: 200px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  object-fit: contain;
+  background: var(--surface-2);
+}
+
+.admin-translation-remove {
+  margin-left: auto;
+}
+
+.admin-translation-remove .btn--danger {
+  color: var(--muted);
+  padding: 0 var(--sp-2);
+}
+
+.admin-translation-remove .btn--danger:hover {
+  color: var(--danger);
+}
+
+/* карточка-форма, которая начинается с раскрывашки: меньше пустоты сверху */
+.admin-card:has(> .admin-disclosures-group:first-child) {
+  padding-top: var(--sp-2);
+}
+
+.admin-category-grid > li,
+.admin-record-list__items > li {
+  display: grid;
+}
+
+.admin-category-card {
+  height: 100%;
+  align-content: start;
+}
+
+/* выпадающие списки — та же высота, что и у полей */
+.admin-page .admin .ss-main.field__input {
+  min-height: var(--control-h);
+  padding: 0 var(--sp-2) 0 var(--sp-1);
+}
+
+.admin-page .ss-content .ss-list .ss-option {
+  min-height: 40px;
+  padding: 8px 12px;
+}
+
+/* Подсказка «какое фото загружать»: рамка с пропорцией + размер и пара строк */
+.admin-photo-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  width: 100%;
+  max-width: 640px;
+  margin-top: var(--sp-2);
+  padding: var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.admin-photo-tip__frame {
+  flex: 0 0 auto;
+  width: 56px;
+  aspect-ratio: var(--ratio, 4 / 3);
+  max-height: 56px;
+  border: 2px solid var(--accent-text);
+  border-radius: 4px;
+  background: var(--accent-soft);
+}
+
+
+.admin-photo-tip__text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: var(--fs-small);
+  line-height: 1.45;
+}
+
+.admin-photo-tip__text strong {
+  color: var(--text);
+  font-size: var(--fs-body);
+  font-weight: 600;
+}
+
+/* --- окно «Сессия истекла» (ответ 401) ------------------------------------ */
+.admin-expired {
+  width: min(440px, calc(100vw - 2 * var(--sp-4)));
+  padding: var(--sp-5);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font);
+}
+
+.admin-expired::backdrop {
+  background: rgb(5 10 16 / 70%);
+}
+
+.admin-expired__title {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--fs-h2);
+  font-weight: 700;
+}
+
+.admin-expired__text,
+.admin-expired__hint {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--fs-body);
+  line-height: 1.5;
+}
+
+.admin-expired__hint {
+  color: var(--muted);
+  font-size: var(--fs-small);
+}
+
+.admin-expired__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-4);
+}
+
+.admin-expired__actions .btn {
+  flex: 1 1 160px;
+  justify-content: center;
+  text-decoration: none;
+}

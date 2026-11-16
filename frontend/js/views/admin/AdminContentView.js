@@ -1,15 +1,16 @@
-import { captureDisclosures, restoreDisclosures } from './disclosureState.js?v=20261106.1';
-import { AdminNotificationView } from './AdminNotificationView.js?v=20261106.1';
-import { AdminRecordList } from './AdminRecordList.js?v=20261106.1';
-import {escapeHtml as esc} from '../../utils/text.js?v=20261106.1';
-import {mediaUrl} from '../../utils/media.js?v=20261106.1';
-import { langTabsMarkup, bindLangTabs } from './langTabs.js?v=20261106.1';
+import { captureDisclosures, restoreDisclosures } from './disclosureState.js?v=20261116.1';
+import { AdminNotificationView } from './AdminNotificationView.js?v=20261116.1';
+import { AdminRecordList } from './AdminRecordList.js?v=20261116.1';
+import {escapeHtml as esc} from '../../utils/text.js?v=20261116.1';
+import {mediaUrl} from '../../utils/media.js?v=20261116.1';
+import { langTabsMarkup, bindLangTabs } from './langTabs.js?v=20261116.1';
+import { revealForm } from './revealForm.js?v=20261116.1';
 export class AdminContentView {
   constructor(root,sections,gallery) {
     this.root=root;this.gallery=gallery;this.events=new AbortController();this.baseline='';
     this.sectionCards = root.id === 'panel-content' || root.id === 'panel-gallery';
     root.innerHTML=`<header class="panel__head"><h1>${gallery?'Галереи':'Тексты страниц'}</h1></header>
-      <p>${gallery?'Фотографии работ — в каталоге, благотворительности — на главной.':'Выберите страницу и блок. Текст — как на сайте, переносы строк сохраняются. Блок — сразу на трёх языках.'}</p>
+      <p>${gallery?'Фотографии работ — в каталоге, благотворительности — на главной.':'Выберите страницу и блок. Текст — как на сайте, переносы строк сохраняются. Блок — сразу на четырёх языках.'}</p>
       ${this.sectionCards?`<nav class="config-section-menu" aria-label="${gallery?'Выбор галереи':'Выбор страницы'}">${Object.entries(sections).map(([code,title],index)=>`<button type="button" class="config-section-card" data-content-section-choice="${esc(code)}" aria-pressed="${index===0}"><span class="config-section-card__name">${esc(title)}</span></button>`).join('')}</nav>`:''}
       <div class="config-admin-toolbar"><label class="field" ${this.sectionCards?'hidden':''}>${gallery?'Галерея':'Страница'}<select class="field__input" data-config-section ${this.sectionCards?'data-native-select':''}>${Object.entries(sections).map(([code,title])=>`<option value="${code}">${esc(title)}</option>`).join('')}</select></label>
       ${gallery?'<button class="btn" type="button" data-config-new>Добавить фотографию</button>':''}<button class="btn" type="button" data-content-refresh>Обновить</button></div>
@@ -31,6 +32,7 @@ export class AdminContentView {
   message(text, type = 'info') { AdminNotificationView.message(this.root.querySelector('[data-content-status]'), text, type); }
   busy(value){this.root.querySelectorAll('input,textarea,select,button').forEach(el=>el.disabled=value);this.recordList.busy(value);}
   select(id){this.recordList.select(id);}
+  revealEditor(){revealForm(this.root.querySelector('[data-content-editor]'));}
   list(items){
     const section=this.root.querySelector('[data-config-section]').value;
     if(this.listSection!==section){this.recordList.reset();this.listSection=section;}
@@ -50,8 +52,8 @@ export class AdminContentView {
     const translation=locale=>item.translations?.find(t=>t.locale===locale)||{};
     const translationFields=`<details class="admin-disclosure" data-editor-disclosure="translations" open><summary>${this.gallery?'Подписи на разных языках':'Тексты на разных языках'}</summary>${langTabsMarkup({
       label: this.gallery ? 'Язык подписи' : 'Язык текста',
-      filled: Object.fromEntries(['rus','eng','ger'].map(locale=>{const t=translation(locale);return [locale,Boolean(t.title||t.content||t.description)];})),
-      panels: Object.fromEntries(['rus','eng','ger'].map(locale=>{const t=translation(locale);return [locale,`<div class="admin-fields">
+      filled: Object.fromEntries(['rus','eng','ger','ces'].map(locale=>{const t=translation(locale);return [locale,Boolean(t.title||t.content||t.description)];})),
+      panels: Object.fromEntries(['rus','eng','ger','ces'].map(locale=>{const t=translation(locale);return [locale,`<div class="admin-fields">
         ${titleEnabled?`<label class="field">${this.gallery?'Подпись':'Заголовок'}<textarea class="field__input" name="title_${locale}" maxlength="${this.gallery?255:500}">${esc(t.title||'')}</textarea></label>`:''}
         ${textEnabled?`<label class="field">Текст<textarea class="field__input" name="content_${locale}" rows="5">${esc(t.content??t.description??'')}</textarea></label>`:''}</div>`];})),
     })}</details>`;

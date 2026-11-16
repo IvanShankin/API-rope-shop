@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8">
-  <script src="/js/api/remote-api.js?v=20261106.1"></script>
+  <script src="/js/api/remote-api.js?v=20261116.1"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Панель управления — Rope-Pro-Line</title>
   <meta name="robots" content="noindex, nofollow">
@@ -15,44 +15,31 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Unbounded:wght@400;500&display=swap">
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap">
   <style>
     .admin[hidden], .admin-session[hidden] { display: none !important; }
     .admin-session { min-height: 100vh; display: grid; place-items: center; padding: 24px; box-sizing: border-box; }
     .admin-session__card { width: 100%; max-width: 480px; text-align: center; }
     .admin-session__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 24px; }
   </style>
-  <!-- стили админки разнесены по файлам в css/admin/; порядок подключения важен -->
-  <link rel="stylesheet" href="/css/admin/01-base.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/admin/02-components.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/admin/03-editors.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/admin/04-savebar.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/admin/05-responsive.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/admin/06-login.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/admin/07-toolbars.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/admin/08-workspace.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/admin/09-dark-theme.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/admin/10-settings-contacts.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/admin/11-product-editor.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/admin/12-flat-forms.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/admin/13-requests-notices.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/admin/14-mobile.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/admin/15-compact.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/admin/16-catalog-config.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/admin/17-grid.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/admin/18-product-card.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/admin/19-content-gallery.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/admin/20-lang-tabs.css?v=20261106.1">
+  <!-- стили админки: base → components → sections → mobile (порядок важен) -->
+  <link rel="stylesheet" href="/css/admin/base.css?v=20261116.1">
+  <link rel="stylesheet" href="/css/admin/components.css?v=20261116.1">
+  <link rel="stylesheet" href="/css/admin/sections.css?v=20261116.1">
+  <link rel="stylesheet" href="/css/admin/mobile.css?v=20261116.1">
+  <!-- плашка «Не показывается на сайте» над формой, когда снята галочка показа -->
+  <link rel="stylesheet" href="/css/admin/hidden-banner.css?v=20261116.1">
   <script>
     // Мгновенная проверка наличия сессии до построения DOM
     if (!localStorage.getItem('rope_access_token')) {
       window.location.replace('/login/');
     }
   </script>
-  <script type="module" src="/js/app.js?v=20261106.1"></script>
-  <link rel="stylesheet" href="/css/custom-selects.css?v=20261106.1">
-  <script type="module" src="/js/ui/custom-selects.js?v=20261106.1"></script>
-  <script type="module" src="/js/ui/admin-mobile-nav.js?v=20261106.1"></script>
+  <script type="module" src="/js/app.js?v=20261116.1"></script>
+  <link rel="stylesheet" href="/css/custom-selects.css?v=20261116.1">
+  <script type="module" src="/js/ui/custom-selects.js?v=20261116.1"></script>
+  <script type="module" src="/js/ui/admin-mobile-nav.js?v=20261116.1"></script>
+  <script type="module" src="/js/ui/admin-hidden-banner.js?v=20261116.1"></script>
 </head>
 
 <body class="admin-page__body">
@@ -120,10 +107,10 @@
 
       <section class="panel" id="panel-colors" aria-labelledby="colors-title" hidden>
         <header class="panel__head"><h1 class="panel__title" id="colors-title">Цвета канатов</h1></header>
-        <p>Названия цветов переводятся. Отключение скрывает цвет у всех канатов.</p>
+        <p>Цвета, которые покупатель выбирает у канатов. Если цвет выключить, он пропадёт у всех канатов.</p>
         <div class="product-toolbar">
-          <button class="btn" type="button" data-color-new>Добавить цвет</button>
-          <button class="btn btn--ghost" type="button" data-colors-refresh>Обновить цвета</button>
+          <button class="btn" type="button" data-color-new>+ Добавить цвет</button>
+          <button class="btn" type="button" data-colors-refresh>Обновить</button>
         </div>
         <div data-color-select></div>
         <p data-color-status role="status" aria-live="polite"></p>
@@ -133,9 +120,9 @@
       <section class="panel" id="panel-requests" aria-labelledby="requests-title" hidden>
         <header class="panel__head">
           <div class="panel__heading"><h1 class="panel__title" id="requests-title">Заявки</h1></div>
-          <button class="btn btn--primary" type="button" data-requests-refresh>Обновить</button>
+          <button class="btn" type="button" data-requests-refresh>Обновить</button>
         </header>
-        <p>50 заявок на странице; номер открывает состав.</p>
+        <p>Нажмите номер заявки, чтобы открыть, что заказали.</p>
         <div class="requests-table" id="admin-requests-list" aria-live="polite"></div>
       </section>
 
@@ -146,11 +133,11 @@
 
       <!-- каталог -->
       <section class="panel" id="panel-catalog" aria-labelledby="catalog-title" hidden>
-        <header class="panel__head"><h1 class="panel__title" id="catalog-title">Канаты</h1><a class="btn btn--ghost" href="/catalog/" target="_blank" rel="noopener">Открыть каталог</a></header>
+        <header class="panel__head"><h1 class="panel__title" id="catalog-title">Канаты</h1><a class="btn" href="/catalog/" target="_blank" rel="noopener">Открыть каталог на сайте</a></header>
         <p>Выберите канат, чтобы изменить характеристики, диаметры, цены и цвета.</p>
         <div class="product-toolbar">
-          <button class="btn" type="button" data-product-new>Добавить канат</button>
-          <button class="btn btn--ghost" type="button" data-products-refresh>Обновить</button>
+          <button class="btn" type="button" data-product-new>+ Добавить канат</button>
+          <button class="btn" type="button" data-products-refresh>Обновить</button>
         </div>
         <div data-product-select></div>
         <p data-product-status role="status" aria-live="polite"></p>

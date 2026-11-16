@@ -221,11 +221,11 @@
     document.querySelectorAll('.showcase').forEach(initShowcase);
     initReveal();
     initToTop();
-    const {initContacts}=await import('./views/common/ContactsView.js?v=20261106.1');initContacts();
-    const {initReviews}=await import('./views/common/ReviewsView.js?v=20261106.1');initReviews();
+    const {initContacts}=await import('./views/common/ContactsView.js?v=20261116.1');initContacts();
+    const {initReviews}=await import('./views/common/ReviewsView.js?v=20261116.1');initReviews();
     const [{initSiteContent},{WorkGalleryView}]=await Promise.all([
-      import('./views/common/SiteContentView.js?v=20261106.1'),
-      import('./views/common/WorkGalleryView.js?v=20261106.1'),
+      import('./views/common/SiteContentView.js?v=20261116.1'),
+      import('./views/common/WorkGalleryView.js?v=20261116.1'),
     ]);
     await initSiteContent({initSwiper:initGallery,initWork:root=>new WorkGalleryView(root)});
   });

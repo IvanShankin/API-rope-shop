@@ -27,7 +27,7 @@ const escapeXml = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;',
   fs.writeFileSync(path.join(output,'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${entries.join('\n')}\n</urlset>\n`);
   // Keep CSS/JS/API crawlable: they are needed to render the public catalogue.
   // Service pages use their own noindex, so robots.txt must not hide that directive.
-  fs.writeFileSync(path.join(output,'robots.txt'), preview ? 'User-agent: *\nDisallow: /\n' : `User-agent: *\nDisallow: /scripts/\nDisallow: /docs/\nDisallow: /.local/\n\nSitemap: ${origin}/sitemap.xml\n`);
+  fs.writeFileSync(path.join(output,'robots.txt'), preview ? 'User-agent: *\nDisallow: /\n' : `User-agent: *\nDisallow: /scripts/\nDisallow: /docs/\nDisallow: /.local/\n\n# Yandex: catalogue filter parameters do not create new pages\nUser-agent: Yandex\nDisallow: /scripts/\nDisallow: /docs/\nDisallow: /.local/\nClean-param: diameter&construction&configurator /category/\n\nSitemap: ${origin}/sitemap.xml\n`);
   fs.writeFileSync(path.join(output,'README.txt'), preview ? 'LOCAL PREVIEW ONLY. Do not upload these files. Category IDs are omitted unless explicitly supplied.\n' : 'Review these files before publication. Server must expose /robots.txt and /sitemap.xml; current nginx does not. Never serve the project root publicly without an explicit allowlist.\n');
   console.log(`${preview ? 'PREVIEW' : 'RELEASE CANDIDATE'}: ${entries.length} URLs in ${output}`);
 })().catch(error => { console.error(error.message); process.exitCode = 1; });

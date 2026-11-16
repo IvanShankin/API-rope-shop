@@ -1,10 +1,11 @@
-import { captureDisclosures, restoreDisclosures } from './disclosureState.js?v=20261106.1';
-import { AdminNotificationView } from './AdminNotificationView.js?v=20261106.1';
-import { AdminTariffTable } from './AdminTariffTable.js?v=20261106.1';
-import { escapeHtml as esc, displayName } from '../../utils/text.js?v=20261106.1';
-import { configSections } from '../../models/AdminConfigModel.js?v=20261106.1';
-import { mediaUrl } from '../../utils/media.js?v=20261106.1';
-import { langTabsMarkup, bindLangTabs } from './langTabs.js?v=20261106.1';
+import { captureDisclosures, restoreDisclosures } from './disclosureState.js?v=20261116.1';
+import { AdminNotificationView } from './AdminNotificationView.js?v=20261116.1';
+import { AdminTariffTable } from './AdminTariffTable.js?v=20261116.1';
+import { escapeHtml as esc, displayName } from '../../utils/text.js?v=20261116.1';
+import { configSections } from '../../models/AdminConfigModel.js?v=20261116.1';
+import { mediaUrl } from '../../utils/media.js?v=20261116.1';
+import { langTabsMarkup, bindLangTabs } from './langTabs.js?v=20261116.1';
+import { revealForm } from './revealForm.js?v=20261116.1';
 function categorySlug(value) {
   const chars = {'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'h','ц':'ts','ч':'ch','ш':'sh','щ':'sch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya','ä':'ae','ö':'oe','ü':'ue','ß':'ss'};
   return [...String(value).toLowerCase()].map(char=>chars[char] ?? char).join('').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,100).replace(/-+$/,'');
@@ -67,7 +68,8 @@ export class AdminConfigView {
     this.root.querySelector('[data-config-section]').addEventListener('change',e=>actions.section(e.target.value),opts);
     this.recordList.onSelect = actions.select;
     this.recordList.onSavePrices = actions.savePrices;
-    this.root.querySelector('[data-config-new]').addEventListener('click',actions.create,opts);
+    this.recordList.onAddPrice = (preset, label) => actions.create(preset, label);
+    this.root.querySelector('[data-config-new]').addEventListener('click',()=>actions.create(),opts);
     this.root.querySelector('[data-config-refresh]').addEventListener('click',actions.refresh,opts);
     this.root.addEventListener('submit',e=>{e.preventDefault();if(e.target.reportValidity()) actions.save();},opts);
     this.root.addEventListener('click',e=>{
@@ -92,9 +94,9 @@ export class AdminConfigView {
       if (e.target.closest('[data-settings-form]')) this.updateSettingsExamples();
       if (e.target.name === 'slug' && this.isNewCategory) { this.autoCategorySlug = !e.target.value.trim(); return; }
       if (!this.autoCategorySlug) return;
-      if (!['name_rus','name_eng','name_ger'].includes(e.target.name)) return;
+      if (!['name_rus','name_eng','name_ger','name_ces'].includes(e.target.name)) return;
       const form = e.target.form;
-      const value = ['name_ger','name_eng','name_rus'].map(key => form.elements[key]?.value.trim()).find(Boolean) || '';
+      const value = ['name_ger','name_eng','name_rus','name_ces'].map(key => form.elements[key]?.value.trim()).find(Boolean) || '';
       const base = categorySlug(value);
       const taken = new Set((this.categoryItems || []).map(item => String(item.slug || '').toLowerCase()));
       let candidate = base, number = 2;
@@ -146,6 +148,7 @@ export class AdminConfigView {
     }
   }
   select(id){this.recordList.select(id);}
+  revealEditor(focusSelector){revealForm(this.root.querySelector('[data-config-editor]'),focusSelector);}
   render(section,item={},sources={}, {preserveDisclosures=false}={}) {
     const disclosureState = captureDisclosures(this.root, preserveDisclosures);
     this.recordList.select(item.id);
@@ -168,8 +171,8 @@ export class AdminConfigView {
     const translation=locale=>item.translations?.find(t=>t.locale===locale)||{};
     const translations=schema.translated?langTabsMarkup({
       label:'Язык названия',
-      filled:Object.fromEntries(['rus','eng','ger'].map(locale=>[locale,Boolean(translation(locale).name||translation(locale).description)])),
-      panels:Object.fromEntries(['rus','eng','ger'].map(locale=>{const t=translation(locale);const short={rus:'(рус.)',eng:'(англ.)',ger:'(нем.)'}[locale];return [locale,`<div class="admin-fields"><label class="field">Название ${short}<input class="field__input" name="name_${locale}" maxlength="255" value="${esc(t.name||'')}"></label>${schema.description?`<label class="field">Описание ${short}<textarea class="field__input" name="description_${locale}" rows="3">${esc(t.description||'')}</textarea></label>`:''}</div>`];})),
+      filled:Object.fromEntries(['rus','eng','ger','ces'].map(locale=>[locale,Boolean(translation(locale).name||translation(locale).description)])),
+      panels:Object.fromEntries(['rus','eng','ger','ces'].map(locale=>{const t=translation(locale);const short={rus:'(рус.)',eng:'(англ.)',ger:'(нем.)',ces:'(чеш.)'}[locale];return [locale,`<div class="admin-fields"><label class="field">Название ${short}<input class="field__input" name="name_${locale}" maxlength="255" value="${esc(t.name||'')}"></label>${schema.description?`<label class="field">Описание ${short}<textarea class="field__input" name="description_${locale}" rows="3">${esc(t.description||'')}</textarea></label>`:''}</div>`];})),
     }):'';
     this.root.querySelector('[data-config-editor]').innerHTML=`<h2>${esc(schema.title)}${item.id?` #${item.id}`:''}</h2><form class="product-editor admin-card" ${section==='configurator_settings'?'data-settings-form':''}><div class="admin-disclosures-group">${section==='configurator_settings'?settingsFields:`<details class="admin-disclosure" data-editor-disclosure="parameters" open><summary>Основные параметры</summary><div class="admin-fields">${fields}</div></details>`}${translations ? `<details class="admin-disclosure" data-editor-disclosure="translations" open><summary>Названия и переводы</summary><p class="admin-editor-hint">Заполните название хотя бы на одном языке.</p>${translations}</details>` : ''}</div><div class="admin-form-actions"><button class="btn btn--primary" type="submit">Сохранить</button>${item.id&&!schema.singleton?'<button class="btn btn--danger" type="button" data-config-remove>Удалить запись</button>':''}</div></form>${((section==='categories') || (section==='splice_types'&&item.id))?`<div class="config-admin-upload admin-card">
       <span class="field__label">Изображение записи</span>
@@ -183,7 +186,7 @@ export class AdminConfigView {
     this.remember();
     if(section==='categories'||(section==='splice_types'&&item.id)){this.root.querySelector('.config-admin-upload').insertAdjacentHTML('beforebegin','<div data-image-preview></div>');if(this.pendingImage)this.showPendingImage(this.pendingImage);else this.image(item.image_url);}
     const known=(item.translations||[]).filter(t=>t.id&&!t.fallback);
-    if(schema.translated&&item.id&&known.length>1)this.root.querySelector('[data-config-editor]').insertAdjacentHTML('beforeend',`<h3>Удалить перевод</h3><p>Один язык должен остаться, иначе покажется другой.</p><div class="config-admin-toolbar">${known.map(t=>`<button class="btn btn--danger" type="button" data-config-translation-remove="${Number(t.id)}">Удалить ${{rus:'(рус.)',eng:'(англ.)',ger:'(нем.)'}[t.locale] || t.locale.toUpperCase()}</button>`).join('')}</div>`);
+    if(schema.translated&&item.id&&known.length>1)this.root.querySelector('[data-config-editor]').insertAdjacentHTML('beforeend',`<h3>Удалить перевод</h3><p>Один язык должен остаться, иначе покажется другой.</p><div class="config-admin-toolbar">${known.map(t=>`<button class="btn btn--danger" type="button" data-config-translation-remove="${Number(t.id)}">Удалить ${{rus:'(рус.)',eng:'(англ.)',ger:'(нем.)',ces:'(чеш.)'}[t.locale] || t.locale.toUpperCase()}</button>`).join('')}</div>`);
     if(['splice_types','categories'].includes(section)&&item.id&&!known.length)this.root.querySelector('[data-config-editor]').insertAdjacentHTML('beforeend','<p>Переводы появятся после сохранения записи.</p>');
   }
   setPendingImage(file){

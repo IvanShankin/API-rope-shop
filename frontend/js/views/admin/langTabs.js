@@ -1,13 +1,13 @@
-import { escapeHtml as esc } from '../../utils/text.js?v=20261106.1';
+import { escapeHtml as esc } from '../../utils/text.js?v=20261116.1';
 
 // Единые языковые вкладки админки: канаты, цвета, тексты, галереи, отзывы, справочники.
 // Разметка и классы — как в карточке каната (стили в css/admin/02-components, 11-product-editor).
-export const LOCALES = [['rus', 'Русский'], ['eng', 'Английский'], ['ger', 'Немецкий']];
+export const LOCALES = [['rus', 'Русский'], ['eng', 'Английский'], ['ger', 'Немецкий'], ['ces', 'Чешский']];
 let lastLocale = 'rus';
 let counter = 0;
 
 /**
- * panels — { rus: html, eng: html, ger: html } с полями каждого языка.
+ * panels — { rus: html, eng: html, ger: html, ces: html } с полями каждого языка.
  * filled — { rus: true, ... } для зелёной точки «заполнено». extra — кнопки справа от вкладок.
  */
 export function langTabsMarkup({ label = 'Язык текста', panels, filled = {}, extra = '' }) {

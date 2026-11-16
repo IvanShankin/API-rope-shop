@@ -1,10 +1,10 @@
-import { loadErrorMessage } from '../ui/load-state.js?v=20261106.1';
-import { BaseController } from './BaseController.js?v=20261106.1';
-import { ConfiguratorModel } from '../models/ConfiguratorModel.js?v=20261106.1';
-import { ConfiguratorView } from '../views/configurator/ConfiguratorView.js?v=20261106.1';
-import { configuratorApi } from '../api/configuratorApi.js?v=20261106.1';
-import { quoteApi } from '../api/quoteApi.js?v=20261106.1';
-import { QuoteCalculator } from '../api/quoteCalculator.js?v=20261106.1';
+import { loadErrorMessage } from '../ui/load-state.js?v=20261116.1';
+import { BaseController } from './BaseController.js?v=20261116.1';
+import { ConfiguratorModel } from '../models/ConfiguratorModel.js?v=20261116.1';
+import { ConfiguratorView } from '../views/configurator/ConfiguratorView.js?v=20261116.1';
+import { configuratorApi } from '../api/configuratorApi.js?v=20261116.1';
+import { quoteApi } from '../api/quoteApi.js?v=20261116.1';
+import { QuoteCalculator, submitErrorMessage } from '../api/quoteCalculator.js?v=20261116.1';
 
 export class ConfiguratorController extends BaseController {
   constructor() {
@@ -95,7 +95,7 @@ export class ConfiguratorController extends BaseController {
         this.view.showSubmitSuccess(response);
       }
     } catch (error) {
-      this.view.showSubmitError(`${error.message || 'Ошибка соединения'}. При потере связи заявка могла сохраниться — уточните результат перед повторной отправкой.`);
+      this.view.showSubmitError(submitErrorMessage(error));
     } finally {
       this.submitting = false;
       this.view.setSubmitLoading(false);

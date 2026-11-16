@@ -1,6 +1,7 @@
-import {appendTrackingLink} from '../../utils/tracking.js?v=20261106.1';
-import { catalogLink, updateLoadState } from '../../ui/load-state.js?v=20261106.1';
-import { escapeHtml as esc, displayName } from '../../utils/text.js?v=20261106.1';
+import {appendTrackingLink} from '../../utils/tracking.js?v=20261116.1';
+import { catalogLink, updateLoadState } from '../../ui/load-state.js?v=20261116.1';
+import { escapeHtml as esc, displayName } from '../../utils/text.js?v=20261116.1';
+import { attachPhoneMask, phoneValue } from '../../utils/phoneMask.js?v=20261116.1';
 
 export class ServiceConfiguratorView {
   constructor(root) {
@@ -16,7 +17,7 @@ export class ServiceConfiguratorView {
         <div class="configurator__step"><label class="configurator__step-title" for="${root.id}-diameter">Диаметр каната, мм</label>
           <input class="field__input" id="${root.id}-diameter" name="diameter" type="number" min="0.1" step="0.1" value="8" required></div>
         <div class="configurator__step" data-eye><label class="configurator__step-title" for="${root.id}-eye">Внутренний диаметр петли, см</label>
-          <input class="field__input" id="${root.id}-eye" name="eye" type="number" min="0.1" step="0.1" value="10"></div>
+          <input class="field__input" id="${root.id}-eye" name="eye" type="number" min="0.1" max="1000" step="0.1" value="10"></div>
         <div class="configurator__step"><label class="configurator__step-title" for="${root.id}-quantity">Количество работ</label>
           <input class="field__input" id="${root.id}-quantity" name="quantity" type="number" min="1" max="999" step="1" value="1" required>
           <p class="configurator__hint">Две петли — две работы. Замкнутое сращивание — одна работа на весь канат.</p></div>
@@ -26,19 +27,20 @@ export class ServiceConfiguratorView {
       <div class="service-summary">
         <p class="service-summary__label">Предварительная стоимость</p>
         <p class="service-summary__total" data-total aria-live="polite">—</p><p data-breakdown></p>
+        <p class="service-summary__alert" data-validation role="alert"></p>
         <p class="service-summary__note">Канат предоставляете вы — его стоимость не включена. Исполнение и окончательную цену подтвердим перед работой.</p>
         <fieldset class="summary__contacts" data-contact-fields><legend>Как с вами связаться</legend>
           <label class="field">Имя<input class="field__input" name="name" autocomplete="name" maxlength="255" required></label>
-          <label class="field">E-mail<input class="field__input" name="email" type="email" autocomplete="email" required></label>
-          <label class="field">Телефон<input class="field__input" name="phone" type="tel" autocomplete="tel" maxlength="100"></label>
-          <label class="field">Пожелания к работе<textarea class="field__input" name="comment" rows="3"></textarea></label>
+          <label class="field">E-mail<input class="field__input" name="email" type="email" autocomplete="email" maxlength="255" required></label>
+          <label class="field">Телефон<input class="field__input" name="phone" type="tel" autocomplete="tel" inputmode="tel" maxlength="100"></label>
+          <label class="field">Пожелания к работе<textarea class="field__input" name="comment" rows="3" maxlength="2000"></textarea></label>
           <label class="check check--light"><input class="check__input" type="checkbox" name="consent" required><span class="check__box"></span><span>Согласен(-на) на обработку данных для ответа на заявку <a href="/legal/?document=privacy" lang="de">Datenschutz</a></span></label>
         </fieldset>
-        <p data-validation role="status"></p>
         <button class="button button--ghost button--small" type="button" data-price-retry hidden>Обновить цену</button>
         <button class="button button--dark" type="submit" disabled>Отправить на проверку</button>
         <p data-result role="status"></p>
       </div>`;
+    attachPhoneMask(this.form.elements.phone);
     this.status = document.createElement('p');
     this.status.setAttribute('role', 'status');
     this.retry = document.createElement('button');
@@ -59,7 +61,7 @@ export class ServiceConfiguratorView {
     this.form.addEventListener('submit', event => {
       event.preventDefault();
       if (!this.form.reportValidity()) return;
-      submit(Object.fromEntries(new FormData(this.form)));
+      submit({ ...Object.fromEntries(new FormData(this.form)), phone: phoneValue(this.form.elements.phone) });
     }, options);
     this.retry.addEventListener('click', retry, options);
     this.form.querySelector('[data-price-retry]').addEventListener('click', priceRetry, options);
@@ -88,10 +90,14 @@ export class ServiceConfiguratorView {
     this.form.elements.eye.disabled = !result.needsEye;
     this.form.elements.eye.required = result.needsEye;
     this.form.querySelector('.service-summary').setAttribute('aria-busy', String(result.status === 'loading'));
-    this.form.querySelector('[data-total]').textContent = ready ? `${result.total.toFixed(2)} ${result.currency}`
-      : result.status === 'loading' ? 'Считаем…' : '—';
+    const total = this.form.querySelector('[data-total]');
+    const failed = !ready && result.status !== 'loading' && Boolean(result.error);
+    total.textContent = ready ? `${result.total.toFixed(2)} ${result.currency}`
+      : result.status === 'loading' ? 'Считаем…' : failed ? 'Расчёт недоступен' : '—';
+    total.classList.toggle('service-summary__total--error', failed);
     this.form.querySelector('[data-breakdown]').textContent = ready ? `Работы: ${result.work.toFixed(2)} · Опции: ${result.extras.toFixed(2)} · Срочность: ${result.urgent.toFixed(2)} ${result.currency}` : '';
-    this.form.querySelector('[data-validation]').textContent = result.error;
+    const alert = this.form.querySelector('[data-validation]');
+    if (alert.textContent !== (result.error || '')) alert.textContent = result.error || '';
     this.form.querySelector('[data-price-retry]').hidden = !result.retry;
     this.setBusy(this.busy, this.sent);
   }

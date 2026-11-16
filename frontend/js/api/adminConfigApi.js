@@ -1,5 +1,5 @@
-import { apiClient as client } from './apiClient.js?v=20261106.1';
-import { adminCatalogApi } from './adminCatalogApi.js?v=20261106.1';
+import { apiClient as client } from './apiClient.js?v=20261116.1';
+import { adminCatalogApi } from './adminCatalogApi.js?v=20261116.1';
 const auth = { requiresAuth:true };
 export const adminConfigApi = {
   list: async (section,params) => {

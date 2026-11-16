@@ -1,4 +1,4 @@
-import { apiClient } from './apiClient.js?v=20261106.1';
+import { apiClient } from './apiClient.js?v=20261116.1';
 const auth = { requiresAuth: true };
 let listCache = null;
 export const adminColorsApi = {

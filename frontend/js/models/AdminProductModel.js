@@ -3,7 +3,7 @@ export class AdminProductModel {
   static catalogProduct(values) {
     const settings = this.product(values);
     delete settings.working_stretch_percent;
-    const translations = ['rus','eng','ger'].filter(locale=>String(values[`name_${locale}`]||'').trim()).map(locale=>({
+    const translations = ['rus','eng','ger','ces'].filter(locale=>String(values[`name_${locale}`]||'').trim()).map(locale=>({
       locale, name: values[`name_${locale}`].trim(), subtitle: String(values[`subtitle_${locale}`]||'').trim()||null,
       description: String(values[`description_${locale}`]||'').trim()||null,
     }));

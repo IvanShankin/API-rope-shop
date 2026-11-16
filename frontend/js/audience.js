@@ -1,5 +1,6 @@
-import {contactsApi} from './api/contactsApi.js?v=20261106.1';
-import {translate as t} from './i18n/translate.js?v=20261106.1';
+import {contactsApi} from './api/contactsApi.js?v=20261116.1';
+import {translate as t} from './i18n/translate.js?v=20261116.1';
+import {attachPhoneMask,phoneValue} from './utils/phoneMask.js?v=20261116.1';
 /* Public inquiries use the existing contact_requests contract. */
 (() => {
   'use strict';
@@ -21,6 +22,8 @@ import {translate as t} from './i18n/translate.js?v=20261106.1';
     let busy=false,sent=false,uncertain=false;
     const submit=form.querySelector('[type=submit]');
     form.querySelectorAll('[name=name],[name=email],[name=company]').forEach(input=>input.maxLength=255);
+    const phone=form.querySelector('[name=phone]');
+    attachPhoneMask(phone);
     form.addEventListener('submit', async event => {
       event.preventDefault();
       if(busy||sent||uncertain)return;
@@ -33,7 +36,7 @@ import {translate as t} from './i18n/translate.js?v=20261106.1';
         form.append(status);
       }
       const values=Object.fromEntries(new FormData(form));
-      const data={name:values.name.trim(),email:values.email.trim(),
+      const data={name:values.name.trim(),email:values.email.trim(),phone:phone?phoneValue(phone)||null:null,
         message:[location.pathname.includes('b2b')?'B2B':'B2C',values.company?.trim(),values.message.trim()].filter(Boolean).join('\n\n')};
       if(!data.name||!values.message.trim()){status.textContent=t('Заполните имя и описание задачи.');return;}
       busy=true;submit.disabled=true;form.setAttribute('aria-busy','true');status.textContent=t('Отправляем обращение…');
@@ -43,7 +46,7 @@ import {translate as t} from './i18n/translate.js?v=20261106.1';
         status.textContent=response?.id?t('Обращение принято. Мы свяжемся с вами по указанному email.'):t('Ответ не подтверждён. Обращение могло сохраниться; уточните результат перед повторной отправкой.');
       }catch(error){
         uncertain=!error.status||error.status>=500;
-        status.textContent=t(uncertain?'Ответ не подтверждён. Обращение могло сохраниться; уточните результат перед повторной отправкой.':'Не удалось отправить обращение. Проверьте поля и повторите позже.');
+        status.textContent=t(uncertain?'Ответ не подтверждён. Обращение могло сохраниться; уточните результат перед повторной отправкой.':error.status===429?'Слишком много обращений подряд. Подождите несколько минут и отправьте снова.':error.status===422?'Проверьте e-mail и длину описания задачи.':'Не удалось отправить обращение. Проверьте поля и повторите позже.');
       }finally{busy=false;submit.disabled=sent||uncertain;form.setAttribute('aria-busy','false');}
     });
   });

@@ -1,7 +1,7 @@
-import { BaseModel } from './BaseModel.js?v=20261106.1';
-import { displayName } from '../utils/text.js?v=20261106.1';
-import { apiLocale } from '../i18n/locale.js?v=20261106.1';
-import { normalizeProduct } from '../api/productAdapter.js?v=20261106.1';
+import { BaseModel } from './BaseModel.js?v=20261116.1';
+import { displayName } from '../utils/text.js?v=20261116.1';
+import { apiLocale } from '../i18n/locale.js?v=20261116.1';
+import { normalizeProduct } from '../api/productAdapter.js?v=20261116.1';
 
 /**
  * Модель данных и бизнес-логики интерактивного конфигуратора

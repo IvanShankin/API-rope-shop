@@ -1,11 +1,12 @@
-import {API_CONFIG} from './api/config.js?v=20261106.1';
-import {getLanguage} from './i18n/locale.js?v=20261106.1';
-import {escapeHtml as esc} from './utils/text.js?v=20261106.1';
+import {API_CONFIG} from './api/config.js?v=20261116.1';
+import {getLanguage} from './i18n/locale.js?v=20261116.1';
+import {escapeHtml as esc} from './utils/text.js?v=20261116.1';
 
 const words = {
   ru: ['Ваша заявка','Сохраните ссылку. Она открывает доступ к вашей заявке — передавайте её только доверенным людям.','Загружаем заявку…','Повторить','К услугам и конфигуратору','Ссылка неполная. Откройте полную ссылку, полученную после отправки заявки.','Заявка недоступна. Проверьте ссылку или обратитесь к менеджеру.','Не удалось загрузить заявку. Попробуйте позже.','Номер','Статус','Сумма','Дата','Канаты','Услуги','Дополнительные опции','Комментарий','Стоимость и срок подтвердит менеджер.'],
   en: ['Your enquiry','Save this link. It gives access to your enquiry; share it only with people you trust.','Loading enquiry…','Retry','Services and configurator','This link is incomplete. Open the full link received after submitting your enquiry.','Enquiry unavailable. Check the link or contact our team.','Could not load the enquiry. Please try later.','Number','Status','Total','Date','Ropes','Services','Extra options','Comment','Our team will confirm the final price and delivery time.'],
   de: ['Ihre Anfrage','Speichern Sie diesen Link. Er ermöglicht den Zugriff auf Ihre Anfrage. Teilen Sie ihn nur mit vertrauenswürdigen Personen.','Anfrage wird geladen…','Erneut versuchen','Leistungen und Konfigurator','Dieser Link ist unvollständig. Öffnen Sie den vollständigen Link, den Sie nach dem Absenden erhalten haben.','Anfrage nicht verfügbar. Prüfen Sie den Link oder kontaktieren Sie uns.','Die Anfrage konnte nicht geladen werden. Bitte versuchen Sie es später.','Nummer','Status','Summe','Datum','Seile','Leistungen','Zusatzoptionen','Kommentar','Unser Team bestätigt den endgültigen Preis und den Liefertermin.'],
+  cs: ['Vaše poptávka','Uložte si tento odkaz. Zpřístupňuje vaši poptávku; sdílejte ho jen s lidmi, kterým důvěřujete.','Načítáme poptávku…','Zkusit znovu','Služby a konfigurátor','Odkaz je neúplný. Otevřete celý odkaz, který jste obdrželi po odeslání poptávky.','Poptávka není dostupná. Zkontrolujte odkaz nebo nás kontaktujte.','Poptávku se nepodařilo načíst. Zkuste to prosím později.','Číslo','Stav','Částka','Datum','Lana','Služby','Doplňkové možnosti','Komentář','Konečnou cenu a termín dodání potvrdí náš tým.'],
 };
 const language = getLanguage();
 const t = words[language];
@@ -13,6 +14,7 @@ const statuses = {
   ru: {new:'Новая',in_progress:'В работе',confirmed:'Подтверждена',completed:'Завершена',cancelled:'Отменена'},
   en: {new:'New',in_progress:'In progress',confirmed:'Confirmed',completed:'Completed',cancelled:'Cancelled'},
   de: {new:'Neu',in_progress:'In Bearbeitung',confirmed:'Bestätigt',completed:'Abgeschlossen',cancelled:'Storniert'},
+  cs: {new:'Nová',in_progress:'Zpracovává se',confirmed:'Potvrzena',completed:'Dokončena',cancelled:'Zrušena'},
 };
 document.documentElement.lang = language;
 document.title = `${t[0]} — Rope-Pro-Line`;

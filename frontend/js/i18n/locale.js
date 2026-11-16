@@ -1,4 +1,4 @@
-export const languages = ['ru', 'en', 'de'];
+export const languages = ['ru', 'en', 'de', 'cs'];
 export function getLanguage() {
   if (typeof window === 'undefined') return 'ru';
   try {
@@ -8,4 +8,4 @@ export function getLanguage() {
     return /^\/(?:admin|login)(?:\/|\.html|$)/.test(window.location.pathname || '') ? 'ru' : 'de';
   } catch { return 'de'; }
 }
-export const apiLocale = () => ({ru:'rus',en:'eng',de:'ger'}[getLanguage()]);
+export const apiLocale = () => ({ru:'rus',en:'eng',de:'ger',cs:'ces'}[getLanguage()]);

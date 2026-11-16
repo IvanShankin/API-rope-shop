@@ -1,9 +1,9 @@
-import { loadErrorMessage } from '../ui/load-state.js?v=20261106.1';
-import { configuratorApi } from '../api/configuratorApi.js?v=20261106.1';
-import { quoteApi } from '../api/quoteApi.js?v=20261106.1';
-import { QuoteCalculator } from '../api/quoteCalculator.js?v=20261106.1';
-import { ServiceConfiguratorModel } from '../models/ServiceConfiguratorModel.js?v=20261106.1';
-import { ServiceConfiguratorView } from '../views/configurator/ServiceConfiguratorView.js?v=20261106.1';
+import { loadErrorMessage } from '../ui/load-state.js?v=20261116.1';
+import { configuratorApi } from '../api/configuratorApi.js?v=20261116.1';
+import { quoteApi } from '../api/quoteApi.js?v=20261116.1';
+import { QuoteCalculator, submitErrorMessage } from '../api/quoteCalculator.js?v=20261116.1';
+import { ServiceConfiguratorModel } from '../models/ServiceConfiguratorModel.js?v=20261116.1';
+import { ServiceConfiguratorView } from '../views/configurator/ServiceConfiguratorView.js?v=20261116.1';
 
 class ServiceController {
   constructor(root) {
@@ -57,7 +57,7 @@ class ServiceController {
         : 'Сервер обработал запрос, но не вернул номер. Уточните результат у менеджера перед повторной отправкой.');
       this.view.tracking(response);
     } catch (error) {
-      this.view.result(`${error.message}. При потере связи заявка могла сохраниться — уточните результат перед повторной отправкой.`);
+      this.view.result(submitErrorMessage(error));
     } finally { this.busy = false; this.view.setBusy(false, this.sent); }
   }
   destroy() { this.destroyed = true; this.calculator.cancel(); this.view.destroy(); }

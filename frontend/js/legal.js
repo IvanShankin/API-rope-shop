@@ -1,4 +1,4 @@
-import {getLanguage} from './i18n/locale.js?v=20261106.1';
+import {getLanguage} from './i18n/locale.js?v=20261116.1';
 
 // These are labels for unfinished templates, not final legal texts.
 const labels = {
@@ -20,6 +20,12 @@ const labels = {
     ['Компания и область действия','Использование сайта и конфигуратора','Заявка, индивидуальное предложение и соглашение','Техническая информация и использование по назначению','Контент и отзывы','Законные права и контакты'],
     ['Область действия и право на отказ','Как воспользоваться правом на отказ','Последствия отказа','Изделия индивидуального изготовления','Образец формы отказа'],
     ['Регион и сроки доставки','Стоимость доставки','Способы и сроки оплаты']]},
+  cs: {names:['Tiráž','Zásady ochrany osobních údajů','Podmínky užívání','Poučení o odstoupení od smlouvy','Doprava a platba'], nav:'Právní dokumenty', notice:'Šablona — zatím nezveřejněno.', detail:'Závazné texty a údaje provozovatele budou doplněny. Tato šablona není úplnou právní informací.', placeholder:'Odsouhlasený text bude doplněn sem.', missing:'Dokument nenalezen', choose:'Vyberte prosím dokument v navigaci.', sections:[
+    ['Provozovatel a adresa','Kontakt','Zastoupení a registrační údaje','DIČ','Mimosoudní řešení spotřebitelských sporů'],
+    ['Správce a kontakt pro ochranu údajů','Hosting a serverové protokoly','Kontaktní dotazy a individuální nabídky','Konfigurátor a stav poptávky','Recenze','Cookies a úložiště prohlížeče','Externí služby a písma','Příjemci a mezinárodní předávání údajů','Doba uložení a výmaz','Vaše práva a možnost stížnosti'],
+    ['Provozovatel a rozsah platnosti','Užívání webu a konfigurátoru','Poptávka, individuální nabídka a dohoda','Technické údaje a zamýšlené použití','Obsah a recenze','Zákonná práva a kontakt'],
+    ['Rozsah a právo odstoupit od smlouvy','Jak odstoupit od smlouvy','Důsledky odstoupení','Zboží vyrobené na zakázku','Vzorový formulář pro odstoupení'],
+    ['Oblast a doba doručení','Náklady na dopravu','Způsoby a splatnost platby']]},
 };
 const keys = ['imprint','privacy','terms','withdrawal','shipping'];
 const language = getLanguage();

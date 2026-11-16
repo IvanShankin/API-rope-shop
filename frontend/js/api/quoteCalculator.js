@@ -1,4 +1,4 @@
-import { quoteApi } from './quoteApi.js?v=20261106.1';
+import { quoteApi } from './quoteApi.js?v=20261116.1';
 
 // Понятный текст ошибки расчёта. Бекенд отвечает 400 с английским detail,
 // поэтому узнаём частые случаи по тексту и не показываем покупателю сырой ответ.
@@ -7,6 +7,10 @@ export function calculationErrorMessage(error) {
   if (error?.network) return { text: `${error.message}. Цена не пересчитана.`, retry: true };
   if (error?.status === 429) return { text: 'Слишком много пересчётов подряд. Подождите минуту и обновите цену.', retry: true };
   if (error?.status >= 500 || !error?.status) return { text: 'Сервер не смог посчитать стоимость. Попробуйте обновить цену.', retry: true };
+  // Бэкенд отклоняет выключенные в админке товар, диаметр, цвет, обработку и материал.
+  if (/inactive/i.test(detail)) return { text: 'Часть выбранных вариантов больше недоступна. Обновите страницу.', retry: false };
+  if (/not a loop/i.test(detail)) return { text: 'Выбранная обработка недоступна для этого каната.', retry: false };
+  if (error?.status === 422) return { text: 'Проверьте диаметр, длину, количество и размер петли.', retry: false };
   if (/pricing rule/i.test(detail)) return { text: 'Для выбранной обработки и диаметра нет тарифа. Выберите другой вариант.', retry: false };
   if (/urgent/i.test(detail)) return { text: 'Срочное изготовление недоступно для такого количества сращиваний.', retry: false };
   if (/per-loop/i.test(detail)) return { text: 'Выбранная опция доступна только при заказе с петлёй.', retry: false };
@@ -15,6 +19,15 @@ export function calculationErrorMessage(error) {
   if (/splic/i.test(detail)) return { text: 'Выбранная обработка недоступна для этого каната.', retry: false };
   if (error?.status === 404) return { text: 'Часть выбранных вариантов больше недоступна. Обновите страницу.', retry: false };
   return { text: 'Эту комбинацию нельзя рассчитать. Измените параметры или опишите задачу в заявке.', retry: false };
+}
+
+// Текст ошибки отправки заявки. Ответ 4xx значит, что заявка точно не сохранена,
+// поэтому оговорку про потерю связи показываем только для сети и 5xx.
+export function submitErrorMessage(error) {
+  if (error?.status === 429) return 'Слишком много заявок подряд. Подождите несколько минут и отправьте снова.';
+  if (error?.status === 422) return 'Проверьте имя, e-mail и длину комментария (до 2000 символов).';
+  if (error?.status >= 400 && error?.status < 500) return calculationErrorMessage(error).text;
+  return `${error?.message || 'Ошибка соединения'}. При потере связи заявка могла сохраниться — уточните результат перед повторной отправкой.`;
 }
 
 /**

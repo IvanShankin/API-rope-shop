@@ -1,7 +1,7 @@
-import {contactsApi as api} from '../api/contactsApi.js?v=20261106.1';
-import {contactPayload} from '../models/ContactsModel.js?v=20261106.1';
-import {AdminContentView} from '../views/admin/AdminContentView.js?v=20261106.1';
-import {escapeHtml as esc} from '../utils/text.js?v=20261106.1';
+import {contactsApi as api} from '../api/contactsApi.js?v=20261116.1';
+import {contactPayload} from '../models/ContactsModel.js?v=20261116.1';
+import {AdminContentView} from '../views/admin/AdminContentView.js?v=20261116.1';
+import {escapeHtml as esc} from '../utils/text.js?v=20261116.1';
 class ContactsView extends AdminContentView {
   constructor(root){
     super(root,{all:'Контакты'},false);

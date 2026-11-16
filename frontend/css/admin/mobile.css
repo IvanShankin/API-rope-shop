@@ -1,0 +1,366 @@
+/* ==========================================================================
+   Админка — планшет и телефон.
+   ≤1000px — меню разделов выезжает по кнопке «Меню» в верхней полосе.
+   ≤600px  — всё в одну колонку.
+   ========================================================================== */
+
+.admin-burger,
+.admin-nav-backdrop {
+  display: none;
+}
+
+@media (max-width: 1000px) {
+  .admin {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin__main {
+    padding: calc(56px + var(--sp-5)) var(--sp-5) 0;
+  }
+
+  /* верхняя полоса с кнопкой «Меню» */
+  .admin-burger {
+    position: fixed;
+    z-index: 60;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    height: 56px;
+    padding: 0 var(--sp-4);
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--text);
+    font-size: var(--fs-body);
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .admin-burger__icon {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+
+  .admin-burger__icon--close,
+  .admin-burger__text--close,
+  .admin-nav-open .admin-burger__icon--open,
+  .admin-nav-open .admin-burger__text--open {
+    display: none;
+  }
+
+  .admin-nav-open .admin-burger__icon--close,
+  .admin-nav-open .admin-burger__text--close {
+    display: inline;
+  }
+
+  .admin-nav-ready .sidebar {
+    position: fixed;
+    z-index: 55;
+    top: 56px;
+    left: 0;
+    bottom: 0;
+    width: min(320px, 86vw);
+    height: auto;
+    transform: translateX(-100%);
+    transition: transform .2s ease;
+    visibility: hidden;
+  }
+
+  .admin-nav-open .sidebar {
+    transform: none;
+    visibility: visible;
+  }
+
+  .admin-nav-ready .admin-nav-backdrop {
+    position: fixed;
+    z-index: 50;
+    inset: 56px 0 0;
+    display: block;
+    background: rgb(0 0 0 / 55%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s;
+  }
+
+  .admin-nav-open .admin-nav-backdrop {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .admin-nav-lock,
+  .admin-nav-lock body {
+    overflow: hidden;
+  }
+
+  .admin-notifications {
+    top: calc(64px + env(safe-area-inset-top));
+  }
+
+  .variants-table-header {
+    display: none;
+  }
+
+  /* строка диаметра — две колонки с подписями */
+  .variant-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: var(--sp-3);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+  }
+
+  .variant-row > div::before {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  .variant-row .col-diam::before { content: "Диаметр, мм *"; }
+  .variant-row .col-price::before { content: "Цена за метр *"; }
+  .variant-row .col-load::before { content: "Разрывная нагрузка"; }
+  .variant-row .col-weight::before { content: "Вес метра"; }
+  .variant-row .col-sku::before { content: "Артикул"; }
+
+  .variant-row .col-active,
+  .variant-row .col-action {
+    justify-self: start;
+  }
+
+  .variant-row .col-active .tick::after {
+    content: "Показывать на сайте";
+    font-size: 14px;
+  }
+
+  .variant-row .col-action {
+    grid-column: 1 / -1;
+    justify-self: end;
+  }
+
+  .variant-row .col-action .btn-icon {
+    width: auto;
+    padding: 0 var(--sp-3);
+    gap: var(--sp-2);
+    display: inline-flex;
+    align-items: center;
+    color: var(--danger);
+    font-size: var(--fs-small);
+  }
+
+  .variant-row .col-action .btn-icon::after {
+    content: "Удалить диаметр";
+    font-weight: 600;
+  }
+
+  /* прокрутка к форме: не прятать её под верхней полосой «Меню» */
+  [data-config-editor],
+  [data-color-editor],
+  [data-product-editor],
+  [data-content-editor],
+  [data-variant-form] {
+    scroll-margin-top: calc(56px + var(--sp-4));
+  }
+}
+
+@media (max-width: 600px) {
+  .admin-page {
+    --fs-h1: 22px;
+    --fs-h2: 18px;
+  }
+
+  .admin__main {
+    padding: calc(56px + var(--sp-4)) var(--sp-4) 0;
+  }
+
+  .admin-fields,
+  .fields--two,
+  .settings-card__grid,
+  .contacts-card__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-card,
+  .card--padded,
+  .settings-card,
+  .contacts-card,
+  .admin-disclosure > .admin-disclosure__body {
+    padding: var(--sp-4);
+  }
+
+  .admin-disclosure > summary {
+    padding-left: var(--sp-4);
+    padding-right: 48px;
+  }
+
+  .admin-disclosure > summary::after {
+    right: var(--sp-4);
+  }
+
+  .admin-disclosure > :not(summary) {
+    margin: var(--sp-4);
+  }
+
+  .admin-record-list__items,
+  .admin-category-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-category-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .config-section-menu {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin: 0 calc(-1 * var(--sp-4));
+    padding: 0 var(--sp-4) var(--sp-1);
+    scrollbar-width: none;
+  }
+
+  .config-section-card {
+    flex-shrink: 0;
+  }
+
+  .product-toolbar .btn,
+  .config-admin-toolbar .btn {
+    flex: 1 1 auto;
+  }
+
+  .savebar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--sp-2);
+    margin-left: calc(-1 * var(--sp-4));
+    margin-right: calc(-1 * var(--sp-4));
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+  }
+
+  .savebar__hint {
+    display: none;
+  }
+
+  .savebar .btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* таблица заявок — карточки-строки */
+  .admin-table thead {
+    display: none;
+  }
+
+  .admin-table,
+  .admin-table tbody,
+  .admin-table tr,
+  .admin-table td {
+    display: block;
+  }
+
+  .admin-table tr {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--sp-1) var(--sp-3);
+    padding: var(--sp-3) var(--sp-4);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .admin-table tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .admin-table td {
+    padding: 0;
+    border: 0;
+  }
+
+  .admin-table td:nth-child(1) { grid-row: 1 / span 2; align-self: center; }
+  .admin-table td:nth-child(3) { grid-column: 2; }
+  .admin-table td:last-child { grid-column: 2; text-align: left; }
+
+  .admin-table td:nth-child(2) {
+    font-weight: 600;
+  }
+
+  .admin-table td:nth-child(3) small {
+    display: inline;
+  }
+
+  .admin-table td:nth-child(3) br {
+    display: none;
+  }
+
+  .admin-table td:nth-child(3) small::before {
+    content: " · ";
+  }
+
+  /* цены на заделки — строки карточками */
+  .admin-tariffs__table thead {
+    display: none;
+  }
+
+  .admin-tariffs__table tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--sp-2);
+    padding: var(--sp-3) var(--sp-4);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .admin-tariffs__table td {
+    display: block;
+    padding: 0;
+    border: 0;
+  }
+
+  .admin-tariffs__table td[data-label="Состояние"] {
+    grid-column: 1 / -1;
+    color: var(--faint);
+    font-size: var(--fs-small);
+  }
+
+  .admin-form-row > .field {
+    width: 100%;
+  }
+
+  .product-lang-bar {
+    align-items: stretch;
+  }
+
+  .lang-switch {
+    width: 100%;
+  }
+
+  .lang-switch__button {
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 6px;
+    font-size: 13px;
+  }
+
+  .admin-card,
+  .admin-disclosure,
+  .lang-tabs,
+  .lang-tab-panel,
+  .product-editor {
+    min-width: 0;
+  }
+}
+
+/* Четыре языка (рус., англ., нем., чеш.): на узком экране вкладки идут в две строки, без прокрутки вбок. */
+@media (max-width: 600px) {
+  .lang-switch {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

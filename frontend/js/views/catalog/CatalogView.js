@@ -1,9 +1,9 @@
-import { catalogLink, updateLoadState } from '../../ui/load-state.js?v=20261106.1';
-import { BaseView } from '../BaseView.js?v=20261106.1';
-import { escapeHtml as esc } from '../../utils/text.js?v=20261106.1';
-import { translate } from '../../i18n/translate.js?v=20261106.1';
-import { getLanguage } from '../../i18n/locale.js?v=20261106.1';
-import { mediaUrl } from '../../utils/media.js?v=20261106.1';
+import { catalogLink, updateLoadState } from '../../ui/load-state.js?v=20261116.1';
+import { BaseView } from '../BaseView.js?v=20261116.1';
+import { escapeHtml as esc } from '../../utils/text.js?v=20261116.1';
+import { translate } from '../../i18n/translate.js?v=20261116.1';
+import { getLanguage } from '../../i18n/locale.js?v=20261116.1';
+import { mediaUrl } from '../../utils/media.js?v=20261116.1';
 
 const filterLabels = {
   title: ['Фильтр', 'Filter', 'Filter'],

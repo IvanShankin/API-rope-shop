@@ -1,4 +1,4 @@
-import { BaseView } from '../BaseView.js?v=20261106.1';
+import { BaseView } from '../BaseView.js?v=20261116.1';
 
 export class HeaderView extends BaseView {
   constructor() {

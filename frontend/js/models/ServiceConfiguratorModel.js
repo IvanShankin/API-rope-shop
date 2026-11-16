@@ -1,4 +1,4 @@
-import { apiLocale } from '../i18n/locale.js?v=20261106.1';
+import { apiLocale } from '../i18n/locale.js?v=20261116.1';
 const number = value => value === '' || value == null ? NaN : Number(value);
 
 export class ServiceConfiguratorModel {

@@ -1,5 +1,5 @@
-import { apiClient } from './apiClient.js?v=20261106.1';
-import { adminCatalogApi } from './adminCatalogApi.js?v=20261106.1';
+import { apiClient } from './apiClient.js?v=20261116.1';
+import { adminCatalogApi } from './adminCatalogApi.js?v=20261116.1';
 
 // Товары, фото и категории — через общий каталог (/products), здесь только
 // справочники и варианты диаметров.

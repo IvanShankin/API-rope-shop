@@ -1,4 +1,4 @@
-import {getLanguage} from '../i18n/locale.js?v=20261106.1';
+import {getLanguage} from '../i18n/locale.js?v=20261116.1';
 
 export function trackingPath(quote) {
   if (!quote?.request_number || !quote?.tracking_token) return '';
@@ -12,7 +12,7 @@ export function appendTrackingLink(root, quote) {
   const link = document.createElement('a');
   link.href = path;
   link.className = 'button button--ghost';
-  link.textContent = ({ru:'Посмотреть заявку',en:'View enquiry',de:'Anfrage ansehen'})[getLanguage()];
+  link.textContent = ({ru:'Посмотреть заявку',en:'View enquiry',de:'Anfrage ansehen',cs:'Zobrazit poptávku'})[getLanguage()];
   const paragraph = document.createElement('p');
   paragraph.append(link);
   root.append(paragraph);

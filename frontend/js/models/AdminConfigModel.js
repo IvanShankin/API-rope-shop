@@ -32,7 +32,7 @@ export const configSections = {
 };
 
 export function automaticConfigCode(section, values, items = []) {
-  const names = ['name_eng', 'name_ger', 'name_rus', 'name'].map(key => String(values[key] || '').trim()).filter(Boolean);
+  const names = ['name_eng', 'name_ger', 'name_rus', 'name_ces', 'name'].map(key => String(values[key] || '').trim()).filter(Boolean);
   const sleeveNames = ['sleeve', 'protective sleeve', 'защитный рукав', 'schutzschlauch'];
   const chars = {'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'h','ц':'ts','ч':'ch','ш':'sh','щ':'sch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya','ä':'ae','ö':'oe','ü':'ue','ß':'ss'};
   const name = names[0] || '';
@@ -60,7 +60,7 @@ export function configPayload(section, values, rules = [], id = null) {
     data[f.name] = value;
   }
   if (schema.translated) {
-    data.translations = ['rus','eng','ger'].filter(locale => String(values[`name_${locale}`] || '').trim()).map(locale => ({locale,name:values[`name_${locale}`].trim(),...(schema.description ? {description:values[`description_${locale}`]?.trim() || null} : {})}));
+    data.translations = ['rus','eng','ger','ces'].filter(locale => String(values[`name_${locale}`] || '').trim()).map(locale => ({locale,name:values[`name_${locale}`].trim(),...(schema.description ? {description:values[`description_${locale}`]?.trim() || null} : {})}));
     if (!data.translations.length) throw new Error('Заполните название хотя бы на одном языке.');
   }
   if (section === 'configurator_settings' && data.max_length_m < data.min_length_m) throw new Error('Максимальная длина меньше минимальной.');

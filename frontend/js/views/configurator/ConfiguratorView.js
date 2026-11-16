@@ -1,8 +1,9 @@
-import {appendTrackingLink} from '../../utils/tracking.js?v=20261106.1';
-import { catalogLink, updateLoadState } from '../../ui/load-state.js?v=20261106.1';
-import { BaseView } from '../BaseView.js?v=20261106.1';
-import { RopeSvgRenderer } from './RopeSvgRenderer.js?v=20261106.1';
-import { escapeHtml, displayName } from '../../utils/text.js?v=20261106.1';
+import {appendTrackingLink} from '../../utils/tracking.js?v=20261116.1';
+import { catalogLink, updateLoadState } from '../../ui/load-state.js?v=20261116.1';
+import { BaseView } from '../BaseView.js?v=20261116.1';
+import { RopeSvgRenderer } from './RopeSvgRenderer.js?v=20261116.1';
+import { escapeHtml, displayName } from '../../utils/text.js?v=20261116.1';
+import { attachPhoneMask, phoneValue } from '../../utils/phoneMask.js?v=20261116.1';
 
 export class ConfiguratorView extends BaseView {
   constructor(root = '#configurator') {
@@ -17,6 +18,8 @@ export class ConfiguratorView extends BaseView {
     this.lengthInput = this.form?.elements['cfg-length'];
     this.range = this.$('[data-cfg-range]');
     this.qtyInput = this.form?.elements['cfg-qty'];
+    this.phoneInput = this.form?.elements['cfg-phone'];
+    attachPhoneMask(this.phoneInput);
     this.linesContainer = this.$('[data-cfg-lines]');
     this.submitStatus = this.$('[data-cfg-submit-status]');
     this.selectionValid = false;
@@ -129,7 +132,7 @@ export class ConfiguratorView extends BaseView {
       const customerData = {
         name: formData.get('cfg-name') || '',
         email: formData.get('cfg-email') || '',
-        phone: formData.get('cfg-phone') || '',
+        phone: this.phoneInput ? phoneValue(this.phoneInput) : '',
         comment: formData.get('cfg-comment') || '',
       };
 

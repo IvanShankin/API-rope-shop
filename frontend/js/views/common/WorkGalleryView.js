@@ -4,7 +4,14 @@ export class WorkGalleryView {
     const photos = Array.from(root.querySelectorAll('.work-gallery__photo'));
     const dialog = root.querySelector('dialog');
     if (!dialog || !photos.length) return;
-    const image=dialog.querySelector('.work-gallery__full-image');
+    let image=dialog.querySelector('.work-gallery__full-image');
+    // В catalog.html окно размечено под ленту Swiper (.work-gallery__viewport), а этот просмотр
+    // показывает одно фото: без <img> окно падало с ошибкой. Создаём картинку сами.
+    if(!image){
+      image=document.createElement('img');image.className='work-gallery__full-image';image.alt='';
+      const viewport=dialog.querySelector('.work-gallery__viewport');
+      if(viewport)viewport.replaceWith(image);else dialog.querySelector('.work-gallery__close').after(image);
+    }
     const caption=dialog.querySelector('.work-gallery__current');
     const description=document.createElement('p');description.className='work-gallery__description';description.setAttribute('data-no-translate','');description.hidden=true;image.after(description);
     const more=root.querySelector('[data-gallery-more]');

@@ -1,11 +1,11 @@
-import {reviewsApi as api} from '../api/reviewsApi.js?v=20261106.1';
-import {AdminReviewsView} from '../views/admin/AdminReviewsView.js?v=20261106.1';
+import {reviewsApi as api} from '../api/reviewsApi.js?v=20261116.1';
+import {AdminReviewsView} from '../views/admin/AdminReviewsView.js?v=20261116.1';
 export class AdminReviewsController {
   constructor(root){
     this.view=new AdminReviewsView(root);this.section='all';this.ready=false;this.busy=false;this.item=null;
     this.view.bind({load:()=>this.load(),select:id=>this.select(id),save:()=>this.save(),remove:()=>this.remove(),create:()=>{
       if(!this.ready||this.busy||!this.view.allowDiscard())return;
-      this.item=null;this.uncertain=false;this.view.select(null);this.view.render();this.view.message('Заполните автора и хотя бы один текст.');
+      this.item=null;this.uncertain=false;this.view.select(null);this.view.render();this.view.message('Заполните автора и хотя бы один текст.');this.view.revealEditor();
     }});
   }
   lock(value){this.busy=value;this.view.busy(value);}
@@ -26,7 +26,7 @@ export class AdminReviewsController {
   async save(){
     if(this.busy)return;
     if(this.uncertain){this.view.message('Не понятно, сохранилось ли. Обновите список и проверьте отзыв.', 'warning');return;}
-    const v=this.view.values();const data={author_name:v.author_name.trim(),rating:v.rating?Number(v.rating):null,status:v.status,is_published:v.is_published,index:Number(v.index),translations:['rus','eng','ger'].map(locale=>({locale,text:v[`text_${locale}`].trim()}))};
+    const v=this.view.values();const data={author_name:v.author_name.trim(),rating:v.rating?Number(v.rating):null,status:v.status,is_published:v.is_published,index:Number(v.index),translations:['rus','eng','ger','ces'].map(locale=>({locale,text:v[`text_${locale}`].trim()}))};
     if(!data.author_name||!data.translations.some(t=>t.text)||!Number.isSafeInteger(data.index)||data.index<0){this.view.message('Заполните автора, один текст и порядок (0, 1, 2…).', 'warning');return;}
     const newReview=!this.item?.id;
     this.lock(true);this.view.message('Сохраняем…');let creating=newReview;

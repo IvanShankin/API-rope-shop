@@ -1,4 +1,4 @@
-import { API_CONFIG } from '../api/config.js?v=20261106.1';
+import { API_CONFIG } from '../api/config.js?v=20261116.1';
 
 // Relative media paths use the same proxy prefix as the API.
 export function mediaUrl(value) {

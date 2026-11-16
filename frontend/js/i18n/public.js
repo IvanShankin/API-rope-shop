@@ -1,6 +1,6 @@
-import { getLanguage, languages } from './locale.js?v=20261106.1';
-import { translate } from './translate.js?v=20261106.1';
-import '../seo/public.js?v=20261106.1';
+import { getLanguage, languages } from './locale.js?v=20261116.1';
+import { translate } from './translate.js?v=20261116.1';
+import '../seo/public.js?v=20261116.1';
 
 // Public pages only. Admin keeps its own Russian interface.
 export function initPublicLanguage() {
@@ -69,7 +69,7 @@ export function initPublicLanguage() {
       const href=node.getAttribute('href');
       if(href && !href.startsWith('#')) {
         const url=new URL(href,location.href);
-        if(url.origin===location.origin && /^\/(?:$|(?:catalog|category|configurator|b2b|b2c|legal)\/$)/.test(url.pathname)) {
+        if(url.origin===location.origin && /^\/(?:$|(?:catalog|category|configurator|b2b|b2c|legal|charity)\/$)/.test(url.pathname)) {
           if(language==='de') url.searchParams.delete('lang'); else url.searchParams.set('lang',language);
           const next=url.pathname+url.search+url.hash;
           if(href!==next) node.setAttribute('href',next);

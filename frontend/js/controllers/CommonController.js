@@ -1,9 +1,9 @@
-import {initContacts} from '../views/common/ContactsView.js?v=20261106.1';
-import {initReviews} from '../views/common/ReviewsView.js?v=20261106.1';
-import { BaseController } from './BaseController.js?v=20261106.1';
-import { HeaderView } from '../views/common/HeaderView.js?v=20261106.1';
-import { WorkGalleryView } from '../views/common/WorkGalleryView.js?v=20261106.1';
-import { initSiteContent } from '../views/common/SiteContentView.js?v=20261106.1';
+import {initContacts} from '../views/common/ContactsView.js?v=20261116.1';
+import {initReviews} from '../views/common/ReviewsView.js?v=20261116.1';
+import { BaseController } from './BaseController.js?v=20261116.1';
+import { HeaderView } from '../views/common/HeaderView.js?v=20261116.1';
+import { WorkGalleryView } from '../views/common/WorkGalleryView.js?v=20261116.1';
+import { initSiteContent } from '../views/common/SiteContentView.js?v=20261116.1';
 
 export class CommonController extends BaseController {
   async init() {

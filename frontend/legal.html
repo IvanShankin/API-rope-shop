@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8">
-  <script src="/js/api/remote-api.js?v=20261106.1"></script>
+  <script src="/js/api/remote-api.js?v=20261116.1"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Правовая информация — Rope-Pro-Line</title>
   <meta name="description"
@@ -13,32 +13,34 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <link rel="icon" type="image/png" href="/img/favicon-64.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/img/favicon-192.png">
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&family=Inter+Tight:wght@400;500;600&display=swap">
   <!-- общие стили сайта разнесены по файлам в css/site/; порядок подключения важен -->
-  <link rel="stylesheet" href="/css/site/01-base.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/site/02-header.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/site/03-hero.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/site/04-about-showcase.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/site/05-configurator.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/site/06-service-forms.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/site/07-charity-gallery-reviews.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/site/08-catalog.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/site/09-footer.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/site/10-responsive.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/site/11-card-fill.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/site/12-hero-stage.css?v=20261106.1">
-  <link rel="stylesheet" href="/css/site/13-accents-remote.css?v=20261106.1">
-  <script type="module" src="/js/app.js?v=20261106.1"></script>
-  <script type="module" src="/js/i18n/public.js?v=20261106.1"></script>
+  <link rel="stylesheet" href="/css/site/01-base.css?v=20261116.1">
+  <link rel="stylesheet" href="/css/site/02-header.css?v=20261116.1">
+  <link rel="stylesheet" href="/css/site/03-hero.css?v=20261116.1">
+  <link rel="stylesheet" href="/css/site/04-about-showcase.css?v=20261116.1">
+  <link rel="stylesheet" href="/css/site/05-configurator.css?v=20261116.1">
+  <link rel="stylesheet" href="/css/site/06-service-forms.css?v=20261116.1">
+  <link rel="stylesheet" href="/css/site/07-charity-gallery-reviews.css?v=20261116.1">
+  <link rel="stylesheet" href="/css/site/08-catalog.css?v=20261116.1">
+  <link rel="stylesheet" href="/css/site/09-footer.css?v=20261116.1">
+  <link rel="stylesheet" href="/css/site/10-responsive.css?v=20261116.1">
+  <link rel="stylesheet" href="/css/site/11-card-fill.css?v=20261116.1">
+  <link rel="stylesheet" href="/css/site/12-hero-stage.css?v=20261116.1">
+  <link rel="stylesheet" href="/css/site/13-accents-remote.css?v=20261116.1">
+  <script type="module" src="/js/app.js?v=20261116.1"></script>
+  <script type="module" src="/js/i18n/public.js?v=20261116.1"></script>
 <meta name="robots" content="noindex">
-  <link rel="stylesheet" href="/css/legal.css?v=20261106.1">
-<script type="module" src="/js/legal.js?v=20261106.1"></script>
-  <link rel="stylesheet" href="/css/custom-selects.css?v=20261106.1">
-  <script type="module" src="/js/ui/custom-selects.js?v=20261106.1"></script>
+  <link rel="stylesheet" href="/css/legal.css?v=20261116.1">
+<script type="module" src="/js/legal.js?v=20261116.1"></script>
+  <link rel="stylesheet" href="/css/custom-selects.css?v=20261116.1">
+  <script type="module" src="/js/ui/custom-selects.js?v=20261116.1"></script>
 </head>
 
 <body class="page__body">
@@ -48,7 +50,7 @@
   <header class="header">
     <div class="header__inner">
       <a class="header__logo logo" href="/" aria-label="Rope-Pro-Line — на главную">
-        <img class="logo__image" srcset="/img/logo.mobile.webp 768w, /img/logo.optimized.webp 925w" sizes="(max-width: 767px) 100vw, 100vw" src="/img/logo.optimized.webp" alt="Rope-Pro-Line — Spleiße Atelier" width="925" height="634">
+        <img class="logo__image" srcset="/img/logo.200.webp 200w, /img/logo.400.webp 400w, /img/logo.optimized.webp 925w" sizes="200px" src="/img/logo.optimized.webp" alt="Rope-Pro-Line — Spleiße Atelier" width="925" height="634">
       </a>
 
       <nav class="header__nav nav" aria-label="Основное меню">
@@ -58,7 +60,7 @@
           <li class="nav__item"><a class="nav__link" href="/b2b/">Бизнесу</a></li>
           <li class="nav__item"><a class="nav__link" href="/b2c/">Частным клиентам</a></li>
           <li class="nav__item"><a class="nav__link" href="/#about">О&nbsp;нас</a></li>
-          <li class="nav__item"><a class="nav__link" href="/#charity">Благотворительность</a></li>
+          <li class="nav__item"><a class="nav__link" href="/charity/">Благотворительность</a></li>
         </ul>
       </nav>
 
@@ -66,6 +68,7 @@
         <ul class="header__lang lang" aria-label="Язык сайта">
           <li class="lang__item"><a class="lang__link" href="#" hreflang="en" lang="en" data-lang="en">EN</a></li>
           <li class="lang__item"><a class="lang__link" href="#" hreflang="de" lang="de" data-lang="de">DE</a></li>
+          <li class="lang__item"><a class="lang__link" href="#" hreflang="cs" lang="cs" data-lang="cs">CS</a></li>
         </ul>
         <a class="header__phone" href="tel:+79000000000">+7 900 000-00-00</a>
         <a class="header__button button button--ghost button--small" href="#">Оставить заявку</a>
@@ -85,13 +88,14 @@
         <li class="mobile-menu__item"><a class="mobile-menu__link" href="/b2b/">Бизнесу</a></li>
         <li class="mobile-menu__item"><a class="mobile-menu__link" href="/b2c/">Частным клиентам</a></li>
         <li class="mobile-menu__item"><a class="mobile-menu__link" href="/#about">О&nbsp;нас</a></li>
-        <li class="mobile-menu__item"><a class="mobile-menu__link" href="/#charity">Благотворительность</a>
+        <li class="mobile-menu__item"><a class="mobile-menu__link" href="/charity/">Благотворительность</a>
         </li>
       </ul>
       <div class="mobile-menu__footer">
         <ul class="mobile-menu__lang lang lang--large" aria-label="Язык сайта">
           <li class="lang__item"><a class="lang__link" href="#" hreflang="en" lang="en" data-lang="en">EN</a></li>
           <li class="lang__item"><a class="lang__link" href="#" hreflang="de" lang="de" data-lang="de">DE</a></li>
+          <li class="lang__item"><a class="lang__link" href="#" hreflang="cs" lang="cs" data-lang="cs">CS</a></li>
         </ul>
         <a class="mobile-menu__phone" href="tel:+79000000000">+7 900 000-00-00</a>
         <a class="mobile-menu__button button button--primary" href="#">Оставить заявку</a>
@@ -165,7 +169,7 @@
       <div class="footer__top">
         <div class="footer__brand">
           <a class="footer__logo" href="/" aria-label="Rope-Pro-Line — на главную">
-            <img class="footer__logo-image" srcset="/img/logo.mobile.webp 768w, /img/logo.optimized.webp 925w" sizes="(max-width: 767px) 100vw, 100vw" src="/img/logo.optimized.webp" alt="Rope-Pro-Line — Spleiße Atelier" width="925"
+            <img class="footer__logo-image" srcset="/img/logo.200.webp 200w, /img/logo.400.webp 400w, /img/logo.optimized.webp 925w" sizes="200px" src="/img/logo.optimized.webp" alt="Rope-Pro-Line — Spleiße Atelier" width="925"
               height="634" loading="lazy">
           </a>
           <p class="footer__slogan">Больше, чем просто канаты</p>
@@ -179,7 +183,7 @@
             <li class="footer__item"><a class="footer__link" href="/b2b/">Бизнесу</a></li>
             <li class="footer__item"><a class="footer__link" href="/b2c/">Частным клиентам</a></li>
             <li class="footer__item"><a class="footer__link" href="/#about">О&nbsp;нас</a></li>
-            <li class="footer__item"><a class="footer__link" href="/#charity">Благотворительность</a></li>
+            <li class="footer__item"><a class="footer__link" href="/charity/">Благотворительность</a></li>
           </ul>
         </nav>
 
@@ -240,6 +244,7 @@
           <ul class="footer__lang lang" aria-label="Язык сайта">
             <li class="lang__item"><a class="lang__link" href="#" hreflang="en" lang="en" data-lang="en">EN</a></li>
             <li class="lang__item"><a class="lang__link" href="#" hreflang="de" lang="de" data-lang="de">DE</a></li>
+            <li class="lang__item"><a class="lang__link" href="#" hreflang="cs" lang="cs" data-lang="cs">CS</a></li>
           </ul>
         </div>
       </div>

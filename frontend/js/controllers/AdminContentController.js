@@ -1,12 +1,12 @@
-import {siteContentApi as api} from '../api/siteContentApi.js?v=20261106.1';
-import {contentPages,contentSlots,gallerySections,contentPayload,galleryPayload} from '../models/SiteContentModel.js?v=20261106.1';
-import {AdminContentView} from '../views/admin/AdminContentView.js?v=20261106.1';
+import {siteContentApi as api} from '../api/siteContentApi.js?v=20261116.1';
+import {contentPages,contentSlots,gallerySections,contentPayload,galleryPayload} from '../models/SiteContentModel.js?v=20261116.1';
+import {AdminContentView} from '../views/admin/AdminContentView.js?v=20261116.1';
 export class AdminContentController {
   constructor(root,gallery=false) {
     this.gallery=gallery;this.section=gallery?'work_photos':'home';this.ready=false;this.busy=false;this.item=null;
     this.view=new AdminContentView(root,gallery?gallerySections:contentPages,gallery);
     this.view.bind({load:key=>this.load(key),select:id=>this.select(id),save:()=>this.save(),remove:()=>this.remove(),create:()=>{
-      if(!this.ready||this.busy||!this.view.allowDiscard())return;this.item=null;this.uncertain=false;this.view.select(null);this.view.render();this.view.message('Выберите фотографию и заполните подписи.');
+      if(!this.ready||this.busy||!this.view.allowDiscard())return;this.item=null;this.uncertain=false;this.view.select(null);this.view.render();this.view.message('Выберите фотографию и заполните подписи.');this.view.revealEditor();
     }});
   }
   lock(value){this.busy=value;this.view.busy(value);}

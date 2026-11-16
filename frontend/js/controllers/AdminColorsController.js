@@ -1,13 +1,13 @@
-import { adminColorsApi as api } from '../api/adminColorsApi.js?v=20261106.1';
-import { AdminColorModel } from '../models/AdminColorModel.js?v=20261106.1';
-import { AdminColorsView } from '../views/admin/AdminColorsView.js?v=20261106.1';
-import { automaticConfigCode } from '../models/AdminConfigModel.js?v=20261106.1';
+import { adminColorsApi as api } from '../api/adminColorsApi.js?v=20261116.1';
+import { AdminColorModel } from '../models/AdminColorModel.js?v=20261116.1';
+import { AdminColorsView } from '../views/admin/AdminColorsView.js?v=20261116.1';
+import { automaticConfigCode } from '../models/AdminConfigModel.js?v=20261116.1';
 export class AdminColorsController {
   constructor(root) {
     this.view = new AdminColorsView(root); this.color = null; this.ready = false; this.busy = false;
     this.view.bind({ select: id => this.select(id), refresh: () => this.load(), save: () => this.save(), create: () => {
       if (this.busy || !this.ready || !this.view.allowDiscard()) return;
-      this.color = null; this.view.selection(null); this.view.render(); this.view.message('Создайте цвет, затем назначьте его канатам в карточке каната.');
+      this.color = null; this.view.selection(null); this.view.render(); this.view.message('Создайте цвет, затем назначьте его канатам в карточке каната.'); this.view.revealEditor();
     }, remove: () => this.remove(), removeTranslation:id=>this.removeTranslation(id) });
   }
   destroy() { this.view.destroy(); }
@@ -33,7 +33,7 @@ export class AdminColorsController {
     let data;
     let index;
     try { const values = this.view.values();
-      values.code = this.color ? this.color.code : automaticConfigCode('colors', {name_eng:values.eng, name_ger:values.ger, name_rus:values.rus}, this.colors);
+      values.code = this.color ? this.color.code : automaticConfigCode('colors', {name_eng:values.eng, name_ger:values.ger, name_rus:values.rus, name_ces:values.ces}, this.colors);
       data = AdminColorModel.payload(values); index=AdminColorModel.index(values);
       if(this.color?.translations.some(t=>!data.translations.some(next=>next.locale===t.locale)))throw new Error('Пустое поле не удаляет перевод. Верните название перед сохранением.');
     } catch (e) { this.view.message(e.message, 'error'); return; }
@@ -70,7 +70,7 @@ export class AdminColorsController {
   }
   async removeTranslation(id){
     const translation=this.color?.translations?.find(t=>Number(t.id)===Number(id));
-    if(this.busy||!translation||this.color.translations.length<=1||!this.view.allowDiscard()||!window.confirm(`Удалить перевод ${({eng:'(англ.)',rus:'(рус.)',ger:'(нем.)'})[translation.locale] || translation.locale.toUpperCase()}? Отменить нельзя.`))return;
+    if(this.busy||!translation||this.color.translations.length<=1||!this.view.allowDiscard()||!window.confirm(`Удалить перевод ${({eng:'(англ.)',rus:'(рус.)',ger:'(нем.)',ces:'(чеш.)'})[translation.locale] || translation.locale.toUpperCase()}? Отменить нельзя.`))return;
     this.lock(true);let committed=false;
     try{await api.removeTranslation(id);committed=true;this.color=await api.detail(this.color.id);this.colors=await api.list();this.view.list(this.colors);this.view.selection(this.color.id);this.view.render(this.color,{preserveDisclosures:true});this.view.message('Перевод удалён. Последний перевод цвета сохраняется.', 'success');}
     catch { this.view.message(`${committed?'Перевод удалён, но форму обновить не удалось.':'Удалить перевод не получилось.'} Обновите цвет.`, 'error'); }

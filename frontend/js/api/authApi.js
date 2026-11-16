@@ -1,5 +1,5 @@
-import { apiClient } from './apiClient.js?v=20261106.1';
-import { API_CONFIG } from './config.js?v=20261106.1';
+import { apiClient } from './apiClient.js?v=20261116.1';
+import { API_CONFIG } from './config.js?v=20261116.1';
 
 export const authApi = {
   clearSession() { apiClient.clearTokens(); },

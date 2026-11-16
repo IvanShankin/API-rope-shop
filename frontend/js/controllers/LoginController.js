@@ -1,6 +1,6 @@
-import { BaseController } from './BaseController.js?v=20261106.1';
-import { AuthModel } from '../models/AuthModel.js?v=20261106.1';
-import { NotificationView } from '../views/common/NotificationView.js?v=20261106.1';
+import { BaseController } from './BaseController.js?v=20261116.1';
+import { AuthModel } from '../models/AuthModel.js?v=20261116.1';
+import { NotificationView } from '../views/common/NotificationView.js?v=20261116.1';
 
 export class LoginController extends BaseController {
   constructor() {
@@ -11,11 +11,15 @@ export class LoginController extends BaseController {
   async init() {
     await super.init();
 
+    // Куда вернуться после входа: только страницы самой панели (/admin/...), иначе на /admin/.
+    const next = new URLSearchParams(location.search).get('next') || '';
+    const target = /^\/admin(?:[/?#]|$)/.test(next) ? next : '/admin/';
+
     // 1. Если администратор уже имеет валидную сессию, перенаправляем в панель
     try {
       const user = await this.authModel.checkSession();
       if (user && user.role === 'admin') {
-        window.location.replace('/admin/');
+        window.location.replace(target);
         return;
       }
     } catch (_) {
@@ -25,11 +29,30 @@ export class LoginController extends BaseController {
     const form = document.querySelector('#admin-login-form');
     if (!form) return;
 
+    // Кнопка-глаз: показать/скрыть пароль. Перед отправкой пароль снова скрывается.
+    const passwordInput = form.querySelector('#auth-password');
+    const eye = form.querySelector('[data-password-toggle]');
+    const setVisible = visible => {
+      if (!passwordInput || !eye) return;
+      passwordInput.type = visible ? 'text' : 'password';
+      const label = visible ? 'Скрыть пароль' : 'Показать пароль';
+      eye.setAttribute('aria-pressed', String(visible));
+      eye.setAttribute('aria-label', label);
+      eye.title = label;
+    };
+    eye?.addEventListener('click', () => {
+      const pos = passwordInput.selectionStart;
+      setVisible(passwordInput.type === 'password');
+      passwordInput.focus();
+      if (pos != null) passwordInput.setSelectionRange(pos, pos);
+    });
+
     const errorEl = document.querySelector('#auth-error-msg');
     const submitBtn = document.querySelector('#auth-submit-btn');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      setVisible(false);
       if (errorEl) errorEl.style.display = 'none';
 
       const username = form.username.value.trim();
@@ -56,7 +79,7 @@ export class LoginController extends BaseController {
         }
 
         NotificationView.success('Успешный вход', 'Перенаправление в панель управления...');
-        window.location.replace('/admin/');
+        window.location.replace(target);
       } catch (err) {
         if (submitBtn) {
           submitBtn.disabled = false;

@@ -10,7 +10,7 @@ export const API_CONFIG = {
   // Таймаут запросов по умолчанию (мс)
   TIMEOUT_MS: 15000,
 
-  // Эндпоинты бэкенда (согласно API-rope-shop)
+  // Эндпоинты бэкенда (согласно rope-shop)
   ENDPOINTS: {
     // Аутентификация и пользователи
     AUTH_LOGIN: '/auth/login',

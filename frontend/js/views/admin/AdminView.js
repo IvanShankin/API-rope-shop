@@ -1,6 +1,6 @@
-import { BaseView } from '../BaseView.js?v=20261106.1';
-import { escapeHtml } from '../../utils/text.js?v=20261106.1';
-import { AdminNotificationView } from './AdminNotificationView.js?v=20261106.1';
+import { BaseView } from '../BaseView.js?v=20261116.1';
+import { escapeHtml } from '../../utils/text.js?v=20261116.1';
+import { AdminNotificationView } from './AdminNotificationView.js?v=20261116.1';
 
 const requestDateText = value => {
   const raw = String(value ?? '').trim();
@@ -112,6 +112,35 @@ export class AdminView extends BaseView {
     status.setAttribute('role', 'status');
     status.textContent = 'Проверяем вход…';
     gate.querySelector('.admin-session__card').replaceChildren(status);
+  }
+
+  /** Окно «Сессия истекла» поверх панели. Показывается один раз, пока его не закроют. */
+  showSessionExpired(onLogin) {
+    if (this.sessionDialog?.open) return;
+    if (!this.sessionDialog) {
+      const dialog = document.createElement('dialog');
+      dialog.className = 'admin-expired';
+      dialog.setAttribute('aria-labelledby', 'admin-expired-title');
+      dialog.innerHTML = `
+        <h2 class="admin-expired__title" id="admin-expired-title">Сессия истекла</h2>
+        <p class="admin-expired__text">Сервер больше не принимает ваш вход, поэтому последнее действие не выполнено. Войдите заново и повторите его.</p>
+        <p class="admin-expired__hint">Несохранённые изменения на этой странице пропадут. Если они нужны, закройте окно и скопируйте их перед входом.</p>
+        <div class="admin-expired__actions">
+          <a class="btn btn--primary" data-expired-login href="/login/">Войти заново</a>
+          <button class="btn btn--ghost" type="button" data-expired-close>Закрыть</button>
+        </div>`;
+      dialog.querySelector('[data-expired-close]').addEventListener('click', () => dialog.close());
+      dialog.querySelector('[data-expired-login]').addEventListener('click', event => {
+        // После входа вернём на тот же раздел панели.
+        event.currentTarget.href = `/login/?next=${encodeURIComponent(location.pathname + location.search + location.hash)}`;
+        onLogin?.();
+      });
+      document.body.append(dialog);
+      this.sessionDialog = dialog;
+    }
+    if (typeof this.sessionDialog.showModal === 'function') this.sessionDialog.showModal();
+    else this.sessionDialog.setAttribute('open', '');
+    this.sessionDialog.querySelector('[data-expired-login]').focus();
   }
 
   showSessionError(message, onRetry, onLogin) {

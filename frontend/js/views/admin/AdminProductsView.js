@@ -1,9 +1,10 @@
-import { AdminNotificationView } from './AdminNotificationView.js?v=20261106.1';
-import { AdminRecordList } from './AdminRecordList.js?v=20261106.1';
-import { escapeHtml as esc, displayName } from '../../utils/text.js?v=20261106.1';
-import { mediaUrl } from '../../utils/media.js?v=20261106.1';
-import { langTabsMarkup, bindLangTabs, refreshLangIndicators } from './langTabs.js?v=20261106.1';
-import { transliterate, variantRowMarkup } from './adminProductParts.js?v=20261106.1';
+import { AdminNotificationView } from './AdminNotificationView.js?v=20261116.1';
+import { AdminRecordList } from './AdminRecordList.js?v=20261116.1';
+import { escapeHtml as esc, displayName } from '../../utils/text.js?v=20261116.1';
+import { mediaUrl } from '../../utils/media.js?v=20261116.1';
+import { langTabsMarkup, bindLangTabs, refreshLangIndicators } from './langTabs.js?v=20261116.1';
+import { transliterate, variantRowMarkup } from './adminProductParts.js?v=20261116.1';
+import { revealForm } from './revealForm.js?v=20261116.1';
 
 export { transliterate };
 
@@ -58,7 +59,7 @@ export class AdminProductsView {
         this.message('Сначала введите русское название каната.', 'warning');
         return;
       }
-      ['eng', 'ger'].forEach(locale => {
+      ['eng', 'ger', 'ces'].forEach(locale => {
         const nameEl = form.querySelector(`[name=name_${locale}]`);
         const subEl = form.querySelector(`[name=subtitle_${locale}]`);
         const descEl = form.querySelector(`[name=description_${locale}]`);
@@ -78,8 +79,7 @@ export class AdminProductsView {
       const index = container.querySelectorAll('[data-variant-form]').length;
       container.insertAdjacentHTML('beforeend', this.variantRow(null, index));
       const newRow = container.lastElementChild;
-      const diamInput = newRow?.querySelector('[name=diameter_mm]');
-      diamInput?.focus();
+      revealForm(newRow, '[name=diameter_mm]', 'center');
     }, options);
 
     // Удаление ещё не сохранённой новой строки диаметра
@@ -171,6 +171,7 @@ export class AdminProductsView {
     this.recordList.busy(value);
   }
   setSelection(id) { this.recordList.select(id); }
+  revealEditor() { revealForm(this.root.querySelector('[data-product-editor]')); }
   clear() {
     this.root.querySelector('[data-product-editor]').replaceChildren();
     this.baselines.clear();
@@ -240,7 +241,7 @@ export class AdminProductsView {
 
     const p = product || {};
 
-    const translations = ['rus', 'eng', 'ger'].map(locale => {
+    const translations = ['rus', 'eng', 'ger', 'ces'].map(locale => {
       const t = p.translations?.find(item => item.locale === locale) || {};
       return { locale, name: t.name || '', subtitle: t.subtitle || '', description: t.description || '' };
     });
@@ -277,7 +278,7 @@ export class AdminProductsView {
         <!-- Языковые вкладки: Название, подзаголовок и описание -->
         <div class="card card--static card--padded product-text-card">
           <h3 class="product-text-card__title">Название и описание</h3>
-          <p class="product-text-card__hint">Текст на трёх языках.</p>
+          <p class="product-text-card__hint">Текст на четырёх языках.</p>
           ${langTabsMarkup({
             label: 'Язык текста товара',
             filled: Object.fromEntries(translations.map(t => [t.locale, Boolean(t.name || t.subtitle || t.description)])),
@@ -304,6 +305,13 @@ export class AdminProductsView {
             <label class="field">
               <span class="field__label">Описание (нем.)</span>
               <textarea class="field__input field__textarea" name="description_ger" rows="3">${esc(translations.find(t => t.locale === 'ger')?.description || '')}</textarea>
+            </label>`,
+              ces: `
+            ${input('name_ces', 'Название (чеш.)', translations.find(t => t.locale === 'ces')?.name, 'maxlength="255"')}
+            ${input('subtitle_ces', 'Подзаголовок (чеш.)', translations.find(t => t.locale === 'ces')?.subtitle, 'maxlength="255"')}
+            <label class="field">
+              <span class="field__label">Описание (чеш.)</span>
+              <textarea class="field__input field__textarea" name="description_ces" rows="3">${esc(translations.find(t => t.locale === 'ces')?.description || '')}</textarea>
             </label>`,
             },
           })}

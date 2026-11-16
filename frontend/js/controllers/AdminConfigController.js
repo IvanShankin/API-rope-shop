@@ -1,12 +1,17 @@
-import { adminConfigApi as api } from '../api/adminConfigApi.js?v=20261106.1';
-import { configSections, configPayload, automaticConfigCode } from '../models/AdminConfigModel.js?v=20261106.1';
-import { AdminConfigView } from '../views/admin/AdminConfigView.js?v=20261106.1';
+import { adminConfigApi as api } from '../api/adminConfigApi.js?v=20261116.1';
+import { configSections, configPayload, automaticConfigCode } from '../models/AdminConfigModel.js?v=20261116.1';
+import { AdminConfigView } from '../views/admin/AdminConfigView.js?v=20261116.1';
 export class AdminConfigController {
   constructor(root, options = {}){
     this.onCatalogChanged = options.onCatalogChanged;
     this.view=new AdminConfigView(root, options);this.section=this.view.root.querySelector('[data-config-section]').value;this.sources={};this.ready=false;
-    this.view.bind({section:key=>this.load(key),refresh:()=>this.load(),select:id=>this.select(id),create:()=>{
-      if(this.busy||!this.ready||!this.view.allowDiscard(false))return;this.view.clearPendingImage();this.item=null;this.uncertain=false;this.view.select(null);this.view.render(this.section,{},this.sources);this.view.message('Новая запись. Заполните поля и сохраните.');
+    this.view.bind({section:key=>this.load(key),refresh:()=>this.load(),select:id=>this.select(id),create:(preset=null,label='')=>{
+      if(this.busy||!this.ready||!this.view.allowDiscard(false))return;this.view.clearPendingImage();this.item=null;this.uncertain=false;this.view.select(null);
+      // Кнопка «Добавить диаметр» в блоке цен: работа и материал уже выбраны, остаются диаметр и цена.
+      this.preset=preset&&this.section==='splice_prices'?{...preset}:null;this.presetLabel=this.preset?label:'';
+      this.view.render(this.section,this.preset||{},this.sources);
+      this.view.message(this.preset?`Новый диаметр для «${label}». Укажите диаметр и цену, затем нажмите «Сохранить».`:'Новая запись. Заполните поля и сохраните.');
+      this.view.revealEditor(this.preset?'[name="diameter_from_mm"]':undefined);
     },save:()=>this.save(),savePrices:()=>this.savePrices(),upload:file=>this.upload(file),retryImage:()=>this.upload(this.view.pendingImage),discardImage:()=>this.discardImage(),remove:()=>this.remove(),removeImage:()=>this.removeImage(),removeTranslation:id=>this.removeTranslation(id)});
   }
   lock(value){this.busy=value;this.view.busy(value);}
@@ -20,7 +25,7 @@ export class AdminConfigController {
       const results=await Promise.all(names.map(name=>api.list(name)));
       const loaded=Object.fromEntries(names.map((name,index)=>[name,results[index]]));
       const items=loaded[listSection];
-      this.section=section;this.sources=loaded;this.items=Array.isArray(items)?items:[];
+      this.section=section;this.sources=loaded;this.preset=null;this.items=Array.isArray(items)?items:[];
       this.view.clearPendingImage();this.view.recordList.clearPriceDrafts();this.item=null;this.uncertain=false;this.view.clear();this.view.list(this.items,section,this.sources);this.ready=true;
       if(configSections[section]?.singleton){this.item=items;this.view.render(section,items,this.sources);}
       this.view.message(configSections[section]?.singleton ? 'Измените настройки и нажмите «Сохранить».' : 'Выберите запись для изменения или добавьте новую.');
@@ -30,8 +35,8 @@ export class AdminConfigController {
   async select(id){
     if(this.busy)return;
     if(!this.view.allowDiscard(false)){this.view.select(this.item?.product_id??this.item?.id);return;}
-    if(!id){this.view.clearPendingImage();this.item=null;this.view.clear();return;}
-    this.view.clearPendingImage();
+    if(!id){this.view.clearPendingImage();this.item=null;this.preset=null;this.view.clear();return;}
+    this.view.clearPendingImage();this.preset=null;
     this.lock(true);
     try{
       let item;
@@ -104,7 +109,8 @@ export class AdminConfigController {
       }
       if(imageError)this.view.message('Категория сохранена, но фото не загрузилось. Нажмите «Повторить загрузку».', 'warning');
       if(creatingRecord && !imageError){
-        this.item=null;this.uncertain=false;this.view.select(null);this.view.render(this.section,{},this.sources);
+        this.item=null;this.uncertain=false;this.view.select(null);this.view.render(this.section,this.preset||{},this.sources);
+        if(this.preset)this.view.message(`Сохранено. Можно добавить ещё один диаметр для «${this.presetLabel}».`, 'success');
       }
     }catch(e){
       if(!this.item&&!e.status)this.uncertain=true;
@@ -183,7 +189,7 @@ export class AdminConfigController {
   async removeTranslation(id){
     const known=this.item?.translations?.filter(t=>t.id&&!t.fallback)||[];
     const translation=known.find(t=>Number(t.id)===Number(id));
-    if(this.busy||known.length<=1||!translation||!this.view.allowDiscard()||!window.confirm(`Удалить перевод ${({rus:'(рус.)',eng:'(англ.)',ger:'(нем.)'})[translation.locale] || translation.locale.toUpperCase()} этой записи? Отменить нельзя.`))return;
+    if(this.busy||known.length<=1||!translation||!this.view.allowDiscard()||!window.confirm(`Удалить перевод ${({rus:'(рус.)',eng:'(англ.)',ger:'(нем.)',ces:'(чеш.)'})[translation.locale] || translation.locale.toUpperCase()} этой записи? Отменить нельзя.`))return;
     this.lock(true);let committed=false;
     try{
       await api.removeTranslation(this.section,id);committed=true;

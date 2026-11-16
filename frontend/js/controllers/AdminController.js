@@ -1,18 +1,18 @@
-import {AdminSettingsController} from './AdminSettingsController.js?v=20261106.1';
-import {AdminContactsController} from './AdminContactsController.js?v=20261106.1';
-import {AdminReviewsController} from './AdminReviewsController.js?v=20261106.1';
-import { BaseController } from './BaseController.js?v=20261106.1';
-import { AuthModel } from '../models/AuthModel.js?v=20261106.1';
-import { authApi } from '../api/authApi.js?v=20261106.1';
-import { AdminView } from '../views/admin/AdminView.js?v=20261106.1';
-import { quoteApi } from '../api/quoteApi.js?v=20261106.1';
-import { AdminNotificationView as NotificationView } from '../views/admin/AdminNotificationView.js?v=20261106.1';
-import { AdminProductsController } from './AdminProductsController.js?v=20261106.1';
-import { AdminContentController } from './AdminContentController.js?v=20261106.1';
-import { AdminColorsController } from './AdminColorsController.js?v=20261106.1';
-import { AdminConfigController } from './AdminConfigController.js?v=20261106.1';
-import { AdminRequestModel } from '../models/AdminRequestModel.js?v=20261106.1';
-import { AdminNavigation } from '../core/AdminNavigation.js?v=20261106.1';
+import {AdminSettingsController} from './AdminSettingsController.js?v=20261116.1';
+import {AdminContactsController} from './AdminContactsController.js?v=20261116.1';
+import {AdminReviewsController} from './AdminReviewsController.js?v=20261116.1';
+import { BaseController } from './BaseController.js?v=20261116.1';
+import { AuthModel } from '../models/AuthModel.js?v=20261116.1';
+import { authApi } from '../api/authApi.js?v=20261116.1';
+import { AdminView } from '../views/admin/AdminView.js?v=20261116.1';
+import { quoteApi } from '../api/quoteApi.js?v=20261116.1';
+import { AdminNotificationView as NotificationView } from '../views/admin/AdminNotificationView.js?v=20261116.1';
+import { AdminProductsController } from './AdminProductsController.js?v=20261116.1';
+import { AdminContentController } from './AdminContentController.js?v=20261116.1';
+import { AdminColorsController } from './AdminColorsController.js?v=20261116.1';
+import { AdminConfigController } from './AdminConfigController.js?v=20261116.1';
+import { AdminRequestModel } from '../models/AdminRequestModel.js?v=20261116.1';
+import { AdminNavigation } from '../core/AdminNavigation.js?v=20261116.1';
 
 export class AdminController extends BaseController {
   constructor() {
@@ -99,10 +99,17 @@ export class AdminController extends BaseController {
     this.view.initTabs(tabName => this.navigation.go(this.navigation.routeFor(tabName)));
     this.navigation.start();
 
+    // 401 от сервера: токен устарел, просим войти заново (окно с кнопкой «Войти заново»)
+    window.addEventListener('rope:session-expired', () => {
+      if (this.leaving) return;
+      this.view.showSessionExpired(() => authApi.clearSession());
+    }, { signal: this.events.signal });
+
     // Навешиваем обработчик выхода из системы
     if (this.view.logoutBtn) {
       this.view.logoutBtn.addEventListener('click', async (e) => {
         e.preventDefault();
+        this.leaving = true;
         try { await this.authModel.logout(); }
         catch (err) { console.warn('Не удалось завершить сессию на сервере:', err); }
         finally { window.location.replace('/login/'); }

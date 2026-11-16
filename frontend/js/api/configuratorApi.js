@@ -1,6 +1,6 @@
-import { apiClient } from './apiClient.js?v=20261106.1';
-import { apiLocale } from '../i18n/locale.js?v=20261106.1';
-import { normalizeProduct } from './productAdapter.js?v=20261106.1';
+import { apiClient } from './apiClient.js?v=20261116.1';
+import { apiLocale } from '../i18n/locale.js?v=20261116.1';
+import { normalizeProduct } from './productAdapter.js?v=20261116.1';
 
 let sharedData = null;
 export const configuratorApi = {

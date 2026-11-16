@@ -1,9 +1,9 @@
-import { adminProductsApi as api } from '../api/adminProductsApi.js?v=20261106.1';
-import { AdminProductsView } from '../views/admin/AdminProductsView.js?v=20261106.1';
-import { AdminProductModel } from '../models/AdminProductModel.js?v=20261106.1';
-import { adminColorsApi as colorsApi } from '../api/adminColorsApi.js?v=20261106.1';
-import { AdminColorModel } from '../models/AdminColorModel.js?v=20261106.1';
-import { adminConfigApi as spliceApi } from '../api/adminConfigApi.js?v=20261106.1';
+import { adminProductsApi as api } from '../api/adminProductsApi.js?v=20261116.1';
+import { AdminProductsView } from '../views/admin/AdminProductsView.js?v=20261116.1';
+import { AdminProductModel } from '../models/AdminProductModel.js?v=20261116.1';
+import { adminColorsApi as colorsApi } from '../api/adminColorsApi.js?v=20261116.1';
+import { AdminColorModel } from '../models/AdminColorModel.js?v=20261116.1';
+import { adminConfigApi as spliceApi } from '../api/adminConfigApi.js?v=20261116.1';
 
 export class AdminProductsController {
   constructor(root) {
@@ -24,6 +24,7 @@ export class AdminProductsController {
           this.view.setSelection(null);
           this.view.renderProduct(null, this.groups, this.materials);
           this.view.message('Заполните данные нового каната.');
+          this.view.revealEditor();
           this.root.dispatchEvent(new CustomEvent('admin:product-new', { bubbles:true }));
         } catch { this.view.message('Не удалось загрузить материалы и цвета. Нажмите «Обновить».', 'error'); }
         finally { this.lock(false); }

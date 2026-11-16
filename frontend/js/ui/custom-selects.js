@@ -1,5 +1,5 @@
-import SlimSelect from '../vendor/slim-select/slimselect.es.js?v=20261106.1';
-import { getLanguage } from '../i18n/locale.js?v=20261106.1';
+import SlimSelect from '../vendor/slim-select/slimselect.es.js?v=20261116.1';
+import { getLanguage } from '../i18n/locale.js?v=20261116.1';
 
 const instances = new Map();
 const valueProperty = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
@@ -9,6 +9,7 @@ const UI_TEXT = {
   ru: { search: 'Найти…', empty: 'Ничего не найдено', searching: 'Поиск…', placeholder: 'Выберите вариант', results: 'Найдено вариантов: {count}' },
   en: { search: 'Search…', empty: 'Nothing found', searching: 'Searching…', placeholder: 'Choose an option', results: 'Options found: {count}' },
   de: { search: 'Suchen…', empty: 'Nichts gefunden', searching: 'Suche…', placeholder: 'Option wählen', results: 'Gefundene Optionen: {count}' },
+  cs: { search: 'Hledat…', empty: 'Nic nenalezeno', searching: 'Hledáme…', placeholder: 'Vyberte možnost', results: 'Nalezené možnosti: {count}' },
 };
 const schedule = () => {
   if (queued) return;

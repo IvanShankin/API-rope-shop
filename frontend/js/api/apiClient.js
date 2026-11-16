@@ -1,4 +1,4 @@
-import { API_CONFIG } from './config.js?v=20261106.1';
+import { API_CONFIG } from './config.js?v=20261116.1';
 
 /**
  * Базовый HTTP-клиент для взаимодействия с бэкендом Rope-Pro-Line
@@ -63,9 +63,31 @@ export class ApiClient {
   }
 
   /**
-   * Базовый метод запроса
+   * Запрос к API. Если запрос админки получил 401 (токен устарел и обновить его не удалось),
+   * страница получает событие rope:session-expired и может попросить войти заново.
    */
   async request(endpoint, options = {}) {
+    try {
+      return await this.send(endpoint, options);
+    } catch (err) {
+      if (options.requiresAuth && err?.status === 401) throw this.sessionExpired(err);
+      throw err;
+    }
+  }
+
+  sessionExpired(error) {
+    if (!error.sessionExpired) {
+      error.message = 'Сессия истекла. Войдите в панель управления заново.';
+      error.sessionExpired = true;
+      if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('rope:session-expired'));
+    }
+    return error;
+  }
+
+  /**
+   * Базовый метод запроса
+   */
+  async send(endpoint, options = {}) {
     const {
       method = 'GET',
       data = null,
@@ -153,10 +175,10 @@ export class ApiClient {
         if (response.status === 401 && requiresAuth && !retried && endpoint !== API_CONFIG.ENDPOINTS.AUTH_REFRESH
           && localStorage.getItem(API_CONFIG.STORAGE_KEYS.REFRESH_TOKEN)) {
           if (token !== this.getAccessToken() && this.getAccessToken()) {
-            return this.request(endpoint, { ...options, retried: true });
+            return this.send(endpoint, { ...options, retried: true });
           }
           await this.renewSession();
-          return this.request(endpoint,{...options,retried:true});
+          return this.send(endpoint,{...options,retried:true});
         }
         const errorMessage = this.errorMessage(response.status, isJson ? responseData : null);
 

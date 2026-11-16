@@ -1,5 +1,5 @@
-import {apiClient as client} from './apiClient.js?v=20261106.1';
-import {API_CONFIG} from './config.js?v=20261106.1';
+import {apiClient as client} from './apiClient.js?v=20261116.1';
+import {API_CONFIG} from './config.js?v=20261116.1';
 const company = data => ({name:data.company_name,email:data.contact_email,phone:data.contact_phone});
 export const contactsApi={
   submit:data=>client.post('/contact_requests',data),

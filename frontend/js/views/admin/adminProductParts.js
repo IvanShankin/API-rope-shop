@@ -1,5 +1,5 @@
 // Разметка для редактора каната (вынесено из AdminProductsView.js).
-import { escapeHtml as esc } from '../../utils/text.js?v=20261106.1';
+import { escapeHtml as esc } from '../../utils/text.js?v=20261116.1';
 
 export function transliterate(text) {
   const map = {

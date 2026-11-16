@@ -1,6 +1,6 @@
-import { getLanguage } from '../i18n/locale.js?v=20261106.1';
-import { seoConfig } from './config.js?v=20261106.1';
-import { canonicalUrl, pageMetadata, pagePath } from './metadata.js?v=20261106.1';
+import { getLanguage } from '../i18n/locale.js?v=20261116.1';
+import { seoConfig } from './config.js?v=20261116.1';
+import { canonicalUrl, pageMetadata, pagePath } from './metadata.js?v=20261116.1';
 
 let categoryName = '';
 let categoryState = 'loading';
@@ -29,7 +29,7 @@ export function updateSeo() {
   if (missing || error) {
     if (!robots) { robots = document.createElement('meta'); robots.name = 'robots'; robots.dataset.seoRobots = ''; document.head.append(robots); }
     robots.content = 'noindex, follow';
-    document.title = ({ de: 'Kategorie nicht verfügbar', en: 'Category unavailable', ru: 'Раздел недоступен' })[language] + ' | Rope-Pro-Line';
+    document.title = ({ de: 'Kategorie nicht verfügbar', en: 'Category unavailable', ru: 'Раздел недоступен', cs: 'Kategorie není dostupná' })[language] + ' | Rope-Pro-Line';
   } else robots?.remove();
   const origin = seoConfig.origin || location.origin;
   const canonical = canonicalUrl(location.href, language, origin);
@@ -42,15 +42,15 @@ export function updateSeo() {
   }
   meta('og:title', document.title, true); meta('og:description', data.description, true);
   meta('og:type', 'website', true); meta('og:site_name', 'Rope-Pro-Line', true);
-  meta('og:url', canonical, true); meta('og:locale', {de:'de_DE',en:'en_GB',ru:'ru_RU'}[language], true);
+  meta('og:url', canonical, true); meta('og:locale', {de:'de_DE',en:'en_GB',ru:'ru_RU',cs:'cs_CZ'}[language], true);
   if (missing || error) return;
   const graph = [{ '@type': 'Organization', '@id': `${origin}/#organization`, name: 'Rope-Pro-Line', url: `${origin}/` },
     { '@type': 'WebSite', '@id': `${origin}/#website`, name: 'Rope-Pro-Line', url: `${origin}/`, inLanguage: seoConfig.languages,
       publisher: { '@id': `${origin}/#organization` } }];
   if (path !== '/') {
-    const home = {de:'Startseite',en:'Home',ru:'Главная'}[language];
+    const home = {de:'Startseite',en:'Home',ru:'Главная',cs:'Úvod'}[language];
     const items = [{ '@type':'ListItem', position:1, name:home, item:canonicalUrl(`${origin}/`,language,origin) }];
-    if (path === '/category/') items.push({ '@type':'ListItem', position:2, name:{de:'Katalog',en:'Catalogue',ru:'Каталог'}[language], item:canonicalUrl(`${origin}/catalog/`,language,origin) });
+    if (path === '/category/') items.push({ '@type':'ListItem', position:2, name:{de:'Katalog',en:'Catalogue',ru:'Каталог',cs:'Katalog'}[language], item:canonicalUrl(`${origin}/catalog/`,language,origin) });
     items.push({ '@type':'ListItem', position:items.length+1, name:categoryName || document.querySelector('h1')?.textContent.trim() || data.title, item:canonical });
     graph.push({ '@type':'BreadcrumbList', itemListElement:items });
   }

@@ -1,0 +1,13 @@
+User-agent: *
+Disallow: /scripts/
+Disallow: /docs/
+Disallow: /.local/
+
+# Yandex: catalogue filter parameters do not create new pages
+User-agent: Yandex
+Disallow: /scripts/
+Disallow: /docs/
+Disallow: /.local/
+Clean-param: diameter&construction&configurator /category/
+
+Sitemap: https://rope.surgecode.ru/sitemap.xml

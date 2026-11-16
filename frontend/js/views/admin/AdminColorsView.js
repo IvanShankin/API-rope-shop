@@ -1,8 +1,9 @@
-import { captureDisclosures, restoreDisclosures } from './disclosureState.js?v=20261106.1';
-import { AdminNotificationView } from './AdminNotificationView.js?v=20261106.1';
-import { AdminRecordList } from './AdminRecordList.js?v=20261106.1';
-import { escapeHtml as esc, displayName } from '../../utils/text.js?v=20261106.1';
-import { langTabsMarkup, bindLangTabs } from './langTabs.js?v=20261106.1';
+import { captureDisclosures, restoreDisclosures } from './disclosureState.js?v=20261116.1';
+import { AdminNotificationView } from './AdminNotificationView.js?v=20261116.1';
+import { AdminRecordList } from './AdminRecordList.js?v=20261116.1';
+import { escapeHtml as esc, displayName } from '../../utils/text.js?v=20261116.1';
+import { langTabsMarkup, bindLangTabs } from './langTabs.js?v=20261116.1';
+import { revealForm } from './revealForm.js?v=20261116.1';
 export class AdminColorsView {
   constructor(root) { this.root = root; this.events = new AbortController(); this.baseline = ''; this.recordList = new AdminRecordList(root.querySelector("[data-color-select]"), this.events.signal, { search: 'Найти цвет', placeholder: 'Название или номер', empty: 'Цветов пока нет. Нажмите «Добавить цвет».' }); }
   bind(actions) {
@@ -34,6 +35,7 @@ export class AdminColorsView {
   busy(value) { this.root.querySelectorAll('input,select,button').forEach(e => { e.disabled = value; }); this.recordList.busy(value); }
   message(text, type = 'info') { AdminNotificationView.message(this.root.querySelector('[data-color-status]'), text, type); }
   selection(id) { this.recordList.select(id); }
+  revealEditor() { revealForm(this.root.querySelector('[data-color-editor]')); }
   list(colors) { this.recordList.setItems(colors.map(c=>({id:c.id,label:displayName(c)||c.code,detail:c.is_active===false?'Скрыт с сайта':'',search:[c.code,c.hex,...(c.translations||[]).map(t=>t.name)].join(' ')}))); }
   clear() { this.root.querySelector('[data-color-editor]').replaceChildren(); this.baseline = ''; this.recordList.select(null); }
   render(color = {}, {preserveDisclosures=false}={}) {
@@ -49,8 +51,8 @@ export class AdminColorsView {
           </div></details>
           <details class="admin-disclosure" data-editor-disclosure="translations" open><summary>Названия на разных языках</summary><p class="admin-editor-hint">Заполните название хотя бы на одном языке.</p>${langTabsMarkup({
             label: 'Язык названия цвета',
-            filled: { rus: Boolean(name('rus')), eng: Boolean(name('eng')), ger: Boolean(name('ger')) },
-            panels: Object.fromEntries([['rus', 'рус.'], ['eng', 'англ.'], ['ger', 'нем.']].map(([locale, short]) => [locale,
+            filled: { rus: Boolean(name('rus')), eng: Boolean(name('eng')), ger: Boolean(name('ger')), ces: Boolean(name('ces')) },
+            panels: Object.fromEntries([['rus', 'рус.'], ['eng', 'англ.'], ['ger', 'нем.'], ['ces', 'чеш.']].map(([locale, short]) => [locale,
               `<div class="admin-fields"><label class="field">Название (${short})<input class="field__input" name="${locale}" maxlength="255" value="${esc(name(locale))}"></label></div>`])),
           })}</details>
         </div>
@@ -62,6 +64,6 @@ export class AdminColorsView {
       </form>`;
     restoreDisclosures(this.root, disclosureState);
     this.baseline = JSON.stringify(this.values());
-    if(color.translations?.length>1)this.root.querySelector('[data-color-editor]').insertAdjacentHTML('beforeend',`<h3>Удалить перевод</h3><p>Один язык должен остаться, иначе покажется другой.</p><div class="config-admin-toolbar">${color.translations.map(t=>`<button class="btn btn--danger" type="button" data-color-translation-remove="${Number(t.id)}">Удалить ${{eng:'(англ.)',rus:'(рус.)',ger:'(нем.)'}[t.locale] || t.locale.toUpperCase()}</button>`).join('')}</div>`);
+    if(color.translations?.length>1)this.root.querySelector('[data-color-editor]').insertAdjacentHTML('beforeend',`<h3>Удалить перевод</h3><p>Один язык должен остаться, иначе покажется другой.</p><div class="config-admin-toolbar">${color.translations.map(t=>`<button class="btn btn--danger" type="button" data-color-translation-remove="${Number(t.id)}">Удалить ${{eng:'(англ.)',rus:'(рус.)',ger:'(нем.)',ces:'(чеш.)'}[t.locale] || t.locale.toUpperCase()}</button>`).join('')}</div>`);
   }
 }

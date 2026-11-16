@@ -1,8 +1,8 @@
-import { captureDisclosures, restoreDisclosures } from './disclosureState.js?v=20261106.1';
-import {AdminContentView} from './AdminContentView.js?v=20261106.1';
-import {escapeHtml as esc} from '../../utils/text.js?v=20261106.1';
-import { langTabsMarkup } from './langTabs.js?v=20261106.1';
-import {reviewFilters, reviewCounts, reviewRecords, reviewPublication} from '../../models/AdminReviewModel.js?v=20261106.1';
+import { captureDisclosures, restoreDisclosures } from './disclosureState.js?v=20261116.1';
+import {AdminContentView} from './AdminContentView.js?v=20261116.1';
+import {escapeHtml as esc} from '../../utils/text.js?v=20261116.1';
+import { langTabsMarkup } from './langTabs.js?v=20261116.1';
+import {reviewFilters, reviewCounts, reviewRecords, reviewPublication} from '../../models/AdminReviewModel.js?v=20261116.1';
 export class AdminReviewsView extends AdminContentView {
   constructor(root){
     super(root,{all:'Все отзывы'},true);
@@ -61,8 +61,8 @@ export class AdminReviewsView extends AdminContentView {
       <div class="admin-disclosures-group">
         <details class="admin-disclosure" data-editor-disclosure="translations" open><summary>Текст отзыва на разных языках</summary>${langTabsMarkup({
           label: 'Язык текста отзыва',
-          filled: Object.fromEntries(['rus','eng','ger'].map(locale=>[locale,Boolean(item.translations?.find(t=>t.locale===locale)?.text)])),
-          panels: Object.fromEntries(['rus','eng','ger'].map(locale=>[locale,`<div class="admin-fields"><label class="field admin-field--wide">Текст ${{rus:'(рус.)',eng:'(англ.)',ger:'(нем.)'}[locale]}<textarea class="field__input" name="text_${locale}" rows="5">${esc(item.translations?.find(t=>t.locale===locale)?.text||'')}</textarea></label></div>`])),
+          filled: Object.fromEntries(['rus','eng','ger','ces'].map(locale=>[locale,Boolean(item.translations?.find(t=>t.locale===locale)?.text)])),
+          panels: Object.fromEntries(['rus','eng','ger','ces'].map(locale=>[locale,`<div class="admin-fields"><label class="field admin-field--wide">Текст ${{rus:'(рус.)',eng:'(англ.)',ger:'(нем.)',ces:'(чеш.)'}[locale]}<textarea class="field__input" name="text_${locale}" rows="5" maxlength="5000">${esc(item.translations?.find(t=>t.locale===locale)?.text||'')}</textarea></label></div>`])),
         })}</details>
       </div>
       <div class="admin-form-actions">

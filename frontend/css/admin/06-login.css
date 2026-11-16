@@ -208,3 +208,56 @@
     transform: rotate(360deg);
   }
 }
+
+/* Кнопка-глаз в поле пароля */
+.admin-auth-input-wrap:has(.admin-auth-eye) .admin-auth-input {
+  padding-right: 48px;
+}
+
+.admin-auth-eye {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #627D98;
+  cursor: pointer;
+  transition: color 0.2s, background-color 0.2s;
+}
+
+.admin-auth-eye:hover {
+  color: #CAD8E6;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.admin-auth-eye:focus-visible {
+  outline: 2px solid #2F6BEE;
+  outline-offset: 1px;
+}
+
+.admin-auth-eye svg {
+  width: 18px;
+  height: 18px;
+}
+
+.admin-auth-eye__hide,
+.admin-auth-eye[aria-pressed="true"] .admin-auth-eye__show {
+  display: none;
+}
+
+.admin-auth-eye[aria-pressed="true"] .admin-auth-eye__hide {
+  display: block;
+}
+
+/* Глаз браузера Edge не нужен: есть свой */
+.admin-auth-input::-ms-reveal {
+  display: none;
+}

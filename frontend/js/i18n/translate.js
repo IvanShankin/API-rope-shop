@@ -1,5 +1,5 @@
-import { dictionary, patterns } from './dictionary.js?v=20261106.1';
-import { getLanguage } from './locale.js?v=20261106.1';
+import { dictionary, patterns } from './dictionary.js?v=20261116.1';
+import { getLanguage } from './locale.js?v=20261116.1';
 
 const normalize = text => String(text).replace(/\s+/g, ' ').trim();
 const entries = new Map(dictionary.map(row => [normalize(row[0]), row]));
@@ -12,9 +12,9 @@ const templates = patterns.map(row => {
 }).sort((a,b) => b.specificity-a.specificity);
 
 export function translate(text, language = getLanguage(), depth = 0) {
-  if (language === 'ru' || !['en','de'].includes(language)) return String(text);
+  if (language === 'ru' || !['en','de','cs'].includes(language)) return String(text);
   const source = normalize(text);
-  const index = language === 'en' ? 1 : 2;
+  const index = {en:1,de:2,cs:3}[language];
   const exact = entries.get(source);
   let result = exact?.[index];
   const pricedLabel = source.match(/^(.+?) (\d+(?:[.,]\d+)?) EUR$/);

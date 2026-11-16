@@ -25,7 +25,7 @@ export const contentSlots = [
 ];
 export const gallerySections = {work_photos:'Галерея работ',charity_photos:'Благотворительность'};
 export function contentPayload(slot,values) {
-  return {page_code:slot.page,is_active:Boolean(values.is_active),translations:['rus','eng','ger'].map(locale=>({locale,
+  return {page_code:slot.page,is_active:Boolean(values.is_active),translations:['rus','eng','ger','ces'].map(locale=>({locale,
     ...(slot.title ? {title:String(values[`title_${locale}`]||'').trim()} : {}),
     ...(slot.content ? {content:String(values[`content_${locale}`]||'').trim()} : {}),
   }))};
@@ -33,7 +33,7 @@ export function contentPayload(slot,values) {
 export function galleryPayload(values) {
   const index=Number(values.index);
   if(values.index===''||!Number.isInteger(index)||index<0)throw new Error('Укажите целый неотрицательный порядок фотографии.');
-  return {index,is_active:Boolean(values.is_active),translations:['rus','eng','ger'].map(locale=>({locale,
+  return {index,is_active:Boolean(values.is_active),translations:['rus','eng','ger','ces'].map(locale=>({locale,
     title:String(values[`title_${locale}`]||'').trim(),description:String(values[`content_${locale}`]||'').trim(),
   }))};
 }

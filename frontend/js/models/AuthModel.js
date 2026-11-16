@@ -1,5 +1,5 @@
-import { BaseModel } from './BaseModel.js?v=20261106.1';
-import { authApi } from '../api/authApi.js?v=20261106.1';
+import { BaseModel } from './BaseModel.js?v=20261116.1';
+import { authApi } from '../api/authApi.js?v=20261116.1';
 
 /**
  * Модель сессии пользователя и администратора

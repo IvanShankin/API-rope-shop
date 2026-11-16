@@ -1082,3 +1082,9 @@ select.field__input {
   justify-content: center;
   text-decoration: none;
 }
+
+/* рядом с «Сохранить» — кнопки тестовой отправки в Telegram и на почту */
+.settings-card__actions {
+  flex-wrap: wrap;
+  gap: 12px;
+}
